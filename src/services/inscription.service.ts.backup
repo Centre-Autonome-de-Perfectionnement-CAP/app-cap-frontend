@@ -1,0 +1,191 @@
+import HttpService from './http.service.ts'
+import { INSCRIPTION_ROUTES } from '@/constants/routes.constants'
+import type { DashboardStats, GraphesData, AcademicYear, PendingStudentData } from '@/types/inscription.types'
+
+class InscriptionService {
+  /**
+   * Récupère les statistiques générales : Nombre d'étudiants inscrits au CAP (toutes années confondues),
+   * Dossiers en attente pour l'année courante, Année académique courante, Nombre de filières.
+   * @returns {Promise<Object>} Un objet avec les stats (ex: { inscritsCap: number, dossiersAttente: number, anneeAcademique: string, nombreFilieres: number }).
+   */
+  /**
+   * Récupère les statistiques du dashboard
+   */
+  stats = async (): Promise<DashboardStats> => {
+    const response = await HttpService.get<{data: DashboardStats}>(INSCRIPTION_ROUTES.STATS)
+    return response.data
+  }
+
+  /**
+   * Récupère les données pour les graphes : Nombre d'inscrits par filière par année académique,
+   * et les statuts admis/rejetés par année académique.
+   * @param {string} annee - L'année académique en query param (ex: '2024-2025').
+   * @returns {Promise<Object>} Un objet avec les données (ex: { inscritsParFiliere: Array<{filiere: string, count: number}>, admis: number, rejetes: number }).
+   */
+  /**
+   * Récupère les données des graphiques pour une année académique
+   */
+  graphes = async (year: string): Promise<GraphesData> => {
+    const response = await HttpService.get<{data: GraphesData}>(`${INSCRIPTION_ROUTES.GRAPHES}?year=${year}`)
+    return response.data
+  }
+
+  /**
+   * Récupère les années académiques avec leur date de début, date de fin, et périodes de dépôt associées.
+   * @param {string} mode - Query param : 'some' pour les 4 dernières années, 'all' pour toutes.
+   * @returns {Promise<Array<Object>>} Un tableau d'objets (ex: [{ annee: string, debut: string, fin: string, periodesDepot: string }]).
+   */
+  /**
+   * Récupère la liste des années académiques
+   */
+  academicYears = async (): Promise<AcademicYear[]> => {
+    const response = await HttpService.get<{data: AcademicYear[]}>(INSCRIPTION_ROUTES.ACADEMIC_YEARS)
+    return response.data
+  }
+
+  /**
+   * Récupère les étudiants en attente avec pagination et recherche
+   */
+  pendingStudents = async (filters: {
+    status?: string,
+    department_id?: number,
+    academic_year_id?: number,
+    entry_diploma_id?: number,
+    level?: string,
+    search?: string,
+    page?: number,
+    per_page?: number
+  } = {}): Promise<{ data: PendingStudentData[]; meta: any }> => {
+    const params = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString())
+      }
+    })
+    
+    const url = `${INSCRIPTION_ROUTES.PENDING_STUDENTS}?${params.toString()}`
+    const response = await HttpService.get<{data: PendingStudentData[]; meta: any}>(url)
+    return response
+    
+  }
+
+  /**
+ * Récupère les options de filtre pour les étudiants (années, filières, diplômes, niveaux, statuts).
+ * @param {string} mode Mode de filtre (par défaut: 'pending').
+ * @returns {Promise<Object>} Options de filtre.
+ */
+  filterOptions = async (mode = 'pending') => {
+    const endpoint = `/inscription/filter-options?mode=${mode}`
+    return await HttpService.get(endpoint)
+  }
+
+
+  /**
+   * Envoie un ou plusieurs mails
+   */
+  sendMail = async (studentsData: any) => {
+    const sendMailEndpoint = '/inscription/send-mail'
+    return await HttpService.post(sendMailEndpoint, studentsData)
+  }
+
+  /**
+   * Exporte les données dans le format spécifié
+   */
+  exportData = async (endpoint: string) => {
+    return await HttpService.get(`/inscription/${endpoint}`)
+  }
+
+  /**
+   * Récupère la liste des filières (fixe)
+   * @returns {Promise<Array<string>>} Un tableau de filières.
+   */
+  getFilieres = async (): Promise<string[]> => {
+    const filieresEndpoint = '/inscription/filieres'
+    return await HttpService.get<string[]>(filieresEndpoint)
+  }
+
+  /**
+   * Crée une nouvelle année académique
+   * @param {Date} start - Date de début.
+   * @param {Date} end - Date de fin.
+   * @returns {Promise<Object>} { success: boolean, year: Object }.
+   */
+  createAcademicYear = async (start: Date, end: Date) => {
+    const createEndpoint = '/inscription/academic-years'
+    return await HttpService.post(createEndpoint, { start, end })
+  }
+
+  /**
+   * Ajoute une période à une année académique
+   * @param {number} yearId - ID de l'année.
+   * @param {string} type - 'depot' ou 'reclamation'.
+   * @param {Date} startDate - Date de début.
+   * @param {Date} startTime - Heure de début.
+   * @param {Date} endDate - Date de fin.
+   * @param {Date} endTime - Heure de fin.
+   * @param {Array<string>} filieres - Tableau de filières.
+   * @returns {Promise<Object>} { success: boolean, error?: string }.
+   */
+  addPeriod = async (yearId: number, type: string, startDate: Date, startTime: Date, endDate: Date, endTime: Date, filieres: string[]) => {
+    const addPeriodEndpoint = `/inscription/academic-years/${yearId}/periods`
+    return await HttpService.post(addPeriodEndpoint, { type, startDate, startTime, endDate, endTime, filieres })
+  }
+
+  /**
+   * Récupère les périodes pour une année académique
+   * @param {number} yearId - ID de l'année.
+   * @returns {Promise<Array<Object>>} Un tableau de périodes (ex: [{ type: string, start: string, end: string, filieres: Array<string> }]).
+   */
+  getPeriods = async (yearId: number | string) => {
+    const getPeriodsEndpoint = `/inscription/academic-years/${yearId}/periods`
+    return await HttpService.get(getPeriodsEndpoint)
+  }
+
+  /**
+   * Récupère la liste des étudiants avec pagination et filtres.
+   * @param {string} year - Année académique.
+   * @param {string} filiere - Filière.
+   * @param {string} entryDiploma - Diplôme d'entrée.
+   * @param {string} redoublant - 'oui' ou 'non'.
+   * @param {number} page - Numéro de page.
+   * @param {string} search - Terme de recherche.
+   * @returns {Promise<Object>} { data: Array, total: number, totalPages: number }.
+   */
+  studentsList = async (
+    year = 'all',
+    filiere = 'all',
+    entryDiploma = 'all',
+    redoublant = 'all',
+    niveau = 'all',
+    page = 1,
+    search = '',
+  ) => {
+    const endpoint = `/inscription/students?year=${year}&filiere=${filiere}&entryDiploma=${entryDiploma}&redoublant=${redoublant}&niveau=${niveau}&page=${page}&search=${encodeURIComponent(search)}`
+    return await HttpService.get(endpoint)
+
+  }
+
+  /**
+   * Récupère les détails d'un étudiant par ID.
+   * @param {number} studentId - ID de l'étudiant.
+   * @returns {Promise<Object>} Les détails de l'étudiant.
+   */
+  getStudentDetails = async (studentId: number | string) => {
+    const endpoint = `/inscription/students/${studentId}`
+    return await HttpService.get(endpoint)
+  }
+
+  /**
+   * Exporte une liste (émargement ou notes) avec query params.
+   * @param {string} type - 'emargement' ou 'notes'.
+   * @param {string} year - Année académique.
+   * @param {string} filiere - Filière.
+   * @returns {Promise<Object>} { success: boolean, url: string }.
+   */
+  exportList = async (type: string, year: string, filiere: string) => {
+    const endpoint = `/inscription/export/${type}?year=${year}&filiere=${filiere}`
+    return await HttpService.get(endpoint)
+  }
+}
+
+export default new InscriptionService()

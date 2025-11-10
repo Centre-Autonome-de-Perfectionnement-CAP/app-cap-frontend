@@ -18,7 +18,7 @@ type FunctionResult = SuccessResult | ErrorResult;
 const usePendingStudentsData = () => {
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [pendingStudents, setPendingStudents] = useState<PendingStudentData[]>([]);
-  const [graphesData, setGraphesData] = useState({ inscritsParFiliere: [], admis: 0, rejetes: 0 });
+  const [graphesData] = useState({ inscritsParFiliere: [], admis: 0, rejetes: 0 });
   const [filterOptions, setFilterOptions] = useState<PendingStudentsFilterOptions>({ filieres: [], years: [], entryDiplomas: [], statuts: [], niveaux: {} });
   const [selectedYear, setSelectedYear] = useState('2024-2025');
   const [selectedFiliere, setSelectedFiliere] = useState('all');

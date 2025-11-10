@@ -6,7 +6,7 @@ import Axios, {
 } from 'axios';
 import type { RequestMethod, ApiResponse, ApiError } from '@/types';
 
-const API_URL = 'http://localhost:8000/api/';
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/';
 Axios.defaults.baseURL = API_URL;
 
 interface RequestOptions extends AxiosRequestConfig {

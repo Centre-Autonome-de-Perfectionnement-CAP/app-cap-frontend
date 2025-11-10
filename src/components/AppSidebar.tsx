@@ -1,6 +1,7 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useLocation, Link } from 'react-router-dom'
+import { getAssetUrl } from '@/utils/assets'
 
 import {
   CCloseButton,
@@ -88,8 +89,8 @@ const AppSidebar = () => {
     >
       <CSidebarHeader className="border-bottom">
         <CSidebarBrand as={Link} to="/">
-          <img className="sidebar-brand-full" src='/public/images/cap.png' alt='logo-cap' height={70}/>
-          <img className="sidebar-brand-narrow" src='/public/images/cap.png' alt='logo-cap' height={70}/>
+          <img className="sidebar-brand-full" src={getAssetUrl('images/cap.png')} alt='logo-cap' height={70}/>
+          <img className="sidebar-brand-narrow" src={getAssetUrl('images/cap.png')} alt='logo-cap' height={70}/>
         </CSidebarBrand>
         <CCloseButton
           className="d-lg-none"

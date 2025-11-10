@@ -22,12 +22,8 @@ import {
 import Swal from 'sweetalert2'
 import type { Period } from '../../../types/inscription.types'
 
-/**
- * AnneeAcademiques - Gestion des années académiques
- * Version refactorisée avec composants réutilisables
- */
+
 const AnneeAcademiques = () => {
-  // Hook principal
   const {
     academicYears,
     filieres,
@@ -38,12 +34,10 @@ const AnneeAcademiques = () => {
     getPeriods,
   } = useAnneeAcademiqueData()
 
-  // Modals
   const createModal = useModal()
   const addPeriodModal = useModal()
   const periodsModal = useModal()
 
-  // États pour la création d'année
   const [newYearStart, setNewYearStart] = useState<Date | null>(null)
   const [newYearEnd, setNewYearEnd] = useState<Date | null>(null)
   const [submissionStart, setSubmissionStart] = useState<Date | null>(null)
@@ -51,7 +45,6 @@ const AnneeAcademiques = () => {
   const [includeSubmissionPeriod, setIncludeSubmissionPeriod] = useState(false)
   const [createLoading, setCreateLoading] = useState(false)
 
-  // États pour l'ajout de période
   const [selectedYear, setSelectedYear] = useState<any>(null)
   const [selectedYearId, setSelectedYearId] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState('depot')
@@ -62,16 +55,13 @@ const AnneeAcademiques = () => {
   const [selectedFilieres, setSelectedFilieres] = useState<number[]>([])
   const [periodLoading, setPeriodLoading] = useState(false)
 
-  // États pour l'affichage des périodes
   const [periods, setPeriods] = useState<Period[]>([])
   const [periodsLoading, setPeriodsLoading] = useState(false)
 
-  // Handler pour créer une année académique
   const handleCreateYear = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
 
-      // Validations
       if (!newYearStart || !newYearEnd) {
         Swal.fire({
           icon: 'warning',
@@ -186,7 +176,6 @@ const AnneeAcademiques = () => {
     ]
   )
 
-  // Handler pour ouvrir le modal d'ajout de période
   const handleOpenAddPeriod = useCallback(
     (year: any) => {
       setSelectedYear(year)
@@ -197,7 +186,6 @@ const AnneeAcademiques = () => {
     [filieres, addPeriodModal]
   )
 
-  // Handler pour ajouter une période
   const handleAddPeriod = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
@@ -238,7 +226,6 @@ const AnneeAcademiques = () => {
 
       setPeriodLoading(true)
       try {
-        // Format dates and times as strings for API
         const formatDateForAPI = (date: Date): string => {
           const year = date.getFullYear()
           const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -319,7 +306,6 @@ const AnneeAcademiques = () => {
     ]
   )
 
-  // Handler pour afficher les périodes
   const handleViewPeriods = useCallback(
     async (year: any) => {
       setSelectedYear(year)
@@ -365,7 +351,6 @@ const AnneeAcademiques = () => {
         </CCardBody>
       </CCard>
 
-      {/* Modal Création Année */}
       <AcademicYearForm
         visible={createModal.isOpen}
         onClose={createModal.close}
@@ -383,7 +368,6 @@ const AnneeAcademiques = () => {
         loading={createLoading}
       />
 
-      {/* Modal Ajout Période */}
       <AddPeriodModal
         visible={addPeriodModal.isOpen}
         onClose={addPeriodModal.close}
@@ -404,7 +388,6 @@ const AnneeAcademiques = () => {
         loading={periodLoading}
       />
 
-      {/* Modal Affichage Périodes */}
       <PeriodsModal
         visible={periodsModal.isOpen}
         onClose={periodsModal.close}

@@ -1,21 +1,23 @@
-
-interface ThemeColorProps {
-  children?: any;
-  className?: string;
-}
-import React, { useEffect, useState, createRef } from 'react'
+import { useEffect, useState, createRef } from 'react'
 import classNames from 'classnames'
 import { CRow, CCol, CCard, CCardHeader, CCardBody } from '@coreui/react'
 import { rgbToHex } from '@coreui/utils'
 
+interface ThemeColorProps {
+  children?: React.ReactNode;
+  className?: string;
+}
+
 const ThemeView = () => {
   const [color, setColor] = useState('rgb(255, 255, 255)')
-  const ref = createRef()
+  const ref = createRef<HTMLTableElement>()
 
   useEffect(() => {
-    const el = ref.current.parentNode.firstChild
-    const varColor = window.getComputedStyle(el).getPropertyValue('background-color')
-    setColor(varColor)
+    if (ref.current?.parentNode?.firstChild) {
+      const el = ref.current.parentNode.firstChild as HTMLElement
+      const varColor = window.getComputedStyle(el).getPropertyValue('background-color')
+      setColor(varColor)
+    }
   }, [ref])
 
   return (
@@ -34,7 +36,7 @@ const ThemeView = () => {
   )
 }
 
-const ThemeColor = ({ className, children }) => {
+const ThemeColor: React.FC<ThemeColorProps> = ({ className, children }) => {
   const classes = classNames(className, 'theme-color w-75 rounded mb-3')
   return (
     <CCol xs={12} sm={6} md={4} xl={2} className="mb-4">

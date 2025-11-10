@@ -1,32 +1,34 @@
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
 
 const MainChart = () => {
-  const chartRef = useRef(null)
+  const chartRef = useRef<any>(null)
 
   useEffect(() => {
     document.documentElement.addEventListener('ColorSchemeChange', () => {
       if (chartRef.current) {
         setTimeout(() => {
-          chartRef.current.options.scales.x.grid.borderColor = getStyle(
-            '--cui-border-color-translucent',
-          )
-          chartRef.current.options.scales.x.grid.color = getStyle('--cui-border-color-translucent')
-          chartRef.current.options.scales.x.ticks.color = getStyle('--cui-body-color')
-          chartRef.current.options.scales.y.grid.borderColor = getStyle(
-            '--cui-border-color-translucent',
-          )
-          chartRef.current.options.scales.y.grid.color = getStyle('--cui-border-color-translucent')
-          chartRef.current.options.scales.y.ticks.color = getStyle('--cui-body-color')
-          chartRef.current.update()
+          if (chartRef.current) {
+            chartRef.current.options.scales.x.grid.borderColor = getStyle(
+              '--cui-border-color-translucent',
+            )
+            chartRef.current.options.scales.x.grid.color = getStyle('--cui-border-color-translucent')
+            chartRef.current.options.scales.x.ticks.color = getStyle('--cui-body-color')
+            chartRef.current.options.scales.y.grid.borderColor = getStyle(
+              '--cui-border-color-translucent',
+            )
+            chartRef.current.options.scales.y.grid.color = getStyle('--cui-border-color-translucent')
+            chartRef.current.options.scales.y.ticks.color = getStyle('--cui-body-color')
+            chartRef.current.update()
+          }
         })
       }
     })
   }, [chartRef])
 
-  const random = () => Math.round(Math.random() * 100)
+  const random = (min: number = 0, max: number = 100): number => Math.round(Math.random() * (max - min) + min)
 
   return (
     <>
@@ -43,13 +45,13 @@ const MainChart = () => {
               pointHoverBackgroundColor: getStyle('--cui-info'),
               borderWidth: 2,
               data: [
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
+                random() * (200 - 50) + 50,
+                random() * (200 - 50) + 50,
+                random() * (200 - 50) + 50,
+                random() * (200 - 50) + 50,
+                random() * (200 - 50) + 50,
+                random() * (200 - 50) + 50,
+                random() * (200 - 50) + 50,
               ],
               fill: true,
             },

@@ -25,10 +25,7 @@ interface StudentMailData {
   commentaireCuo?: string
 }
 
-/**
- * PendingStudents - Gestion des étudiants en attente
- * Version refactorisée avec composants réutilisables
- */
+
 const PendingStudents: React.FC = () => {
   const {
     pendingStudents,
@@ -52,36 +49,29 @@ const PendingStudents: React.FC = () => {
     updateStudentStatus,
   } = usePendingStudentsData()
 
-  // États locaux
   const [editedData, setEditedData] = useState<PendingStudentData[]>(pendingStudents)
   const [localSearchQuery, setLocalSearchQuery] = useState<string>(searchQuery)
   const [selectedStudents, setSelectedStudents] = useState<number[]>([])
 
-  // Debounce la recherche
   const debouncedSearchQuery = useDebounce(localSearchQuery, 300)
 
-  // Options pour les opinions
   const opinionOptions: SelectOption[] = [
     { value: 'Favorable', label: 'Favorable' },
     { value: 'Défavorable', label: 'Défavorable' },
   ]
 
-  // Déterminer si c'est une filière spéciale
   const specialFilieres: string[] = ['Droit', 'Médecine', 'Informatique']
   const isSpecialFiliere: boolean = specialFilieres.includes(selectedFiliere)
 
-  // Synchroniser la recherche debounced avec le hook
   useEffect(() => {
     setSearchQuery(debouncedSearchQuery)
     setCurrentPage(1)
   }, [debouncedSearchQuery, setSearchQuery, setCurrentPage])
 
-  // Synchroniser editedData avec pendingStudents
   useEffect(() => {
     setEditedData(pendingStudents)
   }, [pendingStudents])
 
-  // Handler pour les changements de filtre
   const handleFilterChange = useCallback(
     (name: string, option: SingleValue<SelectOption>): void => {
       const value = option ? String(option.value) : 'all'
@@ -100,7 +90,6 @@ const PendingStudents: React.FC = () => {
     ]
   )
 
-  // Handler pour la recherche
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>): void => {
       setLocalSearchQuery(e.target.value)
@@ -108,7 +97,6 @@ const PendingStudents: React.FC = () => {
     []
   )
 
-  // Handler pour ouvrir un document
   const handleOpenDocument = useCallback((documentUrl: string): void => {
     if (documentUrl) {
       window.open(documentUrl, '_blank')
@@ -137,7 +125,6 @@ const PendingStudents: React.FC = () => {
     []
   )
 
-  // Handler pour changer de commentaire
   const handleCommentChange = useCallback(
     (studentId: number, type: string, value: string): void => {
       setEditedData((prev) =>
@@ -158,7 +145,6 @@ const PendingStudents: React.FC = () => {
     []
   )
 
-  // Handler pour sélectionner un étudiant
   const handleSelectStudent = useCallback((studentId: number): void => {
     setSelectedStudents((prev) =>
       prev.includes(studentId)
@@ -167,7 +153,6 @@ const PendingStudents: React.FC = () => {
     )
   }, [])
 
-  // Handler pour sélectionner tous les étudiants
   const handleSelectAll = useCallback(
     (checked: boolean): void => {
       setSelectedStudents(checked ? editedData.map((student) => student.id) : [])
@@ -175,7 +160,6 @@ const PendingStudents: React.FC = () => {
     [editedData]
   )
 
-  // Handler pour changer le statut (exonéré/sponsorisé)
   const handleStatusChange = useCallback(
     async (
       studentId: number,
@@ -215,9 +199,8 @@ const PendingStudents: React.FC = () => {
     [updateStudentStatus]
   )
 
-  // Handler pour envoyer un mail
   const handleSendMail = useCallback(
-    async (type: string): Promise<void> => {
+    async (_type: string): Promise<void> => {
       if (selectedStudents.length === 0) {
         Swal.fire({
           icon: 'warning',
@@ -263,7 +246,6 @@ const PendingStudents: React.FC = () => {
     [selectedStudents, editedData, sendStudentMail]
   )
 
-  // Handler pour exporter
   const handleExport = useCallback(
     async (format: string): Promise<void> => {
       if (selectedYear === 'all' || selectedFiliere === 'all') {
@@ -309,10 +291,8 @@ const PendingStudents: React.FC = () => {
         <span className="fw-bold">Étudiants en Attente</span>
       </CCardHeader>
       <CCardBody>
-        {/* Erreur */}
         {error && <CAlert color="danger">{error}</CAlert>}
 
-        {/* Filtres */}
         <StudentsFilter
           filterOptions={filterOptions}
           selectedYear={selectedYear}
@@ -325,16 +305,12 @@ const PendingStudents: React.FC = () => {
           showSearch={true}
           showStatut={true}
         />
-
-        {/* Barre d'outils */}
         <PendingStudentsToolbar
           selectedStudentsCount={selectedStudents.length}
           isSpecialFiliere={isSpecialFiliere}
           onSendMail={handleSendMail}
           onExport={handleExport}
         />
-
-        {/* Tableau */}
         <PendingStudentsTable
           students={editedData}
           currentPage={currentPage}
@@ -348,8 +324,6 @@ const PendingStudents: React.FC = () => {
           onCommentChange={handleCommentChange}
           onStatusChange={handleStatusChange}
         />
-
-        {/* Pagination */}
         {totalPages > 1 && (
           <Pagination
             currentPage={currentPage}

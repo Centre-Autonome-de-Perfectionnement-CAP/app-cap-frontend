@@ -17,7 +17,6 @@ type NiveauxResponse = {
  * Adapté aux vraies routes du backend Laravel
  */
 class InscriptionService {
-  // ==================== DASHBOARD ====================
   
   /**
    * Récupère les statistiques du dashboard
@@ -34,8 +33,6 @@ class InscriptionService {
     const response = await HttpService.get<{data: GraphesData}>(`${INSCRIPTION_ROUTES.GRAPHES}?year=${year}`)
     return response.data
   }
-
-  // ==================== ACADEMIC YEARS ====================
   
   /**
    * Récupère la liste des années académiques
@@ -133,8 +130,6 @@ class InscriptionService {
     const response = await HttpService.get(INSCRIPTION_ROUTES.ACADEMIC_YEAR_PERIODS(yearId))
     return response.data || response
   }
-
-  // ==================== PENDING STUDENTS ====================
   
   /**
    * Récupère les étudiants en attente avec pagination et filtres
@@ -243,8 +238,6 @@ class InscriptionService {
     if (perPage) params.append('per_page', perPage.toString())
     
     const response = await HttpService.get(`${INSCRIPTION_ROUTES.BASE}/students?${params.toString()}`)
-    
-    // Transform Laravel pagination structure to expected format
     if (response.data && response.data.data) {
       return {
         data: response.data.data,
@@ -315,8 +308,6 @@ class InscriptionService {
   getDocuments = async (id: number | string) => {
     return await HttpService.get(INSCRIPTION_ROUTES.PENDING_STUDENT_DOCUMENTS(id))
   }
-
-  // ==================== REFERENCE DATA ====================
   
   /**
    * Récupère la liste des cycles
@@ -400,8 +391,6 @@ class InscriptionService {
       }
     }
   }
-
-  // ==================== SUBMISSIONS ====================
   
   /**
    * Récupère les périodes de soumission actives

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import Select from 'react-select'
 import { CCard, CCardBody, CButton, CCol, CRow } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
@@ -7,10 +7,6 @@ import { StatsCard, ChartCard, DashboardTable } from '@/components/dashboard'
 import { LoadingSpinner } from '@/components'
 import useDashboardData from '@/hooks/inscription/useDashboardData'
 
-/**
- * Dashboard - Tableau de bord Inscription
- * Version refactorisée avec composants réutilisables
- */
 const Dashboard = () => {
   const {
     stats,
@@ -23,7 +19,6 @@ const Dashboard = () => {
     error,
   } = useDashboardData()
 
-  // Options communes pour tous les graphiques
   const chartOptions = useMemo(
     () => ({
       responsive: true,
@@ -42,7 +37,6 @@ const Dashboard = () => {
     []
   )
 
-  // Options spécifiques pour le camembert
   const doughnutOptions = useMemo(
     () => ({
       ...chartOptions,
@@ -67,7 +61,6 @@ const Dashboard = () => {
     [chartOptions]
   )
 
-  // Données graphiques
   const inscritsChartData = useMemo(
     () => ({
       labels: graphesData.inscritsParFiliere.map((item) => item.filiere),
@@ -148,7 +141,6 @@ const Dashboard = () => {
     [graphesData.inscritsParCycle]
   )
 
-  // Options année académique
   const yearOptions = useMemo(
     () =>
       academicYears.map((year) => ({
@@ -158,7 +150,6 @@ const Dashboard = () => {
     [academicYears]
   )
 
-  // Colonnes des tableaux
   const academicYearsColumns = [
     { key: 'libelle', label: 'Année Académique', align: 'center' as const },
     { key: 'date_debut', label: 'Début', align: 'center' as const },
@@ -208,7 +199,6 @@ const Dashboard = () => {
 
   return (
     <>
-      {/* Cartes de statistiques */}
       <CRow className="mb-4">
         <StatsCard
           value={stats.inscritsCap}
@@ -236,7 +226,6 @@ const Dashboard = () => {
         />
       </CRow>
 
-      {/* Filtre année académique */}
       <CRow className="mb-3">
         <CCol xs={12} md={4}>
           <label className="form-label fw-semibold">Filtrer par Année Académique</label>
@@ -251,8 +240,6 @@ const Dashboard = () => {
           />
         </CCol>
       </CRow>
-
-      {/* Graphiques */}
       <CRow className="mb-4">
         <ChartCard
           title="Nombre d'inscrits par Filière"
@@ -280,7 +267,6 @@ const Dashboard = () => {
         />
       </CRow>
 
-      {/* Tableaux */}
       <DashboardTable
         title="Années Académiques"
         columns={academicYearsColumns}

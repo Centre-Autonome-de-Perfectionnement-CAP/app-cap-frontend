@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   CButton,
   CCard,
@@ -20,7 +19,7 @@ import {
   CRow,
 } from '@coreui/react'
 
-import ReactImg from 'src/assets/images/react.jpg'
+import ReactImg from '@/assets/images/cap.png'
 
 const Cards = () => {
   return (

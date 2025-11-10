@@ -1,5 +1,3 @@
-import HttpService from './http.service.ts'
-
 class CoursService {
 
 }

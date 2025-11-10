@@ -1,9 +1,6 @@
 import CIcon from '@coreui/icons-react'
 import {
   cilSpeedometer,
-  cilUserPlus,
-  cilCalendar,
-  cilList,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 

@@ -1,4 +1,3 @@
-import React from 'react'
 import { CCard, CCardBody, CCardHeader, CCol, CFormCheck, CFormSwitch, CRow } from '@coreui/react'
 
 const ChecksRadios = () => {

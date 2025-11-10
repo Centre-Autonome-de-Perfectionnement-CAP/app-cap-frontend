@@ -47,11 +47,7 @@ class FinanceService {
     if (data.email) formData.append('email', data.email)
     if (data.contact) formData.append('contact', data.contact)
 
-    return await HttpService.post(FINANCE_ROUTES.PAIEMENTS, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    return await HttpService.post(FINANCE_ROUTES.PAIEMENTS, formData)
   }
 
   /**

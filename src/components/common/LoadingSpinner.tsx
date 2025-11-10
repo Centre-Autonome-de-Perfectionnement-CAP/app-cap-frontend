@@ -3,7 +3,7 @@ import { CSpinner } from '@coreui/react'
 
 interface LoadingSpinnerProps {
   message?: string
-  size?: 'sm' | 'lg'
+  size?: 'sm'
   color?: string
   fullPage?: boolean
 }
@@ -14,7 +14,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   color = 'primary',
   fullPage = false,
 }) => {
-  const spinnerSize = size || (fullPage ? 'lg' : undefined)
+  const spinnerSize = size || (fullPage ? undefined : 'sm')
 
   const content = (
     <div className="text-center">

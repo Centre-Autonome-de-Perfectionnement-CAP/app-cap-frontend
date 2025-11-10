@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   CButton,
   CCol,
@@ -19,9 +18,9 @@ const Page404 = () => {
           <CCol md={6}>
             <div className="clearfix">
               <h1 className="float-start display-3 me-4">404</h1>
-              <h4 className="pt-3">Oops! You{"'"}re lost.</h4>
+              <h4 className="pt-3">Oops! Vous vous êtes perdu.</h4>
               <p className="text-body-secondary float-start">
-                The page you are looking for was not found.
+                La page que vous recherchez n'a pas pu etre trouvé ou a été déplacé temporairement.
               </p>
             </div>
             <CInputGroup className="input-prepend">

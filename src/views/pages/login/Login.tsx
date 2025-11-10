@@ -19,6 +19,7 @@ import { cilLockLocked, cilUser } from '@coreui/icons'
 import { useAuth } from '@/contexts/AuthContext'
 import AuthService from '@/services/auth.service'
 import type { LoginCredentials } from '@/types'
+import { getAssetUrl } from '@/utils/assets'
 
 const Login = () => {
   const { login } = useAuth()
@@ -195,7 +196,7 @@ const Login = () => {
                 <CCardBody className="text-center">
                   <div>
                     <img 
-                      src="/images/cap-1.png" 
+                      src={getAssetUrl('images/cap-1.png')} 
                       alt="logo-cap" 
                       style={{ maxWidth: '150px', marginBottom: '20px' }}
                     />

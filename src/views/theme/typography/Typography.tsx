@@ -1,4 +1,3 @@
-import React from 'react'
 import { CCard, CCardHeader, CCardBody } from '@coreui/react'
 
 const Typography = () => {

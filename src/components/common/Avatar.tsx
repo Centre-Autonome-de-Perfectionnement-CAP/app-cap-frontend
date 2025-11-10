@@ -18,7 +18,6 @@ interface AvatarProps {
  */
 const Avatar: React.FC<AvatarProps> = ({
   src,
-  alt = 'Avatar',
   size = 'md',
   fallbackIcon = cilUser,
   className = '',
@@ -31,7 +30,7 @@ const Avatar: React.FC<AvatarProps> = ({
     xl: 72,
   }
 
-  const iconSizeMap = {
+  const iconSizeMap: Record<'sm' | 'md' | 'lg' | 'xl', 'sm' | 'lg' | 'xl' | 'xxl'> = {
     sm: 'sm',
     md: 'lg',
     lg: 'xl',
@@ -45,7 +44,6 @@ const Avatar: React.FC<AvatarProps> = ({
     return (
       <CAvatar
         src={src}
-        alt={alt}
         size={size}
         shape={shape}
         className={className}

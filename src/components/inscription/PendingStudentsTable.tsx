@@ -5,7 +5,6 @@ import {
   CTableRow,
   CTableHeaderCell,
   CTableBody,
-  CTableDataCell,
   CFormCheck,
 } from '@coreui/react'
 import PendingStudentRow from './PendingStudentRow'

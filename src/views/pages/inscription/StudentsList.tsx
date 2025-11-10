@@ -18,12 +18,7 @@ import {
 import InscriptionService from '../../../services/inscription.service'
 import Swal from 'sweetalert2'
 
-/**
- * StudentsList - Liste des étudiants approuvés
- * Version refactorisée avec composants réutilisables
- */
 const StudentsList = () => {
-  // Hook principal pour les données
   const {
     students,
     filterOptions,
@@ -31,8 +26,7 @@ const StudentsList = () => {
     setSelectedYear,
     selectedFiliere,
     setSelectedFiliere,
-    selectedEntryDiploma,
-    setSelectedEntryDiploma,
+    selectedEntryDiploma: _selectedEntryDiploma,
     selectedRedoublant,
     setSelectedRedoublant,
     selectedNiveau,
@@ -49,16 +43,13 @@ const StudentsList = () => {
     error,
   } = useStudentsListData()
 
-  // État local pour la recherche
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
   const debouncedSearchQuery = useDebounce(localSearchQuery, 300)
 
-  // Hook pour les détails de l'étudiant
   const detailsModal = useStudentDetails({
     getStudentDetails: getStudentDetailsFromHook,
   })
 
-  // Hook pour l'édition de l'étudiant
   const editModal = useStudentEdit({
     studentDetails: detailsModal.studentDetails || studentDetailsFromHook,
     updateStudent,
@@ -67,23 +58,19 @@ const StudentsList = () => {
     },
   })
 
-  // Hook pour la création de groupes
   const groupCreation = useGroupCreation({
     selectedYear,
     selectedFiliere,
     selectedNiveau,
-    selectedEntryDiploma,
+    selectedEntryDiploma: _selectedEntryDiploma,
     selectedRedoublant,
     filterOptions,
   })
-
-  // Synchroniser la recherche debouncée
   React.useEffect(() => {
     setSearchQuery(debouncedSearchQuery)
     setCurrentPage(1)
   }, [debouncedSearchQuery, setSearchQuery, setCurrentPage])
 
-  // Handlers de filtres
   const handleFilterChange = useCallback(
     (name: string, option: { value: string } | null) => {
       const value = option ? option.value : 'all'
@@ -106,7 +93,6 @@ const StudentsList = () => {
     setLocalSearchQuery(e.target.value)
   }, [])
 
-  // Handler pour ouvrir le modal de détails
   const handleRowClick = useCallback(
     (studentId: number) => {
       detailsModal.open(studentId)
@@ -114,7 +100,6 @@ const StudentsList = () => {
     [detailsModal]
   )
 
-  // Handler pour ouvrir le modal d'édition depuis les détails
   const handleOpenEditFromDetails = useCallback(() => {
     if (detailsModal.studentDetails) {
       detailsModal.close()
@@ -122,12 +107,10 @@ const StudentsList = () => {
     }
   }, [detailsModal, editModal])
 
-  // Handler pour créer des groupes
   const handleCreateGroups = useCallback(async () => {
     await groupCreation.initializeGroups()
   }, [groupCreation])
 
-  // Handler pour annuler la création de groupes
   const handleCancelGroupCreation = useCallback(async () => {
     const cancelled = await groupCreation.cancelGroupCreation()
     if (cancelled) {
@@ -135,7 +118,6 @@ const StudentsList = () => {
     }
   }, [groupCreation])
 
-  // Handler pour l'export
   const handleExport = useCallback(
     async (type: 'fiche-presence' | 'fiche-emargement') => {
       if (selectedYear === 'all' || selectedFiliere === 'all' || selectedNiveau === 'all') {
@@ -168,7 +150,6 @@ const StudentsList = () => {
           throw new Error('Impossible de trouver les identifiants nécessaires')
         }
 
-        // Récupérer les groupes disponibles
         const groupsResponse = await InscriptionService.getClassGroups(
           academicYearId,
           departmentId,
@@ -199,8 +180,6 @@ const StudentsList = () => {
           if (!result.isConfirmed) return
           selectedGroupe = result.value !== 'all' ? result.value : undefined
         }
-
-        // Exporter
         const blob = await InscriptionService.exportList(
           type,
           selectedYear,
@@ -275,8 +254,6 @@ const StudentsList = () => {
         </CCardHeader>
         <CCardBody>
           {error && <CAlert color="danger">{error}</CAlert>}
-
-          {/* Filtres */}
           <StudentsFilter
             filterOptions={filterOptions}
             selectedYear={selectedYear}
@@ -290,11 +267,7 @@ const StudentsList = () => {
             showNiveau={true}
             showRedoublant={true}
           />
-
-          {/* Table */}
           <StudentTable students={students} loading={false} onRowClick={handleRowClick} />
-
-          {/* Pagination */}
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -302,8 +275,6 @@ const StudentsList = () => {
           />
         </CCardBody>
       </CCard>
-
-      {/* Modal Détails */}
       <StudentDetailsModal
         visible={detailsModal.isOpen}
         student={detailsModal.studentDetails}
@@ -311,8 +282,6 @@ const StudentsList = () => {
         onClose={detailsModal.close}
         onEdit={handleOpenEditFromDetails}
       />
-
-      {/* Modal Édition */}
       <StudentEditModal
         visible={editModal.isOpen}
         formData={editModal.formData}
@@ -321,8 +290,6 @@ const StudentsList = () => {
         onSubmit={editModal.handleSubmit}
         onChange={editModal.handleChange}
       />
-
-      {/* Modal Création de Groupes */}
       <GroupCreationModal
         visible={groupCreation.allStudentsForGrouping.length > 0}
         groups={groupCreation.groups}

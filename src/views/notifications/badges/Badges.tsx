@@ -1,4 +1,3 @@
-import React from 'react'
 import { CButton, CCard, CCardBody, CCardHeader, CCol, CBadge, CRow } from '@coreui/react'
 
 const Badges = () => {

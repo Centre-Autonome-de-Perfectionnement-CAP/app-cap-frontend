@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CCol } from '@coreui/react'
+import { CButton } from '@coreui/react'
 
 interface PendingStudentsToolbarProps {
   selectedStudentsCount: number

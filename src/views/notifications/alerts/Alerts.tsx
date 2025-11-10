@@ -1,14 +1,4 @@
-import React from 'react'
-import {
-  CAlert,
-  CAlertHeading,
-  CAlertLink,
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
-  CRow,
-} from '@coreui/react'
+import { CAlert, CAlertHeading, CAlertLink, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 
 const Alerts = () => {
   return (

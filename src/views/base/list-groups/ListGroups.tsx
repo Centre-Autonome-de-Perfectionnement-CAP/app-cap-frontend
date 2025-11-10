@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   CBadge,
   CCard,
@@ -154,7 +153,7 @@ const ListGroups = () => {
             </p>
             
               {['', '-sm', '-md', '-lg', '-xl', '-xxl'].map((breakpoint, index) => (
-                <CListGroup className="mb-2" layout={`horizontal${breakpoint}`} key={index}>
+                <CListGroup className="mb-2" layout={`horizontal${breakpoint}` as 'horizontal' | 'horizontal-sm' | 'horizontal-md' | 'horizontal-lg' | 'horizontal-xl' | 'horizontal-xxl'} key={index}>
                   <CListGroupItem>Cras justo odio</CListGroupItem>
                   <CListGroupItem>Dapibus ac facilisis in</CListGroupItem>
                   <CListGroupItem>Morbi leo risus</CListGroupItem>

@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   CBreadcrumb,
   CBreadcrumbItem,
@@ -6,8 +5,7 @@ import {
   CCardBody,
   CCardHeader,
   CCol,
-  CRow,
-  CLink,
+  CRow, CLink,
 } from '@coreui/react'
 
 const Breadcrumbs = () => {

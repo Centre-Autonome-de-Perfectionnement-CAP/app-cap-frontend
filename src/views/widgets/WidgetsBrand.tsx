@@ -1,9 +1,3 @@
-
-interface WidgetsBrandProps {
-  className?: string;
-  withCharts?: boolean;
-}
-import React from 'react'
 import { CWidgetStatsD, CRow, CCol } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cibFacebook, cibLinkedin, cibTwitter, cilCalendar } from '@coreui/icons'

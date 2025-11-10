@@ -1,4 +1,3 @@
-import React from 'react'
 import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { brandSet } from '@coreui/icons'
@@ -10,7 +9,7 @@ const toKebabCase = (str: any) => {
 export const getIconsView = (iconset: any) => {
   return Object.entries(iconset).map(([name, value]) => (
     <CCol className="mb-5" xs={6} sm={4} md={3} xl={2} key={name}>
-      <CIcon icon={value} size="xxl" />
+      <CIcon icon={value + ''} size="xxl" />
       <div>{toKebabCase(name)}</div>
     </CCol>
   ))

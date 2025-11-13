@@ -1,108 +1,242 @@
 /**
- * Types pour les modules Cours, Notes et Présence
+ * Types pour le module Cours (Teaching Units, Course Elements, Resources, Programs)
  */
 
-export interface Matiere {
+// ==================== TEACHING UNITS ====================
+export interface TeachingUnit {
   id: number;
-  nom: string;
+  name: string;
+  code: string;
+  course_elements_count?: number;
+  course_elements?: CourseElement[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTeachingUnitRequest {
+  name: string;
+  code: string;
+}
+
+export interface UpdateTeachingUnitRequest {
+  name?: string;
   code?: string;
-  coefficient: number;
+}
+
+// ==================== COURSE ELEMENTS ====================
+export interface CourseElement {
+  id: number;
+  name: string;
+  code: string;
+  credits: number;
+  teaching_unit_id: number;
+  teaching_unit?: TeachingUnit;
+  professors?: Professor[];
+  professors_count?: number;
+  resources?: CourseResource[];
+  resources_count?: number;
+  programs?: Program[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateCourseElementRequest {
+  name: string;
+  code: string;
+  credits: number;
+  teaching_unit_id: number;
+}
+
+export interface UpdateCourseElementRequest {
+  name?: string;
+  code?: string;
   credits?: number;
-  specialite_id?: number;
-  niveau_id?: number;
-  semestre?: 1 | 2;
-  type?: 'theorique' | 'pratique' | 'td' | 'tp';
-  created_at?: string;
-  updated_at?: string;
+  teaching_unit_id?: number;
 }
 
-export interface Enseignant {
+// ==================== PROFESSORS ====================
+export interface Professor {
   id: number;
-  nom: string;
-  prenom: string;
-  nom_complet?: string;
-  email: string;
-  telephone?: string;
-  specialite?: string;
+  name: string;
+  email?: string;
+  phone?: string;
   grade?: string;
+  speciality?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface Cours {
+export interface CourseElementProfessor {
   id: number;
-  matiere_id: number;
-  enseignant_id: number;
-  classe_id?: number;
-  jour_semaine: string;
-  heure_debut: string;
-  heure_fin: string;
-  salle?: string;
-  type: 'cours' | 'td' | 'tp';
-  matiere?: Matiere;
-  enseignant?: Enseignant;
-  created_at?: string;
-  updated_at?: string;
+  course_element_id: number;
+  professor_id: number;
+  course_element?: CourseElement;
+  professor?: Professor;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface Note {
+export interface AttachProfessorRequest {
+  professor_id: number;
+}
+
+// ==================== COURSE RESOURCES ====================
+export interface CourseResource {
   id: number;
-  etudiant_id: number;
-  matiere_id: number;
-  type_evaluation: 'cc' | 'examen' | 'tp' | 'projet';
-  note: number;
-  note_sur: number;
-  coefficient?: number;
-  semestre: 1 | 2;
-  annee_academique_id: number;
-  observation?: string;
-  created_at?: string;
-  updated_at?: string;
+  title: string;
+  description?: string;
+  resource_type: 'syllabus' | 'cours' | 'td' | 'tp' | 'examen';
+  is_public: boolean;
+  course_element_id: number;
+  course_element?: CourseElement;
+  file?: FileInfo;
+  file_name?: string;
+  file_size?: number;
+  file_path?: string;
+  created_by?: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface Bulletin {
-  etudiant_id: number;
-  etudiant?: any;
-  semestre: 1 | 2;
-  annee_academique_id: number;
-  notes: Note[];
-  moyenne_generale: number;
-  total_coefficients: number;
-  rang?: number;
-  effectif_classe?: number;
-  mention?: string;
-  decision?: 'ADMIS' | 'AJOURNÉ' | 'REDOUBLE';
-  appreciation?: string;
-}
-
-export interface Presence {
+export interface FileInfo {
   id: number;
-  etudiant_id: number;
-  cours_id: number;
-  date: string;
-  statut: 'present' | 'absent' | 'retard' | 'justifie';
-  observation?: string;
-  created_at?: string;
-  updated_at?: string;
+  file_name: string;
+  file_size: number;
+  file_path: string;
+  mime_type: string;
+  created_at: string;
 }
 
-export interface SeancePresence {
-  cours_id: number;
-  date: string;
-  heure_debut: string;
-  heure_fin: string;
-  presences: Presence[];
-  taux_presence?: number;
+export interface CreateCourseResourceRequest {
+  title: string;
+  description?: string;
+  resource_type: 'syllabus' | 'cours' | 'td' | 'tp' | 'examen';
+  is_public?: boolean;
+  course_element_id: number;
+  file: File;
 }
 
-export interface EmploiDuTemps {
+export interface UpdateCourseResourceRequest {
+  title?: string;
+  description?: string;
+  resource_type?: 'syllabus' | 'cours' | 'td' | 'tp' | 'examen';
+  is_public?: boolean;
+}
+
+// ==================== PROGRAMS ====================
+export interface ClassGroup {
   id: number;
-  classe_id?: number;
-  specialite_id?: number;
-  niveau_id?: number;
-  semestre: 1 | 2;
-  annee_academique_id: number;
-  cours: Cours[];
+  name: string;
+  department?: any;
+  academic_year?: any;
+  study_level?: string;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface Program {
+  id: number;
+  class_group_id: number;
+  course_element_professor_id: number;
+  weighting: { [key: string]: number }; // ex: { "CC": 30, "TP": 20, "EXAMEN": 50 }
+  class_group?: ClassGroup;
+  course_element_professor?: CourseElementProfessor;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateProgramRequest {
+  class_group_id: number;
+  course_element_professor_id: number;
+  weighting: { [key: string]: number };
+}
+
+export interface UpdateProgramRequest {
+  weighting?: { [key: string]: number };
+}
+
+export interface BulkCreateProgramsRequest {
+  programs: CreateProgramRequest[];
+}
+
+export interface CopyProgramsRequest {
+  source_class_group_id: number;
+  target_class_group_id: number;
+}
+
+export interface BulkProgramsResponse {
+  created: Program[];
+  errors: any[];
+  summary: {
+    success_count: number;
+    error_count: number;
+    total: number;
+  };
+}
+
+export interface CopyProgramsResponse {
+  created: Program[];
+  skipped: Array<{
+    source_program_id: number;
+    course_element_professor_id: number;
+    reason: string;
+  }>;
+  errors: any[];
+  summary: {
+    total_source: number;
+    success_count: number;
+    skipped_count: number;
+    error_count: number;
+  };
+}
+
+// ==================== API RESPONSES ====================
+export interface PaginatedResponse<T> {
+  data: T[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  from: number;
+  to: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+// ==================== FILTERS & SEARCH ====================
+export interface TeachingUnitFilters {
+  search?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  per_page?: number;
+}
+
+export interface CourseElementFilters {
+  search?: string;
+  teaching_unit_id?: number;
+  credits?: number;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  per_page?: number;
+}
+
+export interface CourseResourceFilters {
+  course_element_id?: number;
+  resource_type?: string;
+  is_public?: boolean;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  per_page?: number;
+}
+
+export interface ProgramFilters {
+  class_group_id?: number;
+  course_element_id?: number;
+  professor_id?: number;
+  search?: string;
+  per_page?: number;
 }

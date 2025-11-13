@@ -15,7 +15,7 @@ import {
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
 import inscriptionNavigation from "./inscription.tsx";
-import emploiNavigation from "./emploi.tsx";
+import emploiNavigation from "./emploi-du-temps.tsx";
 import rhNavigation from "./rh.tsx";
 import soutenanceNavigation from "./soutenance.tsx";
 import coursNavigation from "./cours.tsx";

@@ -74,13 +74,34 @@ export const FINANCE_ROUTES = {
 // Cours
 export const COURS_ROUTES = {
   BASE: 'cours',
-  LIST: 'cours',
-  DETAIL: (id: number | string) => `cours/${id}`,
-  MATIERES: 'cours/matieres',
-  MATIERE: (id: number | string) => `cours/matieres/${id}`,
-  ENSEIGNANTS: 'cours/enseignants',
-  ENSEIGNANT: (id: number | string) => `cours/enseignants/${id}`,
-  EMPLOI_DU_TEMPS: 'cours/emploi-du-temps',
+  
+  // Teaching Units (UE)
+  TEACHING_UNITS: 'cours/teaching-units',
+  TEACHING_UNIT: (id: number | string) => `cours/teaching-units/${id}`,
+  TEACHING_UNIT_COURSE_ELEMENTS: (id: number | string) => `cours/teaching-units/${id}/course-elements`,
+  
+  // Course Elements (ECUE)
+  COURSE_ELEMENTS: 'cours/course-elements',
+  COURSE_ELEMENT: (id: number | string) => `cours/course-elements/${id}`,
+  COURSE_ELEMENT_PROFESSORS: (id: number | string) => `cours/course-elements/${id}/professors`,
+  COURSE_ELEMENT_PROFESSORS_ATTACH: (id: number | string) => `cours/course-elements/${id}/professors/attach`,
+  COURSE_ELEMENT_PROFESSORS_DETACH: (id: number | string) => `cours/course-elements/${id}/professors/detach`,
+  COURSE_ELEMENT_RESOURCES: (id: number | string) => `cours/course-elements/${id}/resources`,
+  
+  // Course Resources
+  COURSE_RESOURCES: 'cours/course-resources',
+  COURSE_RESOURCE: (id: number | string) => `cours/course-resources/${id}`,
+  
+  // Programs
+  PROGRAMS: 'cours/programs',
+  PROGRAM: (id: number | string) => `cours/programs/${id}`,
+  PROGRAMS_BULK: 'cours/programs/bulk',
+  PROGRAMS_COPY: 'cours/programs/copy',
+  
+  // Utility routes
+  CLASS_GROUP_PROGRAMS: (classGroupId: number | string) => `cours/class-groups/${classGroupId}/programs`,
+  PROFESSOR_PROGRAMS: (professorId: number | string) => `cours/professors/${professorId}/programs`,
+  COURSE_ELEMENT_PROGRAMS: (courseElementId: number | string) => `cours/course-elements/${courseElementId}/programs`,
 } as const;
 
 // Notes
@@ -106,12 +127,36 @@ export const PRESENCE_ROUTES = {
 } as const;
 
 // Emploi du temps
-export const EMPLOI_ROUTES = {
-  BASE: 'emploi-du-temps',
-  LIST: 'emploi-du-temps',
-  DETAIL: (id: number | string) => `emploi-du-temps/${id}`,
-  BY_CLASSE: (classeId: number | string) => `emploi-du-temps/classe/${classeId}`,
-  BY_ENSEIGNANT: (enseignantId: number | string) => `emploi-du-temps/enseignant/${enseignantId}`,
+export const EMPLOI_DU_TEMPS_ROUTES = {
+  BASE: 'emploi-temps',
+  
+  // Buildings (Bâtiments)
+  BUILDINGS: 'emploi-temps/buildings',
+  BUILDING: (id: number | string) => `emploi-temps/buildings/${id}`,
+  
+  // Rooms (Salles)
+  ROOMS: 'emploi-temps/rooms',
+  ROOM: (id: number | string) => `emploi-temps/rooms/${id}`,
+  ROOMS_AVAILABLE: 'emploi-temps/rooms-available',
+  
+  // Time Slots (Créneaux horaires)
+  TIME_SLOTS: 'emploi-temps/time-slots',
+  TIME_SLOT: (id: number | string) => `emploi-temps/time-slots/${id}`,
+  TIME_SLOTS_BY_DAY: (day: string) => `emploi-temps/time-slots/day/${day}`,
+  
+  // Scheduled Courses (Cours planifiés)
+  SCHEDULED_COURSES: 'emploi-temps/scheduled-courses',
+  SCHEDULED_COURSE: (id: number | string) => `emploi-temps/scheduled-courses/${id}`,
+  CHECK_CONFLICTS: 'emploi-temps/scheduled-courses/check-conflicts',
+  CANCEL_COURSE: (id: number | string) => `emploi-temps/scheduled-courses/${id}/cancel`,
+  UPDATE_HOURS: (id: number | string) => `emploi-temps/scheduled-courses/${id}/update-hours`,
+  EXCLUDE_DATE: (id: number | string) => `emploi-temps/scheduled-courses/${id}/exclude-date`,
+  OCCURRENCES: (id: number | string) => `emploi-temps/scheduled-courses/${id}/occurrences`,
+  
+  // Schedule Views (Vues d'emploi du temps)
+  SCHEDULE_BY_CLASS_GROUP: (classGroupId: number | string) => `emploi-temps/schedule/class-group/${classGroupId}`,
+  SCHEDULE_BY_PROFESSOR: (professorId: number | string) => `emploi-temps/schedule/professor/${professorId}`,
+  SCHEDULE_BY_ROOM: (roomId: number | string) => `emploi-temps/schedule/room/${roomId}`,
 } as const;
 
 // Bibliothèque
@@ -197,6 +242,18 @@ export const FRONTEND_ROUTES = {
     BASE: '/cours',
     LIST: '/cours/liste',
     EMPLOI: '/cours/emploi-du-temps',
+  },
+  
+  // Emploi du Temps
+  EMPLOI_DU_TEMPS: {
+    BASE: '/emploi-du-temps',
+    DASHBOARD: '/emploi-du-temps/dashboard',
+    CALENDAR: '/emploi-du-temps/calendar',
+    BUILDINGS: '/emploi-du-temps/buildings',
+    ROOMS: '/emploi-du-temps/rooms',
+    TIME_SLOTS: '/emploi-du-temps/time-slots',
+    SCHEDULED_COURSES: '/emploi-du-temps/scheduled-courses',
+    SCHEDULE_VIEW: '/emploi-du-temps/schedule-view',
   },
   
   // Notes

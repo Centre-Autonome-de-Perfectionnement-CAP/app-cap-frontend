@@ -1,0 +1,11 @@
+export { default as useTeachingUnits } from './useTeachingUnits'
+export { default as useCourseElements } from './useCourseElements' 
+export { default as useCourseResources } from './useCourseResources'
+export { default as usePrograms } from './usePrograms'
+export { default as useCoursDashboard } from './useCoursDashboard'
+
+export type { useTeachingUnits as UseTeachingUnitsHook } from './useTeachingUnits'
+export type { useCourseElements as UseCourseElementsHook } from './useCourseElements'
+export type { useCourseResources as UseCourseResourcesHook } from './useCourseResources'
+export type { usePrograms as UseProgramsHook } from './usePrograms'
+export type { useCoursDashboard as UseCourseDashboardHook } from './useCoursDashboard'

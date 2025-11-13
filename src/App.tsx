@@ -130,7 +130,7 @@ const App = () => {
               }
             />
             <Route
-              path={`${FRONTEND_ROUTES.COURS.EMPLOI}/*`}
+              path={`${FRONTEND_ROUTES.EMPLOI_DU_TEMPS.BASE}/*`}
               element={
                 <ProtectedRoute module={MODULES.EMPLOI_DU_TEMPS}>
                   <DefaultLayout>

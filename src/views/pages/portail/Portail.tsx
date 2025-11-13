@@ -50,7 +50,7 @@ const applications = [
     title: 'CAP Emploi du Temps',
     description: 'Création et gestion des horaires de cours et d\'examens.',
     image: '/assets/svg/emploi.svg',
-    url: '/cours/emploi-du-temps',
+    url: '/emploi-du-temps',
   },
   {
     title: 'CAP Cahier de Texte',

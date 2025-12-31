@@ -10,9 +10,26 @@ const useHistorique = () => {
 
   const fetchClasses = async () => {
     try {
-      // Utiliser le service d'inscription pour récupérer les classes
-      const response = await HttpService.get('inscription/class-groups')
-      setClasses(response.data)
+      // Utiliser l'endpoint des classes disponibles pour les tarifs
+      const response = await HttpService.get('finance/tarifs/available-classes')
+      
+      // Transformer les données pour avoir un format uniforme
+      const uniqueClasses = response.data?.reduce((acc: any[], curr: any) => {
+        const key = `${curr.academic_year_id}-${curr.department_id}-${curr.study_level}`
+        if (!acc.find((c: any) => `${c.academic_year_id}-${c.department_id}-${c.study_level}` === key)) {
+          acc.push({
+            id: key,
+            name: curr.label,
+            department: { name: curr.label.split(' - ')[0] },
+            academic_year_id: curr.academic_year_id,
+            department_id: curr.department_id,
+            study_level: curr.study_level,
+          })
+        }
+        return acc
+      }, [])
+      
+      setClasses(uniqueClasses || [])
     } catch (err: any) {
       console.error('Erreur lors du chargement des classes:', err)
     }

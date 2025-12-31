@@ -27,8 +27,6 @@ function useAsync<T, Args extends any[] = []>(
     error: null,
     data: null,
   })
-
-  // Utiliser useRef pour éviter les problèmes de dépendances
   const asyncFunctionRef = useRef(asyncFunction)
 
   useEffect(() => {
@@ -56,8 +54,6 @@ function useAsync<T, Args extends any[] = []>(
   const setData = useCallback((data: T | null) => {
     setState((prev) => ({ ...prev, data }))
   }, [])
-
-  // Exécution immédiate si demandé
   useEffect(() => {
     if (immediate) {
       execute(...([] as unknown as Args))

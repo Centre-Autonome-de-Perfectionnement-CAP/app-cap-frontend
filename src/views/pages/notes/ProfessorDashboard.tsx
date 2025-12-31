@@ -77,12 +77,12 @@ const ProfessorDashboard = () => {
 
   const handleCreateEvaluation = (programUuid: string) => {
     // Rediriger vers la page de création d'évaluation
-    window.location.href = `/notes/professor/evaluation/${programUuid}`
+    window.location.href = `/services/notes/professor/evaluation/${programUuid}`
   }
 
   const handleViewGrades = (programUuid: string) => {
     // Rediriger vers la page de notation
-    window.location.href = `/notes/professor/grade-sheet/${programUuid}`
+    window.location.href = `/services/notes/professor/grade-sheet/${programUuid}`
   }
 
   if (loading && !classes.length) {

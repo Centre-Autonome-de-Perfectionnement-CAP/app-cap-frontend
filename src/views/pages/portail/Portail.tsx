@@ -9,82 +9,76 @@ import {
   CContainer,
   CButton,
 } from '@coreui/react';
-import { Link } from 'react-router-dom'; 
+import { Link } from 'react-router-dom';
+import { getAssetUrl } from '@/utils/assets'; 
 
 const applications = [
   {
     title: 'CAP Attestations',
-    description:
-      '',
-    image: '/images/attestation.png',
+    description: '',
+    image: getAssetUrl('images/attestation.png'),
     url: '/attestations',
   },
-    {
+  {
     title: 'CAP Bibliothèque',
     description: '',
-    image: '/images/bibliotheque.png',
+    image: getAssetUrl('images/bibliotheque.png'),
     url: '/bibliotheque',
   },
-    {
+  {
     title: 'CAP Cahier de Texte',
     description: '',
-    image: '/images/cahier-texte.png',
+    image: getAssetUrl('images/cahier-texte.png'),
     url: '/cahier-texte',
   },
-    {
+  {
     title: 'CAP Cours',
     description: '',
-    image: '/images/cours.png',
+    image: getAssetUrl('images/cours.png'),
     url: '/cours',
   },
-    {
+  {
     title: 'CAP Emploi du Temps',
     description: '',
-    image: '/images/emploi-temps.png',
+    image: getAssetUrl('images/emploi-temps.png'),
     url: '/emploi-du-temps',
   },
-    {
+  {
     title: 'CAP Finance',
     description: '',
-    image: '/images/finance.png',
+    image: getAssetUrl('images/finance.png'),
     url: '/finance',
   },
   {
     title: 'CAP Inscription',
-    description:
-      '',
-    image: '/images/inscription.png',
+    description: '',
+    image: getAssetUrl('images/inscription.png'),
     url: '/inscription',
   },
   {
     title: 'CAP Notes',
-    description:
-      '',
-    image: '/images/notes.png',
+    description: '',
+    image: getAssetUrl('images/notes.png'),
     url: '/notes',
   },
   {
     title: 'CAP Ressources Humaines',
-    description:
-      '',
-    image: '/images/rh.png',
+    description: '',
+    image: getAssetUrl('images/rh.png'),
     url: '/rh',
   },
   {
     title: 'CAP Soutenances',
     description: '',
-    image: '/images/soutenances.png',
+    image: getAssetUrl('images/soutenances.png'),
     url: '/soutenances',
   },
-
   {
     title: 'CAP Présence',
-    description:
-      '',
-    image: '/images/presence.png',
+    description: '',
+    image: getAssetUrl('images/presence.png'),
     url: '/presence',
   },
-
 ];
 
 const Portail = () => {

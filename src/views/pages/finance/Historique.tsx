@@ -24,6 +24,7 @@ import CIcon from '@coreui/icons-react'
 import { cilUser, cilCloudDownload, cilSearch } from '@coreui/icons'
 import { LoadingSpinner } from '@/components'
 import useHistorique from '@/hooks/finance/useHistorique'
+import { getAssetUrl } from '@/utils/assets'
 
 const Historique = () => {
   const {
@@ -189,7 +190,7 @@ const Historique = () => {
             <div className="row">
               <div className="col-md-3 text-center mb-3">
                 <img
-                  src={selectedStudent.photo || '/images/default-avatar.png'}
+                  src={selectedStudent.photo || getAssetUrl('images/default-avatar.png')}
                   alt="Photo étudiant"
                   className="img-fluid rounded-circle"
                   style={{ width: '120px', height: '120px', objectFit: 'cover' }}

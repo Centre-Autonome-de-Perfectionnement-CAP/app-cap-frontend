@@ -1,0 +1,5 @@
+export { default as AttestationRoutes } from './AttestationRoutes'
+export { default as AttestationSuccess } from './AttestationSuccess'
+export { default as PreparatoryClass } from './PreparatoryClass'
+export { default as Bulletins } from './Bulletins'
+export { default as AttestationLicence } from './AttestationLicence'

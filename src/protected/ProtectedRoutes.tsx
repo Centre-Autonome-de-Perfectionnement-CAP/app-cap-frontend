@@ -20,7 +20,6 @@ const rolePermissions = {
     finance: false
   },
   'chef-division': {
-    finance: false
   },
   'comptable': {
     attestation: false,

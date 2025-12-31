@@ -73,14 +73,20 @@ export class HttpService {
     return await this.request<T>(this.getOptionsConfig('delete' as const, url, data));
   };
 
-  downloadFile = async (url: string): Promise<{success: true, url: string, filename?: string}> => {
+  downloadFile = async (url: string, options?: { method?: string; body?: string }): Promise<{success: true, url: string, filename?: string}> => {
     try {
-      const response = await this._axios.get(url, {
+      const method = options?.method?.toLowerCase() || 'get';
+      const config: AxiosRequestConfig = {
         responseType: 'blob',
         headers: {
           'Accept': 'application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Type': 'application/json',
         },
-      });
+      };
+      
+      const response = method === 'post' 
+        ? await this._axios.post(url, options?.body ? JSON.parse(options.body) : {}, config)
+        : await this._axios.get(url, config);
       
       const blob = new Blob([response.data], { 
         type: response.headers['content-type'] || 'application/octet-stream' 

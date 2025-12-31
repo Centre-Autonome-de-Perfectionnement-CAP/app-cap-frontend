@@ -331,21 +331,19 @@ const GradeSheet = () => {
                   <CTableHeaderCell>Nom et Prénoms</CTableHeaderCell>
                   {Array.from({ length: gradeSheet.program.column_count }, (_, i) => (
                     <CTableHeaderCell key={i} className="text-center position-relative">
-                      {gradeSheet.program.retake_column_count === 0 && (
-                        <CButton
-                          color="danger"
-                          size="sm"
-                          className="position-absolute top-0 end-0 m-1"
-                          style={{ padding: '2px 6px', fontSize: '10px' }}
-                          onClick={() => {
-                            setDeleteColumn(i)
-                            setDeleteIsRetake(false)
-                            setShowDeleteModal(true)
-                          }}
-                        >
-                          <CIcon icon={cilX} size="sm" />
-                        </CButton>
-                      )}
+                      <CButton
+                        color="danger"
+                        size="sm"
+                        className="position-absolute top-0 end-0 m-1"
+                        style={{ padding: '4px 8px' }}
+                        onClick={() => {
+                          setDeleteColumn(i)
+                          setDeleteIsRetake(false)
+                          setShowDeleteModal(true)
+                        }}
+                      >
+                        <CIcon icon={cilX} />
+                      </CButton>
                       <div>Eval {i + 1}</div>
                       {gradeSheet.program.weighting[i] && (
                         <div className="small text-muted">
@@ -365,14 +363,14 @@ const GradeSheet = () => {
                             color="danger"
                             size="sm"
                             className="position-absolute top-0 end-0 m-1"
-                            style={{ padding: '2px 6px', fontSize: '10px' }}
+                            style={{ padding: '4px 8px' }}
                             onClick={() => {
                               setDeleteColumn(i)
                               setDeleteIsRetake(true)
                               setShowDeleteModal(true)
                             }}
                           >
-                            <CIcon icon={cilX} size="sm" />
+                            <CIcon icon={cilX} />
                           </CButton>
                           <div>Rattrapage {i + 1}</div>
                           {gradeSheet.program.retake_weighting[i] && (

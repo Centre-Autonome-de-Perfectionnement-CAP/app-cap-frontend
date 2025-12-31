@@ -107,6 +107,20 @@ class FinanceService {
   }
 
   /**
+   * Récupère un tarif par son ID
+   */
+  getTarifById = async (id: number) => {
+    return await HttpService.get(`${FINANCE_ROUTES.TARIFS}/${id}`)
+  }
+
+  /**
+   * Récupère les classes disponibles pour une année académique
+   */
+  getAvailableClasses = async (academicYearId: number) => {
+    return await HttpService.get(`${FINANCE_ROUTES.TARIFS}/available-classes?academic_year_id=${academicYearId}`)
+  }
+
+  /**
    * Crée un nouveau tarif
    */
   createTarif = async (data: any) => {
@@ -155,6 +169,69 @@ class FinanceService {
 
   // ==================== MÉTHODES GÉNÉRIQUES ====================
   
+  // ==================== TRANSACTIONS ====================
+  
+  getStudentTransactions = async (studentPendingStudentId: number) => {
+    return await HttpService.get(`/finance/transactions/student/${studentPendingStudentId}`)
+  }
+  
+  getStudentBalance = async (studentPendingStudentId: number) => {
+    return await HttpService.get(`/finance/transactions/student/${studentPendingStudentId}/balance`)
+  }
+  
+  // ==================== EXONÉRATIONS ====================
+  
+  getExonerations = async (filters?: any) => {
+    return await HttpService.get('/finance/exonerations', { params: filters })
+  }
+  
+  createExoneration = async (data: any) => {
+    return await HttpService.post('/finance/exonerations', data)
+  }
+  
+  updateExoneration = async (id: number, data: any) => {
+    return await HttpService.put(`/finance/exonerations/${id}`, data)
+  }
+  
+  deleteExoneration = async (id: number) => {
+    return await HttpService.delete(`/finance/exonerations/${id}`)
+  }
+  
+  // ==================== ÉTAT FINANCIER ÉTUDIANT ====================
+  
+  getStudentFinancialState = async (studentPendingStudentId: number, academicYearId: number) => {
+    return await HttpService.get(`/finance/student/${studentPendingStudentId}/financial-state`, {
+      params: { academic_year_id: academicYearId }
+    })
+  }
+  
+  submitPayment = async (formData: FormData) => {
+    return await HttpService.post('/finance/student/submit-payment', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
+  
+  // ==================== RAPPORTS ====================
+  
+  exportPayments = async (filters?: any) => {
+    return await HttpService.get('/finance/reports/export-payments', { 
+      params: filters, 
+      responseType: 'blob' 
+    })
+  }
+  
+  getFinancialStatsByDepartment = async (academicYearId: number, departmentId?: number) => {
+    return await HttpService.get('/finance/reports/stats-by-department', {
+      params: { academic_year_id: academicYearId, department_id: departmentId }
+    })
+  }
+  
+  getRevenueByPeriod = async (startDate: string, endDate: string, groupBy: 'day' | 'month' = 'month') => {
+    return await HttpService.get('/finance/reports/revenue-by-period', {
+      params: { start_date: startDate, end_date: endDate, group_by: groupBy }
+    })
+  }
+
   /**
    * Méthode GET générique
    */
@@ -170,4 +247,6 @@ class FinanceService {
   }
 }
 
-export default new FinanceService()
+const financeService = new FinanceService()
+export { financeService }
+export default financeService

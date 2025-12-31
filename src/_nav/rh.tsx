@@ -3,6 +3,7 @@ import {
   cilSpeedometer,
   cilUser,
   cilPeople,
+  cilFile,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -25,9 +26,21 @@ const rhNavigation = [
   },
   {
     component: CNavItem,
+    name: 'Signataires',
+    to: '/rh/signataires',
+    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
     name: 'Utilisateurs Admin',
     to: '/rh/admin-users',
     icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Gestion de Contenu',
+    to: '/rh/content',
+    icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
   },
 ]
 

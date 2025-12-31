@@ -97,6 +97,79 @@ class RhService {
     const response = await HttpService.get<ApiResponse<any[]>>('rh/roles')
     return response.data || []
   }
+
+  // Signataires
+  getSignataires = async (): Promise<ApiResponse<any[]>> => {
+    const response = await HttpService.get<ApiResponse<any[]>>('rh/signataires')
+    return response
+  }
+
+  getSignataire = async (id: number | string): Promise<any> => {
+    const response = await HttpService.get<ApiResponse<any>>(`rh/signataires/${id}`)
+    return response.data!
+  }
+
+  createSignataire = async (data: any): Promise<any> => {
+    const response = await HttpService.post<ApiResponse<any>>('rh/signataires', data)
+    return response.data!
+  }
+
+  updateSignataire = async (id: number | string, data: any): Promise<any> => {
+    const response = await HttpService.put<ApiResponse<any>>(`rh/signataires/${id}`, data)
+    return response.data!
+  }
+
+  deleteSignataire = async (id: number | string): Promise<void> => {
+    await HttpService.delete(`rh/signataires/${id}`)
+  }
+
+  // Documents Management
+  getDocuments = async (categorie?: string): Promise<any[]> => {
+    const url = categorie ? `rh/documents?categorie=${categorie}` : 'rh/documents'
+    const response = await HttpService.get<ApiResponse<any[]>>(url)
+    return response.data || []
+  }
+
+  createDocument = async (formData: FormData): Promise<any> => {
+    const response = await HttpService.post<ApiResponse<any>>('rh/documents', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data!
+  }
+
+  updateDocument = async (id: number, data: any): Promise<any> => {
+    const response = await HttpService.put<ApiResponse<any>>(`rh/documents/${id}`, data)
+    return response.data!
+  }
+
+  deleteDocument = async (id: number): Promise<void> => {
+    await HttpService.delete(`rh/documents/${id}`)
+  }
+
+  // Important Informations
+  getImportantInformations = async (): Promise<any[]> => {
+    const response = await HttpService.get<ApiResponse<any[]>>('rh/important-informations')
+    return response.data || []
+  }
+
+  getImportantInformationsAdmin = async (): Promise<any[]> => {
+    const response = await HttpService.get<ApiResponse<any[]>>('rh/important-informations/admin')
+    return response.data || []
+  }
+
+  createImportantInformation = async (data: any): Promise<any> => {
+    const response = await HttpService.post<ApiResponse<any>>('rh/important-informations', data)
+    return response.data!
+  }
+
+  updateImportantInformation = async (id: number, data: any): Promise<any> => {
+    const response = await HttpService.put<ApiResponse<any>>(`rh/important-informations/${id}`, data)
+    return response.data!
+  }
+
+  deleteImportantInformation = async (id: number): Promise<void> => {
+    await HttpService.delete(`rh/important-informations/${id}`)
+  }
 }
 
 export default new RhService()

@@ -506,6 +506,31 @@ class InscriptionService {
     return await HttpService.get(`${INSCRIPTION_ROUTES.CLASS_GROUPS}/by-class/${classGroupId}`)
   }
 
+
+  // ==================== RESPONSABLE DE CLASSE ====================
+
+/**
+ * Assigne le rôle de responsable de classe à un étudiant (role_id = 9)
+ * POST /api/inscription/students/{id}/assign-class-responsible
+ */
+assignClassResponsible = async (studentId: number) => {
+  return await HttpService.post(
+    `${INSCRIPTION_ROUTES.BASE}/students/${studentId}/assign-class-responsible`,
+    {}
+  )
+}
+
+/**
+ * Retire le rôle de responsable de classe d'un étudiant
+ * POST /api/inscription/students/{id}/remove-class-responsible
+ */
+removeClassResponsible = async (studentId: number) => {
+  return await HttpService.post(
+    `${INSCRIPTION_ROUTES.BASE}/students/${studentId}/remove-class-responsible`,
+    {}
+  )
+}
+
   /**
    * Crée des groupes pour une classe
    */

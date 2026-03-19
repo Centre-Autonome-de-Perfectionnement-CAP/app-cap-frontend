@@ -6,9 +6,10 @@ import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } 
 import { FRONTEND_ROUTES } from '@/constants';
 import { LoadingSpinner } from '@/components';
 
+// ── Permissions par rôle (false = accès interdit à ce module) ──────────────
 const rolePermissions = {
   'chef-cap': {
-    inscription: false
+    inscription: false,
   },
   'secretaire': {
     bibliotheque: false,
@@ -17,10 +18,9 @@ const rolePermissions = {
     emploi: false,
     notes: false,
     presence: false,
-    finance: false
+    finance: false,
   },
-  'chef-division': {
-  },
+  'chef-division': {},
   'comptable': {
     attestation: false,
     bibliotheque: false,
@@ -30,7 +30,7 @@ const rolePermissions = {
     inscription: false,
     notes: false,
     presence: false,
-    soutenance: false
+    soutenance: false,
   },
   'professeur': {
     attestation: false,
@@ -41,16 +41,30 @@ const rolePermissions = {
     inscription: false,
     presence: false,
     soutenance: false,
-    finance: false
-  }
+    finance: false,
+  },
+  // ✅ Le responsable n'a accès à RIEN du portail admin
+  'responsable': {
+    portail:      false,
+    inscription:  false,
+    attestation:  false,
+    bibliotheque: false,
+    cahier:       false,
+    cours:        false,
+    emploi:       false,
+    notes:        false,
+    presence:     false,
+    soutenance:   false,
+    finance:      false,
+    rh:           false,
+  },
 };
 
 const isAllowed = (role: string | null, module: string): boolean => {
   if (!role) return false;
   const perms = rolePermissions[role as keyof typeof rolePermissions] || {};
-  return perms[module as keyof typeof perms] !== false; 
+  return perms[module as keyof typeof perms] !== false;
 };
-
 
 interface ProtectedRouteProps {
   children?: React.ReactNode;
@@ -61,20 +75,26 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, module }) => 
   const { isAuthenticated, isLoading, role } = useAuth();
   const navigate = useNavigate();
 
-
   if (isLoading) {
     return <LoadingSpinner message="Vérification de l'authentification..." />;
   }
 
+  // Non authentifié → page de login
   if (!isAuthenticated) {
     return <Navigate to={FRONTEND_ROUTES.LOGIN} replace />;
   }
 
-  // Redirection automatique des professeurs vers les notes
-  if (role === 'professeur' as any && window.location.pathname === FRONTEND_ROUTES.PORTAIL) {
+  // ✅ Responsable de classe : tout accès au portail/modules → son dashboard
+  if ((role as string) === 'responsable') {
+    return <Navigate to={FRONTEND_ROUTES.RESPONSABLE_DASHBOARD} replace />;
+  }
+
+  // Redirection automatique des professeurs vers leurs notes
+  if ((role as string) === 'professeur' && window.location.pathname === FRONTEND_ROUTES.PORTAIL) {
     return <Navigate to="/notes/professor/dashboard" replace />;
   }
 
+  // Vérification des permissions par module
   if (module && !isAllowed(role, module)) {
     return (
       <CModal visible={true} onClose={() => navigate(FRONTEND_ROUTES.PORTAIL)}>
@@ -93,7 +113,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, module }) => 
     );
   }
 
-  return children ? children : <Outlet />;
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default ProtectedRoute;

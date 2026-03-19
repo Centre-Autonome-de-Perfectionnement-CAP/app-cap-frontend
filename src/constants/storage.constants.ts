@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   PRENOMS: 'prenoms',
   USER_ID: 'userId',
   EMAIL: 'email',
+  USER: '',
 } as const;
 
 export type StorageKey = keyof typeof STORAGE_KEYS;

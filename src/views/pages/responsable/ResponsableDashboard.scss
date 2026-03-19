@@ -1,0 +1,46 @@
+.responsable-dashboard {
+  .class-card {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    &.border-primary {
+      border-width: 2px !important;
+    }
+  }
+  
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #321fdb 0%, #1b1a5c 100%);
+  }
+  
+  .table {
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+    
+    td {
+      vertical-align: middle;
+    }
+  }
+  
+  .c-progress {
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+  }
+  
+  @media (max-width: 768px) {
+    .c-alert {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .d-flex.gap-2.justify-content-end {
+      justify-content: center !important;
+      margin-top: 1rem;
+    }
+  }
+}

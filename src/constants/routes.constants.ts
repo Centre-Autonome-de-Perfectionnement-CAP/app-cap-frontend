@@ -55,6 +55,7 @@ export const INSCRIPTION_ROUTES = {
   PUBLIC_ACADEMIC_YEARS_FOR_DEPARTMENT: (departmentId: number | string) => 
     `inscription/public/academic-years/department/${departmentId}`,
   PUBLIC_ENTRY_DIPLOMAS: 'inscription/public/entry-diplomas',
+
 } as const;
 
 // Finance
@@ -226,6 +227,7 @@ export const FRONTEND_ROUTES = {
   
   // Dashboard
   DASHBOARD: '/dashboard',
+  RESPONSABLE_DASHBOARD: '/responsable/dashboard',
   
   // Inscription
   INSCRIPTION: {
@@ -289,3 +291,4 @@ export const FRONTEND_ROUTES = {
   PAGE_404: '/404',
   PAGE_500: '/500',
 } as const;
+

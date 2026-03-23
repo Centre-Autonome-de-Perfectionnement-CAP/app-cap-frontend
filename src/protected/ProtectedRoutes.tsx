@@ -6,44 +6,49 @@ import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } 
 import { FRONTEND_ROUTES } from '@/constants';
 import { LoadingSpinner } from '@/components';
 
-// ── Permissions par rôle (false = accès interdit à ce module) ──────────────
-const rolePermissions = {
+// ── Modules autorisés par rôle ───────────────────────────────────────────────
+// false = accès interdit pour ce module
+const rolePermissions: Record<string, Record<string, boolean>> = {
   'chef-cap': {
     inscription: false,
   },
   'secretaire': {
     bibliotheque: false,
-    cahier: false,
-    cours: false,
-    emploi: false,
-    notes: false,
-    presence: false,
-    finance: false,
+    cahier:       false,
+    cours:        false,
+    emploi:       false,
+    notes:        false,
+    presence:     false,
+    finance:      false,
   },
   'chef-division': {},
   'comptable': {
-    attestation: false,
+    attestation:  false,
     bibliotheque: false,
-    cahier: false,
-    cours: false,
-    emploi: false,
-    inscription: false,
-    notes: false,
-    presence: false,
-    soutenance: false,
+    cahier:       false,
+    cours:        false,
+    emploi:       false,
+    inscription:  false,
+    notes:        false,
+    presence:     false,
+    soutenance:   false,
   },
+  // ✅ Professeur : accès UNIQUEMENT à notes + emploi-du-temps
+  // Tout le reste est bloqué via la redirection dans ce composant
   'professeur': {
-    attestation: false,
+    portail:      false,
+    attestation:  false,
     bibliotheque: false,
-    cahier: false,
-    cours: false,
-    emploi: false,
-    inscription: false,
-    presence: false,
-    soutenance: false,
-    finance: false,
+    cahier:       false,
+    cours:        false,
+    inscription:  false,
+    presence:     false,
+    soutenance:   false,
+    finance:      false,
+    rh:           false,
+    // notes et emploi-du-temps ne sont PAS listés ici → donc autorisés
   },
-  // ✅ Le responsable n'a accès à RIEN du portail admin
+  // ✅ Responsable : accès UNIQUEMENT à /responsable/*
   'responsable': {
     portail:      false,
     inscription:  false,
@@ -60,10 +65,13 @@ const rolePermissions = {
   },
 };
 
+// Modules autorisés au professeur (pour la redirection)
+const PROFESSEUR_ALLOWED_MODULES = ['notes', 'emploi']
+
 const isAllowed = (role: string | null, module: string): boolean => {
   if (!role) return false;
-  const perms = rolePermissions[role as keyof typeof rolePermissions] || {};
-  return perms[module as keyof typeof perms] !== false;
+  const perms = rolePermissions[role] ?? {};
+  return perms[module] !== false;
 };
 
 interface ProtectedRouteProps {
@@ -74,28 +82,34 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, module }) => {
   const { isAuthenticated, isLoading, role } = useAuth();
   const navigate = useNavigate();
+  const r = role as string;
 
   if (isLoading) {
     return <LoadingSpinner message="Vérification de l'authentification..." />;
   }
 
-  // Non authentifié → page de login
   if (!isAuthenticated) {
     return <Navigate to={FRONTEND_ROUTES.LOGIN} replace />;
   }
 
-  // ✅ Responsable de classe : tout accès au portail/modules → son dashboard
-  if ((role as string) === 'responsable') {
+  // ✅ Responsable → son dashboard uniquement
+  if (r === 'responsable') {
     return <Navigate to={FRONTEND_ROUTES.RESPONSABLE_DASHBOARD} replace />;
   }
 
-  // Redirection automatique des professeurs vers leurs notes
-  if ((role as string) === 'professeur' && window.location.pathname === FRONTEND_ROUTES.PORTAIL) {
-    return <Navigate to="/notes/professor/dashboard" replace />;
+  // ✅ Professeur → autorisé sur notes + emploi-du-temps uniquement
+  // Si le module demandé n'est pas dans sa liste → redirigé vers son dashboard
+  if (r === 'professeur') {
+    // Si on ne précise pas de module (ex: portail) → redirection
+    if (!module || !PROFESSEUR_ALLOWED_MODULES.includes(module)) {
+      return <Navigate to={FRONTEND_ROUTES.NOTES.PROFESSOR_DASHBOARD} replace />;
+    }
+    // Module autorisé → on laisse passer
+    return children ? <>{children}</> : <Outlet />;
   }
 
-  // Vérification des permissions par module
-  if (module && !isAllowed(role, module)) {
+  // Vérification des permissions par module pour les autres rôles admin
+  if (module && !isAllowed(r, module)) {
     return (
       <CModal visible={true} onClose={() => navigate(FRONTEND_ROUTES.PORTAIL)}>
         <CModalHeader>

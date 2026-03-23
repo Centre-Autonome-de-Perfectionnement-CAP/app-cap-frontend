@@ -37,8 +37,9 @@ import Swal from 'sweetalert2';
 import './ResponsableDashboard.scss';
 
 const ResponsableDashboard: React.FC = () => {
-  const { user, updateUser } = useAuth();
-  const fullName = [user?.prenoms, user?.nom].filter(Boolean).join(' ') || 'Responsable';
+  // ✅ AuthContext expose nom et prenoms directement (pas un objet 'user')
+  const { nom, prenoms } = useAuth();
+  const fullName = [prenoms, nom].filter(Boolean).join(' ') || 'Responsable';
 
   // États
   const [classesByYear, setClassesByYear] = useState<ClassByYear[]>([]);
@@ -70,26 +71,12 @@ const ResponsableDashboard: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      // Vérifier d'abord dans le contexte utilisateur
-      if (user?.classes && user.classes.length > 0) {
-        setClassesByYear(user.classes);
-        
-        if (user.classes[0]?.classes?.length > 0) {
-          const firstClass = user.classes[0].classes[0];
-          setSelectedClass(firstClass);
-          setActiveTab(0);
-          await loadStudentsForClass(firstClass.id);
-        }
-      } else {
-        // Appel API pour récupérer les classes
-        const response = await inscriptionService.getResponsableClasses();
+      // ✅ Plus de cache dans le contexte — on appelle toujours l'API directement
+      const response = await inscriptionService.getResponsableClasses();
         const classesData = response.classes_by_year || [];
         setClassesByYear(classesData);
         
-        // Mettre à jour le contexte utilisateur
         if (classesData.length > 0) {
-          updateUser({ classes: classesData });
-          
           if (classesData[0]?.classes?.length > 0) {
             const firstClass = classesData[0].classes[0];
             setSelectedClass(firstClass);
@@ -97,7 +84,6 @@ const ResponsableDashboard: React.FC = () => {
             await loadStudentsForClass(firstClass.id);
           }
         }
-      }
     } catch (err: any) {
       console.error('Erreur chargement classes:', err);
       setError(

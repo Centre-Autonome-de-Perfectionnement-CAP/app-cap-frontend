@@ -12,11 +12,11 @@ class RhService {
         params.append(key, value.toString())
       }
     })
-    
-    const url = params.toString() 
+
+    const url = params.toString()
       ? `rh/professors?${params.toString()}`
       : 'rh/professors'
-    
+
     const response = await HttpService.get<ApiResponse<Professor[]>>(url)
     return response
   }
@@ -42,10 +42,17 @@ class RhService {
   }
 
   updateProfessor = async (id: number | string, data: any): Promise<Professor> => {
+    // ✅ Laravel ne supporte pas PUT avec FormData → on utilise POST + _method
+    if (data instanceof FormData) {
+        data.append('_method', 'PUT')
+        const response = await HttpService.post<ApiResponse<Professor>>(`rh/professors/${id}`, data)
+        return response.data!
+    }
+
+    // JSON classique (sans fichier)
     const response = await HttpService.put<ApiResponse<Professor>>(`rh/professors/${id}`, data)
     return response.data!
-  }
-
+}
   deleteProfessor = async (id: number | string): Promise<void> => {
     await HttpService.delete(`rh/professors/${id}`)
   }
@@ -58,11 +65,11 @@ class RhService {
         params.append(key, value.toString())
       }
     })
-    
-    const url = params.toString() 
+
+    const url = params.toString()
       ? `rh/admin-users?${params.toString()}`
       : 'rh/admin-users'
-    
+
     const response = await HttpService.get<ApiResponse<AdminUser[]>>(url)
     return response
   }
@@ -171,7 +178,7 @@ class RhService {
       })
       return response.data!
     }
-    
+
     // Sinon, on envoie en JSON classique
     const response = await HttpService.post<ApiResponse<any>>('rh/important-informations', data)
     return response.data!
@@ -193,7 +200,7 @@ class RhService {
       })
       return response.data!
     }
-    
+
     // Sinon, on envoie en JSON classique
     const response = await HttpService.put<ApiResponse<any>>(`rh/important-informations/${id}`, data)
     return response.data!

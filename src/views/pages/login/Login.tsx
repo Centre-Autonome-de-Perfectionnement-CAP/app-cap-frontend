@@ -23,7 +23,7 @@ import { getAssetUrl } from '@/utils/assets'
 
 const Login = () => {
   const { login } = useAuth()
-  
+
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -75,22 +75,29 @@ const Login = () => {
         user.first_name || '',
         user.role as any
       )
-      
-    } catch (err: any) {
-      console.error('Erreur de connexion:', err)
-      
-      if (err.response?.status === 401) {
-        setError('Email ou mot de passe incorrect')
-      } else if (err.response?.status === 422) {
-        setError('Données de connexion invalides')
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message)
-      } else if (err.message) {
-        setError(err.message)
-      } else {
-        setError('Une erreur est survenue lors de la connexion. Veuillez réessayer.')
-      }
-    } finally {
+
+    }
+      catch (err: any) {
+  console.error('Erreur de connexion:', err)
+
+  // L'erreur vient de HttpService sous forme d'ApiError
+  // donc err.status et err.message sont directement disponibles
+  const status = err?.status
+  const message = err?.message
+
+  if (status === 401) {
+    setError('Email ou mot de passe incorrect')
+  } else if (status === 422) {
+    setError('Données de connexion invalides')
+  } else if (status === 500) {
+    setError('Erreur serveur. Veuillez réessayer plus tard.')
+  } else if (message) {
+    setError(message)
+  } else {
+    setError('Une erreur est survenue lors de la connexion. Veuillez réessayer.')
+  }
+}
+  finally {
       setLoading(false)
     }
   }
@@ -100,14 +107,14 @@ const Login = () => {
       ...prev,
       [field]: value,
     }))
-    
+
     if (validationErrors[field]) {
       setValidationErrors(prev => ({
         ...prev,
         [field]: '',
       }))
     }
-    
+
     if (error) {
       setError(null)
     }
@@ -169,9 +176,9 @@ const Login = () => {
 
                     <CRow>
                       <CCol xs={6}>
-                        <CButton 
-                          color="primary" 
-                          className="px-4" 
+                        <CButton
+                          color="primary"
+                          className="px-4"
                           type="submit"
                           disabled={loading}
                         >
@@ -195,9 +202,9 @@ const Login = () => {
               <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
                 <CCardBody className="text-center">
                   <div>
-                    <img 
-                      src={getAssetUrl('images/cap-1.png')} 
-                      alt="logo-cap" 
+                    <img
+                      src={getAssetUrl('images/cap-1.png')}
+                      alt="logo-cap"
                       style={{ maxWidth: '150px', marginBottom: '20px' }}
                     />
                     <h5>Centre Autonome de Perfectionnement</h5>

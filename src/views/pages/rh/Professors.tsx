@@ -224,9 +224,9 @@ fields.forEach(field => {
 // ✅ AJOUTER statut ici (IMPORTANT)
 submitData.append(
   'statut',
-  formData.statut === 'active'
+  formData.status === 'active'
     ? 'active'
-    : formData.statut === 'inactive'
+    : formData.status === 'inactive'
     ? 'inactive'
     : 'suspended'
 );

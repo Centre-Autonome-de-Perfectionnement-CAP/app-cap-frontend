@@ -86,6 +86,11 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
         {/* Nom et Prénoms */}
         <CTableDataCell>{student.first_name + ' ' + student.last_name}</CTableDataCell>
 
+        {/* Contact Téléphonique */}
+        <CTableDataCell>
+          {student.phone || '-'}
+        </CTableDataCell>
+
         {/* Niveau */}
         <CTableDataCell>
           <CFormInput

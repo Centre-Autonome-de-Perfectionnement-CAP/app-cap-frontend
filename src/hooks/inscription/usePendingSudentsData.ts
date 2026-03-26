@@ -216,6 +216,13 @@ const usePendingStudentsData = () => {
         if (selectedCohort !== 'all') {
           endpoint += `&cohort=${selectedCohort}`;
         }
+      } else if (format === 'validated-students') {
+        // Pour l'export des étudiants validés CUO, seule l'année est nécessaire
+        endpoint = `/inscription/export/validated-students?year=${selectedYear}`;
+      } else if (format.startsWith('validated-students-')) {
+        // Pour l'export des étudiants validés par type
+        const type = format.replace('validated-students-', '');
+        endpoint = `/inscription/export/validated-students?year=${selectedYear}&type=${type}`;
       } else {
         // Pour les autres formats
         endpoint = `/inscription/export/${format}?year=${selectedYear}&filiere=${selectedFiliere}`;

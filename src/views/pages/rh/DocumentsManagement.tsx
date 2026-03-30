@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { CButton, CCard, CCardBody, CCardHeader, CCol, CForm, CFormInput, CFormLabel, CFormSelect, CFormTextarea, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CRow, CSpinner, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CBadge } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPlus, cilPencil, cilTrash } from '@coreui/icons'
+import { cilPlus, cilPencil, cilTrash, cilCloudDownload } from '@coreui/icons'
 import rhService from '@/services/rh.service'
 
 const DocumentsManagement: React.FC = () => {
@@ -73,6 +73,25 @@ const DocumentsManagement: React.FC = () => {
     }
   }
 
+  const handleDownload = async (doc: any) => {
+    try {
+      const blobUrl = await rhService.downloadDocument(doc.id)
+      
+      // Créer un lien de téléchargement temporaire
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = `${doc.titre}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      
+      // Nettoyer
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(blobUrl)
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error)
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       titre: '',
@@ -132,6 +151,9 @@ const DocumentsManagement: React.FC = () => {
                     <CTableDataCell><CBadge color="info">{doc.type}</CBadge></CTableDataCell>
                     <CTableDataCell>{new Date(doc.datePublication).toLocaleDateString('fr-FR')}</CTableDataCell>
                     <CTableDataCell>
+                      <CButton color="success" variant="ghost" size="sm" className="me-2" onClick={() => handleDownload(doc)} title="Télécharger">
+                        <CIcon icon={cilCloudDownload} />
+                      </CButton>
                       <CButton color="primary" variant="ghost" size="sm" className="me-2" onClick={() => openEditModal(doc)}>
                         <CIcon icon={cilPencil} />
                       </CButton>

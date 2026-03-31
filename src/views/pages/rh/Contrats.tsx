@@ -984,17 +984,17 @@ const Contrats: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#0f172a', letterSpacing: '-.02em' }}>Contrats d'enseignement</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#64748b' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6c648b' }}>
             {loading ? 'Chargement…' : `${contrats.length} contrat${contrats.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <button
-          className="ctr-btn ctr-btn-primary"
-          style={{ height: 42 }}
-          onClick={() => { setShowCreate(true); setCreateError(''); setCreateForm({ ...emptyForm }); }}
-        >
-          <Icon.Plus /> Nouveau contrat
-        </button>
+      <button
+     className="ctr-btn"
+     style={{ height: 40, background: '#4F46E5', color: '#fff', border: 'none' }}
+     onClick={() => { setShowCreate(true); setCreateError(''); setCreateForm({ ...emptyForm }); }}
+   >
+     <Icon.Plus /> Nouveau contrat
+   </button>
       </div>
 
       {/* ── Table card ──────────────────────────────────────────────────────── */}

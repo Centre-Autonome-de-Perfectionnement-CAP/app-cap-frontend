@@ -17,8 +17,10 @@ interface Toast { id: number; type: ToastType; title: string; message?: string }
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 const DIVISIONS = [
-  { value: 'RD-FAD', label: 'RD-FAD — Responsable DivisionFormation à Distance' },
-  { value: 'RD-FC',  label: 'RD-FC — Formation Continue' },
+
+  { value: 'RD-FAD', label: 'RD-FAD — Responsable Division-Formation à Distance' },
+
+  { value: 'RD-FC',  label: 'RD-FC — Responsable Division-Formation Continue' },
 ];
 const REGROUPEMENTS = [
   { value: '1', label: 'Regroupement I' },

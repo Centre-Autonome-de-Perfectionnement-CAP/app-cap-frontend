@@ -99,7 +99,7 @@ const ProfessorDashboard = () => {
       {/* ── En-tête de bienvenue ── */}
       <CRow className="mb-4 align-items-center">
         <CCol>
-          <h2 className="mb-1">Bonjour, {fullName} 👋</h2>
+          <h2 className="mb-1">Bonjour, {fullName} </h2>
           <p className="text-muted mb-0">
             Gérez vos notes et consultez l'emploi du temps depuis cet espace.
           </p>

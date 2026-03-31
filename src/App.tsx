@@ -154,13 +154,15 @@ const App = () => {
               }
             />
             <Route
-              path={`${FRONTEND_ROUTES.RH}/*`}
-              element={
-                <ProtectedRoute module={MODULES.RH}>
-                  <DefaultLayout><RhRoutes /></DefaultLayout>
-                </ProtectedRoute>
-              }
-            />
+  path={`${FRONTEND_ROUTES.RH}/*`}
+  element={
+    <ProtectedRoute module={MODULES.RH}>
+      <DefaultLayout>
+        <RhRoutes />
+      </DefaultLayout>
+    </ProtectedRoute>
+  }
+/>
             <Route
               path={`${FRONTEND_ROUTES.SOUTENANCES}/*`}
               element={

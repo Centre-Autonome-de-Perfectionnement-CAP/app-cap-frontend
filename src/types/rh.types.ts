@@ -1,3 +1,5 @@
+// ─── AdminUser ────────────────────────────────────────────────────────────────
+
 export interface AdminUser {
   id: number
   uuid: string
@@ -59,4 +61,96 @@ export interface RhStats {
   total_professors: number
   total_admin_users: number
   active_professors: number
+}
+
+// ─── Contrat ──────────────────────────────────────────────────────────────────
+
+export type ContratStatus = 'pending' | 'signed' | 'ongoing' | 'completed' | 'cancelled'
+
+/**
+ * Un programme = assignation Professeur + Matière (ECUE) + Classe
+ * Correspond à une ligne dans course_element_professor
+ */
+export interface ProfessorProgram {
+  id: number
+  is_primary: boolean
+  label: string         // label pré-calculé par le backend : "CODE — Matière — Classe"
+  course_element: {
+    id: number
+    name: string
+    code: string
+    teaching_unit: {
+      id: number
+      name: string
+      code: string
+    }
+  }
+  class_group: {
+    id: number
+    name: string
+  } | null
+}
+
+export interface Contrat {
+  id: number
+  uuid?: string
+  contrat_number: string
+  division?: string
+  professor_id: number
+  academic_year_id: number
+  cycle_id?: number
+  regroupement?: string
+  start_date: string
+  end_date?: string
+  amount: number
+  status: ContratStatus
+  notes?: string
+  is_validated?: boolean
+  validation_date?: string
+  professor?: { id: number; full_name: string }
+  academicYear?: { id: number; academic_year: string }
+  cycle?: { id: number; name: string }
+  /** Programmes (Matière + Classe) liés à ce contrat */
+  course_element_professors?: ProfessorProgram[]
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CreateContratPayload {
+  division?: string | null
+  professor_id: number
+  academic_year_id: number
+  cycle_id?: number | null
+  regroupement?: string | null
+  start_date: string
+  end_date?: string | null
+  amount: number
+  notes?: string | null
+  course_element_professor_ids?: number[]
+}
+
+export interface UpdateContratPayload extends CreateContratPayload {
+  status: ContratStatus
+}
+
+// ─── AcademicYear ─────────────────────────────────────────────────────────────
+
+export interface AcademicYear {
+  id: number
+  uuid?: string
+  academic_year: string
+  libelle?: string
+  year_start?: string
+  year_end?: string
+  is_current?: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ─── Cycle ────────────────────────────────────────────────────────────────────
+
+export interface Cycle {
+  id: number
+  name: string
+  abbreviation?: string
 }

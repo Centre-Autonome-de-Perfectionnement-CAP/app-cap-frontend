@@ -990,7 +990,7 @@ const Contrats: React.FC = () => {
         </div>
       <button
      className="ctr-btn"
-     style={{ height: 40, background: '#4F46E5', color: '#fff', border: 'none' }}
+     style={{ height: 38, background: '#4F46E5', color: '#fff', border: 'none' }}
      onClick={() => { setShowCreate(true); setCreateError(''); setCreateForm({ ...emptyForm }); }}
    >
      <Icon.Plus /> Nouveau contrat

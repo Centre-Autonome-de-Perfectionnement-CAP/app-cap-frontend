@@ -23,6 +23,7 @@ import {
   CFormSelect,
   CFormTextarea,
   CFormSwitch,
+  CFormFeedback,
   CAlert,
   CBadge,
   CDropdown,
@@ -146,7 +147,8 @@ const Professors: React.FC = () => {
 
   const handleToggleStatus = async (professor: Professor) => {
     try {
-      const newStatus = professor.status === 'active' ? 'inactive' : 'active';
+      // ✅ CORRECTION : utiliser ?. pour éviter le crash si professor est undefined
+      const newStatus = professor?.status === 'active' ? 'inactive' : 'active';
       await updateProfessor(professor.id, { status: newStatus });
       setAlert({ type: 'success', message: 'Statut mis à jour avec succès!' });
       setTimeout(() => setAlert(null), 5000);
@@ -163,77 +165,62 @@ const Professors: React.FC = () => {
     setIfuFile(null);
   };
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const errors: { rib?: string; ifu?: string } = {};
+    const errors: { rib?: string; ifu?: string } = {};
 
-  // ✅ Rendre la validation obligatoire (retirer le "&&")
-  if (!formData.rib_number) {
-    errors.rib = 'Le RIB est obligatoire';
-  } else if (!validateRIB(formData.rib_number)) {
-    errors.rib = 'Le RIB doit contenir entre 22 et 27 caractères alphanumériques';
-  }
+    if (!formData.rib_number) {
+      errors.rib = 'Le RIB est obligatoire';
+    } else if (!validateRIB(formData.rib_number)) {
+      errors.rib = 'Le RIB doit contenir entre 22 et 27 caractères alphanumériques';
+    }
 
-  if (!formData.ifu_number) {
-    errors.ifu = 'Le numéro IFU est obligatoire';
-  } else if (!validateIFU(formData.ifu_number)) {
-    errors.ifu = 'Le numéro IFU doit contenir exactement 13 chiffres';
-  }
+    if (!formData.ifu_number) {
+      errors.ifu = 'Le numéro IFU est obligatoire';
+    } else if (!validateIFU(formData.ifu_number)) {
+      errors.ifu = 'Le numéro IFU doit contenir exactement 13 chiffres';
+    }
 
-  if (Object.keys(errors).length > 0) {
-    setValidationErrors(errors);
-    return; // ✅ bloque l'envoi avant même d'appeler Laravel
-  }
-
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
 
     setValidationErrors({});
 
     try {
       const submitData = new FormData();
 
-// ✅ liste SANS status
-const fields = [
-  'first_name',
-  'last_name',
-  'email',
-  'phone',
-  'rib_number',
-  'ifu_number',
-  'bank',
-  'speciality',
-  'grade_id',
-  'bio',
-  'nationality',
-  'profession',
-  'city',
-  'district',
-  'plot_number',
-  'house_number'
-];
+      // ✅ CORRECTION : tous les champs texte incluant status
+      const fields: (keyof typeof formData)[] = [
+        'first_name',
+        'last_name',
+        'email',
+        'phone',
+        'rib_number',
+        'ifu_number',
+        'bank',
+        'speciality',
+        'grade_id',
+        'bio',
+        'nationality',
+        'profession',
+        'city',
+        'district',
+        'plot_number',
+        'house_number',
+        // ✅ CORRECTION : 'status' inclus directement dans la liste (plus de bloc séparé)
+        'status',
+      ];
 
-// ✅ envoyer seulement les champs remplis
-fields.forEach(field => {
-  const value = formData[field as keyof typeof formData];
+      // ✅ CORRECTION : envoyer TOUS les champs, même vides (pas de filtre sur value !== '')
+      fields.forEach(field => {
+        submitData.append(field, formData[field] ?? '');
+      });
 
-  if (value !== null && value !== undefined && value !== '') {
-    submitData.append(field, value.toString());
-  }
-});
-
-// ✅ AJOUTER statut ici (IMPORTANT)
-submitData.append(
-  'statut',
-  formData.status === 'active'
-    ? 'active'
-    : formData.status === 'inactive'
-    ? 'inactive'
-    : 'suspended'
-);
       if (ribFile) submitData.append('rib', ribFile);
       if (ifuFile) submitData.append('ifu', ifuFile);
-
-      console.log('Form Data:', Object.fromEntries(submitData.entries()));
 
       if (editingProfessor) {
         await updateProfessor(editingProfessor.id, submitData);
@@ -245,9 +232,6 @@ submitData.append(
       handleCloseModal();
       setTimeout(() => setAlert(null), 5000);
     } catch (error: any) {
-      console.log('FULL ERROR:', error);
-      console.log('LARAVEL ERRORS:', error.errors);
-      console.log('MESSAGE:', error.message);
       setAlert({
         type: 'danger',
         message: error.response?.data?.message || error.message || 'Une erreur est survenue'
@@ -347,6 +331,8 @@ submitData.append(
                     <CTableHeaderCell>IFU</CTableHeaderCell>
                     <CTableHeaderCell>Statut</CTableHeaderCell>
                     <CTableHeaderCell>Actions</CTableHeaderCell>
+
+
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
@@ -385,10 +371,11 @@ submitData.append(
                           ) : 'N/A'}
                         </CTableDataCell>
                         <CTableDataCell>
+                          {/* ✅ CORRECTION : utiliser ?. pour éviter le crash */}
                           <CFormSwitch
-                            checked={professor.status === 'active'}
+                            checked={professor?.status === 'active'}
                             onChange={() => handleToggleStatus(professor)}
-                            label={professor.status === 'active' ? 'Actif' : 'Inactif'}
+                            label={professor?.status === 'active' ? 'Actif' : 'Inactif'}
                           />
                         </CTableDataCell>
                         <CTableDataCell>
@@ -425,274 +412,274 @@ submitData.append(
         </CCol>
       </CRow>
 
-       <CModal size="lg" visible={showModal} onClose={handleCloseModal} backdrop="static">
-  <CModalHeader closeButton>
-    <CModalTitle>
-      {editingProfessor ? 'Modifier le professeur' : 'Nouveau Professeur'}
-    </CModalTitle>
-  </CModalHeader>
+      <CModal size="lg" visible={showModal} onClose={handleCloseModal} backdrop="static">
+        <CModalHeader closeButton>
+          <CModalTitle>
+            {editingProfessor ? 'Modifier le professeur' : 'Nouveau Professeur'}
+          </CModalTitle>
+        </CModalHeader>
 
-  {/* ✅ Key pour forcer reset du formulaire */}
-  <CForm key={editingProfessor?.id || 'new'} onSubmit={handleSubmit}>
-    <CModalBody>
-      <CRow>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="first_name">Prénom *</CFormLabel>
-            <CFormInput
-              id="first_name"
-              value={formData.first_name}
-              onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-              required
-            />
-          </div>
-        </CCol>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="last_name">Nom *</CFormLabel>
-            <CFormInput
-              id="last_name"
-              value={formData.last_name}
-              onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-              required
-            />
-          </div>
-        </CCol>
-      </CRow>
+        <CForm key={editingProfessor?.id || 'new'} onSubmit={handleSubmit}>
+          <CModalBody>
+            <CRow>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="first_name">Prénom *</CFormLabel>
+                  <CFormInput
+                    id="first_name"
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    required
+                  />
+                </div>
+              </CCol>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="last_name">Nom *</CFormLabel>
+                  <CFormInput
+                    id="last_name"
+                    value={formData.last_name}
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                    required
+                  />
+                </div>
+              </CCol>
+            </CRow>
 
-      <CRow>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="email">Email *</CFormLabel>
-            <CFormInput
-              type="email"
-              id="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
-          </div>
-        </CCol>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="phone">Téléphone</CFormLabel>
-            <CFormInput
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
-          </div>
-        </CCol>
-      </CRow>
+            <CRow>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="email">Email *</CFormLabel>
+                  <CFormInput
+                    type="email"
+                    id="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </CCol>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="phone">Téléphone</CFormLabel>
+                  <CFormInput
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                </div>
+              </CCol>
+            </CRow>
 
-      <CRow>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="grade_id">Grade</CFormLabel>
-            <CFormSelect
-              id="grade_id"
-              value={formData.grade_id}
-              onChange={(e) => setFormData({ ...formData, grade_id: e.target.value })}
-            >
-              <option value="">Sélectionner un grade</option>
-              {grades.map((grade) => (
-                <option key={grade.id} value={grade.id}>{grade.name}</option>
-              ))}
-            </CFormSelect>
-          </div>
-        </CCol>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="speciality">Spécialité</CFormLabel>
-            <CFormInput
-              id="speciality"
-              value={formData.speciality}
-              onChange={(e) => setFormData({ ...formData, speciality: e.target.value })}
-            />
-          </div>
-        </CCol>
-      </CRow>
+            <CRow>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="grade_id">Grade</CFormLabel>
+                  <CFormSelect
+                    id="grade_id"
+                    value={formData.grade_id}
+                    onChange={(e) => setFormData({ ...formData, grade_id: e.target.value })}
+                  >
+                    <option value="">Sélectionner un grade</option>
+                    {grades.map((grade) => (
+                      <option key={grade.id} value={grade.id}>{grade.name}</option>
+                    ))}
+                  </CFormSelect>
+                </div>
+              </CCol>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="speciality">Spécialité</CFormLabel>
+                  <CFormInput
+                    id="speciality"
+                    value={formData.speciality}
+                    onChange={(e) => setFormData({ ...formData, speciality: e.target.value })}
+                  />
+                </div>
+              </CCol>
+            </CRow>
 
-      <CRow>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="statut">Statut *</CFormLabel>
-            <CFormSelect
-              id="statut"
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              required
-            >
-              <option value="active">Actif</option>
-              <option value="inactive">Inactif</option>
-            </CFormSelect>
-          </div>
-        </CCol>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="bank">Banque</CFormLabel>
-            <CFormInput
-              id="bank"
-              value={formData.bank}
-              onChange={(e) => setFormData({ ...formData, bank: e.target.value })}
-              placeholder="Nom de la banque"
-            />
-          </div>
-        </CCol>
-      </CRow>
+            <CRow>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="status">Statut *</CFormLabel>
+                  <CFormSelect
+                    id="status"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    required
+                  >
+                    <option value="active">Actif</option>
+                    <option value="inactive">Inactif</option>
 
-      <CRow>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="rib_number">Numéro RIB</CFormLabel>
-            <CFormInput
-              id="rib_number"
-              value={formData.rib_number}
-              onChange={(e) => {
-                setFormData({ ...formData, rib_number: e.target.value });
-                if (validationErrors.rib) setValidationErrors({ ...validationErrors, rib: undefined });
-              }}
-              invalid={!!validationErrors.rib}
-            />
-            {validationErrors.rib && <CFormFeedback invalid>{validationErrors.rib}</CFormFeedback>}
-            <small className="text-muted d-block">22 à 27 caractères alphanumériques</small>
-          </div>
-        </CCol>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="rib_file">Document RIB</CFormLabel>
-            <CFormInput
-              type="file"
-              id="rib_file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => setRibFile(e.target.files?.[0] || null)}
-            />
-            <small className="text-muted">PDF, JPG ou PNG</small>
-          </div>
-        </CCol>
-      </CRow>
+                  </CFormSelect>
+                </div>
+              </CCol>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="bank">Banque</CFormLabel>
+                  <CFormInput
+                    id="bank"
+                    value={formData.bank}
+                    onChange={(e) => setFormData({ ...formData, bank: e.target.value })}
+                    placeholder="Nom de la banque"
+                  />
+                </div>
+              </CCol>
+            </CRow>
 
-      <CRow>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="ifu_number">Numéro IFU</CFormLabel>
-            <CFormInput
-              id="ifu_number"
-              value={formData.ifu_number}
-              onChange={(e) => {
-                setFormData({ ...formData, ifu_number: e.target.value });
-                if (validationErrors.ifu) setValidationErrors({ ...validationErrors, ifu: undefined });
-              }}
-              invalid={!!validationErrors.ifu}
-            />
-            {validationErrors.ifu && <CFormFeedback invalid>{validationErrors.ifu}</CFormFeedback>}
-            <small className="text-muted d-block">13 chiffres exactement</small>
-          </div>
-        </CCol>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="ifu_file">Document IFU</CFormLabel>
-            <CFormInput
-              type="file"
-              id="ifu_file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => setIfuFile(e.target.files?.[0] || null)}
-            />
-            <small className="text-muted">PDF, JPG ou PNG</small>
-          </div>
-        </CCol>
-      </CRow>
+            <CRow>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="rib_number">Numéro RIB</CFormLabel>
+                  <CFormInput
+                    id="rib_number"
+                    value={formData.rib_number}
+                    onChange={(e) => {
+                      setFormData({ ...formData, rib_number: e.target.value });
+                      if (validationErrors.rib) setValidationErrors({ ...validationErrors, rib: undefined });
+                    }}
+                    invalid={!!validationErrors.rib}
+                  />
+                  {validationErrors.rib && <CFormFeedback invalid>{validationErrors.rib}</CFormFeedback>}
+                  <small className="text-muted d-block">22 à 27 caractères alphanumériques</small>
+                </div>
+              </CCol>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="rib_file">Document RIB</CFormLabel>
+                  <CFormInput
+                    type="file"
+                    id="rib_file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setRibFile(e.target.files?.[0] || null)}
+                  />
+                  <small className="text-muted">PDF, JPG ou PNG</small>
+                </div>
+              </CCol>
+            </CRow>
 
-      <CRow>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="nationality">Nationalité</CFormLabel>
-            <CFormInput
-              id="nationality"
-              value={formData.nationality}
-              onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-            />
-          </div>
-        </CCol>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="profession">Profession</CFormLabel>
-            <CFormInput
-              id="profession"
-              value={formData.profession}
-              onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
-            />
-          </div>
-        </CCol>
-      </CRow>
+            <CRow>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="ifu_number">Numéro IFU</CFormLabel>
+                  <CFormInput
+                    id="ifu_number"
+                    value={formData.ifu_number}
+                    onChange={(e) => {
+                      setFormData({ ...formData, ifu_number: e.target.value });
+                      if (validationErrors.ifu) setValidationErrors({ ...validationErrors, ifu: undefined });
+                    }}
+                    invalid={!!validationErrors.ifu}
+                  />
+                  {validationErrors.ifu && <CFormFeedback invalid>{validationErrors.ifu}</CFormFeedback>}
+                  <small className="text-muted d-block">13 chiffres exactement</small>
+                </div>
+              </CCol>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="ifu_file">Document IFU</CFormLabel>
+                  <CFormInput
+                    type="file"
+                    id="ifu_file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setIfuFile(e.target.files?.[0] || null)}
+                  />
+                  <small className="text-muted">PDF, JPG ou PNG</small>
+                </div>
+              </CCol>
+            </CRow>
 
-      <CRow>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="city">Ville</CFormLabel>
-            <CFormInput
-              id="city"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            />
-          </div>
-        </CCol>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="district">District</CFormLabel>
-            <CFormInput
-              id="district"
-              value={formData.district}
-              onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-            />
-          </div>
-        </CCol>
-      </CRow>
+            <CRow>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="nationality">Nationalité</CFormLabel>
+                  <CFormInput
+                    id="nationality"
+                    value={formData.nationality}
+                    onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
+                  />
+                </div>
+              </CCol>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="profession">Profession</CFormLabel>
+                  <CFormInput
+                    id="profession"
+                    value={formData.profession}
+                    onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
+                  />
+                </div>
+              </CCol>
+            </CRow>
 
-      <CRow>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="plot_number">Numéro de parcelle</CFormLabel>
-            <CFormInput
-              id="plot_number"
-              value={formData.plot_number}
-              onChange={(e) => setFormData({ ...formData, plot_number: e.target.value })}
-            />
-          </div>
-        </CCol>
-        <CCol md={6}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="house_number">Numéro de maison</CFormLabel>
-            <CFormInput
-              id="house_number"
-              value={formData.house_number}
-              onChange={(e) => setFormData({ ...formData, house_number: e.target.value })}
-            />
-          </div>
-        </CCol>
-      </CRow>
+            <CRow>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="city">Ville</CFormLabel>
+                  <CFormInput
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  />
+                </div>
+              </CCol>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="district">District</CFormLabel>
+                  <CFormInput
+                    id="district"
+                    value={formData.district}
+                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                  />
+                </div>
+              </CCol>
+            </CRow>
 
-      <div className="mb-3">
-        <CFormLabel htmlFor="bio">Biographie</CFormLabel>
-        <CFormTextarea
-          id="bio"
-          rows={3}
-          value={formData.bio}
-          onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-        />
-      </div>
-    </CModalBody>
+            <CRow>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="plot_number">Numéro de parcelle</CFormLabel>
+                  <CFormInput
+                    id="plot_number"
+                    value={formData.plot_number}
+                    onChange={(e) => setFormData({ ...formData, plot_number: e.target.value })}
+                  />
+                </div>
+              </CCol>
+              <CCol md={6}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="house_number">Numéro de maison</CFormLabel>
+                  <CFormInput
+                    id="house_number"
+                    value={formData.house_number}
+                    onChange={(e) => setFormData({ ...formData, house_number: e.target.value })}
+                  />
+                </div>
+              </CCol>
+            </CRow>
 
-    <CModalFooter>
-      <CButton color="secondary" onClick={handleCloseModal}>
-        Annuler
-      </CButton>
-      <CButton color="primary" type="submit">
-        {editingProfessor ? 'Mettre à jour' : 'Créer'}
-      </CButton>
-    </CModalFooter>
-  </CForm>
-</CModal>
+            <div className="mb-3">
+              <CFormLabel htmlFor="bio">Biographie</CFormLabel>
+              <CFormTextarea
+                id="bio"
+                rows={3}
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+              />
+            </div>
+          </CModalBody>
+
+          <CModalFooter>
+            <CButton color="secondary" onClick={handleCloseModal}>
+              Annuler
+            </CButton>
+            <CButton color="primary" type="submit">
+              {editingProfessor ? 'Mettre à jour' : 'Créer'}
+            </CButton>
+          </CModalFooter>
+        </CForm>
+      </CModal>
 
       <CModal size="lg" visible={showDetailsModal} onClose={() => setShowDetailsModal(false)} backdrop="static">
         <CModalHeader closeButton>
@@ -727,8 +714,8 @@ submitData.append(
                   </div>
                   <div className="mb-3">
                     <strong className="text-muted d-block mb-1">Statut</strong>
-                    <CBadge color={selectedProfessor.status === 'active' ? 'success' : 'secondary'}>
-                      {selectedProfessor.status}
+                    <CBadge color={selectedProfessor?.status === 'active' ? 'success' : 'secondary'}>
+                      {selectedProfessor?.status || 'N/A'}
                     </CBadge>
                   </div>
                   <div className="mb-3">

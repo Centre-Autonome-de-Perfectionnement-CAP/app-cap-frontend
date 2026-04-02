@@ -45,15 +45,21 @@ class RhService {
   }
 
   updateProfessor = async (id: number | string, data: any): Promise<Professor> => {
-    if (data instanceof FormData) {
-      data.append('_method', 'PUT')
-      const response = await HttpService.post<ApiResponse<Professor>>(`rh/professors/${id}`, data)
-      return response.data!
-    }
-    const response = await HttpService.put<ApiResponse<Professor>>(`rh/professors/${id}`, data)
-    return response.data!
+  // Assure que tous les champs requis sont présents
+  const payload = {
+    full_name: data.full_name || '',
+    email: data.email || '',
+    cycle_id: data.cycle_id || null,
+    ...data
   }
 
+  if (data instanceof FormData) {
+    data.append('_method', 'PUT')
+    return (await HttpService.post(`rh/professors/${id}`, data)).data
+  }
+
+  return (await HttpService.put(`rh/professors/${id}`, payload)).data
+}
   deleteProfessor = async (id: number | string): Promise<void> => {
     await HttpService.delete(`rh/professors/${id}`)
   }
@@ -255,6 +261,12 @@ class RhService {
     return response.data || []
   }
 
+  // Dans rh.service.ts
+
+// Ajoutez cette méthode à la classe RhService
+sendTransferEmail = async (contratId: number | string): Promise<ApiResponse<{message: string}>> => {
+  return HttpService.post<ApiResponse<{message: string}>>(`rh/contrats/${contratId}/send-transfer-email`, {});
+}
   // ─── Cycles ──────────────────────────────────────────────────────────────────
 
   getCycles = async (): Promise<any[]> => {

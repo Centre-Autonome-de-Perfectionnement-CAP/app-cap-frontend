@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import rhService from '@/services/rh.service';
+import { getAssetUrl } from '@/utils/assets'; // adapte ce chemin si nécessaire
 import type {
   Contrat,
   AcademicYear,
@@ -11,7 +12,21 @@ import type {
 } from '@/types/rh.types';
 
 // ─── Types locaux ──────────────────────────────────────────────────────────────
-type Professor = { id: number; full_name: string };
+type Professor = {
+  id: number;
+  full_name: string;
+  nationality?: string;
+  profession?: string;
+  city?: string;
+  plot_number?: string;
+  house_number?: string;
+  ifu_number?: string;
+  rib_number?: string;
+  bank?: string;
+  district?: string;
+  email?: string;
+  phone?: string;
+};
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 interface Toast { id: number; type: ToastType; title: string; message?: string }
 
@@ -601,8 +616,7 @@ const ContratFormFields: React.FC<{
 
 // ─── PDF Print Modal ───────────────────────────────────────────────────────────
 const ContratPdfModal: React.FC<{ contrat: Contrat; onClose: () => void }> = ({ contrat, onClose }) => {
-  const prof       = contrat.professor;
-  const year       = (contrat as any).academicYear?.academic_year ?? '—';
+  const prof = contrat.professor as Professor | undefined;
   const cycle      = contrat.cycle?.name ?? '—';
   const reg        = contrat.regroupement === '1' ? 'I' : contrat.regroupement === '2' ? 'II' : '—';
   const division   = contrat.division ?? '—';
@@ -613,6 +627,14 @@ const ContratPdfModal: React.FC<{ contrat: Contrat; onClose: () => void }> = ({ 
     const ms = new Date(contrat.end_date.substring(0, 10)).getTime() - new Date(contrat.start_date.substring(0, 10)).getTime();
     return Math.max(1, Math.round(ms / 86400000));
   })();
+  const daysWord = (() => {
+    const n = typeof daysCount === 'number' ? daysCount : parseInt(String(daysCount));
+    if (isNaN(n)) return '…';
+    const words: Record<number, string> = { 1:'un', 2:'deux', 3:'trois', 4:'quatre', 5:'cinq', 6:'six', 7:'sept', 8:'huit', 9:'neuf', 10:'dix',
+      11:'onze', 12:'douze', 13:'treize', 14:'quatorze', 15:'quinze', 16:'seize', 17:'dix-sept', 18:'dix-huit', 19:'dix-neuf', 20:'vingt',
+      21:'vingt et un', 22:'vingt-deux', 25:'vingt-cinq', 30:'trente', 32:'trente-deux' };
+    return words[n] ?? String(n);
+  })();
 
   const handlePrint = () => {
     const content = printRef.current?.innerHTML ?? '';
@@ -622,28 +644,66 @@ const ContratPdfModal: React.FC<{ contrat: Contrat; onClose: () => void }> = ({ 
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <title>Contrat N° ${contrat.contrat_number}</title>
+  <title></title>
   <style>
-    @page { size: A4; margin: 2.2cm 2cm; }
-    * { box-sizing: border-box; }
-    body { font-family: 'Times New Roman', serif; font-size: 11pt; color: #000; line-height: 1.65; margin: 0; }
-    .header-band { background: #1a1a2e; color: #fff; padding: 14px 0 10px; text-align: center; margin-bottom: 28px; }
-    .header-band h1 { margin: 0; font-size: 13pt; letter-spacing: .06em; font-weight: 700; }
-    .header-band .sub { margin: 4px 0 0; font-size: 9.5pt; opacity: .8; }
-    .ref { text-align: center; font-size: 10.5pt; margin-bottom: 22px; font-style: italic; color: #333; }
-    .parties { margin-bottom: 18px; }
-    .art { margin-bottom: 14px; page-break-inside: avoid; }
-    .art-title { font-weight: bold; text-decoration: underline; margin-bottom: 6px; font-size: 11pt; }
-    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10pt; }
-    th, td { border: 1px solid #555; padding: 5px 8px; }
-    th { background: #e8e8e8; font-weight: bold; }
-    ul { margin: 6px 0; padding-left: 22px; }
-    li { margin-bottom: 3px; }
-    .sig-zone { display: flex; justify-content: space-between; margin-top: 50px; }
-    .sig-box { width: 42%; text-align: center; }
-    .sig-label { font-weight: bold; margin-bottom: 4px; font-size: 10.5pt; }
-    .sig-line { border-top: 1px solid #000; margin-top: 80px; padding-top: 5px; font-size: 10pt; }
-    p { margin: 4px 0 8px; }
+    @page {
+      size: A4;
+      margin: 1.8cm 2cm 2cm;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 10.5pt;
+      color: #000;
+      line-height: 1.55;
+      background: #fff;
+    }
+    /* ── En-tête ── */
+    .doc-header { display: flex; align-items: center; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #000; }
+    .doc-header-logo { width: 74px; flex-shrink: 0; }
+    .doc-header-logo img { width: 72px; height: 72px; object-fit: contain; display: block; }
+    .doc-header-text { flex: 1; text-align: center; }
+    .doc-header .inst-line { font-weight: bold; text-transform: uppercase; font-size: 10.5pt; line-height: 1.7; color: #000; }
+    .doc-header .inst-dots { color: #000; letter-spacing: 5px; font-size: 9.5pt; margin-top: 3px; }
+    /* ── Titre ── */
+    .doc-title { text-align: center; margin: 10px 0 4px; }
+    .doc-title .title-main { font-size: 12pt; font-weight: bold; text-transform: uppercase; color: #000; }
+    /* ── Référence ── */
+    .doc-ref { text-align: center; font-size: 10pt; font-style: italic; margin: 6px 0 16px; color: #000; }
+    /* ── Corps ── */
+    p { margin: 3px 0 7px; text-align: justify; }
+    .indent { padding-left: 18px; }
+    strong { font-weight: bold; }
+    em { font-style: italic; }
+    /* ── Articles ── */
+    .art { margin-bottom: 10px; page-break-inside: avoid; }
+    .art-title { font-weight: bold; text-decoration: underline; margin-bottom: 4px; font-size: 10.5pt; }
+    /* ── Tableau ── */
+    table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9.5pt; }
+    th { border: 1px solid #999; padding: 5px 6px; background: #efefef; color: #000; font-weight: bold; text-align: center; }
+    td { border: 1px solid #999; padding: 4px 6px; vertical-align: middle; }
+    tr:nth-child(even) td { background: #f8f8f8; }
+    /* ── Listes ── */
+    ul { margin: 4px 0 6px; padding-left: 22px; }
+    li { margin-bottom: 2px; }
+    /* ── Signatures ── */
+    .sig-row1 { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px; }
+    .sig-left { width: 40%; text-align: center; }
+    .sig-right { width: 34%; text-align: center; }
+    .sig-italic { font-style: italic; font-size: 10.5pt; margin: 0 0 48px; }
+    .sig-dotline { border-bottom: 1px dotted #555; width: 80%; margin: 0 auto 6px; }
+    .sig-name-bold { font-weight: bold; font-size: 10.5pt; margin: 0; }
+    .sig-name-underline { font-weight: bold; text-decoration: underline; font-size: 10.5pt; margin: 0 0 1px; }
+    .sig-cap-bold { font-weight: bold; font-size: 10.5pt; margin: 0 0 1px; }
+    .sig-sub-italic { font-style: italic; font-size: 10pt; margin: 0 0 48px; }
+    .sig-title-sm { font-size: 9.5pt; margin: 0; }
+    .sig-director { text-align: center; margin-top: 28px; width: 38%; margin-left: auto; margin-right: auto; }
+    .sig-dir-title { font-weight: bold; font-size: 10.5pt; margin: 0 0 48px; }
+    /* ── Note bas ── */
+    .footnote { font-size: 8pt; border-top: 1px solid #888; margin-top: 14px; padding-top: 3px; color: #333; }
+    @media print {
+      html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
   </style>
 </head>
 <body>${content}</body>
@@ -652,6 +712,54 @@ const ContratPdfModal: React.FC<{ contrat: Contrat; onClose: () => void }> = ({ 
     win.focus();
     setTimeout(() => win.print(), 400);
   };
+
+  /* ── Styles inline pour la prévisualisation ── */
+  const S = {
+    header: { textAlign: 'center' as const, marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #000' },
+    instLine: { fontWeight: 'bold', textTransform: 'uppercase' as const, fontSize: '11pt', lineHeight: 1.7, color: '#000' },
+    instDots: { color: '#000', letterSpacing: '5px', fontSize: '9.5pt', marginTop: 3 },
+    title: { textAlign: 'center' as const, margin: '10px 0 4px' },
+    titleMain: { fontSize: '12pt', fontWeight: 'bold', textTransform: 'uppercase' as const, color: '#000' },
+    ref: { textAlign: 'center' as const, fontSize: '10pt', fontStyle: 'italic' as const, margin: '6px 0 18px', color: '#000' },
+    artTitle: { fontWeight: 'bold', textDecoration: 'underline', marginBottom: 5, fontSize: '10.5pt' },
+    p: { margin: '3px 0 7px', textAlign: 'justify' as const },
+    pIndent: { margin: '3px 0 7px', textAlign: 'justify' as const, paddingLeft: 18 },
+    th: { border: '1px solid #999', padding: '5px 6px', background: '#efefef', color: '#000', fontWeight: 'bold', textAlign: 'center' as const },
+    td: { border: '1px solid #999', padding: '4px 6px', verticalAlign: 'middle' as const },
+  };
+
+
+  const EPAC_LOGO = 'data:image/jpeg;base64,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';
+  const CAP_LOGO  = getAssetUrl('images/cap-1.png');
+
+  const headerHtml = (
+    <div>
+      {/* En-tête avec logos gauche/droite et texte centré */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #000' }}>
+        {/* Logo EPAC — gauche */}
+        <div style={{ width: 70, flexShrink: 0 }}>
+          <img src={EPAC_LOGO} alt="EPAC" style={{ width: 72, height: 72, objectFit: 'contain', display: 'block' }} />
+        </div>
+        {/* Texte centré */}
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <div style={S.instLine}>UNIVERSITE D'ABOMEY-CALAVI</div>
+          <div style={S.instLine}>ECOLE POLYTECHNIQUE D'ABOMEY –CALAVI</div>
+          <div style={S.instLine}>CENTRE AUTONOME DE PERFECTIONNEMENT</div>
+          <div style={S.instDots}>………………………………</div>
+        </div>
+        {/* Logo CAP — droite */}
+        <div style={{ width: 70, flexShrink: 0, textAlign: 'right' }}>
+          <img src={CAP_LOGO} alt="CAP" style={{ width: 72, height: 72, objectFit: 'contain', display: 'block', marginLeft: 'auto' }} />
+        </div>
+      </div>
+      {/* Titre */}
+      <div style={S.title}>
+        <span style={S.titleMain}>
+          (Regroupement {reg} — Cycle : {cycle}) CONTRAT DE PRESTATION D'ENSEIGNEMENT
+        </span>
+      </div>
+    </div>
+  );
 
   return (
     <Modal
@@ -669,137 +777,216 @@ const ContratPdfModal: React.FC<{ contrat: Contrat; onClose: () => void }> = ({ 
       }
     >
       {/* Scrollable preview */}
-      <div style={{ background: '#f3f4f6', padding: '20px', borderRadius: 10, marginBottom: 4 }}>
-        <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,.09)', padding: '0', overflow: 'hidden' }}>
+      <div style={{ background: '#e8edf4', padding: '24px', borderRadius: 10, marginBottom: 4 }}>
+        <div style={{ background: '#fff', borderRadius: 6, boxShadow: '0 2px 24px rgba(26,58,92,.13)', padding: '32px 40px 36px', fontFamily: 'Times New Roman, serif', fontSize: '10.5pt', lineHeight: 1.55, color: '#1a1a1a', maxWidth: 760, margin: '0 auto' }}>
           <div ref={printRef}>
-            {/* Header band */}
-            <div style={{ background: '#1a1a2e', color: '#fff', padding: '18px 0 14px', textAlign: 'center', marginBottom: 28 }}>
-              <h1 style={{ margin: 0, fontSize: '14pt', letterSpacing: '.06em', fontWeight: 700, fontFamily: 'Georgia, serif' }}>
-                CONTRAT DE PRESTATION D'ENSEIGNEMENT
-              </h1>
-              <p style={{ margin: '4px 0 0', fontSize: '10pt', opacity: .8, fontFamily: 'Georgia, serif' }}>
-                Regroupement {reg} — Cycle : {cycle}
+            {headerHtml}
+
+            {/* Référence */}
+            <p style={S.ref}>
+              <strong>N° {contrat.contrat_number} /UAC/ EPAC/CAP/{division}/</strong> du {formatDate(contrat.start_date)}
+            </p>
+
+            {/* Parties */}
+            <p style={{ marginBottom: 10 }}><strong>Entre :</strong></p>
+            <p style={{ marginBottom: 10, textAlign: 'justify' }}>
+              Le Centre Autonome de Perfectionnement de l'École Polytechnique d'Abomey-Calavi de l'Université
+              d'Abomey-Calavi, Représenté par son Chef, Monsieur <strong>Fidèle Paul TCHOBO</strong>,
+              Tél : (229) 01 99 54 62 67, <strong>E-mail professionnel</strong> : <strong>contact@cap-epac.online</strong>,
+              ci-après dénommé <strong>CAP</strong> d'une part,
+            </p>
+            <p style={{ marginBottom: 10 }}><strong>Et</strong></p>
+            <p style={{ marginBottom: 4 }}><strong>Monsieur / Madame :</strong> <strong>{prof?.full_name ?? '…………………………………………………………………………………………'}</strong></p>
+            <p style={{ marginBottom: 4 }}><strong>Nationalité :</strong> <strong>{prof?.nationality ?? '…………………………………………'}</strong></p>
+            <p style={{ marginBottom: 4 }}><strong>Profession :</strong> <strong>{prof?.profession ?? '……………………………………………'}</strong></p>
+            <p style={{ marginBottom: 4 }}><strong>Domicilié(e) à :</strong> <strong>{prof?.city ?? '……………………………'}</strong> / Parcelle <strong>{prof?.plot_number ?? '………………………'}</strong>, Maison : <strong>{prof?.house_number ?? '………………………'}</strong></p>
+            <p style={{ marginBottom: 4 }}><strong>IFU :</strong> <strong>{prof?.ifu_number ?? '…………………………………………………'}</strong></p>
+            <p style={{ marginBottom: 4 }}><strong>RIB :</strong> N° <strong>[{prof?.rib_number ?? 'Code banque - Code guichet - Numéro de compte - Clé RIB'}]</strong> / <strong>Banque :</strong> <strong>{prof?.bank ?? '………………………'}</strong></p>
+            <p style={{ marginBottom: 4 }}><strong>Adresse :</strong> <strong>{[prof?.city, prof?.district].filter(Boolean).join(', ') || '………………………'}</strong> / <strong>Email :</strong> {prof?.email ?? '………………………………'} / <strong>Tél. :</strong> <strong>{prof?.phone ?? '…………………………………'}</strong></p>
+            <p style={{ marginBottom: 10 }}>ci-après dénommé « <strong>L'ENSEIGNANT PRESTATAIRE</strong> » d'autre part,</p>
+            <p style={{ marginBottom: 10, textAlign: 'justify' }}>
+              qui déclare être disponible pour fournir les prestations objet du présent contrat, ci-après dénommé<br/>
+              « <strong>PRESTATIONS D'ENSEIGNEMENT</strong> »,
+            </p>
+            <p style={{ marginBottom: 10, textAlign: 'justify' }}>
+              Considérant que le CAP est disposé à faciliter à l'enseignant prestataire l'exécution de ses prestations, conformément aux clauses et conditions du présent contrat ;
+            </p>
+            <p style={{ marginBottom: 16 }}>Les parties au présent contrat ont convenu de ce qui suit :</p>
+
+            {/* Art. 1 */}
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 5 }}>1. Objet du contrat</p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>Le présent contrat a pour objet la fourniture de prestations d'enseignement au CAP dans les conditions de délai, normes académiques et de qualité conformément aux clauses et conditions ci-après énoncées.</p>
+            </div>
+
+            {/* Art. 2 */}
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 5 }}>2. Nature des prestations</p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                Le Centre retient par la présente les prestations de l'enseignant pour l'exécution de <strong>{programmes.length > 0 ? `${daysWord.charAt(0).toUpperCase() + daysWord.slice(1)} (${daysCount})` : 'Trente-deux (32)'} heures</strong> d'enseignement des cours de :
+              </p>
+              {programmes.length > 0 ? (
+                <ul style={{ marginLeft: 20 }}>{programmes.map(p => (
+                  <li key={p.id}>
+                    <strong>({p.course_element?.code ?? '—'})</strong> : {p.course_element?.name ?? '—'}{p.class_group ? ` en ${p.class_group.name}` : ''}
+                  </li>
+                ))}</ul>
+              ) : (
+                <ul style={{ marginLeft: 20 }}>
+                  <li><strong>(Code ECU)</strong> : [Intitulé de l'ECU] en [Filière et année d'étude] et pendant [……] heures</li>
+                </ul>
+              )}
+              <p style={{ marginLeft: 20, fontStyle: 'italic' }}>
+                conformément aux exigences énumérées dans le cahier de charges joint au présent contrat.
               </p>
             </div>
 
-            <div style={{ padding: '0 32px 32px', fontFamily: 'Georgia, serif' }}>
-              {/* Ref */}
-              <p style={{ textAlign: 'center', fontSize: '10.5pt', marginBottom: 24, fontStyle: 'italic', color: '#444' }}>
-                N° <strong>{contrat.contrat_number}</strong> /UAC/EPAC/CAP/{division}/ du {formatDate(contrat.start_date)}
+            {/* Art. 3 */}
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 5 }}>3. Date de démarrage et calendrier</p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                La durée de la prestation est de <strong>{daysCount} ({daysWord}.) jours</strong> ouvrables à partir de : <strong>{formatDate(contrat.start_date)}</strong>
               </p>
+              <table style={{ marginLeft: 0, marginTop: 8, fontSize: '10pt' }}>
+                <thead>
+                  <tr>
+                    <th style={{ border: '1px solid #999', padding: '5px 6px', background: '#efefef', color: '#000', fontWeight: 'bold', textAlign: 'center' }}>Département</th>
+                    <th style={{ border: '1px solid #999', padding: '5px 6px', background: '#efefef', color: '#000', fontWeight: 'bold', textAlign: 'center' }}>Année d'étude</th>
+                    <th style={{ border: '1px solid #999', padding: '5px 6px', background: '#efefef', color: '#000', fontWeight: 'bold', textAlign: 'center' }}>ECUE<sup>1</sup></th>
+                    <th style={{ border: '1px solid #999', padding: '5px 6px', background: '#efefef', color: '#000', fontWeight: 'bold', textAlign: 'center' }}>Nbre d'heures</th>
+                    <th style={{ border: '1px solid #999', padding: '5px 6px', background: '#efefef', color: '#000', fontWeight: 'bold', textAlign: 'center' }}>Date de démarrage</th>
+                    <th style={{ border: '1px solid #999', padding: '5px 6px', background: '#efefef', color: '#000', fontWeight: 'bold', textAlign: 'center' }}>Date de fin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {programmes.length > 0 ? programmes.map((p, i) => (
+                    <tr key={p.id}>
+                      <td style={{ ...S.td, ...(i % 2 === 1 ? { background: '#f8f8f8' } : {}) }}>{p.course_element?.teaching_unit?.name ?? '—'}</td>
+                      <td style={{ ...S.td, ...(i % 2 === 1 ? { background: '#f8f8f8' } : {}) }}>{p.class_group?.name ?? '—'}</td>
+                      <td style={{ ...S.td, ...(i % 2 === 1 ? { background: '#f8f8f8' } : {}) }}>{p.course_element?.name ?? '—'}</td>
+                      <td style={{ ...S.td, textAlign: 'center', ...(i % 2 === 1 ? { background: '#f8f8f8' } : {}) }}>—</td>
+                      <td style={{ ...S.td, ...(i % 2 === 1 ? { background: '#f8f8f8' } : {}) }}>{formatDate(contrat.start_date)}</td>
+                      <td style={{ ...S.td, ...(i % 2 === 1 ? { background: '#f8f8f8' } : {}) }}>{formatDate(contrat.end_date)}</td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td style={S.td}>………………</td>
+                      <td style={S.td}>………</td>
+                      <td style={S.td}>………………………</td>
+                      <td style={{ ...S.td, textAlign: 'center' }}>…</td>
+                      <td style={S.td}>JJ/MM/20..</td>
+                      <td style={S.td}>JJ/MM/20..</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-              {/* Parties */}
-              <p style={{ marginBottom: 12 }}><strong>Entre :</strong></p>
-              <p style={{ marginBottom: 12 }}>
-                Le Centre Autonome de Perfectionnement de l'École Polytechnique d'Abomey-Calavi de l'Université d'Abomey-Calavi,
-                Représenté par son Chef, Monsieur <strong>Fidèle Paul TCHOBO</strong>,
-                Tél : (229) 01 99 54 62 67, E-mail : contact@cap-epac.online,
-                ci-après dénommé <em>CAP</em> d'une part,
+            {/* Art. 4 */}
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 5 }}>4- Temps de présence</p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                Dans l'exécution du présent contrat, « L'ENSEIGNANT PRESTATAIRE », <strong>{prof?.full_name ?? '[Nom de l\'Enseignant ici]'}</strong> assurera également la surveillance des évaluations. En outre, il surveillera les travaux de recherche des apprenants dans les conditions prévues par les textes du CAP.
               </p>
-              <p><strong>Et</strong></p>
-              <p style={{ marginBottom: 4 }}><strong>Monsieur / Madame :</strong> {prof?.full_name ?? '…'}</p>
-              <p style={{ marginBottom: 4 }}><strong>Nationalité :</strong> {(contrat as any).professor?.nationality ?? '………………'}</p>
-              <p style={{ marginBottom: 4 }}><strong>Profession :</strong> {(contrat as any).professor?.profession ?? '………………'}</p>
-              <p style={{ marginBottom: 4 }}><strong>Domicilié(e) à :</strong> {(contrat as any).professor?.city ?? '………'} / Parcelle {(contrat as any).professor?.plot_number ?? '…'}, Maison {(contrat as any).professor?.house_number ?? '…'}</p>
-              <p style={{ marginBottom: 4 }}><strong>IFU :</strong> {(contrat as any).professor?.ifu_number ?? '………………………'}</p>
-              <p style={{ marginBottom: 4 }}><strong>RIB :</strong> N° {(contrat as any).professor?.rib_number ?? '…'} / Banque : {(contrat as any).professor?.bank ?? '…'}</p>
-              <p style={{ marginBottom: 4 }}><strong>Tél. :</strong> {(contrat as any).professor?.phone ?? '……………'} &nbsp; <strong>Email :</strong> {(contrat as any).professor?.email ?? '……………'}</p>
-              <p style={{ marginBottom: 18 }}>ci-après dénommé « <strong>L'ENSEIGNANT PRESTATAIRE</strong> » d'autre part.</p>
-              <p style={{ marginBottom: 18 }}>Les parties au présent contrat ont convenu de ce qui suit :</p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                Conformément à l'arrêté N°0388/MESRS/DC/SGM/DPAF/DGES/CJ/SA/05 du 03/08/2022, au CAP, les charges horaires des prestataires d'enseignement, sont fixées comme suit :
+              </p>
+              <ul style={{ marginLeft: 20 }}>
+                <li>une heure (01) de Cours Théorique équivaut à une heure et demie (1h30) de travaux dirigés ;</li>
+                <li>une heure (01) de Cours Théorique équivaut à deux (02) heures de travaux Pratiques ;</li>
+                <li>une heure (01) de Cours Théorique équivaut à cinq (05) heures d'ateliers / sorties pédagogiques / Stage</li>
+              </ul>
+            </div>
 
-              {/* Art. 1 */}
-              <div style={{ marginBottom: 14 }}>
-                <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 6 }}>1. Objet du contrat</p>
-                <p>Le présent contrat a pour objet la fourniture de prestations d'enseignement au CAP dans les conditions de délai, normes académiques et de qualité conformément aux clauses et conditions ci-après énoncées.</p>
-              </div>
+            {/* Art. 5 */}
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 5 }}>5- Termes de paiement et prélèvements</p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                Les honoraires pour les prestations d'enseignement sont de <strong>{formatAmount(contrat.amount)}</strong> brut par heure exécutée conformément aux exigences du CAP.
+              </p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                Les paiements sont effectués en Francs CFA à la fin des prestations (dépôt de sujet, corrigé type et copies corrigées) dûment constatées par une attestation de service fait, par virement bancaire après le prélèvement de l'AIB.
+              </p>
+            </div>
 
-              {/* Art. 2 */}
-              <div style={{ marginBottom: 14 }}>
-                <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 6 }}>2. Nature des prestations</p>
-                <p>Le Centre retient par la présente les prestations de l'enseignant pour l'exécution des cours de :</p>
-                {programmes.length > 0 ? (
-                  <ul>{programmes.map(p => (
-                    <li key={p.id}><strong>({p.course_element?.code ?? '—'})</strong> : {p.course_element?.name ?? '—'}{p.class_group ? ` en ${p.class_group.name}` : ''}</li>
-                  ))}</ul>
-                ) : <p style={{ color: '#666', fontStyle: 'italic' }}>Aucun programme sélectionné.</p>}
-                <p>conformément aux exigences énumérées dans le cahier des charges joint au présent contrat.</p>
-              </div>
+            {/* Art. 6 */}
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 5 }}>6. Normes de Performance</p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                L'enseignant prestataire s'engage à fournir les prestations conformément aux normes professionnelles, d'éthique et déontologiques, de compétence et d'intégrité les plus exigeantes. Il est systématiquement mis fin au présent contrat en cas de défaillance du prestataire constatée et motivée par écrit au CAP.
+              </p>
+            </div>
 
-              {/* Art. 3 */}
-              <div style={{ marginBottom: 14 }}>
-                <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 6 }}>3. Date de démarrage et calendrier</p>
-                <p>La durée de la prestation est de <strong>{daysCount}</strong> jours ouvrables à partir du <strong>{formatDate(contrat.start_date)}</strong>.</p>
-                {programmes.length > 0 && (
-                  <table>
-                    <thead><tr><th>ECUE (Code)</th><th>Intitulé</th><th>UE</th><th>Date début</th><th>Date fin</th></tr></thead>
-                    <tbody>{programmes.map(p => (
-                      <tr key={p.id}>
-                        <td>{p.course_element?.code ?? '—'}</td>
-                        <td>{p.course_element?.name ?? '—'}</td>
-                        <td>{p.course_element?.teaching_unit?.name ?? '—'}</td>
-                        <td>{formatDate(contrat.start_date)}</td>
-                        <td>{formatDate(contrat.end_date)}</td>
-                      </tr>
-                    ))}</tbody>
-                  </table>
-                )}
-              </div>
+            {/* Art. 7 */}
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 5 }}>7. Droit de propriété, de devoir de réserve et de non-concurrence</p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                Pendant la durée d'exécution du présent contrat et les cinq années suivant son expiration, l'enseignant prestataire ne divulguera aucune information exclusive ou confidentielle concernant la prestation, le présent contrat, les affaires ou les documents du CAP sans avoir obtenu au préalable l'autorisation écrite de l'Unité de formation et de recherche concernée.
+              </p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                Tous les rapports ou autres documents, que l'enseignant prestataire préparera pour le compte du CAP dans le cadre du présent contrat deviendront et demeureront la propriété du CAP.
+              </p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                Ne sont pas pris en compte les cours et autres documents préparés par l'enseignant pour l'exécution de ses prestations.
+              </p>
+            </div>
 
-              {/* Art. 4 */}
-              <div style={{ marginBottom: 14 }}>
-                <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 6 }}>4. Temps de présence</p>
-                <p>Dans l'exécution du présent contrat, « L'ENSEIGNANT PRESTATAIRE », <strong>{prof?.full_name ?? '…'}</strong>, assurera également la surveillance des évaluations. En outre, il surveillera les travaux de recherche des apprenants dans les conditions prévues par les textes du CAP.</p>
-                <p>Conformément à l'arrêté N°0388/MESRS/DC/SGM/DPAF/DGES/CJ/SA/05 du 03/08/2022, les charges horaires sont fixées comme suit :</p>
-                <ul>
-                  <li>1h de Cours Théorique = 1h30 de Travaux Dirigés</li>
-                  <li>1h de Cours Théorique = 2h de Travaux Pratiques</li>
-                  <li>1h de Cours Théorique = 5h d'ateliers / sorties pédagogiques / Stage</li>
-                </ul>
-              </div>
+            {/* Art. 8 */}
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 5 }}>8. Règlement des litiges</p>
+              <p style={{ marginLeft: 20, textAlign: 'justify' }}>
+                Pour tout ce qui n'est pas prévu au présent contrat, les parties se référeront aux lois béninoises en la matière. Tout litige survenu lors de l'exécution du présent contrat sera soumis aux juridictions compétentes, s'il n'est pas réglé à l'amiable ou par tout autre mode de règlement agréé par les deux parties.
+              </p>
+            </div>
 
-              {/* Art. 5 */}
-              <div style={{ marginBottom: 14 }}>
-                <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 6 }}>5. Termes de paiement et prélèvements</p>
-                <p>Le montant total des honoraires pour les prestations d'enseignement est de <strong>{formatAmount(contrat.amount)}</strong> brut, conformément aux exigences du CAP.</p>
-                <p>Les paiements sont effectués en Francs CFA à la fin des prestations (dépôt de sujet, corrigé type et copies corrigées) dûment constatées par une attestation de service fait, par virement bancaire après prélèvement de l'AIB.</p>
-              </div>
+            <p style={{ ...S.p, marginBottom: 24 }}>
+              Fait en Trois (03) copies originales à l'Université d'Abomey-Calavi, le <strong>{formatDate(contrat.start_date)}</strong>
+            </p>
 
-              {/* Art. 6 */}
-              <div style={{ marginBottom: 14 }}>
-                <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 6 }}>6. Normes de Performance</p>
-                <p>L'enseignant prestataire s'engage à fournir les prestations conformément aux normes professionnelles, d'éthique et déontologiques les plus exigeantes. Il est systématiquement mis fin au présent contrat en cas de défaillance du prestataire constatée et motivée par écrit au CAP.</p>
-              </div>
+            {/* ── Signatures — disposition exacte du document Word ── */}
+            {/*
+              Word layout (page ~595pt wide, margins ~27pt left, ~27pt right):
+              Shape 0  left=27pt  w=240pt  → Enseignant label    (gauche)
+              Shape 1  left=370pt w=205pt  → Pour le CAP + Chef + Fidèle  (droite)
+              Shape 2  left=218pt w=225pt  → Le Directeur + Guy Alain     (centre)
+              Shape 3  left=27pt  w=240pt  → ligne pointillée + nom        (sous enseignant)
+            */}
+            <div style={{ position: 'relative', marginTop: 20 }}>
 
-              {/* Art. 7 */}
-              <div style={{ marginBottom: 14 }}>
-                <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 6 }}>7. Droit de propriété et devoir de réserve</p>
-                <p>Pendant la durée d'exécution du présent contrat et les cinq années suivant son expiration, l'enseignant prestataire ne divulguera aucune information exclusive ou confidentielle concernant le présent contrat, les affaires ou les documents du CAP sans autorisation écrite préalable.</p>
-              </div>
+              {/* Rangée 1 : Enseignant (gauche) + Pour le CAP (droite) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 
-              {/* Art. 8 */}
-              <div style={{ marginBottom: 28 }}>
-                <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: 6 }}>8. Règlement des litiges</p>
-                <p>Tout différend relatif à l'interprétation ou à l'exécution du présent contrat sera réglé à l'amiable entre les parties. À défaut de règlement amiable, le différend sera soumis à la juridiction compétente du Bénin.</p>
-                <p>Fait à Abomey-Calavi le <strong>{formatDate(contrat.start_date)}</strong>, en deux (2) exemplaires originaux.</p>
-              </div>
-
-              {/* Signatures */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 48 }}>
-                <div style={{ width: '42%', textAlign: 'center' }}>
-                  <p style={{ fontWeight: 'bold', marginBottom: 4 }}>Pour le CAP</p>
-                  <p style={{ fontSize: '10pt', color: '#555', marginBottom: 4 }}>Le Chef du CAP</p>
-                  <div style={{ borderTop: '1.5px solid #000', marginTop: 80, paddingTop: 5, fontSize: '10pt' }}>
-                    Fidèle Paul TCHOBO
-                  </div>
+                {/* GAUCHE : L'enseignant prestataire */}
+                <div style={{ width: '40%', textAlign: 'center' }}>
+                  <p style={{ fontStyle: 'italic', fontSize: '10.5pt', margin: '0 0 48px' }}>L'enseignant (e) prestataire,</p>
+                  {/* Ligne pointillée de signature */}
+                  <div style={{ borderBottom: '1px dotted #555', width: '80%', margin: '0 auto 6px' }} />
+                  <p style={{ fontWeight: 'bold', fontSize: '10.5pt', margin: 0 }}>{prof?.full_name ?? '……………………………'}</p>
                 </div>
-                <div style={{ width: '42%', textAlign: 'center' }}>
-                  <p style={{ fontWeight: 'bold', marginBottom: 4 }}>L'Enseignant Prestataire</p>
-                  <p style={{ fontSize: '10pt', color: '#555', marginBottom: 4 }}>Lu et approuvé</p>
-                  <div style={{ borderTop: '1.5px solid #000', marginTop: 80, paddingTop: 5, fontSize: '10pt' }}>
-                    {prof?.full_name ?? '……………………………'}
-                  </div>
+
+                {/* DROITE : Pour le CAP, Le Chef, Fidèle Paul TCHOBO */}
+                <div style={{ width: '34%', textAlign: 'center' }}>
+                  <p style={{ fontWeight: 'bold', fontSize: '10.5pt', margin: '0 0 1px' }}>Pour le CAP,</p>
+                  <p style={{ fontStyle: 'italic', fontSize: '10pt', margin: '0 0 48px' }}>Le Chef,</p>
+                  <p style={{ fontWeight: 'bold', textDecoration: 'underline', fontSize: '10.5pt', margin: '0 0 1px' }}>Fidèle Paul TCHOBO</p>
+                  <p style={{ fontSize: '9.5pt', margin: 0 }}>Professeur Titulaire de Chimie Alimentaire</p>
+                  <p style={{ fontSize: '9.5pt', margin: 0 }}><u>et</u> Chimie Analytique</p>
                 </div>
               </div>
+
+              {/* Rangée 2 : Le Directeur — centré entre les deux colonnes */}
+              <div style={{ textAlign: 'center', marginTop: 28, width: '38%', marginLeft: 'auto', marginRight: 'auto' }}>
+                <p style={{ fontWeight: 'bold', fontSize: '10.5pt', margin: '0 0 48px' }}>Le Directeur</p>
+                <p style={{ fontWeight: 'bold', textDecoration: 'underline', fontSize: '10.5pt', margin: '0 0 1px' }}>Guy Alain ALITONOU</p>
+                <p style={{ fontSize: '9.5pt', margin: 0 }}>Professeur Titulaire de Chimie organique</p>
+                <p style={{ fontSize: '9.5pt', margin: 0 }}>et chimie des substances naturelles</p>
+              </div>
+
+            </div>
+
+            {/* Note de bas de page */}
+            <div style={{ borderTop: '1px solid #555', marginTop: 16, paddingTop: 4, fontSize: '8.5pt', fontFamily: 'Times New Roman, serif' }}>
+              <sup>1</sup> ECUE : Élément Constitutif de l'Unité d'Enseignement
             </div>
           </div>
         </div>
@@ -819,6 +1006,35 @@ const Contrats: React.FC = () => {
   const [showCreate, setShowCreate]         = useState(false);
   const [editingContrat, setEditingContrat] = useState<Contrat | null>(null);
   const [pdfContrat, setPdfContrat]         = useState<Contrat | null>(null);
+  const [pdfLoading, setPdfLoading]         = useState<number | null>(null); // id du contrat en chargement
+
+  // Ouvre le PDF en rechargeant le contrat complet depuis l'API (pour avoir tous les champs du professeur)
+  const openPdf = useCallback((c: Contrat) => {
+    setPdfLoading(c.id);
+
+    // Récupère le token Sanctum depuis le localStorage (clé standard de l'app)
+    const token = localStorage.getItem('token')
+      ?? localStorage.getItem('auth_token')
+      ?? localStorage.getItem('sanctum_token')
+      ?? '';
+
+    const fetchFn: Promise<any> = typeof (rhService as any).getContrat === 'function'
+      ? (rhService as any).getContrat(c.id)
+      : fetch(`/api/rh/contrats/${c.id}`, {
+          headers: {
+            'Accept': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
+        }).then(r => r.json());
+
+    fetchFn
+      .then((r: any) => {
+        const fresh = r.data ?? r ?? c;
+        setPdfContrat(fresh);
+      })
+      .catch(() => setPdfContrat(c))  // fallback sur l'objet en mémoire
+      .finally(() => setPdfLoading(null));
+  }, []);
 
   // Confirm modals
   const [deleteConfirm, setDeleteConfirm] = useState<Contrat | null>(null);
@@ -951,31 +1167,40 @@ const Contrats: React.FC = () => {
 
   // ── Transfer ──────────────────────────────────────────────────────────────
   // Sets status to 'transfered' then triggers email notification via backend
-  const handleTransferConfirm = async () => {
-    const c = transferConfirm;
-    if (!c) return;
-    setTransferLoading(true);
-    try {
-      await rhService.updateContrat(c.id, {
-        division:                     c.division ?? null,
-        professor_id:                 c.professor_id,
-        academic_year_id:             c.academic_year_id,
-        cycle_id:                     c.cycle_id ?? null,
-        regroupement:                 c.regroupement ?? null,
-        start_date:                   c.start_date?.substring(0, 10) ?? '',
-        end_date:                     c.end_date?.substring(0, 10) ?? null,
-        amount:                       Number(c.amount),
-        notes:                        c.notes ?? null,
-        status:                       'transfered' as ContratStatus,
-        course_element_professor_ids: (c.course_element_professors ?? []).map(p => p.id),
-      });
-      addToast('success', 'Contrat transféré', `Un e-mail de notification a été envoyé à ${c.professor?.full_name ?? "l'enseignant"}.`);
-      setTransferConfirm(null);
-      reload();
-    } catch (err: any) {
-      addToast('error', 'Erreur de transfert', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
-    } finally { setTransferLoading(false); }
-  };
+  // Dans Contrats.tsx
+
+const handleTransferConfirm = async () => {
+  const c = transferConfirm;
+  if (!c) return;
+  setTransferLoading(true);
+  try {
+    // D'abord mettre à jour le statut
+    await rhService.updateContrat(c.id, {
+      division:                     c.division ?? null,
+      professor_id:                 c.professor_id,
+      academic_year_id:             c.academic_year_id,
+      cycle_id:                     c.cycle_id ?? null,
+      regroupement:                 c.regroupement ?? null,
+      start_date:                   c.start_date?.substring(0, 10) ?? '',
+      end_date:                     c.end_date?.substring(0, 10) ?? null,
+      amount:                       Number(c.amount),
+      notes:                        c.notes ?? null,
+      status:                       'transfered' as ContratStatus,
+      course_element_professor_ids: (c.course_element_professors ?? []).map(p => p.id),
+    });
+    
+    // Ensuite envoyer l'email
+    await rhService.sendTransferEmail(c.id);
+    
+    addToast('success', 'Contrat transféré', `Un e-mail de notification a été envoyé à ${c.professor?.full_name ?? "l'enseignant"}.`);
+    setTransferConfirm(null);
+    reload();
+  } catch (err: any) {
+    addToast('error', 'Erreur de transfert', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
+  } finally { 
+    setTransferLoading(false); 
+  }
+};
 
   const COLS = ['N° Contrat', 'Division', 'Cycle', 'Regroupement', 'Professeur', 'Année', 'Programmes', 'Début', 'Fin', 'Montant', 'Statut', 'Actions'];
 
@@ -1088,8 +1313,17 @@ const Contrats: React.FC = () => {
                       <td>
                         <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
                           {/* Voir PDF */}
-                          <button className="ctr-btn-icon" title="Aperçu du contrat" onClick={() => setPdfContrat(c)}>
-                            <Icon.FileText />
+                          <button
+                            className="ctr-btn-icon"
+                            title="Aperçu du contrat"
+                            onClick={() => openPdf(c)}
+                            disabled={pdfLoading === c.id}
+                            style={pdfLoading === c.id ? { opacity: 0.6 } : {}}
+                          >
+                            {pdfLoading === c.id
+                              ? <span style={{ fontSize: 11, fontFamily: 'monospace' }}>…</span>
+                              : <Icon.FileText />
+                            }
                           </button>
                           {/* Transférer */}
                           <button

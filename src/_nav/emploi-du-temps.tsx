@@ -6,6 +6,7 @@ import {
   cilList,
   cilBuilding,
   cilRoom,
+  cilNotes,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -31,6 +32,12 @@ const emploiNavigation = [
     name: 'Cours Planifiés',
     to: '/emploi-du-temps/scheduled-courses',
     icon: <CIcon icon={cilList} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Emploi du Temps',
+    to: '/emploi-du-temps/gestion',
+    icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
   },
   {
     component: CNavTitle,

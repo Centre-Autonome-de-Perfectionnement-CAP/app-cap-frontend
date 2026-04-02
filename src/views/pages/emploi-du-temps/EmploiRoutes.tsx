@@ -2,22 +2,31 @@ import { Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { LoadingSpinner } from '@/components'
 
-import { Dashboard, Calendar, Buildings, Rooms, TimeSlots, ScheduledCourses } from './index'
+import {
+  Dashboard,
+  Calendar,
+  Buildings,
+  Rooms,
+  TimeSlots,
+  ScheduledCourses,
+  GestionEmploiDuTemps,
+} from './index'
 
 const EmploiRoutes = () => {
   return (
     <Suspense fallback={<LoadingSpinner fullPage message="Chargement du module Emploi du Temps..." />}>
       <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path="/buildings" element={<Buildings />} />
-        <Route path="/rooms" element={<Rooms />} />
-        <Route path="/time-slots" element={<TimeSlots />} />
-        <Route path="/scheduled-courses" element={<ScheduledCourses />} />
-        {/* Rediriger vers le dashboard par défaut */}
-        <Route path="/" element={<Navigate to="/emploi-du-temps/dashboard" replace />} />
-        {/* Route 404 pour les sous-routes invalides */}
-        <Route path="*" element={<Navigate to="/404" replace />} />
+        <Route path="/dashboard"          element={<Dashboard />} />
+        <Route path="/calendar"           element={<Calendar />} />
+        <Route path="/buildings"          element={<Buildings />} />
+        <Route path="/rooms"              element={<Rooms />} />
+        <Route path="/time-slots"         element={<TimeSlots />} />
+        <Route path="/scheduled-courses"  element={<ScheduledCourses />} />
+        {/* ── Nouvelle page : gestion complète des emplois du temps ── */}
+        <Route path="/gestion"            element={<GestionEmploiDuTemps />} />
+        {/* Redirection par défaut */}
+        <Route path="/"  element={<Navigate to="/emploi-du-temps/dashboard" replace />} />
+        <Route path="*"  element={<Navigate to="/404" replace />} />
       </Routes>
     </Suspense>
   )

@@ -65,7 +65,13 @@ export interface RhStats {
 
 // ─── Contrat ──────────────────────────────────────────────────────────────────
 
-export type ContratStatus = 'pending' | 'signed' | 'ongoing' | 'completed' | 'cancelled'
+export type ContratStatus =
+  | 'pending'
+  | 'signed'
+  | 'ongoing'
+  | 'completed'
+  | 'cancelled'
+  | 'transfered'
 
 /**
  * Un programme = assignation Professeur + Matière (ECUE) + Classe
@@ -74,7 +80,7 @@ export type ContratStatus = 'pending' | 'signed' | 'ongoing' | 'completed' | 'ca
 export interface ProfessorProgram {
   id: number
   is_primary: boolean
-  label: string         // label pré-calculé par le backend : "CODE — Matière — Classe"
+  label: string
   course_element: {
     id: number
     name: string
@@ -105,12 +111,35 @@ export interface Contrat {
   amount: number
   status: ContratStatus
   notes?: string
+
+  /** Validé par le professeur via le lien email */
   is_validated?: boolean
   validation_date?: string
-  professor?: { id: number; full_name: string }
+
+  /** Motif de rejet saisi par le professeur */
+  rejection_reason?: string
+
+  /** Autorisé par l'admin après validation du professeur */
+  is_authorized?: boolean
+  authorization_date?: string
+
+  professor?: {
+    id: number
+    full_name: string
+    nationality?: string
+    profession?: string
+    city?: string
+    district?: string
+    plot_number?: string
+    house_number?: string
+    ifu_number?: string
+    rib_number?: string
+    bank?: string
+    email?: string
+    phone?: string
+  }
   academicYear?: { id: number; academic_year: string }
   cycle?: { id: number; name: string }
-  /** Programmes (Matière + Classe) liés à ce contrat */
   course_element_professors?: ProfessorProgram[]
   created_at?: string
   updated_at?: string

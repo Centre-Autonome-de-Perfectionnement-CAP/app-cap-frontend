@@ -45,29 +45,25 @@ class RhService {
   }
 
   updateProfessor = async (id: number | string, data: any): Promise<Professor> => {
-  // Assure que tous les champs requis sont présents
-  const payload = {
-    full_name: data.full_name || '',
-    email: data.email || '',
-    cycle_id: data.cycle_id || null,
-    ...data
+    const payload = {
+      full_name: data.full_name || '',
+      email: data.email || '',
+      cycle_id: data.cycle_id || null,
+      ...data,
+    }
+
+    if (data instanceof FormData) {
+      data.append('_method', 'PUT')
+      return (await HttpService.post(`rh/professors/${id}`, data)).data
+    }
+
+    return (await HttpService.put(`rh/professors/${id}`, payload)).data
   }
 
-  if (data instanceof FormData) {
-    data.append('_method', 'PUT')
-    return (await HttpService.post(`rh/professors/${id}`, data)).data
-  }
-
-  return (await HttpService.put(`rh/professors/${id}`, payload)).data
-}
   deleteProfessor = async (id: number | string): Promise<void> => {
     await HttpService.delete(`rh/professors/${id}`)
   }
 
-  /**
-   * Retourne les programmes (Matière + Classe) assignés à un professeur.
-   * Utilisé pour peupler le select "Programmes" dans le formulaire de contrat.
-   */
   getProfessorPrograms = async (professorId: number | string): Promise<ProfessorProgram[]> => {
     const response = await HttpService.get<ApiResponse<ProfessorProgram[]>>(
       `rh/professors/${professorId}/programs`
@@ -235,8 +231,23 @@ class RhService {
     return HttpService.get<ApiResponse<Contrat[]>>('rh/contrats')
   }
 
+  /**
+   * Contrats du professeur connecté (espace professeur)
+   */
+  getMyContrats = async (): Promise<ApiResponse<Contrat[]>> => {
+    return HttpService.get<ApiResponse<Contrat[]>>('rh/professor/my-contrats')
+  }
+
   getContrat = async (id: number | string): Promise<Contrat> => {
     const response = await HttpService.get<ApiResponse<Contrat>>(`rh/contrats/${id}`)
+    return response.data!
+  }
+
+  /**
+   * Récupère un contrat par son token UUID (lien email, sans authentification admin)
+   */
+  getContratByToken = async (token: string): Promise<Contrat> => {
+    const response = await HttpService.get<ApiResponse<Contrat>>(`rh/contrats/by-token/${token}`)
     return response.data!
   }
 
@@ -250,8 +261,23 @@ class RhService {
     return response.data!
   }
 
+  /**
+   * Autorisation du contrat par l'admin (après validation du professeur)
+   */
+  authorizeContrat = async (id: number | string): Promise<Contrat> => {
+    const response = await HttpService.post<ApiResponse<Contrat>>(`rh/contrats/${id}/authorize`, {})
+    return response.data!
+  }
+
   deleteContrat = async (id: number | string): Promise<void> => {
     await HttpService.delete(`rh/contrats/${id}`)
+  }
+
+  sendTransferEmail = async (contratId: number | string): Promise<ApiResponse<{ message: string }>> => {
+    return HttpService.post<ApiResponse<{ message: string }>>(
+      `rh/contrats/${contratId}/send-transfer-email`,
+      {}
+    )
   }
 
   // ─── Academic Years ──────────────────────────────────────────────────────────
@@ -261,12 +287,6 @@ class RhService {
     return response.data || []
   }
 
-  // Dans rh.service.ts
-
-// Ajoutez cette méthode à la classe RhService
-sendTransferEmail = async (contratId: number | string): Promise<ApiResponse<{message: string}>> => {
-  return HttpService.post<ApiResponse<{message: string}>>(`rh/contrats/${contratId}/send-transfer-email`, {});
-}
   // ─── Cycles ──────────────────────────────────────────────────────────────────
 
   getCycles = async (): Promise<any[]> => {

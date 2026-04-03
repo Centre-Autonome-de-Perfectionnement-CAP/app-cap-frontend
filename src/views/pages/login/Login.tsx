@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   CButton,
   CCard,
@@ -23,26 +24,29 @@ import { getAssetUrl } from '@/utils/assets'
 
 const Login = () => {
   const { login } = useAuth()
+  const navigate  = useNavigate()
+  const location  = useLocation()
+
+  // Récupère l'URL vers laquelle rediriger après connexion (passée par ProfessorRoute)
+  const redirectAfterLogin =
+    (location.state as any)?.redirectAfterLogin ?? null
 
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
   })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading]               = useState(false)
+  const [error, setError]                   = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState({
     email: '',
     password: '',
   })
 
   const validateForm = (): boolean => {
-    const errors = {
-      email: '',
-      password: '',
-    }
+    const errors = { email: '', password: '' }
 
     if (!credentials.email.trim()) {
-      errors.email = 'L\'email est requis'
+      errors.email = "L'email est requis"
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email)) {
       errors.email = 'Email invalide'
     }
@@ -60,15 +64,13 @@ const Login = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     setLoading(true)
-
     try {
       const response = await AuthService.login(credentials)
       const { access_token, user } = response.data!
+
       login(
         access_token,
         user.last_name || user.name || '',
@@ -76,48 +78,44 @@ const Login = () => {
         user.role as any
       )
 
-    }
-      catch (err: any) {
-  console.error('Erreur de connexion:', err)
+      // Redirection : vers la page d'origine si elle existe, sinon vers le dashboard du rôle
+      if (redirectAfterLogin) {
+        navigate(redirectAfterLogin, { replace: true })
+      } else {
+        // Redirection par défaut selon le rôle
+        const defaultRoutes: Record<string, string> = {
+          professeur:  '/professor/dashboard',
+          admin:       '/dashboard',
+          responsable: '/responsable/dashboard',
+        }
+        navigate(defaultRoutes[user.role] ?? '/dashboard', { replace: true })
+      }
+    } catch (err: any) {
+      const status  = err?.status
+      const message = err?.message
 
-  // L'erreur vient de HttpService sous forme d'ApiError
-  // donc err.status et err.message sont directement disponibles
-  const status = err?.status
-  const message = err?.message
-
-  if (status === 401) {
-    setError('Email ou mot de passe incorrect')
-  } else if (status === 422) {
-    setError('Données de connexion invalides')
-  } else if (status === 500) {
-    setError('Erreur serveur. Veuillez réessayer plus tard.')
-  } else if (message) {
-    setError(message)
-  } else {
-    setError('Une erreur est survenue lors de la connexion. Veuillez réessayer.')
-  }
-}
-  finally {
+      if (status === 401) {
+        setError('Email ou mot de passe incorrect')
+      } else if (status === 422) {
+        setError('Données de connexion invalides')
+      } else if (status === 500) {
+        setError('Erreur serveur. Veuillez réessayer plus tard.')
+      } else if (message) {
+        setError(message)
+      } else {
+        setError('Une erreur est survenue lors de la connexion. Veuillez réessayer.')
+      }
+    } finally {
       setLoading(false)
     }
   }
 
   const handleInputChange = (field: keyof LoginCredentials, value: string) => {
-    setCredentials(prev => ({
-      ...prev,
-      [field]: value,
-    }))
-
+    setCredentials((prev) => ({ ...prev, [field]: value }))
     if (validationErrors[field]) {
-      setValidationErrors(prev => ({
-        ...prev,
-        [field]: '',
-      }))
+      setValidationErrors((prev) => ({ ...prev, [field]: '' }))
     }
-
-    if (error) {
-      setError(null)
-    }
+    if (error) setError(null)
   }
 
   return (
@@ -131,6 +129,13 @@ const Login = () => {
                   <CForm onSubmit={handleSubmit}>
                     <h1>Se Connecter</h1>
                     <p className="text-body-secondary mb-4">Connectez-vous à votre compte</p>
+
+                    {/* Message informatif si redirection depuis un lien contrat */}
+                    {redirectAfterLogin && redirectAfterLogin.includes('/professor/contrats/') && (
+                      <CAlert color="info" className="mb-3" style={{ fontSize: 13 }}>
+                        Veuillez vous connecter pour accéder à votre contrat.
+                      </CAlert>
+                    )}
 
                     {error && (
                       <CAlert color="danger" dismissible onClose={() => setError(null)}>
@@ -192,9 +197,6 @@ const Login = () => {
                           )}
                         </CButton>
                       </CCol>
-                      <CCol xs={6} className="text-end">
-                        {/* Future: Mot de passe oublié */}
-                      </CCol>
                     </CRow>
                   </CForm>
                 </CCardBody>
@@ -208,9 +210,7 @@ const Login = () => {
                       style={{ maxWidth: '150px', marginBottom: '20px' }}
                     />
                     <h5>Centre Autonome de Perfectionnement</h5>
-                    <p className="mt-3">
-                      École Polytechnique d'Abomey-Calavi
-                    </p>
+                    <p className="mt-3">École Polytechnique d'Abomey-Calavi</p>
                   </div>
                 </CCardBody>
               </CCard>

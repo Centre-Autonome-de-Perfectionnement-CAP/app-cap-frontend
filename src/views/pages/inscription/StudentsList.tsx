@@ -6,6 +6,7 @@ import {
   StudentDetailsModal,
   StudentEditModal,
   GroupCreationModal,
+  WhatsAppBroadcastModal,
 } from '../../../components/inscription'
 import { LoadingSpinner, Pagination } from '../../../components/common'
 import { useDebounce } from '../../../hooks/common'
@@ -47,6 +48,7 @@ const StudentsList = () => {
 
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
   const [hasExistingGroups, setHasExistingGroups] = useState(false)
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false)
   const debouncedSearchQuery = useDebounce(localSearchQuery, 300)
 
   const detailsModal = useStudentDetails({
@@ -307,6 +309,15 @@ const StudentsList = () => {
         <CCardHeader className="d-flex justify-content-between align-items-center">
           <span className="fw-bold">Liste des Étudiants</span>
           <div>
+            <CButton
+              color="success"
+              variant="outline"
+              size="sm"
+              className="me-2"
+              onClick={() => setShowWhatsAppModal(true)}
+            >
+              📱 Envoyer un message
+            </CButton>
             {!hasExistingGroups && (
               <>
                 <CButton
@@ -403,6 +414,10 @@ const StudentsList = () => {
         onSelectLast={groupCreation.selectLast}
         onSelectOneInTwo={groupCreation.selectOneInTwo}
         onValidateGroup={groupCreation.validateGroup}
+      />
+      <WhatsAppBroadcastModal
+        visible={showWhatsAppModal}
+        onClose={() => setShowWhatsAppModal(false)}
       />
     </>
   )

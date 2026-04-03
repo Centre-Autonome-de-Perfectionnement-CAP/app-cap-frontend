@@ -38,6 +38,7 @@ const InformationsManagement: React.FC = () => {
     link: '',
     file_id: null as number | null,
     file: null as File | null,
+    files: [] as File[], // Nouveau: pour plusieurs fichiers
     is_active: true,
     order: 0,
   })
@@ -414,6 +415,7 @@ const InformationsManagement: React.FC = () => {
       link: '',
       file_id: null,
       file: null,
+      files: [],
       is_active: true,
       order: 0,
     })
@@ -430,6 +432,7 @@ const InformationsManagement: React.FC = () => {
       link: info.link || '',
       file_id: info.file_id || null,
       file: null,
+      files: [],
       is_active: info.is_active ?? true,
       order: info.order ?? 0,
     })
@@ -548,13 +551,13 @@ const InformationsManagement: React.FC = () => {
             </CRow>
             <CRow className="mb-3">
               <CCol>
-                <CFormLabel>Document PDF</CFormLabel>
+                <CFormLabel>Documents PDF</CFormLabel>
                 <small className="text-muted d-block mb-2">
-                  Vous pouvez soit uploader un nouveau fichier PDF, soit sélectionner un document existant
+                  Vous pouvez soit uploader un nouveau fichier PDF, soit sélectionner un document existant, ou uploader plusieurs fichiers
                 </small>
                 
                 <div className="mb-3">
-                  <CFormLabel className="fw-semibold">Option 1: Uploader un nouveau PDF</CFormLabel>
+                  <CFormLabel className="fw-semibold">Option 1: Uploader un nouveau PDF (fichier principal)</CFormLabel>
                   <CFormInput 
                     type="file" 
                     accept=".pdf"
@@ -572,7 +575,7 @@ const InformationsManagement: React.FC = () => {
 
                 <div className="text-center my-2 text-muted">OU</div>
 
-                <div>
+                <div className="mb-3">
                   <CFormLabel className="fw-semibold">Option 2: Sélectionner un document existant</CFormLabel>
                   <CFormSelect 
                     value={formData.file_id || ''} 
@@ -588,6 +591,31 @@ const InformationsManagement: React.FC = () => {
                     <small className="text-muted d-block mt-1">
                       Désactivé car un nouveau fichier est sélectionné
                     </small>
+                  )}
+                </div>
+
+                <div className="border-top pt-3 mt-3">
+                  <CFormLabel className="fw-semibold">Option 3: Uploader plusieurs fichiers additionnels</CFormLabel>
+                  <CFormInput 
+                    type="file" 
+                    accept=".pdf"
+                    multiple
+                    onChange={e => {
+                      const files = Array.from((e.target as HTMLInputElement).files || [])
+                      setFormData({...formData, files})
+                    }}
+                  />
+                  {formData.files.length > 0 && (
+                    <div className="mt-2">
+                      <small className="text-success d-block mb-1">
+                        {formData.files.length} fichier(s) sélectionné(s):
+                      </small>
+                      <ul className="small mb-0">
+                        {formData.files.map((file, index) => (
+                          <li key={index}>{file.name}</li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
               </CCol>

@@ -158,11 +158,16 @@ class RhService {
   }
 
   createImportantInformation = async (data: any): Promise<any> => {
-    // Si data contient un fichier, on envoie en FormData
-    if (data.file) {
+    // Si data contient un fichier ou plusieurs fichiers, on envoie en FormData
+    if (data.file || (data.files && data.files.length > 0)) {
       const formData = new FormData()
       Object.entries(data).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
+        if (key === 'files' && Array.isArray(value)) {
+          // Ajouter plusieurs fichiers
+          value.forEach((file: File) => {
+            formData.append('files[]', file)
+          })
+        } else if (value !== null && value !== undefined) {
           formData.append(key, value as string | Blob)
         }
       })
@@ -178,11 +183,16 @@ class RhService {
   }
 
   updateImportantInformation = async (id: number, data: any): Promise<any> => {
-    // Si data contient un fichier, on envoie en FormData
-    if (data.file) {
+    // Si data contient un fichier ou plusieurs fichiers, on envoie en FormData
+    if (data.file || (data.files && data.files.length > 0)) {
       const formData = new FormData()
       Object.entries(data).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
+        if (key === 'files' && Array.isArray(value)) {
+          // Ajouter plusieurs fichiers
+          value.forEach((file: File) => {
+            formData.append('files[]', file)
+          })
+        } else if (value !== null && value !== undefined) {
           formData.append(key, value as string | Blob)
         }
       })
@@ -230,6 +240,21 @@ class RhService {
   getBroadcastStatus = async (broadcastId: string): Promise<any> => {
     const response = await HttpService.get<ApiResponse<any>>(`rh/broadcast-status/${broadcastId}`)
     return response.data!
+  }
+
+  // Groupes WhatsApp
+  getWhatsAppGroups = async (): Promise<any[]> => {
+    const response = await HttpService.get<ApiResponse<any[]>>('rh/whatsapp-groups')
+    return response.data || []
+  }
+
+  updateWhatsAppGroup = async (departmentId: number, data: { whatsapp_link: string | null }): Promise<any> => {
+    const response = await HttpService.put<ApiResponse<any>>(`rh/whatsapp-groups/${departmentId}`, data)
+    return response.data!
+  }
+
+  deleteWhatsAppGroup = async (departmentId: number): Promise<void> => {
+    await HttpService.delete(`rh/whatsapp-groups/${departmentId}`)
   }
 }
 

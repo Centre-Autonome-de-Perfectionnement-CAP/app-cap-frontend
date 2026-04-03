@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { LoadingSpinner } from '@/components'
-import { Dashboard, Professors, AdminUsers, Signataires, ContentManagement } from './index'
+import { Dashboard, Professors, AdminUsers, Signataires, ContentManagement, WhatsAppGroups } from './index'
 
 const RhRoutes = () => {
   return (
@@ -12,6 +12,7 @@ const RhRoutes = () => {
         <Route path="/admin-users" element={<AdminUsers />} />
         <Route path="/signataires" element={<Signataires />} />
         <Route path="/content" element={<ContentManagement />} />
+        <Route path="/whatsapp-groups" element={<WhatsAppGroups />} />
         <Route path="/" element={<Navigate to="/rh/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>

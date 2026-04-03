@@ -4,6 +4,7 @@ import {
   cilUser,
   cilPeople,
   cilFile,
+  cilCommentSquare,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -41,6 +42,12 @@ const rhNavigation = [
     name: 'Gestion de Contenu',
     to: '/rh/content',
     icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Groupes WhatsApp',
+    to: '/rh/whatsapp-groups',
+    icon: <CIcon icon={cilCommentSquare} customClassName="nav-icon" />,
   },
 ]
 

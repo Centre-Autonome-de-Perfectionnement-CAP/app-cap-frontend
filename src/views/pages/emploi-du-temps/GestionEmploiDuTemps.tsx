@@ -13,9 +13,11 @@ import CIcon from '@coreui/icons-react'
 import {
   cilPlus, cilPencil, cilTrash, cilBan, cilSearch, cilFilter,
   cilReload, cilWarning, cilCalendar, cilClock, cilBuilding,
-  cilRoom, cilUser, cilBook, cilChevronBottom, cilChevronTop, cilX,
+  cilRoom, cilUser, cilBook, cilChevronBottom, cilChevronTop, cilX,cilCloudDownload,
 } from '@coreui/icons'
 import axios from 'axios'
+
+import DownloadEdtModal from './DownloadEdtModal'
 
 // ─── Intercepteur Bearer ──────────────────────────────────────────────────────
 axios.interceptors.request.use(
@@ -153,6 +155,8 @@ const GestionEmploiDuTemps: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteTarget, setDeleteTarget]       = useState<EmploiDuTemps | null>(null)
   const [deleteLoading, setDeleteLoading]     = useState(false)
+
+  const [showDownloadModal, setShowDownloadModal] = useState(false)
 
   // ─── Dérivés ─────────────────────────────────────────────────────────────
 
@@ -447,6 +451,10 @@ const GestionEmploiDuTemps: React.FC = () => {
             <small className="text-medium-emphasis">{total} entrée(s)</small>
           </div>
           <div className="d-flex gap-2 flex-wrap">
+            <CButton color="success" size="sm" onClick={() => setShowDownloadModal(true)} title="Télécharger l'emploi du temps en PDF">
+              <CIcon icon={cilCloudDownload} className="me-1" />
+              Télécharger PDF
+            </CButton>
             <CButton color="secondary" variant="outline" size="sm" onClick={() => setShowFilters(v => !v)}>
               <CIcon icon={cilFilter} className="me-1" />Filtres
               {activeFilterCount > 0 && <CBadge color="danger" shape="rounded-pill" className="ms-1">{activeFilterCount}</CBadge>}
@@ -1016,6 +1024,10 @@ const GestionEmploiDuTemps: React.FC = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+      <DownloadEdtModal
+        visible={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+      />
     </>
   )
 }

@@ -22,7 +22,6 @@ const rolePermissions = {
   'chef-division': {
   },
   'comptable': {
-    attestation: false,
     bibliotheque: false,
     cahier: false,
     cours: false,
@@ -31,6 +30,28 @@ const rolePermissions = {
     notes: false,
     presence: false,
     soutenance: false
+  },
+  'directeur-adjoint': {
+    bibliotheque: false,
+    cahier: false,
+    cours: false,
+    emploi: false,
+    inscription: false,
+    notes: false,
+    presence: false,
+    soutenance: false,
+    finance: false
+  },
+  'directeur': {
+    bibliotheque: false,
+    cahier: false,
+    cours: false,
+    emploi: false,
+    inscription: false,
+    notes: false,
+    presence: false,
+    soutenance: false,
+    finance: false
   },
   'professeur': {
     attestation: false,
@@ -41,7 +62,8 @@ const rolePermissions = {
     inscription: false,
     presence: false,
     soutenance: false,
-    finance: false
+    finance: false,
+    demandes: false,
   }
 };
 

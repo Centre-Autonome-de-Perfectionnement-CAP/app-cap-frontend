@@ -563,6 +563,18 @@ class InscriptionService {
       study_level: studyLevel,
     })
   }
+
+  /**
+   * Envoie une invitation WhatsApp aux étudiants d'une filière
+   */
+  sendWhatsAppInvitation = async (data: {
+    department_id: number
+    message: string
+    cohort?: string
+  }): Promise<any> => {
+    const response = await HttpService.post('inscription/broadcast/whatsapp-invitation', data)
+    return response.data
+  }
 }
 
 export default new InscriptionService()

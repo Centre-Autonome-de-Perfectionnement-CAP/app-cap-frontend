@@ -84,6 +84,7 @@ const PendingStudentsTable: React.FC<PendingStudentsTableProps> = ({
           {/* Headers */}
           <CTableHeaderCell>N°</CTableHeaderCell>
           <CTableHeaderCell>Nom et Prénoms</CTableHeaderCell>
+          <CTableHeaderCell>Contact Téléphonique</CTableHeaderCell>
           <CTableHeaderCell>Niveau</CTableHeaderCell>
           <CTableHeaderCell>Pièces</CTableHeaderCell>
           <CTableHeaderCell>

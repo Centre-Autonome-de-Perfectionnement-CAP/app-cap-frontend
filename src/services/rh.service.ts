@@ -158,11 +158,16 @@ class RhService {
   }
 
   createImportantInformation = async (data: any): Promise<any> => {
-    // Si data contient un fichier, on envoie en FormData
-    if (data.file) {
+    // Si data contient un fichier ou plusieurs fichiers, on envoie en FormData
+    if (data.file || (data.files && data.files.length > 0)) {
       const formData = new FormData()
       Object.entries(data).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
+        if (key === 'files' && Array.isArray(value)) {
+          // Ajouter plusieurs fichiers
+          value.forEach((file: File) => {
+            formData.append('files[]', file)
+          })
+        } else if (value !== null && value !== undefined) {
           formData.append(key, value as string | Blob)
         }
       })
@@ -178,11 +183,16 @@ class RhService {
   }
 
   updateImportantInformation = async (id: number, data: any): Promise<any> => {
-    // Si data contient un fichier, on envoie en FormData
-    if (data.file) {
+    // Si data contient un fichier ou plusieurs fichiers, on envoie en FormData
+    if (data.file || (data.files && data.files.length > 0)) {
       const formData = new FormData()
       Object.entries(data).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
+        if (key === 'files' && Array.isArray(value)) {
+          // Ajouter plusieurs fichiers
+          value.forEach((file: File) => {
+            formData.append('files[]', file)
+          })
+        } else if (value !== null && value !== undefined) {
           formData.append(key, value as string | Blob)
         }
       })
@@ -206,6 +216,45 @@ class RhService {
   // Télécharger un fichier PDF en blob
   downloadImportantInformationFile = async (fileId: number): Promise<{success: true, url: string, filename?: string}> => {
     return await HttpService.downloadFile(`rh/files/${fileId}`)
+  }
+
+  // Télécharger un document
+  downloadDocument = async (documentId: number): Promise<string> => {
+    const result = await HttpService.downloadFile(`rh/files/${documentId}?download=1`)
+    return result.url
+  }
+
+  // Diffuser une information importante par email
+  broadcastImportantInformation = async (id: number, data: {
+    cycle_id: number
+    department_ids: number[]
+    levels: string[]
+    all_departments: boolean
+    all_levels: boolean
+  }): Promise<any> => {
+    const response = await HttpService.post<ApiResponse<any>>(`rh/important-informations/${id}/broadcast`, data)
+    return response.data!
+  }
+
+  // Récupérer le statut d'un broadcast
+  getBroadcastStatus = async (broadcastId: string): Promise<any> => {
+    const response = await HttpService.get<ApiResponse<any>>(`rh/broadcast-status/${broadcastId}`)
+    return response.data!
+  }
+
+  // Groupes WhatsApp
+  getWhatsAppGroups = async (): Promise<any[]> => {
+    const response = await HttpService.get<ApiResponse<any[]>>('rh/whatsapp-groups')
+    return response.data || []
+  }
+
+  updateWhatsAppGroup = async (departmentId: number, data: { whatsapp_link: string | null }): Promise<any> => {
+    const response = await HttpService.put<ApiResponse<any>>(`rh/whatsapp-groups/${departmentId}`, data)
+    return response.data!
+  }
+
+  deleteWhatsAppGroup = async (departmentId: number): Promise<void> => {
+    await HttpService.delete(`rh/whatsapp-groups/${departmentId}`)
   }
 }
 

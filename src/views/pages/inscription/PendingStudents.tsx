@@ -5,6 +5,7 @@ import {
   PendingStudentsTable,
   PendingStudentsToolbar,
   StudentsFilter,
+  ValidatedStudentsModal,
 } from '../../../components/inscription'
 import { Pagination, LoadingSpinner } from '../../../components/common'
 import usePendingStudentsData from '../../../hooks/inscription/usePendingSudentsData'
@@ -57,6 +58,7 @@ const PendingStudents: React.FC = () => {
   const [editedData, setEditedData] = useState<PendingStudentData[]>(pendingStudents)
   const [localSearchQuery, setLocalSearchQuery] = useState<string>(searchQuery)
   const [selectedStudents, setSelectedStudents] = useState<number[]>([])
+  const [showValidatedStudentsModal, setShowValidatedStudentsModal] = useState(false)
 
   const debouncedSearchQuery = useDebounce(localSearchQuery, 300)
 
@@ -315,6 +317,16 @@ const PendingStudents: React.FC = () => {
           })
           return
         }
+      } else if (format.startsWith('validated-students-')) {
+        // Pour l'export des étudiants validés par type, seule l'année académique est nécessaire
+        if (selectedYear === 'all') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Sélection requise',
+            text: "Veuillez sélectionner une année académique avant d'exporter les étudiants validés.",
+          })
+          return
+        }
       } else {
         // Pour les autres exports, année et filière sont obligatoires, cohorte optionnelle
         if (selectedYear === 'all' || selectedFiliere === 'all') {
@@ -349,10 +361,14 @@ const PendingStudents: React.FC = () => {
         document.body.removeChild(link)
         window.URL.revokeObjectURL(result.url)
         
+        const successMessage = format.startsWith('validated-students-') 
+          ? 'Export des étudiants validés réussi.'
+          : `Exportation en ${format} réussie.`
+        
         Swal.fire({
           icon: 'success',
           title: 'Succès',
-          text: `Exportation en ${format} réussie.`,
+          text: successMessage,
           timer: 1500,
           showConfirmButton: false,
         })
@@ -365,6 +381,13 @@ const PendingStudents: React.FC = () => {
       }
     },
     [selectedYear, selectedFiliere, selectedCohort, exportData]
+  )
+
+  const handleValidatedStudentsExport = useCallback(
+    async (type: string): Promise<void> => {
+      await handleExport(`validated-students-${type}`)
+    },
+    [handleExport]
   )
 
   return (
@@ -394,6 +417,7 @@ const PendingStudents: React.FC = () => {
           isSpecialFiliere={isSpecialFiliere}
           onSendMail={handleSendMail}
           onExport={handleExport}
+          onShowValidatedStudentsModal={() => setShowValidatedStudentsModal(true)}
         />
         {loading ? (
           <LoadingSpinner message="Chargement des étudiants..." />
@@ -424,6 +448,12 @@ const PendingStudents: React.FC = () => {
           </>
         )}
       </CCardBody>
+
+      <ValidatedStudentsModal
+        visible={showValidatedStudentsModal}
+        onClose={() => setShowValidatedStudentsModal(false)}
+        onExport={handleValidatedStudentsExport}
+      />
     </CCard>
   )
 }

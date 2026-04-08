@@ -192,7 +192,7 @@ export const CAHIER_ROUTES = {
   BASE: 'cahier-texte',
   LIST: 'cahier-texte',
   DETAIL: (id: number | string) => `cahier-texte/${id}`,
-  BY_CLASSE: (classeId: number | string) => `cahier-texte/classe/${classeId}`,
+  BY_CLASSE: (classeId: number | string) => `cahier-texte/class-group/${classeId}`,
   BY_MATIERE: (matiereId: number | string) => `cahier-texte/matiere/${matiereId}`,
 } as const;
 

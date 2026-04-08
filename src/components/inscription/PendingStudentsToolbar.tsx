@@ -6,6 +6,7 @@ interface PendingStudentsToolbarProps {
   isSpecialFiliere: boolean
   onSendMail: (type: string) => void
   onExport: (format: string) => void
+  onShowValidatedStudentsModal: () => void
 }
 
 /**
@@ -16,6 +17,7 @@ const PendingStudentsToolbar: React.FC<PendingStudentsToolbarProps> = ({
   isSpecialFiliere,
   onSendMail,
   onExport,
+  onShowValidatedStudentsModal,
 }) => {
   return (
     <div className="mb-3 d-flex justify-content-between align-items-center">
@@ -52,9 +54,18 @@ const PendingStudentsToolbar: React.FC<PendingStudentsToolbarProps> = ({
           color="success"
           variant="outline"
           size="sm"
+          className="me-2"
           onClick={() => onExport('emails')}
         >
           Exporter Emails
+        </CButton>
+        <CButton
+          color="warning"
+          variant="outline"
+          size="sm"
+          onClick={onShowValidatedStudentsModal}
+        >
+          Étudiants Validés
         </CButton>
       </div>
 

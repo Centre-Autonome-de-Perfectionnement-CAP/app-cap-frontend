@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   CCard,
   CCardBody,
@@ -18,12 +19,14 @@ import {
   CPagination,
   CPaginationItem,
 } from '@coreui/react'
-import { cilPlus, cilPencil, cilTrash, cilCheckAlt } from '@coreui/icons'
+import { cilPlus, cilPencil, cilTrash, cilCheckAlt, cilEye } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import CahierService from '@/services/cahier.service'
 import type { TextbookEntry, TextbookEntryStatus } from '@/types/cahier-texte.types'
+import Swal from 'sweetalert2'
 
 const TextbookList = () => {
+  const navigate = useNavigate()
   const [entries, setEntries] = useState<TextbookEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
@@ -64,12 +67,32 @@ const TextbookList = () => {
   }
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
+    const confirm = await Swal.fire({
+      icon: 'warning',
+      title: 'Supprimer cette entrée ?',
+      text: 'Cette action est irréversible',
+      showCancelButton: true,
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: '#d33',
+    })
+
+    if (confirm.isConfirmed) {
       try {
         await CahierService.deleteEntry(id)
+        Swal.fire({
+          icon: 'success',
+          title: 'Supprimé',
+          text: 'L\'entrée a été supprimée',
+          timer: 2000,
+        })
         loadEntries()
       } catch (error) {
-        console.error('Erreur suppression:', error)
+        Swal.fire({
+          icon: 'error',
+          title: 'Erreur',
+          text: 'Erreur lors de la suppression',
+        })
       }
     }
   }
@@ -77,9 +100,19 @@ const TextbookList = () => {
   const handlePublish = async (id: number) => {
     try {
       await CahierService.publishEntry(id)
+      Swal.fire({
+        icon: 'success',
+        title: 'Publié',
+        text: 'L\'entrée a été publiée',
+        timer: 2000,
+      })
       loadEntries()
     } catch (error) {
-      console.error('Erreur publication:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: 'Erreur lors de la publication',
+      })
     }
   }
 
@@ -89,7 +122,7 @@ const TextbookList = () => {
         <CCard className="mb-4">
           <CCardHeader className="d-flex justify-content-between align-items-center">
             <strong>Liste des entrées du cahier de texte</strong>
-            <CButton color="primary" size="sm">
+            <CButton color="primary" size="sm" onClick={() => navigate('/cahier-texte/new')}>
               <CIcon icon={cilPlus} className="me-2" />
               Nouvelle entrée
             </CButton>
@@ -136,7 +169,9 @@ const TextbookList = () => {
                   <CTableBody>
                     {entries.map((entry) => (
                       <CTableRow key={entry.id}>
-                        <CTableDataCell>{entry.session_date}</CTableDataCell>
+                        <CTableDataCell>
+                          {new Date(entry.session_date).toLocaleDateString('fr-FR')}
+                        </CTableDataCell>
                         <CTableDataCell>{entry.session_title}</CTableDataCell>
                         <CTableDataCell>
                           {entry.course_element?.name || '-'}
@@ -151,7 +186,17 @@ const TextbookList = () => {
                             color="info"
                             size="sm"
                             className="me-2"
+                            title="Voir"
+                            onClick={() => navigate(`/cahier-texte/detail/${entry.id}`)}
+                          >
+                            <CIcon icon={cilEye} />
+                          </CButton>
+                          <CButton
+                            color="warning"
+                            size="sm"
+                            className="me-2"
                             title="Modifier"
+                            onClick={() => navigate(`/cahier-texte/edit/${entry.id}`)}
                           >
                             <CIcon icon={cilPencil} />
                           </CButton>

@@ -2,7 +2,18 @@ import { Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { LoadingSpinner } from '@/components'
 
-import { Dashboard, Calendar, Buildings, Rooms, TimeSlots, ScheduledCourses } from './index'
+import { 
+  Dashboard, 
+  Calendar, 
+  Buildings, 
+  Rooms, 
+  TimeSlots, 
+  ScheduledCourses,
+  UpdateHours,
+  ScheduleViews,
+  RenewSchedule,
+  GenerateSchedule
+} from './index'
 
 const EmploiRoutes = () => {
   return (
@@ -14,6 +25,10 @@ const EmploiRoutes = () => {
         <Route path="/rooms" element={<Rooms />} />
         <Route path="/time-slots" element={<TimeSlots />} />
         <Route path="/scheduled-courses" element={<ScheduledCourses />} />
+        <Route path="/update-hours" element={<UpdateHours />} />
+        <Route path="/schedule-views" element={<ScheduleViews />} />
+        <Route path="/renew-schedule" element={<RenewSchedule />} />
+        <Route path="/generate-schedule" element={<GenerateSchedule />} />
         {/* Rediriger vers le dashboard par défaut */}
         <Route path="/" element={<Navigate to="/emploi-du-temps/dashboard" replace />} />
         {/* Route 404 pour les sous-routes invalides */}

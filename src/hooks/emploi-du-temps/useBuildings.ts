@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import EmploiDuTempsService from '@/services/emploi-du-temps.service'
 import type { Building, BuildingFilters, CreateBuildingRequest } from '@/types/emploi-du-temps.types'
 import Swal from 'sweetalert2'
 
-export const useBuildings = () => {
+export const useBuildings = (autoLoad = true) => {
   const [buildings, setBuildings] = useState<Building[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [meta, setMeta] = useState<any>(null)
+  const hasLoadedRef = useRef(false)
 
   const fetchBuildings = useCallback(async (filters?: BuildingFilters) => {
     setLoading(true)
@@ -115,8 +116,11 @@ export const useBuildings = () => {
   }, [])
 
   useEffect(() => {
-    fetchBuildings()
-  }, [fetchBuildings])
+    if (autoLoad && !hasLoadedRef.current) {
+      hasLoadedRef.current = true
+      fetchBuildings()
+    }
+  }, [fetchBuildings, autoLoad])
 
   return {
     buildings,

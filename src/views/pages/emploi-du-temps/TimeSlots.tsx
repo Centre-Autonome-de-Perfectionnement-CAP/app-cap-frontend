@@ -38,11 +38,24 @@ const TimeSlots = () => {
 
   const [showModal, setShowModal] = useState(false)
   const [editingTimeSlot, setEditingTimeSlot] = useState<any>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedDay, setSelectedDay] = useState<string>('all')
   const [selectedType, setSelectedType] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const itemsPerPage = 15
+
+  // Filtres temporaires
+  const [tempSearchTerm, setTempSearchTerm] = useState('')
+  const [tempSelectedDay, setTempSelectedDay] = useState<string>('all')
+  const [tempSelectedType, setTempSelectedType] = useState<string>('all')
+
+  const handleFilter = () => {
+    setSearchTerm(tempSearchTerm)
+    setSelectedDay(tempSelectedDay)
+    setSelectedType(tempSelectedType)
+    setCurrentPage(1)
+  }
 
   const [formData, setFormData] = useState<CreateTimeSlotRequest>({
     day_of_week: 'monday' as DayOfWeek,
@@ -73,6 +86,7 @@ const TimeSlots = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitting(true)
     try {
       if (editingTimeSlot) {
         await updateTimeSlot(editingTimeSlot.id, formData)
@@ -80,9 +94,11 @@ const TimeSlots = () => {
         await createTimeSlot(formData)
       }
       resetForm()
-      fetchTimeSlots()
-    } catch (error) {
+      await fetchTimeSlots()
+    } catch (error: any) {
       console.error('Erreur lors de la sauvegarde:', error)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -161,22 +177,17 @@ const TimeSlots = () => {
         <CCardBody>
           {/* Filters */}
           <CRow className="mb-3">
-            <CCol md={4}>
-              <CInputGroup>
-                <CFormInput
-                  placeholder="Rechercher un créneau..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <CButton variant="outline" color="secondary">
-                  <CIcon icon={cilSearch} />
-                </CButton>
-              </CInputGroup>
+            <CCol md={3}>
+              <CFormInput
+                placeholder="Rechercher un créneau..."
+                value={tempSearchTerm}
+                onChange={(e) => setTempSearchTerm(e.target.value)}
+              />
             </CCol>
-            <CCol md={4}>
+            <CCol md={3}>
               <CFormSelect
-                value={selectedDay}
-                onChange={(e) => setSelectedDay(e.target.value)}
+                value={tempSelectedDay}
+                onChange={(e) => setTempSelectedDay(e.target.value)}
               >
                 <option value="all">Tous les jours</option>
                 {Object.entries(dayLabels).map(([key, label]) => (
@@ -184,16 +195,22 @@ const TimeSlots = () => {
                 ))}
               </CFormSelect>
             </CCol>
-            <CCol md={4}>
+            <CCol md={3}>
               <CFormSelect
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                value={tempSelectedType}
+                onChange={(e) => setTempSelectedType(e.target.value)}
               >
                 <option value="all">Tous les types</option>
                 {Object.entries(typeLabels).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
               </CFormSelect>
+            </CCol>
+            <CCol md={3}>
+              <CButton color="primary" onClick={handleFilter} className="w-100">
+                <CIcon icon={cilSearch} className="me-1" />
+                Filtrer
+              </CButton>
             </CCol>
           </CRow>
 
@@ -218,45 +235,53 @@ const TimeSlots = () => {
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {paginatedTimeSlots.map((timeSlot) => (
-                    <CTableRow key={timeSlot.id}>
-                      <CTableDataCell>
-                        {dayLabels[timeSlot.day_of_week as keyof typeof dayLabels]}
-                      </CTableDataCell>
-                      <CTableDataCell>{timeSlot.start_time}</CTableDataCell>
-                      <CTableDataCell>{timeSlot.end_time}</CTableDataCell>
-                      <CTableDataCell>
-                        {timeSlot.duration_in_hours}h ({timeSlot.duration_in_minutes}min)
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CBadge color={typeColors[timeSlot.type as keyof typeof typeColors]}>
-                          {typeLabels[timeSlot.type as keyof typeof typeLabels]}
-                        </CBadge>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        {timeSlot.name || '-'}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CButton
-                          color="info"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(timeSlot)}
-                          className="me-1"
-                        >
-                          <CIcon icon={cilPencil} />
-                        </CButton>
-                        <CButton
-                          color="danger"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(timeSlot)}
-                        >
-                          <CIcon icon={cilTrash} />
-                        </CButton>
+                  {paginatedTimeSlots.length === 0 ? (
+                    <CTableRow>
+                      <CTableDataCell colSpan={7} className="text-center text-muted py-4">
+                        Aucun créneau horaire trouvé
                       </CTableDataCell>
                     </CTableRow>
-                  ))}
+                  ) : (
+                    paginatedTimeSlots.map((timeSlot) => (
+                      <CTableRow key={timeSlot.id}>
+                        <CTableDataCell>
+                          {dayLabels[timeSlot.day_of_week as keyof typeof dayLabels]}
+                        </CTableDataCell>
+                        <CTableDataCell>{timeSlot.start_time}</CTableDataCell>
+                        <CTableDataCell>{timeSlot.end_time}</CTableDataCell>
+                        <CTableDataCell>
+                          {timeSlot.duration_in_hours}h ({timeSlot.duration_in_minutes}min)
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <CBadge color={typeColors[timeSlot.type as keyof typeof typeColors]}>
+                            {typeLabels[timeSlot.type as keyof typeof typeLabels]}
+                          </CBadge>
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          {timeSlot.name || '-'}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <CButton
+                            color="info"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(timeSlot)}
+                            className="me-1"
+                          >
+                            <CIcon icon={cilPencil} />
+                          </CButton>
+                          <CButton
+                            color="danger"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(timeSlot)}
+                          >
+                            <CIcon icon={cilTrash} />
+                          </CButton>
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))
+                  )}
                 </CTableBody>
               </CTable>
 
@@ -383,11 +408,18 @@ const TimeSlots = () => {
             </div>
           </CModalBody>
           <CModalFooter>
-            <CButton color="secondary" onClick={resetForm}>
+            <CButton color="secondary" onClick={resetForm} disabled={submitting}>
               Annuler
             </CButton>
-            <CButton color="primary" type="submit">
-              {editingTimeSlot ? 'Modifier' : 'Créer'}
+            <CButton color="primary" type="submit" disabled={submitting}>
+              {submitting ? (
+                <>
+                  <CSpinner size="sm" className="me-2" />
+                  {editingTimeSlot ? 'Modification...' : 'Création...'}
+                </>
+              ) : (
+                editingTimeSlot ? 'Modifier' : 'Créer'
+              )}
             </CButton>
           </CModalFooter>
         </CForm>

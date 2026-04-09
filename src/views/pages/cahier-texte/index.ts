@@ -1,2 +1,5 @@
 export { default as Dashboard } from './Dashboard'
 export { default as TextbookList } from './TextbookList'
+export { default as EntryForm } from './EntryForm'
+export { default as EntryDetail } from './EntryDetail'
+export { default as ViewByClass } from './ViewByClass'

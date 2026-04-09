@@ -6,6 +6,10 @@ import {
   cilList,
   cilBuilding,
   cilRoom,
+  cilPencil,
+  cilSearch,
+  cilReload,
+  cilLightbulb,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -31,6 +35,32 @@ const emploiNavigation = [
     name: 'Cours Planifiés',
     to: '/emploi-du-temps/scheduled-courses',
     icon: <CIcon icon={cilList} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Consulter Emplois',
+    to: '/emploi-du-temps/schedule-views',
+    icon: <CIcon icon={cilSearch} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavTitle,
+    name: 'Gestion',
+  },
+  {
+    component: CNavItem,
+    name: 'Générer Automatiquement',
+    to: '/emploi-du-temps/generate-schedule',
+    icon: <CIcon icon={cilLightbulb} customClassName="nav-icon" />,
+    badge: {
+      color: 'success',
+      text: 'IA',
+    },
+  },
+  {
+    component: CNavItem,
+    name: 'Reconduire Emploi',
+    to: '/emploi-du-temps/renew-schedule',
+    icon: <CIcon icon={cilReload} customClassName="nav-icon" />,
   },
   {
     component: CNavTitle,

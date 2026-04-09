@@ -34,16 +34,29 @@ import { useRooms, useBuildings } from '@/hooks/emploi-du-temps'
 import type { CreateRoomRequest, RoomType } from '@/types/emploi-du-temps.types'
 
 const Rooms = () => {
-  const { rooms, loading, error, fetchRooms, createRoom, updateRoom, deleteRoom } = useRooms()
+  const { rooms, loading, error, fetchRooms, createRoom, updateRoom, deleteRoom } = useRooms(undefined, true)
   const { buildings } = useBuildings()
 
   const [showModal, setShowModal] = useState(false)
   const [editingRoom, setEditingRoom] = useState<any>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedBuilding, setSelectedBuilding] = useState<string>('all')
   const [selectedType, setSelectedType] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
+
+  // Filtres temporaires (avant de cliquer sur Filtrer)
+  const [tempSearchTerm, setTempSearchTerm] = useState('')
+  const [tempSelectedBuilding, setTempSelectedBuilding] = useState<string>('all')
+  const [tempSelectedType, setTempSelectedType] = useState<string>('all')
+
+  const handleFilter = () => {
+    setSearchTerm(tempSearchTerm)
+    setSelectedBuilding(tempSelectedBuilding)
+    setSelectedType(tempSelectedType)
+    setCurrentPage(1)
+  }
 
   const [formData, setFormData] = useState<CreateRoomRequest>({
     building_id: 0,
@@ -76,6 +89,7 @@ const Rooms = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitting(true)
     try {
       if (editingRoom) {
         await updateRoom(editingRoom.id, formData)
@@ -83,9 +97,11 @@ const Rooms = () => {
         await createRoom(formData)
       }
       resetForm()
-      fetchRooms()
+      await fetchRooms()
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -152,22 +168,17 @@ const Rooms = () => {
         <CCardBody>
           {/* Filters */}
           <CRow className="mb-3">
-            <CCol md={4}>
-              <CInputGroup>
-                <CFormInput
-                  placeholder="Rechercher une salle..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <CButton variant="outline" color="secondary">
-                  <CIcon icon={cilSearch} />
-                </CButton>
-              </CInputGroup>
+            <CCol md={3}>
+              <CFormInput
+                placeholder="Rechercher une salle..."
+                value={tempSearchTerm}
+                onChange={(e) => setTempSearchTerm(e.target.value)}
+              />
             </CCol>
-            <CCol md={4}>
+            <CCol md={3}>
               <CFormSelect
-                value={selectedBuilding}
-                onChange={(e) => setSelectedBuilding(e.target.value)}
+                value={tempSelectedBuilding}
+                onChange={(e) => setTempSelectedBuilding(e.target.value)}
               >
                 <option value="all">Tous les bâtiments</option>
                 {buildings.map((building) => (
@@ -177,16 +188,22 @@ const Rooms = () => {
                 ))}
               </CFormSelect>
             </CCol>
-            <CCol md={4}>
+            <CCol md={3}>
               <CFormSelect
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                value={tempSelectedType}
+                onChange={(e) => setTempSelectedType(e.target.value)}
               >
                 <option value="all">Tous les types</option>
                 {Object.entries(roomTypeLabels).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
               </CFormSelect>
+            </CCol>
+            <CCol md={3}>
+              <CButton color="primary" onClick={handleFilter} className="w-100">
+                <CIcon icon={cilSearch} className="me-1" />
+                Filtrer
+              </CButton>
             </CCol>
           </CRow>
 
@@ -211,43 +228,51 @@ const Rooms = () => {
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {paginatedRooms.map((room) => (
-                    <CTableRow key={room.id}>
-                      <CTableDataCell>{room.code}</CTableDataCell>
-                      <CTableDataCell>{room.name}</CTableDataCell>
-                      <CTableDataCell>
-                        {room.building?.name || 'N/A'}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        {roomTypeLabels[room.room_type as keyof typeof roomTypeLabels]}
-                      </CTableDataCell>
-                      <CTableDataCell>{room.capacity}</CTableDataCell>
-                      <CTableDataCell>
-                        <CBadge color={room.is_available ? 'success' : 'danger'}>
-                          {room.is_available ? 'Disponible' : 'Indisponible'}
-                        </CBadge>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CButton
-                          color="info"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(room)}
-                          className="me-1"
-                        >
-                          <CIcon icon={cilPencil} />
-                        </CButton>
-                        <CButton
-                          color="danger"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(room)}
-                        >
-                          <CIcon icon={cilTrash} />
-                        </CButton>
+                  {paginatedRooms.length === 0 ? (
+                    <CTableRow>
+                      <CTableDataCell colSpan={7} className="text-center text-muted py-4">
+                        Aucune salle trouvée
                       </CTableDataCell>
                     </CTableRow>
-                  ))}
+                  ) : (
+                    paginatedRooms.map((room) => (
+                      <CTableRow key={room.id}>
+                        <CTableDataCell>{room.code}</CTableDataCell>
+                        <CTableDataCell>{room.name}</CTableDataCell>
+                        <CTableDataCell>
+                          {room.building?.name || 'N/A'}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          {roomTypeLabels[room.room_type as keyof typeof roomTypeLabels]}
+                        </CTableDataCell>
+                        <CTableDataCell>{room.capacity}</CTableDataCell>
+                        <CTableDataCell>
+                          <CBadge color={room.is_available ? 'success' : 'danger'}>
+                            {room.is_available ? 'Disponible' : 'Indisponible'}
+                          </CBadge>
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <CButton
+                            color="info"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(room)}
+                            className="me-1"
+                          >
+                            <CIcon icon={cilPencil} />
+                          </CButton>
+                          <CButton
+                            color="danger"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(room)}
+                          >
+                            <CIcon icon={cilTrash} />
+                          </CButton>
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))
+                  )}
                 </CTableBody>
               </CTable>
 
@@ -395,11 +420,18 @@ const Rooms = () => {
             </CRow>
           </CModalBody>
           <CModalFooter>
-            <CButton color="secondary" onClick={resetForm}>
+            <CButton color="secondary" onClick={resetForm} disabled={submitting}>
               Annuler
             </CButton>
-            <CButton color="primary" type="submit">
-              {editingRoom ? 'Modifier' : 'Créer'}
+            <CButton color="primary" type="submit" disabled={submitting}>
+              {submitting ? (
+                <>
+                  <CSpinner size="sm" className="me-2" />
+                  {editingRoom ? 'Modification...' : 'Création...'}
+                </>
+              ) : (
+                editingRoom ? 'Modifier' : 'Créer'
+              )}
             </CButton>
           </CModalFooter>
         </CForm>

@@ -172,10 +172,18 @@ export interface UpdateCourseResourceRequest {
 // ==================== PROGRAMS ====================
 export interface ClassGroup {
   id: number;
-  name: string;
-  department?: any;
-  academic_year?: any;
-  study_level?: string;
+  uuid?: string;
+  group_name: string;
+  study_level: string;
+  department?: {
+    id: number;
+    name: string;
+    code?: string;
+  };
+  academic_year?: {
+    id: number;
+    name: string;
+  };
   created_at?: string;
   updated_at?: string;
 }

@@ -1,13 +1,15 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import EmploiDuTempsService from '@/services/emploi-du-temps.service'
 import type { Room, RoomFilters, CreateRoomRequest } from '@/types/emploi-du-temps.types'
 import Swal from 'sweetalert2'
 
-export const useRooms = (initialFilters?: RoomFilters) => {
+export const useRooms = (initialFilters?: RoomFilters, autoLoad = true) => {
   const [rooms, setRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [meta, setMeta] = useState<any>(null)
+  const initialFiltersRef = useRef<string | undefined>(undefined)
+  const hasLoadedRef = useRef(false)
 
   const fetchRooms = useCallback(async (filters?: RoomFilters) => {
     setLoading(true)
@@ -136,8 +138,15 @@ export const useRooms = (initialFilters?: RoomFilters) => {
   }, [])
 
   useEffect(() => {
-    fetchRooms(initialFilters)
-  }, [fetchRooms, initialFilters])
+    if (!autoLoad) return
+    
+    const filtersString = JSON.stringify(initialFilters || {})
+    if (filtersString !== initialFiltersRef.current && !hasLoadedRef.current) {
+      initialFiltersRef.current = filtersString
+      hasLoadedRef.current = true
+      fetchRooms(initialFilters)
+    }
+  }, [initialFilters, fetchRooms, autoLoad])
 
   return {
     rooms,

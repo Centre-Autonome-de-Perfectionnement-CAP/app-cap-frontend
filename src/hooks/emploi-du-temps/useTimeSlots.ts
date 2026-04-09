@@ -1,13 +1,15 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import EmploiDuTempsService from '@/services/emploi-du-temps.service'
 import type { TimeSlot, TimeSlotFilters, CreateTimeSlotRequest } from '@/types/emploi-du-temps.types'
 import Swal from 'sweetalert2'
 
-export const useTimeSlots = (initialFilters?: TimeSlotFilters) => {
+export const useTimeSlots = (initialFilters?: TimeSlotFilters, autoLoad = true) => {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [meta, setMeta] = useState<any>(null)
+  const initialFiltersRef = useRef<string | undefined>(undefined)
+  const hasLoadedRef = useRef(false)
 
   const fetchTimeSlots = useCallback(async (filters?: TimeSlotFilters) => {
     setLoading(true)
@@ -58,10 +60,18 @@ export const useTimeSlots = (initialFilters?: TimeSlotFilters) => {
       })
       return newSlot
     } catch (err: any) {
+      const errors = err.response?.data?.errors
+      let errorMessage = err.response?.data?.message || 'Erreur lors de la création du créneau'
+      
+      if (errors) {
+        const errorList = Object.values(errors).flat().join('<br>')
+        errorMessage = `<div style="text-align: left;">${errorList}</div>`
+      }
+      
       Swal.fire({
         icon: 'error',
-        title: 'Erreur',
-        text: err.response?.data?.message || 'Erreur lors de la création du créneau',
+        title: 'Erreur de validation',
+        html: errorMessage,
       })
       throw err
     } finally {
@@ -83,10 +93,18 @@ export const useTimeSlots = (initialFilters?: TimeSlotFilters) => {
         })
         return updated
       } catch (err: any) {
+        const errors = err.response?.data?.errors
+        let errorMessage = err.response?.data?.message || 'Erreur lors de la mise à jour'
+        
+        if (errors) {
+          const errorList = Object.values(errors).flat().join('<br>')
+          errorMessage = `<div style="text-align: left;">${errorList}</div>`
+        }
+        
         Swal.fire({
           icon: 'error',
-          title: 'Erreur',
-          text: err.response?.data?.message || 'Erreur lors de la mise à jour',
+          title: 'Erreur de validation',
+          html: errorMessage,
         })
         throw err
       } finally {
@@ -132,8 +150,15 @@ export const useTimeSlots = (initialFilters?: TimeSlotFilters) => {
   }, [])
 
   useEffect(() => {
-    fetchTimeSlots(initialFilters)
-  }, [fetchTimeSlots, initialFilters])
+    if (!autoLoad) return
+    
+    const filtersString = JSON.stringify(initialFilters || {})
+    if (filtersString !== initialFiltersRef.current && !hasLoadedRef.current) {
+      initialFiltersRef.current = filtersString
+      hasLoadedRef.current = true
+      fetchTimeSlots(initialFilters)
+    }
+  }, [initialFilters, fetchTimeSlots, autoLoad])
 
   return {
     timeSlots,

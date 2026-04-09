@@ -146,7 +146,8 @@ const StudentsList = () => {
   }, [groupCreation])
   
   const handleCreateDefaultGroup = useCallback(async () => {
-    if (selectedYear === 'all' || selectedFiliere === 'all' || selectedNiveau === 'all' || selectedCohort === 'all') {
+    // || selectedCohort === 'all'
+    if (selectedYear === 'all' || selectedFiliere === 'all' || selectedNiveau === 'all' ) {
       Swal.fire({
         icon: 'warning',
         title: 'Sélection requise',

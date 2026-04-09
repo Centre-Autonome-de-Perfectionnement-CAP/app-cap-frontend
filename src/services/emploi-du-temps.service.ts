@@ -359,6 +359,61 @@ class EmploiDuTempsService {
     return response.data
   }
 
+  /**
+   * Reconduire l'emploi du temps d'une année vers une autre
+   */
+  renewSchedule = async (data: {
+    source_academic_year_id: number
+    target_academic_year_id: number
+    date_offset?: number
+    check_conflicts?: boolean
+    ignore_conflicts?: boolean
+  }): Promise<{
+    success: boolean
+    created: number
+    skipped: number
+    total: number
+    errors: string[]
+  }> => {
+    const response = await HttpService.post<{
+      success: boolean
+      data: {
+        success: boolean
+        created: number
+        skipped: number
+        total: number
+        errors: string[]
+      }
+    }>('/api/emploi-temps/scheduled-courses/renew-schedule', data)
+    return response.data
+  }
+
+  /**
+   * Générer automatiquement un emploi du temps
+   */
+  generateSchedule = async (data: {
+    academic_year_id: number
+    start_date?: string
+  }): Promise<{
+    success: boolean
+    created: number
+    skipped: number
+    total: number
+    errors: string[]
+  }> => {
+    const response = await HttpService.post<{
+      success: boolean
+      data: {
+        success: boolean
+        created: number
+        skipped: number
+        total: number
+        errors: string[]
+      }
+    }>('/api/emploi-temps/scheduled-courses/generate-schedule', data)
+    return response.data
+  }
+
   // ============================================
   // SCHEDULE VIEWS (Vues emploi du temps)
   // ============================================
@@ -396,6 +451,61 @@ class EmploiDuTempsService {
   ): Promise<ScheduleView[]> => {
     const url = buildUrlWithParams(EMPLOI_DU_TEMPS_ROUTES.SCHEDULE_BY_ROOM(roomId), params)
     const response = await HttpService.get<{ success: boolean; data: ScheduleView[] }>(url)
+    return response.data
+  }
+
+  /**
+   * Télécharge l'emploi du temps en PDF
+   */
+  downloadSchedulePDF = async (
+    entityType: 'class_group' | 'professor' | 'room',
+    entityId: number,
+    params?: { start_date?: string; end_date?: string }
+  ): Promise<void> => {
+    let url = ''
+    
+    if (entityType === 'class_group') {
+      url = buildUrlWithParams(`${EMPLOI_DU_TEMPS_ROUTES.SCHEDULE_BY_CLASS_GROUP(entityId)}/pdf`, params)
+    } else if (entityType === 'professor') {
+      url = buildUrlWithParams(`${EMPLOI_DU_TEMPS_ROUTES.SCHEDULE_BY_PROFESSOR(entityId)}/pdf`, params)
+    } else {
+      url = buildUrlWithParams(`${EMPLOI_DU_TEMPS_ROUTES.SCHEDULE_BY_ROOM(entityId)}/pdf`, params)
+    }
+
+    const response = await HttpService.get(url, { responseType: 'blob' })
+    
+    // Créer un lien de téléchargement
+    const blob = new Blob([response], { type: 'application/pdf' })
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = `emploi-du-temps-${entityType}-${entityId}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(downloadUrl)
+  }
+
+  /**
+   * Créer plusieurs cours en masse (mode brouillon)
+   */
+  bulkCreateScheduledCourses = async (courses: CreateScheduledCourseRequest[]) => {
+    const response = await HttpService.post<{
+      success: boolean
+      message: string
+      data: {
+        created: ScheduledCourse[]
+        conflicts?: any[]
+        errors?: any[]
+        summary: {
+          total: number
+          created_count: number
+          conflict_count: number
+          error_count: number
+        }
+      }
+    }>(EMPLOI_DU_TEMPS_ROUTES.SCHEDULED_COURSES + '/bulk-create', { courses })
+    
     return response.data
   }
 }

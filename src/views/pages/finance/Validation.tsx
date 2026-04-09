@@ -27,7 +27,7 @@ import {
   CNavLink,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilCheckCircle, cilXCircle, cilFile, cilSearch } from '@coreui/icons'
+import { cilCheckCircle, cilXCircle, cilFile, cilSearch, cilInfo } from '@coreui/icons'
 import { LoadingSpinner } from '@/components'
 import useValidation from '@/hooks/finance/useValidation'
 import { formatDate, formatDateTime } from '@/utils/date.utils'
@@ -50,6 +50,7 @@ const Validation = () => {
   const [showValidateModal, setShowValidateModal] = useState(false)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [showReceiptModal, setShowReceiptModal] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState<any>(null)
   const [observation, setObservation] = useState('')
   const [rejectionReason, setRejectionReason] = useState('')
@@ -74,6 +75,11 @@ const Validation = () => {
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error)
     }
+  }
+
+  const handleViewDetails = (payment: any) => {
+    setSelectedPayment(payment)
+    setShowDetailsModal(true)
   }
 
   const confirmValidation = async () => {
@@ -251,7 +257,7 @@ const Validation = () => {
                 )}
                 <CTableHeaderCell>Quittance</CTableHeaderCell>
                 <CTableHeaderCell>Observations</CTableHeaderCell>
-                {activeTab === 'pending' && <CTableHeaderCell>Actions</CTableHeaderCell>}
+                <CTableHeaderCell>Actions</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
             <CTableBody>
@@ -297,34 +303,45 @@ const Validation = () => {
                       {payment.observation || 'Aucune observation'}
                     </span>
                   </CTableDataCell>
-                  {activeTab === 'pending' && (
-                    <CTableDataCell>
-                      <div className="d-flex gap-1">
-                        <CButton
-                          color="success"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleValidate(payment)}
-                          title="Valider"
-                        >
-                          <CIcon icon={cilCheckCircle} />
-                        </CButton>
-                        <CButton
-                          color="danger"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleReject(payment)}
-                          title="Rejeter"
-                        >
-                          <CIcon icon={cilXCircle} />
-                        </CButton>
-                      </div>
-                    </CTableDataCell>
-                  )}
+                  <CTableDataCell>
+                    <div className="d-flex gap-1">
+                      <CButton
+                        color="info"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDetails(payment)}
+                        title="Voir les détails"
+                      >
+                        <CIcon icon={cilInfo} />
+                      </CButton>
+                      {activeTab === 'pending' && (
+                        <>
+                          <CButton
+                            color="success"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleValidate(payment)}
+                            title="Valider"
+                          >
+                            <CIcon icon={cilCheckCircle} />
+                          </CButton>
+                          <CButton
+                            color="danger"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleReject(payment)}
+                            title="Rejeter"
+                          >
+                            <CIcon icon={cilXCircle} />
+                          </CButton>
+                        </>
+                      )}
+                    </div>
+                  </CTableDataCell>
                 </CTableRow>
               )) : (
                 <CTableRow>
-                  <CTableDataCell colSpan={activeTab === 'pending' ? 8 : 8} className="text-center text-muted py-4">
+                  <CTableDataCell colSpan={9} className="text-center text-muted py-4">
                     {activeTab === 'pending' && 'Aucun paiement en attente de validation'}
                     {activeTab === 'approved' && 'Aucun paiement validé'}
                     {activeTab === 'rejected' && 'Aucun paiement rejeté'}
@@ -438,6 +455,123 @@ const Validation = () => {
             />
           )}
         </CModalBody>
+      </CModal>
+
+      {/* Modal des détails du paiement */}
+      <CModal visible={showDetailsModal} onClose={() => setShowDetailsModal(false)} size="lg">
+        <CModalHeader>
+          <CModalTitle>Détails du paiement</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {selectedPayment && (
+            <div className="row g-3">
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Matricule</label>
+                  <p className="mb-0">{selectedPayment.student_id_number}</p>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Nom et Prénoms</label>
+                  <p className="mb-0">
+                    {selectedPayment.student 
+                      ? `${selectedPayment.student_pending_student.pending_student.personal_information.first_names} ${selectedPayment.student_pending_student.pending_student.personal_information.last_name}`
+                      : selectedPayment.studentPendingStudent
+                      ? `${selectedPayment.studentPendingStudent.first_name} ${selectedPayment.studentPendingStudent.last_name}`
+                      : 'N/A'
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Référence</label>
+                  <p className="mb-0">{selectedPayment.reference}</p>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Montant</label>
+                  <p className="mb-0 fw-bold text-primary">{selectedPayment.amount?.toLocaleString()} FCFA</p>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Numéro de compte</label>
+                  <p className="mb-0">{selectedPayment.account_number}</p>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Date de versement</label>
+                  <p className="mb-0">{formatDate(selectedPayment.payment_date)}</p>
+                </div>
+              </div>
+              <div className="col-12">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Motif</label>
+                  <p className="mb-0">{selectedPayment.purpose || 'Non spécifié'}</p>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Email</label>
+                  <p className="mb-0">{selectedPayment.email || 'Non renseigné'}</p>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Contact</label>
+                  <p className="mb-0">{selectedPayment.contact || 'Non renseigné'}</p>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Statut</label>
+                  <p className="mb-0">
+                    <CBadge color={
+                      selectedPayment.status === 'approved' ? 'success' :
+                      selectedPayment.status === 'rejected' ? 'danger' : 'warning'
+                    }>
+                      {selectedPayment.status === 'approved' ? 'Validé' :
+                       selectedPayment.status === 'rejected' ? 'Rejeté' : 'En attente'}
+                    </CBadge>
+                  </p>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label className="form-label fw-bold text-muted small">Date de soumission</label>
+                  <p className="mb-0">{formatDateTime(selectedPayment.created_at)}</p>
+                </div>
+              </div>
+              {selectedPayment.observation && (
+                <div className="col-12">
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-muted small">Observations</label>
+                    <p className="mb-0">{selectedPayment.observation}</p>
+                  </div>
+                </div>
+              )}
+              <div className="col-12">
+                <CButton
+                  color="info"
+                  onClick={() => handleViewReceipt(selectedPayment)}
+                  className="w-100"
+                >
+                  <CIcon icon={cilFile} className="me-2" />
+                  Voir la quittance
+                </CButton>
+              </div>
+            </div>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setShowDetailsModal(false)}>
+            Fermer
+          </CButton>
+        </CModalFooter>
       </CModal>
     </>
   )

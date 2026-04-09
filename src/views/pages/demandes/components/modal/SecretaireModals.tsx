@@ -1,5 +1,4 @@
-// src/views/pages/demandes/components/SecretaireModals.tsx
-// Modaux spécifiques au secrétaire : choix Responsable Division + renvoi depuis correction.
+// src/views/pages/demandes/components/modal/SecretaireModals.tsx
 
 import { useState } from 'react'
 import {
@@ -10,6 +9,7 @@ import CIcon from '@coreui/icons-react'
 import { cilInfo } from '@coreui/icons'
 import type { DocumentRequest, ChefDivisionType } from '@/types/document-request.types'
 import { CHEF_DIVISION_LABELS, RESEND_OPTIONS } from '@/types/document-request.types'
+import RadioCard from '../ui/RadioCard'
 
 // ─── Choix du chef de division ────────────────────────────────────────────────
 
@@ -25,25 +25,38 @@ export const ChefDivisionModal = ({ visible, onClose, onConfirm }: ChefDivisionM
       <CModalTitle>Choisir le Responsable Division</CModalTitle>
     </CModalHeader>
     <CModalBody>
-      <p className="text-muted small mb-3">
+      <p style={{ fontSize: '0.83rem', color: '#6b7280', marginBottom: 12 }}>
         Sélectionnez le chef de division concerné par ce dossier.
       </p>
-      <div className="d-flex gap-3">
+      <div style={{ display: 'flex', gap: 10 }}>
         {(['formation_distance', 'formation_continue'] as ChefDivisionType[]).map(type => (
-          <CButton
+          <button
             key={type}
-            color="primary"
-            variant="outline"
-            className="flex-fill py-3 fw-bold"
             onClick={() => onConfirm(type)}
+            style={{
+              flex: 1, padding: '14px 10px', borderRadius: 10, cursor: 'pointer',
+              border: '2px solid #7c3aed', background: '#f5f3ff',
+              color: '#5b21b6', fontWeight: 700, fontSize: '0.88rem',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => {
+              const b = e.currentTarget as HTMLButtonElement
+              b.style.background = '#7c3aed'
+              b.style.color = '#ffffff'
+            }}
+            onMouseLeave={e => {
+              const b = e.currentTarget as HTMLButtonElement
+              b.style.background = '#f5f3ff'
+              b.style.color = '#5b21b6'
+            }}
           >
             {CHEF_DIVISION_LABELS[type]}
-          </CButton>
+          </button>
         ))}
       </div>
     </CModalBody>
     <CModalFooter>
-      <CButton color="secondary" onClick={onClose}>Annuler</CButton>
+      <CButton color="secondary" variant="ghost" onClick={onClose}>Annuler</CButton>
     </CModalFooter>
   </CModal>
 )
@@ -58,8 +71,8 @@ interface ResendModalProps {
 }
 
 export const ResendModal = ({ demande, visible, onClose, onConfirm }: ResendModalProps) => {
-  const [resendTo,    setResendTo]    = useState('')
-  const [chefDivType, setChefDivType] = useState<ChefDivisionType>('formation_distance')
+  const [resendTo,     setResendTo]     = useState('')
+  const [chefDivType,  setChefDivType]  = useState<ChefDivisionType>('formation_distance')
 
   if (!demande) return null
 
@@ -72,79 +85,59 @@ export const ResendModal = ({ demande, visible, onClose, onConfirm }: ResendModa
         {demande.rejected_by && (
           <CAlert color="danger" className="py-2 mb-3 small">
             <strong>Rejeté par :</strong> {demande.rejected_by}<br />
-            {demande.rejected_reason && (
-              <><strong>Motif :</strong> {demande.rejected_reason}</>
-            )}
+            {demande.rejected_reason && <><strong>Motif :</strong> {demande.rejected_reason}</>}
           </CAlert>
         )}
 
-        <p className="fw-semibold small mb-2">Renvoyer à quel niveau ?</p>
+        <p style={{ fontWeight: 600, fontSize: '0.84rem', marginBottom: 10 }}>
+          Renvoyer à quel niveau ?
+        </p>
 
-        <div className="d-flex flex-column gap-2 mb-3">
-          {RESEND_OPTIONS.map(opt => {
-            const isSelected = resendTo === opt.value
-            return (
-              <button
-                key={opt.value}
-                onClick={() => setResendTo(opt.value)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  border: `2px solid ${isSelected ? '#3b82f6' : '#e5e7eb'}`,
-                  background: isSelected ? '#eff6ff' : 'white',
-                  borderRadius: 8, padding: '10px 14px', cursor: 'pointer',
-                  textAlign: 'left',
-                  color: isSelected ? '#1d4ed8' : '#374151',
-                  fontWeight: isSelected ? 600 : 400,
-                  transition: 'all 0.15s',
-                }}
-              >
-                {/* Indicateur radio */}
-                <div style={{
-                  width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
-                  border: `2px solid ${isSelected ? '#3b82f6' : '#d1d5db'}`,
-                  background: isSelected ? '#3b82f6' : 'white',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {isSelected && (
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'white' }} />
-                  )}
-                </div>
-                {opt.label}
-              </button>
-            )
-          })}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+          {RESEND_OPTIONS.map(opt => (
+            <RadioCard
+              key={opt.value}
+              value={opt.value}
+              selected={resendTo}
+              onSelect={setResendTo}
+              label={opt.label}
+              color="#2563eb"
+            />
+          ))}
         </div>
 
         {resendTo === 'chef_division' && (
           <div>
-            <p className="fw-semibold small mb-2">
-              <CIcon icon={cilInfo} className="me-1" />
+            <p style={{ fontWeight: 600, fontSize: '0.83rem', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <CIcon icon={cilInfo} style={{ width: 14 }} />
               Quel Responsable Division ?
             </p>
-            <div className="d-flex gap-2">
+            <div style={{ display: 'flex', gap: 8 }}>
               {(['formation_distance', 'formation_continue'] as ChefDivisionType[]).map(t => (
-                <CButton
+                <button
                   key={t}
-                  size="sm"
-                  color={chefDivType === t ? 'primary' : 'light'}
                   onClick={() => setChefDivType(t)}
+                  style={{
+                    flex: 1, padding: '8px 10px', borderRadius: 8, cursor: 'pointer',
+                    border: `2px solid ${chefDivType === t ? '#7c3aed' : '#e5e7eb'}`,
+                    background: chefDivType === t ? '#7c3aed' : 'white',
+                    color: chefDivType === t ? '#ffffff' : '#374151',
+                    fontWeight: 600, fontSize: '0.82rem', transition: 'all 0.15s',
+                  }}
                 >
                   {CHEF_DIVISION_LABELS[t]}
-                </CButton>
+                </button>
               ))}
             </div>
           </div>
         )}
       </CModalBody>
       <CModalFooter>
-        <CButton color="secondary" onClick={onClose}>Annuler</CButton>
+        <CButton color="secondary" variant="ghost" onClick={onClose}>Annuler</CButton>
         <CButton
           color="primary"
-          onClick={() => resendTo && onConfirm(
-            resendTo,
-            resendTo === 'chef_division' ? chefDivType : undefined,
-          )}
           disabled={!resendTo}
+          onClick={() => resendTo && onConfirm(resendTo, resendTo === 'chef_division' ? chefDivType : undefined)}
         >
           Renvoyer
         </CButton>

@@ -1,26 +1,22 @@
 // src/views/pages/demandes/dashboards/ChefCapDashboard.tsx
+
 import { useState } from 'react'
-import { CButton, CAlert, CSpinner } from '@coreui/react'
+import { CAlert } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilX, cilPen, cilTask, cilCheck } from '@coreui/icons'
+import { cilX, cilPen, cilCheck } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
 import {
   DashboardShell, DemandeTable, DemandeModalShell, DemandeDetailBase,
-  ConfirmCheckbox, ReferenceCell, EtudiantCell, TypeCell, DateCell,
+  ConfirmCheckbox, RadioCard, ActionButton, useActionColumns,
+  ReferenceCell, EtudiantCell, TypeCell, DateCell,
 } from '../components'
-import type { ColumnDef } from '../components'
 import type { DocumentRequest } from '@/types/document-request.types'
 
 type CapChoice = 'paraphe' | 'signature'
 
-const CHOICES: {
-  value: CapChoice
-  label: string
-  desc: string
-  color: string
-  nextLabel: string
-  icon: object
+const CAP_CHOICES: {
+  value: CapChoice; label: string; desc: string; color: string; nextLabel: string; icon: object
 }[] = [
   {
     value: 'paraphe',
@@ -28,31 +24,27 @@ const CHOICES: {
     color: '#7c3aed',
     icon: cilPen,
     nextLabel: 'Parapher et transmettre à la Direction',
-    desc: "Le document passera ensuite chez la Directrice Adjointe, puis le Directeur.",
+    desc: 'Le document passera ensuite chez la Directrice Adjointe, puis le Directeur.',
   },
   {
     value: 'signature',
     label: 'Signer',
-    color: '#10b981',
+    color: '#059669',
     icon: cilCheck,
     nextLabel: 'Signer — Document prêt immédiatement',
-    desc: "Le document est validé directement et sera immédiatement prêt à retirer.",
+    desc: 'Le document est validé directement et sera immédiatement prêt à retirer.',
   },
 ]
 
-// ─── Modal de détail ──────────────────────────────────────────────────────────
-
 const DetailModal = ({ demande, visible, onClose, onAction }: {
-  demande: DocumentRequest
-  visible: boolean
-  onClose: () => void
+  demande: DocumentRequest; visible: boolean; onClose: () => void
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
 }) => {
   const [choice,        setChoice]        = useState<CapChoice>('paraphe')
   const [confirmed,     setConfirmed]     = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [rejectModal,   setRejectModal]   = useState(false)
-  const selectedChoice = CHOICES.find(c => c.value === choice)!
+  const selectedChoice = CAP_CHOICES.find(c => c.value === choice)!
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
     setActionLoading(true)
@@ -60,77 +52,47 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
     finally { setActionLoading(false); setConfirmed(false) }
   }
 
-  const btnActive = confirmed && !actionLoading
-
   const footer = (<>
-    <CButton color="secondary" variant="ghost" onClick={onClose} disabled={actionLoading}>Fermer</CButton>
-    <CButton color="danger" variant="outline" onClick={() => setRejectModal(true)} disabled={actionLoading}>
-      <CIcon icon={cilX} className="me-1" />Rejeter
-    </CButton>
-    <CButton
-      style={{
-        background: btnActive ? selectedChoice.color : '#d1d5db',
-        borderColor: btnActive ? selectedChoice.color : '#d1d5db',
-        color: 'white',
-        transition: 'all 0.2s',
-      }}
+    <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={actionLoading} />
+    <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline" disabled={actionLoading}
+      onClick={() => setRejectModal(true)} />
+    <ActionButton
+      label={selectedChoice.nextLabel}
+      icon={selectedChoice.icon}
+      customBg={confirmed && !actionLoading ? selectedChoice.color : undefined}
+      loading={actionLoading}
+      disabled={!confirmed}
       onClick={() => run('chef_cap_sign', { signature_type: choice })}
-      disabled={!btnActive}
-    >
-      {actionLoading
-        ? <><CSpinner size="sm" className="me-1" />En cours…</>
-        : <><CIcon icon={selectedChoice.icon} className="me-1" />{selectedChoice.nextLabel}</>}
-    </CButton>
+    />
   </>)
 
   return (<>
-    <DemandeModalShell demande={demande} visible={visible} onClose={onClose} title="Traitement — Chef CAP" footer={footer}>
+    <DemandeModalShell demande={demande} visible={visible} onClose={onClose}
+      title="Traitement — Chef CAP" footer={footer}>
       <DemandeDetailBase demande={demande}>
-        {/* Sélection paraphe/signature */}
-        <div className="mt-4">
-          <p className="fw-semibold mb-3" style={{ fontSize: '0.9rem' }}>
+        <div style={{ marginTop: 20 }}>
+          <p style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 12 }}>
             Quelle action souhaitez-vous effectuer ?
           </p>
-          <div className="d-flex flex-column gap-2">
-            {CHOICES.map(opt => (
-              <div
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {CAP_CHOICES.map(opt => (
+              <RadioCard
                 key={opt.value}
-                onClick={() => { setChoice(opt.value); setConfirmed(false) }}
-                style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 12,
-                  border: `2px solid ${choice === opt.value ? opt.color : '#e5e7eb'}`,
-                  borderRadius: 10, padding: '14px 16px', cursor: 'pointer',
-                  background: choice === opt.value ? opt.color + '0d' : 'white',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {/* Radio visuel */}
-                <div style={{
-                  marginTop: 2, width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-                  border: `2px solid ${choice === opt.value ? opt.color : '#d1d5db'}`,
-                  background: choice === opt.value ? opt.color : 'white',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {choice === opt.value && (
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'white' }} />
-                  )}
-                </div>
-                <div>
-                  <div className="fw-bold mb-1" style={{ color: choice === opt.value ? opt.color : '#111827' }}>
-                    <CIcon icon={opt.icon} className="me-1" style={{ width: 14 }} />
-                    {opt.label}
-                  </div>
-                  <div className="text-muted" style={{ fontSize: '0.8rem', lineHeight: 1.4 }}>
-                    {opt.desc}
-                  </div>
-                </div>
-              </div>
+                value={opt.value}
+                selected={choice}
+                onSelect={v => { setChoice(v as CapChoice); setConfirmed(false) }}
+                label={opt.label}
+                description={opt.desc}
+                color={opt.color}
+                icon={opt.icon}
+              />
             ))}
           </div>
         </div>
 
         <CAlert color="warning" className="mt-4 py-2 small mb-0">
-          <strong>Attention :</strong> Votre décision est définitive. En cas de rejet, le dossier retourne à la secrétaire.
+          <strong>Attention :</strong> Votre décision est définitive.
+          En cas de rejet, le dossier retourne à la secrétaire.
         </CAlert>
 
         <ConfirmCheckbox
@@ -145,8 +107,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
     <MotifModal
       visible={rejectModal}
       title="Rejeter — retour à la secrétaire"
-      confirmLabel="Rejeter"
-      confirmColor="danger"
+      confirmLabel="Rejeter" confirmColor="danger"
       placeholder="Indiquer le motif…"
       onClose={() => setRejectModal(false)}
       onConfirm={async motif => { setRejectModal(false); await run('chef_cap_reject', { motif }) }}
@@ -154,55 +115,30 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
   </>)
 }
 
-// ─── Vue principale ───────────────────────────────────────────────────────────
+const BASE_COLUMNS = [
+  { header: 'Référence', render: (d: DocumentRequest) => <ReferenceCell d={d} /> },
+  { header: 'Étudiant',  render: (d: DocumentRequest) => <EtudiantCell d={d} showDept /> },
+  { header: 'Type',      render: (d: DocumentRequest) => <TypeCell d={d} /> },
+  { header: 'Date',      render: (d: DocumentRequest) => <DateCell d={d} /> },
+]
 
 const ChefCapDashboard = () => {
-  const {
-    demandes, loading, filters, setFilters,
-    selected, detailOpen, openDetail, closeDetail, handleAction,
-  } = useDemandesDashboard()
+  const { demandes, loading, filters, setFilters, selected, detailOpen, openDetail, closeDetail, handleAction } =
+    useDemandesDashboard()
 
-  const columns: ColumnDef[] = [
-    { header: 'Référence', render: d => <ReferenceCell d={d} /> },
-    { header: 'Étudiant',  render: d => <EtudiantCell d={d} showDept /> },
-    { header: 'Type',      render: d => <TypeCell d={d} /> },
-    { header: 'Date',      render: d => <DateCell d={d} /> },
-    {
-      header: '', width: 50,
-      render: d => (
-        <td>
-          <CButton color="primary" size="sm" variant="ghost"
-            onClick={e => { e.stopPropagation(); openDetail(d) }}>
-            <CIcon icon={cilTask} />
-          </CButton>
-        </td>
-      ),
-    },
-  ]
+  const columns = useActionColumns(BASE_COLUMNS, openDetail)
 
   return (
     <DashboardShell
-      title="Documents à traiter"
-      subtitle="Chef CAP"
-      search={filters.search ?? ''}
-      onSearchChange={v => setFilters({ ...filters, search: v })}
-      stats={[{ key: 'total', label: 'Documents à traiter', color: '#0ea5e9', bg: '#f0f9ff' }]}
-      counts={{ total: demandes.length }}
+      title="Documents à traiter" subtitle="Chef CAP"
+      search={filters.search ?? ''} onSearchChange={v => setFilters({ ...filters, search: v })}
+      stats={[{ key: 'chef_cap_review', label: 'Documents à traiter' }]}
+      counts={{ chef_cap_review: demandes.length }}
     >
-      <DemandeTable
-        demandes={demandes}
-        loading={loading}
-        columns={columns}
-        emptyMessage="Aucun document en attente de traitement"
-        onRowClick={openDetail}
-      />
+      <DemandeTable demandes={demandes} loading={loading} columns={columns}
+        emptyMessage="Aucun document en attente de traitement" onRowClick={openDetail} />
       {selected && (
-        <DetailModal
-          demande={selected}
-          visible={detailOpen}
-          onClose={closeDetail}
-          onAction={handleAction}
-        />
+        <DetailModal demande={selected} visible={detailOpen} onClose={closeDetail} onAction={handleAction} />
       )}
     </DashboardShell>
   )

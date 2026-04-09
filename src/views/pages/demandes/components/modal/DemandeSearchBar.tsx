@@ -1,5 +1,4 @@
-// src/views/pages/demandes/components/DemandeSearchBar.tsx
-// Barre de recherche + filtre par type, partagée par tous les dashboards.
+// src/views/pages/demandes/components/modal/DemandeSearchBar.tsx
 
 import { CFormInput, CFormSelect, CInputGroup, CInputGroupText } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
@@ -19,7 +18,7 @@ const DemandeSearchBar = ({
   typeFilter = '', onTypeChange,
   showTypeFilter = false,
 }: Props) => (
-  <div className="d-flex gap-2 flex-wrap">
+  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
     <CInputGroup size="sm" style={{ width: 200 }}>
       <CInputGroupText><CIcon icon={cilSearch} /></CInputGroupText>
       <CFormInput
@@ -29,8 +28,12 @@ const DemandeSearchBar = ({
       />
     </CInputGroup>
     {showTypeFilter && onTypeChange && (
-      <CFormSelect size="sm" style={{ width: 170 }} value={typeFilter}
-        onChange={e => onTypeChange(e.target.value)}>
+      <CFormSelect
+        size="sm"
+        style={{ width: 170 }}
+        value={typeFilter}
+        onChange={e => onTypeChange(e.target.value)}
+      >
         <option value="">Tous les types</option>
         {Object.entries(TYPE_LABELS).map(([v, l]) => (
           <option key={v} value={v}>{l}</option>

@@ -5,7 +5,7 @@ import autoprefixer from 'autoprefixer'
 
 export default defineConfig(() => {
   return {
-    base: '/services/',
+    base: '/app-cap-frontend/',
     define: {
       __APP_BASE__: '"/services/"'
     },

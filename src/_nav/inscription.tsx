@@ -4,6 +4,7 @@ import {
   cilUserPlus,
   cilCalendar,
   cilList,
+  cilTask,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -35,6 +36,12 @@ const inscriptionNavigation = [
     name: 'Liste des étudiants',
     to: '/inscription/students-list',
     icon: <CIcon icon={cilList} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: "Corrections d'infos",
+    to: '/inscription/corrections',
+    icon: <CIcon icon={cilTask} customClassName="nav-icon" />,
   },
 ]
 

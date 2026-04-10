@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { CCard, CCardBody } from '@coreui/react'
 import { LoadingSpinner } from '@/components'
 
-import { Dashboard, PendingStudents, AnneeAcademiques, StudentsList } from './index.ts'
+import { Dashboard, PendingStudents, AnneeAcademiques, StudentsList, CorrectionRequestsList } from './index.ts'
 
 // Composant de test simple
 const TestComponent = () => {
@@ -26,6 +26,7 @@ const InscriptionRoutes = () => {
         <Route path="/pending-students" element={<PendingStudents />} />
         <Route path="/academics-years" element={<AnneeAcademiques />} />
         <Route path="/students-list" element={<StudentsList />} />
+        <Route path="/corrections" element={<CorrectionRequestsList />} />
         {/* Rediriger /inscription vers /inscription/dashboard par défaut */}
         <Route path="/" element={<Navigate to="/inscription/dashboard" replace />} />
         {/* Route 404 pour les sous-routes invalides */}

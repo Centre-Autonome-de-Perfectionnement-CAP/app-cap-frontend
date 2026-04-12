@@ -100,15 +100,20 @@ export class HttpService {
 
   private request<T = any>(options: RequestOptions): Promise<T> {
     return new Promise((resolve, reject) => {
-      // FormData => multipart, Axios gère le Content-Type
+      // ✅ CORRECTION : FormData => laisser Axios gérer le Content-Type automatiquement
+      // Ne jamais forcer Content-Type: multipart/form-data manuellement (le boundary serait absent)
       if (options.data instanceof FormData) {
-        const { headers, ...rest } = options;
-        if (headers) {
-          delete headers['Content-Type'];
-          delete headers['content-type'];
-        }
         this._axios
-          .post(options.url, options.data, { headers: options.headers, timeout: options.timeout })
+          .request<T>({
+            method: options.method as any,
+            url: options.url,
+            data: options.data,
+            timeout: options.timeout,
+            headers: {
+              // ✅ Supprimer Content-Type pour que Axios génère le bon boundary automatiquement
+              'Content-Type': undefined,
+            },
+          })
           .then((res: AxiosResponse) => resolve(res.data as T))
           .catch((ex: any) => reject(this.formatError(ex)));
       } else {

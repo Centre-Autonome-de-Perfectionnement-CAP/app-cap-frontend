@@ -35,19 +35,19 @@ const getNoteNavigation = (role: string | null) => {
       {
         component: CNavItem,
         name: 'Mes Contrats',
-        to: '/professor/contrats',
+        to: '/notes/professor/contrats',
         icon: <CIcon icon={cilFile} />,
       },
       {
         component: CNavItem,
         name: 'Contrats en attente',
-        to: '/professor/contrats?status=pending',
+        to: '/notes/professor/contrats?status=pending',
         icon: <CIcon icon={cilClock} />,
       },
       {
         component: CNavItem,
         name: 'Contrats signés',
-        to: '/professor/contrats?status=signed',
+        to: '/notes/professor/contrats?status=signed',
         icon: <CIcon icon={cilCheckCircle} />,
       }
     )
@@ -80,12 +80,12 @@ const getNoteNavigation = (role: string | null) => {
           {
             component: CNavItem,
             name: 'Décisions Semestre',
-            to: '/notes/decisions/semester',
+            to: '/notes/admin/decision-semester',
           },
           {
             component: CNavItem,
             name: 'Décisions Année',
-            to: '/notes/decisions/year',
+            to: '/notes/admin/decision-year',
           },
         ],
       },

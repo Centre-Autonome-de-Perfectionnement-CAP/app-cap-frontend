@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   CButton,
   CCard,
@@ -26,10 +26,15 @@ const Login = () => {
   const { login } = useAuth()
   const navigate  = useNavigate()
   const location  = useLocation()
+  const [searchParams] = useSearchParams()
 
-  // Récupère l'URL vers laquelle rediriger après connexion (passée par ProfessorRoute)
-  const redirectAfterLogin =
-    (location.state as any)?.redirectAfterLogin ?? null
+  // Deux mécanismes supportés :
+  // 1. Query param : /login?redirectTo=/notes/professor/contrats/xxx  (depuis NoteRoutes)
+  // 2. State React Router : { redirectAfterLogin: '/...' }  (héritage)
+  const redirectTo =
+    searchParams.get('redirectTo') ||
+    (location.state as any)?.redirectAfterLogin ||
+    null
 
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
@@ -78,14 +83,17 @@ const Login = () => {
         user.role as any
       )
 
-      // Redirection : vers la page d'origine si elle existe, sinon vers le dashboard du rôle
-      if (redirectAfterLogin) {
-        navigate(redirectAfterLogin, { replace: true })
+      // Redirection après login :
+      // 1. Si redirectTo est présent (lien email ou page protégée) → y aller directement
+      // 2. Sinon → route par défaut selon le rôle
+      if (redirectTo && redirectTo.startsWith('/')) {
+        navigate(decodeURIComponent(redirectTo), { replace: true })
       } else {
-        // Redirection par défaut selon le rôle
         const defaultRoutes: Record<string, string> = {
-          professeur:  '/professor/dashboard',
+          professeur:  '/notes/professor/dashboard',
           admin:       '/dashboard',
+          scolarite:   '/dashboard',
+          direction:   '/dashboard',
           responsable: '/responsable/dashboard',
         }
         navigate(defaultRoutes[user.role] ?? '/dashboard', { replace: true })
@@ -131,7 +139,7 @@ const Login = () => {
                     <p className="text-body-secondary mb-4">Connectez-vous à votre compte</p>
 
                     {/* Message informatif si redirection depuis un lien contrat */}
-                    {redirectAfterLogin && redirectAfterLogin.includes('/professor/contrats/') && (
+                    {redirectTo && redirectTo.includes('/professor/contrats/') && (
                       <CAlert color="info" className="mb-3" style={{ fontSize: 13 }}>
                         Veuillez vous connecter pour accéder à votre contrat.
                       </CAlert>

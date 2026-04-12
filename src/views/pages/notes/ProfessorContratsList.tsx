@@ -4,8 +4,6 @@ import {
   CCard,
   CCardBody,
   CCardHeader,
-  CRow,
-  CCol,
   CBadge,
   CButton,
   CAlert,
@@ -17,29 +15,29 @@ import {
 import CIcon from '@coreui/icons-react';
 import {
   cilFile,
-  cilArrowRight,
   cilSearch,
   cilWarning,
   cilCheckCircle,
   cilXCircle,
   cilClock,
-  cilList,
 } from '@coreui/icons';
 import HttpService from '@/services/http.service';
 import type { Contrat } from '@/types/rh.types';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  pending:   { label: 'En attente',  color: 'warning', icon: cilClock },
-  transfered:{ label: 'Transféré',   color: 'info',    icon: cilFile },
-  signed:    { label: 'Signé',       color: 'success', icon: cilCheckCircle },
-  ongoing:   { label: 'En cours',    color: 'primary', icon: cilFile },
-  completed: { label: 'Complété',    color: 'dark',    icon: cilCheckCircle },
-  cancelled: { label: 'Rejeté',      color: 'danger',  icon: cilXCircle },
+  pending:    { label: 'En attente', color: 'warning', icon: cilClock        },
+  transfered: { label: 'En attente',  color: 'info',    icon: cilFile         },
+  signed:     { label: 'Signé',      color: 'success', icon: cilCheckCircle  },
+  ongoing:    { label: 'En cours',   color: 'primary', icon: cilFile         },
+  completed:  { label: 'Complété',   color: 'dark',    icon: cilCheckCircle  },
+  cancelled:  { label: 'Rejeté',     color: 'danger',  icon: cilXCircle      },
 };
 
 const formatDate = (date?: string) =>
   date
-    ? new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+    ? new Date(date).toLocaleDateString('fr-FR', {
+        day: '2-digit', month: 'short', year: 'numeric',
+      })
     : '—';
 
 const formatAmount = (amount: number) =>
@@ -49,9 +47,9 @@ const ProfessorContratsList = () => {
   const navigate = useNavigate();
 
   const [contrats, setContrats] = useState<Contrat[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState<string | null>(null);
+  const [search, setSearch]     = useState('');
 
   useEffect(() => {
     const fetchContrats = async () => {
@@ -59,11 +57,11 @@ const ProfessorContratsList = () => {
       setError(null);
       try {
         const response = await HttpService.get<{ success: boolean; data: Contrat[] }>(
-          'rh/professor/my-contrats'
+          'rh/professor/my-contrats',
         );
         setContrats(response.data ?? []);
       } catch (err: any) {
-        setError(err.message || "Impossible de charger vos contrats. Veuillez réessayer.");
+        setError(err.message || 'Impossible de charger vos contrats. Veuillez réessayer.');
       } finally {
         setLoading(false);
       }
@@ -82,17 +80,23 @@ const ProfessorContratsList = () => {
   });
 
   const pendingCount = contrats.filter((c) =>
-    ['pending', 'transfered'].includes(c.status)
+    ['pending', 'transfered'].includes(c.status),
   ).length;
+
+  // Chemins corrigés : /notes/professor/… (basename /services → route réelle /services/notes/…)
+  const goToDashboard = () => navigate('/notes/professor/dashboard');
+  const goToContrat   = (uuid?: string) => uuid && navigate(`/notes/professor/contrats/${uuid}`);
 
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1>Mes contrats</h1>
-          <p className="text-muted">Consultez et gérez l'ensemble de vos contrats d'enseignement.</p>
+          <p className="text-muted">
+            Consultez et gérez l'ensemble de vos contrats d'enseignement.
+          </p>
         </div>
-        <CButton color="secondary" onClick={() => navigate('/professor/dashboard')}>
+        <CButton color="secondary" onClick={goToDashboard}>
           Tableau de bord
         </CButton>
       </div>
@@ -100,7 +104,8 @@ const ProfessorContratsList = () => {
       {pendingCount > 0 && (
         <CAlert color="warning" className="mb-4">
           <CIcon icon={cilWarning} className="me-2" />
-          Vous avez {pendingCount} contrat{pendingCount > 1 ? 's' : ''} en attente de votre signature.
+          Vous avez {pendingCount} contrat{pendingCount > 1 ? 's' : ''} en attente de votre
+          signature.
         </CAlert>
       )}
 
@@ -120,6 +125,7 @@ const ProfessorContratsList = () => {
             </CInputGroup>
           </div>
         </CCardHeader>
+
         <CCardBody>
           {loading ? (
             <div className="text-center py-5">
@@ -130,67 +136,72 @@ const ProfessorContratsList = () => {
             <CAlert color="danger">{error}</CAlert>
           ) : filtered.length === 0 ? (
             <CAlert color="info">
-              {search ? 'Aucun contrat ne correspond à votre recherche.' : 'Vous n\'avez pas encore de contrat.'}
+              {search
+                ? 'Aucun contrat ne correspond à votre recherche.'
+                : "Vous n'avez pas encore de contrat."}
             </CAlert>
           ) : (
-            <>
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Numéro</th>
-                      <th>Année académique</th>
-                      <th>Cycle</th>
-                      <th>Montant</th>
-                      <th>Date de début</th>
-                      <th>Statut</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((contrat) => {
-                      const statusCfg = STATUS_CONFIG[contrat.status] ?? { label: contrat.status, color: 'secondary', icon: cilFile };
-                      const isPending = ['pending', 'transfered'].includes(contrat.status);
-                      return (
-                        <tr
-                          key={contrat.uuid}
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => navigate(`/professor/contrats/${contrat.uuid}`)}
-                        >
-                          <td>
-                            <strong>N° {contrat.contrat_number}</strong>
-                            {isPending && (
-                              <CBadge color="warning" className="ms-2">Signature requise</CBadge>
-                            )}
-                          </td>
-                          <td>{contrat.academicYear?.academic_year ?? '—'}</td>
-                          <td>{contrat.cycle?.name ?? '—'}</td>
-                          <td>{formatAmount(contrat.amount)}</td>
-                          <td>{formatDate(contrat.start_date)}</td>
-                          <td>
-                            <CBadge color={statusCfg.color}>
-                              {statusCfg.label}
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Numéro</th>
+                    <th>Année académique</th>
+                    <th>Cycle</th>
+                    <th>Montant</th>
+                    <th>Date de début</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((contrat) => {
+                    const statusCfg = STATUS_CONFIG[contrat.status] ?? {
+                      label: contrat.status,
+                      color: 'secondary',
+                      icon: cilFile,
+                    };
+                    const isPending = ['pending', 'transfered'].includes(contrat.status);
+
+                    return (
+                      <tr
+                        key={contrat.uuid ?? contrat.id}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => goToContrat(contrat.uuid)}
+                      >
+                        <td>
+                          <strong>N° {contrat.contrat_number}</strong>
+                          {isPending && (
+                            <CBadge color="warning" className="ms-2">
+                              Signature requise
                             </CBadge>
-                          </td>
-                          <td>
-                            <CButton
-                              size="sm"
-                              color={isPending ? 'warning' : 'primary'}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/professor/contrats/${contrat.uuid}`);
-                              }}
-                            >
-                              {isPending ? 'Signer' : 'Voir'}
-                            </CButton>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </>
+                          )}
+                        </td>
+                        <td>{contrat.academicYear?.academic_year ?? '—'}</td>
+                        <td>{contrat.cycle?.name ?? '—'}</td>
+                        <td>{formatAmount(contrat.amount)}</td>
+                        <td>{formatDate(contrat.start_date)}</td>
+                        <td>
+                          <CBadge color={statusCfg.color}>{statusCfg.label}</CBadge>
+                        </td>
+                        <td>
+                          <CButton
+                            size="sm"
+                            color={isPending ? 'warning' : 'primary'}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              goToContrat(contrat.uuid);
+                            }}
+                          >
+                            {isPending ? 'Signer' : 'Voir'}
+                          </CButton>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </CCardBody>
       </CCard>
@@ -199,3 +210,4 @@ const ProfessorContratsList = () => {
 };
 
 export default ProfessorContratsList;
+

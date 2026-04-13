@@ -1,8 +1,10 @@
 // src/views/pages/demandes/constants/workflow.ts
 // ─── Source unique de vérité : couleurs, onglets, labels ─────────────────────
-// Nouveau circuit :
+// Circuit :
 //   Secrétaire → Comptable → Resp. Division → Chef CAP →
 //   Sec. Dir. Adjointe → Dir. Adjointe → Sec. Directeur → Directeur → Secrétaire (clôture)
+//
+// SIMPLIFIÉ : secretaire_review supprimé du circuit et des onglets.
 
 import {
   cilInbox, cilEnvelopeLetter, cilDollar, cilUser,
@@ -13,14 +15,13 @@ import {
 
 export const STATUS_COLORS: Record<string, { color: string; bg: string; text: string }> = {
   pending:                      { color: '#d97706', bg: '#fffbeb', text: '#92400e' },  // Ambre
-  secretaire_review:            { color: '#2563eb', bg: '#eff6ff', text: '#1e40af' },  // Bleu
   secretaire_correction:        { color: '#dc2626', bg: '#fef2f2', text: '#7f1d1d' },  // Rouge correction
   comptable_review:             { color: '#0891b2', bg: '#ecfeff', text: '#164e63' },  // Cyan
   chef_division_review:         { color: '#7c3aed', bg: '#f5f3ff', text: '#4c1d95' },  // Violet
   chef_cap_review:              { color: '#0284c7', bg: '#f0f9ff', text: '#0c4a6e' },  // Bleu ciel
   sec_dir_adjointe_review:      { color: '#9333ea', bg: '#faf5ff', text: '#581c87' },  // Violet moyen
   directrice_adjointe_review:   { color: '#6d28d9', bg: '#f5f3ff', text: '#3b0764' },  // Violet profond
-  sec_directeur_review:         { color: '#15803d', bg: '#f0fdf4', text: '#14532d' },  // Orange profond
+  sec_directeur_review:         { color: '#c2410c', bg: '#fff7ed', text: '#7c2d12' },  // Orange profond
   directeur_review:             { color: '#15803d', bg: '#f0fdf4', text: '#14532d' },  // Vert
   ready:                        { color: '#059669', bg: '#ecfdf5', text: '#064e3b' },  // Vert émeraude
   delivered:                    { color: '#4b5563', bg: '#f9fafb', text: '#1f2937' },  // Gris neutre
@@ -45,7 +46,7 @@ export interface StatConfig {
 
 export const SECRETAIRE_TABS: TabConfig[] = [
   { key: 'pending',                    label: 'Nouvelles',          icon: cilInbox          },
-  { key: 'secretaire_review',          label: 'En cours',           icon: cilEnvelopeLetter },
+  // secretaire_review supprimé — la secrétaire agit directement depuis pending
   { key: 'comptable_review',           label: 'Comptabilité',       icon: cilDollar         },
   { key: 'chef_division_review',       label: 'Resp. Division',     icon: cilUser           },
   { key: 'chef_cap_review',            label: 'Chef CAP',           icon: cilPen            },

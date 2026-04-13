@@ -1,6 +1,9 @@
 // src/views/pages/demandes/dashboards/SecretaireDashboard.tsx
-// Nouveau circuit : Secrétaire → Comptable → Resp. Division → Chef CAP →
+// Circuit : Secrétaire → Comptable → Resp. Division → Chef CAP →
 //   Sec. Dir. Adjointe → Dir. Adjointe → Sec. Directeur → Directeur → Secrétaire (clôture)
+//
+// SIMPLIFIÉ : plus de secretaire_review ni de secretaire_accept.
+// La secrétaire agit directement depuis le statut pending via secretaire_validate.
 
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -12,7 +15,7 @@ import {
   ReferenceCell, EtudiantCell, TypeCell, DateCell, StatutCell,
   SECRETAIRE_TABS, SECRETAIRE_STAT_TABS,
 } from '../components'
-import { cilCheckAlt, cilX, cilSend, cilReload } from '@coreui/icons'
+import { cilCheckAlt, cilX, cilReload } from '@coreui/icons'
 import type { DocumentRequest } from '@/types/document-request.types'
 
 // ─── Modal de détail ──────────────────────────────────────────────────────────
@@ -23,10 +26,10 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
   onClose: () => void
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
 }) => {
-  const [loading,          setLoading]          = useState(false)
-  const [resendModal,      setResendModal]       = useState(false)
-  const [rejectModal,      setRejectModal]       = useState(false)
-  const [rejectFinalModal, setRejectFinalModal]  = useState(false)
+  const [loading,          setLoading]         = useState(false)
+  const [resendModal,      setResendModal]      = useState(false)
+  const [rejectModal,      setRejectModal]      = useState(false)
+  const [rejectFinalModal, setRejectFinalModal] = useState(false)
   const s = demande.status
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
@@ -38,27 +41,22 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
     <>
       <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={loading} />
 
-      {/* pending → secretaire prend en charge → secretaire_review */}
-      {s === 'pending' && (
+      {/* pending → action directe : rejeter ou valider vers comptable */}
+      {s === 'pending' && (<>
         <ActionButton
-          label="Prendre en charge"
-          icon={cilCheckAlt}
-          color="success"
-          loading={loading}
-          onClick={() => run('secretaire_accept')}
+          label="Rejeter"
+          icon={cilX}
+          color="danger"
+          variant="outline"
+          disabled={loading}
+          onClick={() => setRejectModal(true)}
         />
-      )}
-
-      {/* secretaire_review → envoyer au comptable (premier maillon du nouveau circuit) */}
-      {s === 'secretaire_review' && (<>
-        <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline" disabled={loading}
-          onClick={() => setRejectModal(true)} />
         <ActionButton
-          label="Envoyer au Comptable"
-          icon={cilSend}
+          label="Valider → Comptable"
+          icon={cilCheckAlt}
           color="primary"
           loading={loading}
-          onClick={() => run('secretaire_send_comptable')}
+          onClick={() => run('secretaire_validate')}
         />
       </>)}
 
@@ -71,8 +69,13 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
           disabled={loading}
           onClick={() => setRejectFinalModal(true)}
         />
-        <ActionButton label="Renvoyer" icon={cilReload} color="primary" disabled={loading}
-          onClick={() => setResendModal(true)} />
+        <ActionButton
+          label="Renvoyer"
+          icon={cilReload}
+          color="primary"
+          disabled={loading}
+          onClick={() => setResendModal(true)}
+        />
       </>)}
 
       {/* ready → marquer comme retiré → delivered */}

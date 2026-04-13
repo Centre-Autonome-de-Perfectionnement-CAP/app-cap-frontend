@@ -60,6 +60,16 @@ const DemandeDetailBase = ({ demande, children, showTimeline = true }: Props) =>
             label="Soumis le"
             value={demande.submitted_at ? new Date(demande.submitted_at).toLocaleDateString('fr-FR') : undefined}
           />
+          {demande.comptable_reviewed_at && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: '0.72rem', padding: '2px 8px', borderRadius: 5,
+              background: '#ecfeff', color: '#164e63', fontWeight: 600, marginTop: 4,
+            }}>
+              <CIcon icon={cilCheckCircle} style={{ width: 11 }} />
+              Validé — Comptabilité
+            </span>
+          )}
           {demande.chef_division_reviewed_at && (
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -92,6 +102,16 @@ const DemandeDetailBase = ({ demande, children, showTimeline = true }: Props) =>
               </span>
             </div>
           )}
+          {demande.directrice_adjointe_reviewed_at && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: '0.72rem', padding: '2px 8px', borderRadius: 5,
+              background: '#f5f3ff', color: '#3b0764', fontWeight: 600, marginTop: 4,
+            }}>
+              <CIcon icon={cilCheckCircle} style={{ width: 11 }} />
+              Signé — Directrice Adjointe
+            </span>
+          )}
         </InfoBlock>
       </CCol>
     </CRow>
@@ -105,16 +125,17 @@ const DemandeDetailBase = ({ demande, children, showTimeline = true }: Props) =>
       <DossierFiles files={demande.files} />
     </div>
 
-    {demande.chef_division_comment && (
-      <CAlert color="warning" className="mt-3 py-2 small mb-0">
-        <CIcon icon={cilInfo} className="me-1" />
-        <strong>Responsable Division :</strong> {demande.chef_division_comment}
-      </CAlert>
-    )}
+    {/* Commentaires des acteurs du circuit */}
     {demande.comptable_comment && (
-      <CAlert color="info" className="mt-2 py-2 small mb-0">
+      <CAlert color="info" className="mt-3 py-2 small mb-0">
         <CIcon icon={cilInfo} className="me-1" />
         <strong>Comptable :</strong> {demande.comptable_comment}
+      </CAlert>
+    )}
+    {demande.chef_division_comment && (
+      <CAlert color="warning" className="mt-2 py-2 small mb-0">
+        <CIcon icon={cilInfo} className="me-1" />
+        <strong>Responsable Division :</strong> {demande.chef_division_comment}
       </CAlert>
     )}
     {demande.status === 'secretaire_correction' && (demande.rejected_by || demande.rejected_reason) && (

@@ -1,8 +1,8 @@
 // src/views/pages/demandes/dashboards/ChefDivisionDashboard.tsx
+// Nouveau circuit : reçoit de Comptable → valide vers Chef CAP
 
 import { useState } from 'react'
 import { CAlert } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
 import { cilCheckAlt, cilX } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
@@ -29,8 +29,13 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
     <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={loading} />
     <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline" disabled={loading}
       onClick={() => setRejectModal(true)} />
-    <ActionButton label="Valider → Comptable" icon={cilCheckAlt} color="success" loading={loading}
-      onClick={() => run('chef_division_validate')} />
+    <ActionButton
+      label="Valider → Chef CAP"
+      icon={cilCheckAlt}
+      color="success"
+      loading={loading}
+      onClick={() => run('chef_division_validate')}
+    />
   </>)
 
   return (<>
@@ -38,7 +43,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
       title="Validation — Responsable Division" footer={footer}>
       <DemandeDetailBase demande={demande}>
         <CAlert color="info" className="mt-3 py-2 small">
-          <strong>Information :</strong> Si vous validez, le dossier passe à la comptabilité.
+          <strong>Information :</strong> Si vous validez, le dossier passe au Chef CAP.
           Si vous rejetez, il retourne à la secrétaire avec votre commentaire.
         </CAlert>
       </DemandeDetailBase>

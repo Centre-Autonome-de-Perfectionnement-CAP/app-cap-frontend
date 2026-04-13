@@ -1,24 +1,26 @@
 // src/views/pages/demandes/dashboards/ComptableDashboard.tsx
+// Nouveau circuit : reçoit de Secrétaire → valide vers Resp. Division
+// Le comptable DOIT choisir le type de division lors de sa validation.
 
 import { useState } from 'react'
 import { CAlert } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
 import { cilCheckAlt, cilX } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
 import {
   DashboardShell, DemandeTable, DemandeModalShell, DemandeDetailBase,
-  FinancialPanel, ActionButton, useActionColumns,
+  FinancialPanel, ActionButton, useActionColumns, ChefDivisionModal,
   ReferenceCell, EtudiantCell, TypeCell, DateCell,
 } from '../components'
-import type { DocumentRequest } from '@/types/document-request.types'
+import type { DocumentRequest, ChefDivisionType } from '@/types/document-request.types'
 
 const DetailModal = ({ demande, visible, onClose, onAction }: {
   demande: DocumentRequest; visible: boolean; onClose: () => void
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
 }) => {
-  const [loading,     setLoading]     = useState(false)
-  const [rejectModal, setRejectModal] = useState(false)
+  const [loading,      setLoading]      = useState(false)
+  const [rejectModal,  setRejectModal]  = useState(false)
+  const [chefDivModal, setChefDivModal] = useState(false)
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
     setLoading(true)
@@ -27,28 +29,58 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
 
   const footer = (<>
     <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={loading} />
-    <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline" disabled={loading}
-      onClick={() => setRejectModal(true)} />
-    <ActionButton label="Valider → Chef CAP" icon={cilCheckAlt} color="success" loading={loading}
-      onClick={() => run('comptable_validate')} />
+    <ActionButton
+      label="Rejeter"
+      icon={cilX}
+      color="danger"
+      variant="outline"
+      disabled={loading}
+      onClick={() => setRejectModal(true)}
+    />
+    <ActionButton
+      label="Valider → Resp. Division"
+      icon={cilCheckAlt}
+      color="success"
+      loading={loading}
+      // Ouvre le sélecteur de type division AVANT d'envoyer
+      onClick={() => setChefDivModal(true)}
+    />
   </>)
 
   return (<>
-    <DemandeModalShell demande={demande} visible={visible} onClose={onClose}
-      title="Vérification financière" footer={footer}>
+    <DemandeModalShell
+      demande={demande}
+      visible={visible}
+      onClose={onClose}
+      title="Vérification financière"
+      footer={footer}
+    >
       <DemandeDetailBase demande={demande}>
         <FinancialPanel demande={demande} />
         <CAlert color="info" className="mt-3 py-2 small">
           <strong>Information :</strong> Vérifiez la situation financière avant de valider.
+          Vous devrez ensuite sélectionner le Responsable Division concerné.
           En cas de problème, rejetez avec un commentaire explicite.
         </CAlert>
       </DemandeDetailBase>
     </DemandeModalShell>
 
+    {/* Sélecteur obligatoire du type de division lors de la validation */}
+    <ChefDivisionModal
+      visible={chefDivModal}
+      onClose={() => setChefDivModal(false)}
+      onConfirm={(type: ChefDivisionType) => {
+        setChefDivModal(false)
+        // chef_division_type est envoyé au backend → enregistré sur comptable_validate
+        run('comptable_validate', { chef_division_type: type })
+      }}
+    />
+
     <MotifModal
       visible={rejectModal}
       title="Rejeter — retour à la secrétaire"
-      confirmLabel="Rejeter" confirmColor="danger"
+      confirmLabel="Rejeter"
+      confirmColor="danger"
       placeholder="Décrire le problème financier…"
       onClose={() => setRejectModal(false)}
       onConfirm={async motif => { setRejectModal(false); await run('comptable_reject', { motif }) }}
@@ -64,22 +96,36 @@ const BASE_COLUMNS = [
 ]
 
 const ComptableDashboard = () => {
-  const { demandes, loading, filters, setFilters, selected, detailOpen, openDetail, closeDetail, handleAction } =
-    useDemandesDashboard()
+  const {
+    demandes, loading, filters, setFilters,
+    selected, detailOpen, openDetail, closeDetail, handleAction,
+  } = useDemandesDashboard()
 
   const columns = useActionColumns(BASE_COLUMNS, openDetail)
 
   return (
     <DashboardShell
-      title="Vérification financière" subtitle="Comptabilité"
-      search={filters.search ?? ''} onSearchChange={v => setFilters({ ...filters, search: v })}
+      title="Vérification financière"
+      subtitle="Comptabilité"
+      search={filters.search ?? ''}
+      onSearchChange={v => setFilters({ ...filters, search: v })}
       stats={[{ key: 'comptable_review', label: 'Dossiers à vérifier' }]}
       counts={{ comptable_review: demandes.length }}
     >
-      <DemandeTable demandes={demandes} loading={loading} columns={columns}
-        emptyMessage="Aucun dossier en attente de vérification" onRowClick={openDetail} />
+      <DemandeTable
+        demandes={demandes}
+        loading={loading}
+        columns={columns}
+        emptyMessage="Aucun dossier en attente de vérification"
+        onRowClick={openDetail}
+      />
       {selected && (
-        <DetailModal demande={selected} visible={detailOpen} onClose={closeDetail} onAction={handleAction} />
+        <DetailModal
+          demande={selected}
+          visible={detailOpen}
+          onClose={closeDetail}
+          onAction={handleAction}
+        />
       )}
     </DashboardShell>
   )

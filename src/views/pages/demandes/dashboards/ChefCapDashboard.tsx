@@ -1,8 +1,9 @@
 // src/views/pages/demandes/dashboards/ChefCapDashboard.tsx
+// Nouveau circuit : reçoit de Resp. Division → paraphe → Sec. Dir. Adjointe
+//                                             → signature → ready (direct)
 
 import { useState } from 'react'
 import { CAlert } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
 import { cilX, cilPen, cilCheck } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
@@ -23,8 +24,8 @@ const CAP_CHOICES: {
     label: 'Parapher',
     color: '#7c3aed',
     icon: cilPen,
-    nextLabel: 'Parapher et transmettre à la Direction',
-    desc: 'Le document passera ensuite chez la Directrice Adjointe, puis le Directeur.',
+    nextLabel: 'Parapher et transmettre à la Sec. Dir. Adjointe',
+    desc: 'Le dossier passera ensuite chez la Sec. Dir. Adjointe, puis la Directrice Adjointe, la Sec. Directeur et enfin le Directeur.',
   },
   {
     value: 'signature',

@@ -1,15 +1,15 @@
-// src/views/pages/demandes/dashboards/DirecteurDashboard.tsx
-// Rôle : Directeur (slug: directeur) — dernier maillon signataire
-// Reçoit de Sec. Directeur → signe → ready
+// src/views/pages/demandes/dashboards/SecDirAdjointeDashboard.tsx
+// Nouveau rôle : Secrétaire Directrice Adjointe (slug: sec-da)
+// Reçoit de Chef CAP (paraphe) → transmet à la Directrice Adjointe
 
 import { useState } from 'react'
 import { CAlert } from '@coreui/react'
-import { cilX, cilCheck } from '@coreui/icons'
+import { cilCheckAlt, cilX } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
 import {
   DashboardShell, DemandeTable, DemandeModalShell, DemandeDetailBase,
-  ConfirmCheckbox, ActionButton, useActionColumns,
+  ActionButton, useActionColumns,
   ReferenceCell, EtudiantCell, TypeCell, DateCell, SignatureTypeCell,
 } from '../components'
 import { STATUS_COLORS } from '../components'
@@ -20,14 +20,11 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
 }) => {
   const [loading,     setLoading]     = useState(false)
-  const [confirmed,   setConfirmed]   = useState(false)
   const [rejectModal, setRejectModal] = useState(false)
-  const palette = STATUS_COLORS['directeur_review']
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
     setLoading(true)
-    try { await onAction(action, extra) } catch (e) { console.error(e) }
-    finally { setLoading(false); setConfirmed(false) }
+    try { await onAction(action, extra) } catch (e) { console.error(e) } finally { setLoading(false) }
   }
 
   const footer = (<>
@@ -35,29 +32,22 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
     <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline" disabled={loading}
       onClick={() => setRejectModal(true)} />
     <ActionButton
-      label="Signer — Document prêt"
-      icon={cilCheck}
-      customBg={confirmed && !loading ? palette.color : undefined}
+      label="Transmettre → Dir. Adjointe"
+      icon={cilCheckAlt}
+      color="success"
       loading={loading}
-      disabled={!confirmed}
-      onClick={() => run('directeur_sign')}
+      onClick={() => run('sec_da_transmit')}  // ← corrigé : était 'sec_dir_adjointe_forward'
     />
   </>)
 
   return (<>
     <DemandeModalShell demande={demande} visible={visible} onClose={onClose}
-      title="Signature — Directeur" footer={footer}>
+      title="Transmission — Sec. Directrice Adjointe" footer={footer}>
       <DemandeDetailBase demande={demande}>
-        <CAlert color="warning" className="mt-3 py-2 small">
-          <strong>Attention :</strong> En signant, le document sera marqué prêt à retirer par l'étudiant.
-          Cette action est définitive.
+        <CAlert color="info" className="mt-3 py-2 small">
+          <strong>Information :</strong> Si vous transmettez, le dossier passe à la Directrice Adjointe pour signature.
+          Si vous rejetez, il retourne à la secrétaire.
         </CAlert>
-        <ConfirmCheckbox
-          id="confirm-directeur"
-          checked={confirmed}
-          onChange={setConfirmed}
-          label={<>J'ai examiné ce dossier et j'appose ma signature en tant que <strong>Directeur</strong>.</>}
-        />
       </DemandeDetailBase>
     </DemandeModalShell>
 
@@ -65,23 +55,25 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
       visible={rejectModal}
       title="Rejeter — retour à la secrétaire"
       confirmLabel="Rejeter" confirmColor="danger"
+      placeholder="Motif du rejet…"
       onClose={() => setRejectModal(false)}
-      onConfirm={async motif => { setRejectModal(false); await run('directeur_reject', { motif }) }}
+      onConfirm={async motif => { setRejectModal(false); await run('sec_da_reject', { motif }) }}
+      // ← corrigé : était 'sec_dir_adjointe_reject'
     />
   </>)
 }
 
 const BASE_COLUMNS = [
   { header: 'Référence',      render: (d: DocumentRequest) => <ReferenceCell d={d} /> },
-  { header: 'Étudiant',       render: (d: DocumentRequest) => <EtudiantCell d={d} showDept={false} /> },
+  { header: 'Étudiant',       render: (d: DocumentRequest) => <EtudiantCell d={d} /> },
   { header: 'Type',           render: (d: DocumentRequest) => <TypeCell d={d} /> },
   { header: 'Type signature', render: (d: DocumentRequest) => <SignatureTypeCell d={d} /> },
   { header: 'Date',           render: (d: DocumentRequest) => <DateCell d={d} /> },
 ]
 
-const palette = STATUS_COLORS['directeur_review']
+const palette = STATUS_COLORS['sec_dir_adjointe_review']
 
-const DirecteurDashboard = () => {
+const SecDirAdjointeDashboard = () => {
   const { demandes, loading, filters, setFilters, selected, detailOpen, openDetail, closeDetail, handleAction } =
     useDemandesDashboard()
 
@@ -89,13 +81,13 @@ const DirecteurDashboard = () => {
 
   return (
     <DashboardShell
-      title="Documents à signer" subtitle="Direction"
+      title="Documents à transmettre" subtitle="Secrétariat — Directrice Adjointe"
       search={filters.search ?? ''} onSearchChange={v => setFilters({ ...filters, search: v })}
-      stats={[{ key: 'directeur_review', label: 'Documents à signer', color: palette.color, bg: palette.bg }]}
-      counts={{ directeur_review: demandes.length }}
+      stats={[{ key: 'sec_dir_adjointe_review', label: 'Documents à transmettre', color: palette.color, bg: palette.bg }]}
+      counts={{ sec_dir_adjointe_review: demandes.length }}
     >
       <DemandeTable demandes={demandes} loading={loading} columns={columns}
-        emptyMessage="Aucun document en attente de signature" onRowClick={openDetail} />
+        emptyMessage="Aucun document en attente de transmission" onRowClick={openDetail} />
       {selected && (
         <DetailModal demande={selected} visible={detailOpen} onClose={closeDetail} onAction={handleAction} />
       )}
@@ -103,4 +95,4 @@ const DirecteurDashboard = () => {
   )
 }
 
-export default DirecteurDashboard
+export default SecDirAdjointeDashboard

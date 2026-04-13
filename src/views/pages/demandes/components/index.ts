@@ -23,8 +23,9 @@ export { default as DemandeDetailBase } from './modal/DemandeDetailBase'
 export { default as DemandeSearchBar }  from './modal/DemandeSearchBar'
 export { default as FinancialPanel }    from './modal/FinancialPanel'
 export { default as ConfirmCheckbox }   from './modal/ConfirmCheckbox'
-export { ChefDivisionModal, ResendModal } from './modal/SecretaireModals'
+export { ResendModal, ChefDivisionModal, ChefDivisionPicker } from './modal/SecretaireModals'
+// Note : ChefDivisionModal utilisée par Comptable ; ChefDivisionPicker utilisée dans ResendModal
 
 // Constants (re-exportées pour que les dashboards n'aient qu'un import)
 export { STATUS_COLORS, SECRETAIRE_TABS, SECRETAIRE_STAT_TABS } from '../constants/workflow'
-export type { TabConfig, StatConfig } from '../constants/workflow'
+export type { TabConfig, StatConfig }                            from '../constants/workflow'

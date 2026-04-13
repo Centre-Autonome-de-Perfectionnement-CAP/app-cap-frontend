@@ -6,9 +6,10 @@ import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } 
 import { FRONTEND_ROUTES } from '@/constants';
 import { LoadingSpinner } from '@/components';
 
+// Permissions par rôle : false = module interdit, absent = autorisé par défaut
 const rolePermissions = {
   'chef-cap': {
-    inscription: false
+    inscription: false,
   },
   'secretaire': {
     bibliotheque: false,
@@ -17,7 +18,7 @@ const rolePermissions = {
     emploi: false,
     notes: false,
     presence: false,
-    finance: false
+    finance: false,
   },
   'chef-division': {
   },
@@ -29,18 +30,21 @@ const rolePermissions = {
     inscription: false,
     notes: false,
     presence: false,
-    soutenance: false
-  },
-  'directeur-adjoint': {
-    bibliotheque: false,
-    cahier: false,
-    cours: false,
-    emploi: false,
-    inscription: false,
-    notes: false,
-    presence: false,
     soutenance: false,
-    finance: false
+  },
+  // Nouveaux rôles : accès au module demandes uniquement
+  // ⚠️ Ne PAS mettre demandes: false ici — laisser absent = autorisé
+  'sec-da': {
+    bibliotheque: false, cahier: false, cours: false, emploi: false,
+    inscription: false, notes: false, presence: false, soutenance: false, finance: false,
+  },
+  'directrice-adjointe': {
+    bibliotheque: false, cahier: false, cours: false, emploi: false,
+    inscription: false, notes: false, presence: false, soutenance: false, finance: false,
+  },
+  'sec-dir': {
+    bibliotheque: false, cahier: false, cours: false, emploi: false,
+    inscription: false, notes: false, presence: false, soutenance: false, finance: false,
   },
   'directeur': {
     bibliotheque: false,
@@ -51,7 +55,7 @@ const rolePermissions = {
     notes: false,
     presence: false,
     soutenance: false,
-    finance: false
+    finance: false,
   },
   'professeur': {
     attestation: false,
@@ -64,15 +68,14 @@ const rolePermissions = {
     soutenance: false,
     finance: false,
     demandes: false,
-  }
+  },
 };
 
 const isAllowed = (role: string | null, module: string): boolean => {
   if (!role) return false;
   const perms = rolePermissions[role as keyof typeof rolePermissions] || {};
-  return perms[module as keyof typeof perms] !== false; 
+  return perms[module as keyof typeof perms] !== false;
 };
-
 
 interface ProtectedRouteProps {
   children?: React.ReactNode;
@@ -82,7 +85,6 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, module }) => {
   const { isAuthenticated, isLoading, role } = useAuth();
   const navigate = useNavigate();
-
 
   if (isLoading) {
     return <LoadingSpinner message="Vérification de l'authentification..." />;

@@ -1,19 +1,19 @@
 // src/views/pages/demandes/dashboards/SecretaireDashboard.tsx
+// Nouveau circuit : Secrétaire → Comptable → Resp. Division → Chef CAP →
+//   Sec. Dir. Adjointe → Dir. Adjointe → Sec. Directeur → Directeur → Secrétaire (clôture)
 
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CSpinner } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilCheckAlt, cilX, cilSend, cilReload, cilWarning } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
 import {
   DashboardShell, DemandeTable, DemandeModalShell, DemandeDetailBase,
-  ChefDivisionModal, ResendModal, TabBar, ActionButton, useActionColumns,
+  ResendModal, TabBar, ActionButton, useActionColumns,
   ReferenceCell, EtudiantCell, TypeCell, DateCell, StatutCell,
   SECRETAIRE_TABS, SECRETAIRE_STAT_TABS,
 } from '../components'
-import type { DocumentRequest, ChefDivisionType } from '@/types/document-request.types'
+import { cilCheckAlt, cilX, cilSend, cilReload } from '@coreui/icons'
+import type { DocumentRequest } from '@/types/document-request.types'
 
 // ─── Modal de détail ──────────────────────────────────────────────────────────
 
@@ -24,10 +24,9 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
 }) => {
   const [loading,          setLoading]          = useState(false)
-  const [chefDivModal,     setChefDivModal]     = useState(false)
-  const [resendModal,      setResendModal]      = useState(false)
-  const [rejectModal,      setRejectModal]      = useState(false)
-  const [rejectFinalModal, setRejectFinalModal] = useState(false)
+  const [resendModal,      setResendModal]       = useState(false)
+  const [rejectModal,      setRejectModal]       = useState(false)
+  const [rejectFinalModal, setRejectFinalModal]  = useState(false)
   const s = demande.status
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
@@ -39,6 +38,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
     <>
       <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={loading} />
 
+      {/* pending → secretaire prend en charge → secretaire_review */}
       {s === 'pending' && (
         <ActionButton
           label="Prendre en charge"
@@ -49,15 +49,21 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
         />
       )}
 
+      {/* secretaire_review → envoyer au comptable (premier maillon du nouveau circuit) */}
       {s === 'secretaire_review' && (<>
         <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline" disabled={loading}
           onClick={() => setRejectModal(true)} />
-        <ActionButton label="Envoyer au Responsable Division" icon={cilSend} color="primary" disabled={loading}
-          onClick={() => setChefDivModal(true)} />
+        <ActionButton
+          label="Envoyer au Comptable"
+          icon={cilSend}
+          color="primary"
+          loading={loading}
+          onClick={() => run('secretaire_send_comptable')}
+        />
       </>)}
 
+      {/* secretaire_correction → renvoyer à n'importe quel maillon ou rejeter définitivement */}
       {s === 'secretaire_correction' && (<>
-        {/* Rejeter définitivement : fond rouge vif + texte blanc */}
         <ActionButton
           label="Rejeter définitivement"
           icon={cilX}
@@ -69,6 +75,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
           onClick={() => setResendModal(true)} />
       </>)}
 
+      {/* ready → marquer comme retiré → delivered */}
       {s === 'ready' && (
         <ActionButton
           label="Marquer comme retiré"
@@ -86,17 +93,14 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
       <DemandeDetailBase demande={demande} />
     </DemandeModalShell>
 
-    <ChefDivisionModal
-      visible={chefDivModal}
-      onClose={() => setChefDivModal(false)}
-      onConfirm={(type: ChefDivisionType) => { setChefDivModal(false); run('secretaire_send_chef_division', { chef_division_type: type }) }}
-    />
-
     <ResendModal
       demande={demande}
       visible={resendModal}
       onClose={() => setResendModal(false)}
-      onConfirm={(resendTo, chefDivType) => { setResendModal(false); run('secretaire_resend', { resend_to: resendTo, chef_division_type: chefDivType }) }}
+      onConfirm={(resendTo, chefDivType) => {
+        setResendModal(false)
+        run('secretaire_resend', { resend_to: resendTo, chef_division_type: chefDivType })
+      }}
     />
 
     <MotifModal

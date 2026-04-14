@@ -1,7 +1,19 @@
+// src/contexts/AuthContext.tsx
+// Modification : après login, les rôles direction sont redirigés vers /demandes/cap
+// (espace isolé CAP Demandes) — les autres rôles vont au portail comme avant.
+
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { STORAGE_KEYS, FRONTEND_ROUTES, UserRole } from '@/constants';
 import authService from '@/services/auth.service';
+
+// Rôles qui ont un espace dédié CAP Demandes (pas le portail principal)
+const CAP_DIRECTION_ROLES: string[] = [
+  'sec-da',
+  'directrice-adjointe',
+  'sec-dir',
+  'directeur',
+]
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -29,9 +41,9 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-    const storedRole = localStorage.getItem(STORAGE_KEYS.ROLE) as UserRole | null;
-    const storedNom = localStorage.getItem(STORAGE_KEYS.NOM);
+    const storedToken  = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    const storedRole   = localStorage.getItem(STORAGE_KEYS.ROLE) as UserRole | null;
+    const storedNom    = localStorage.getItem(STORAGE_KEYS.NOM);
     const storedPrenoms = localStorage.getItem(STORAGE_KEYS.PRENOMS);
 
     if (storedToken && storedRole) {
@@ -48,16 +60,24 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     localStorage.setItem(STORAGE_KEYS.NOM, userNom);
     localStorage.setItem(STORAGE_KEYS.PRENOMS, userPrenoms);
     localStorage.setItem(STORAGE_KEYS.ROLE, userRole);
-    
+
     setNom(userNom);
     setPrenoms(userPrenoms);
     setRole(userRole);
     setIsAuthenticated(true);
-    
-    navigate(FRONTEND_ROUTES.PORTAIL);
+
+    // Redirection selon le rôle
+    if (CAP_DIRECTION_ROLES.includes(userRole as string)) {
+      // Espace CAP Demandes isolé — pas le portail principal
+      navigate(FRONTEND_ROUTES.DEMANDES_CAP);
+    } else {
+      navigate(FRONTEND_ROUTES.PORTAIL);
+    }
   };
 
   const logout = async (): Promise<void> => {
+    const currentRole = role as string | null;
+
     try {
       await authService.logout();
     } catch (error) {
@@ -67,13 +87,18 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
       localStorage.removeItem(STORAGE_KEYS.ROLE);
       localStorage.removeItem(STORAGE_KEYS.NOM);
       localStorage.removeItem(STORAGE_KEYS.PRENOMS);
-      
+
       setIsAuthenticated(false);
       setRole(null);
       setNom(null);
       setPrenoms(null);
-      
-      navigate(FRONTEND_ROUTES.PORTAIL);
+
+      // Rediriger vers la bonne page de login selon le rôle qui se déconnecte
+      if (currentRole && CAP_DIRECTION_ROLES.includes(currentRole)) {
+        navigate(FRONTEND_ROUTES.DEMANDES_CAP_LOGIN);
+      } else {
+        navigate(FRONTEND_ROUTES.LOGIN);
+      }
     }
   };
 

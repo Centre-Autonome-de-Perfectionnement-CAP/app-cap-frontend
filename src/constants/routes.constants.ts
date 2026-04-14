@@ -1,5 +1,6 @@
 // src/constants/routes.constants.ts
 // — Ajout de FRONTEND_ROUTES.DEMANDES = '/demandes'
+// — Ajout de FRONTEND_ROUTES.DEMANDES_CAP_LOGIN et FRONTEND_ROUTES.DEMANDES_CAP
 
 export const AUTH_ROUTES = {
   LOGIN: 'auth/login', LOGOUT: 'auth/logout',
@@ -78,62 +79,50 @@ export const COURS_ROUTES = {
   PROGRAMS_BULK: 'cours/programs/bulk', PROGRAMS_COPY: 'cours/programs/copy', PROGRAMS_RENEW: 'cours/programs/renew',
   CLASS_GROUP_PROGRAMS: (classGroupId: number | string) => `cours/class-groups/${classGroupId}/programs`,
   PROFESSOR_PROGRAMS: (professorId: number | string) => `cours/professors/${professorId}/programs`,
-  COURSE_ELEMENT_PROGRAMS: (courseElementId: number | string) => `cours/course-elements/${courseElementId}/programs`,
 } as const
 
 export const NOTES_ROUTES = {
-  BASE: 'notes', LIST: 'notes',
-  DETAIL: (id: number | string) => `notes/${id}`,
-  BULLETIN: (etudiantId: number | string, semestreId: number | string) => `notes/bulletin/${etudiantId}/${semestreId}`,
-  BY_ETUDIANT: (etudiantId: number | string) => `notes/etudiant/${etudiantId}`,
-  BY_MATIERE: (matiereId: number | string) => `notes/matiere/${matiereId}`,
+  BASE: 'notes',
+  EVALUATIONS: 'notes/evaluations',
+  EVALUATION: (id: number | string) => `notes/evaluations/${id}`,
+  NOTES: 'notes/notes',
+  NOTE: (id: number | string) => `notes/notes/${id}`,
+  BULLETINS: 'notes/bulletins',
+  BULLETIN: (id: number | string) => `notes/bulletins/${id}`,
+  PROFESSOR_DASHBOARD: 'notes/professor/dashboard',
+  PROFESSOR_EVALUATIONS: 'notes/professor/evaluations',
 } as const
 
 export const PRESENCE_ROUTES = {
-  BASE: 'presence', LIST: 'presence',
-  DETAIL: (id: number | string) => `presence/${id}`,
-  SEANCE: (seanceId: number | string) => `presence/seance/${seanceId}`,
-  BY_ETUDIANT: (etudiantId: number | string) => `presence/etudiant/${etudiantId}`,
-  BY_COURS: (coursId: number | string) => `presence/cours/${coursId}`,
-  STATISTICS: (etudiantId: number | string) => `presence/statistics/${etudiantId}`,
+  BASE: 'presence',
+  SESSIONS: 'presence/sessions',
+  SESSION: (id: number | string) => `presence/sessions/${id}`,
+  PRESENCES: 'presence/presences',
 } as const
 
 export const EMPLOI_DU_TEMPS_ROUTES = {
-  BASE: 'emploi-temps',
-  BUILDINGS: 'emploi-temps/buildings', BUILDING: (id: number | string) => `emploi-temps/buildings/${id}`,
-  ROOMS: 'emploi-temps/rooms', ROOM: (id: number | string) => `emploi-temps/rooms/${id}`,
-  ROOMS_AVAILABLE: 'emploi-temps/rooms-available',
-  TIME_SLOTS: 'emploi-temps/time-slots', TIME_SLOT: (id: number | string) => `emploi-temps/time-slots/${id}`,
-  TIME_SLOTS_BY_DAY: (day: string) => `emploi-temps/time-slots/day/${day}`,
-  SCHEDULED_COURSES: 'emploi-temps/scheduled-courses',
-  SCHEDULED_COURSE: (id: number | string) => `emploi-temps/scheduled-courses/${id}`,
-  CHECK_CONFLICTS: 'emploi-temps/scheduled-courses/check-conflicts',
-  CANCEL_COURSE: (id: number | string) => `emploi-temps/scheduled-courses/${id}/cancel`,
-  UPDATE_HOURS: (id: number | string) => `emploi-temps/scheduled-courses/${id}/update-hours`,
-  EXCLUDE_DATE: (id: number | string) => `emploi-temps/scheduled-courses/${id}/exclude-date`,
-  OCCURRENCES: (id: number | string) => `emploi-temps/scheduled-courses/${id}/occurrences`,
-  SCHEDULE_BY_CLASS_GROUP: (classGroupId: number | string) => `emploi-temps/schedule/class-group/${classGroupId}`,
-  SCHEDULE_BY_PROFESSOR: (professorId: number | string) => `emploi-temps/schedule/professor/${professorId}`,
-  SCHEDULE_BY_ROOM: (roomId: number | string) => `emploi-temps/schedule/room/${roomId}`,
+  BASE: 'emploi-du-temps',
+  BUILDINGS: 'emploi-du-temps/buildings',
+  BUILDING: (id: number | string) => `emploi-du-temps/buildings/${id}`,
+  ROOMS: 'emploi-du-temps/rooms',
+  ROOM: (id: number | string) => `emploi-du-temps/rooms/${id}`,
+  TIME_SLOTS: 'emploi-du-temps/time-slots',
+  TIME_SLOT: (id: number | string) => `emploi-du-temps/time-slots/${id}`,
+  SCHEDULED_COURSES: 'emploi-du-temps/scheduled-courses',
+  SCHEDULED_COURSE: (id: number | string) => `emploi-du-temps/scheduled-courses/${id}`,
+  SCHEDULE_VIEW: 'emploi-du-temps/schedule-view',
+  DASHBOARD: 'emploi-du-temps/dashboard',
+  CONFLICTS: 'emploi-du-temps/conflicts',
 } as const
 
-export const BIBLIOTHEQUE_ROUTES = {
-  BASE: 'bibliotheque', LIVRES: 'bibliotheque/livres',
-  LIVRE: (id: number | string) => `bibliotheque/livres/${id}`,
-  EMPRUNTS: 'bibliotheque/emprunts',
-  EMPRUNT: (id: number | string) => `bibliotheque/emprunts/${id}`,
-  EMPRUNTER: (livreId: number | string) => `bibliotheque/emprunts/${livreId}/emprunter`,
-  RETOURNER: (empruntId: number | string) => `bibliotheque/emprunts/${empruntId}/retourner`,
+export const SOUTENANCE_ROUTES = {
+  BASE: 'soutenances', LIST: 'soutenances',
+  DETAIL: (id: number | string) => `soutenances/${id}`,
+  PLANIFIER: 'soutenances/planifier',
+  JURY: (soutenanceId: number | string) => `soutenances/${soutenanceId}/jury`,
 } as const
 
-export const ATTESTATION_ROUTES = {
-  BASE: 'attestations', LIST: 'attestations',
-  DETAIL: (id: number | string) => `attestations/${id}`,
-  GENERER: 'attestations/generer',
-  DOWNLOAD: (id: number | string) => `attestations/${id}/download`,
-} as const
-
-export const CAHIER_ROUTES = {
+export const CAHIER_TEXTE_ROUTES = {
   BASE: 'cahier-texte', LIST: 'cahier-texte',
   DETAIL: (id: number | string) => `cahier-texte/${id}`,
   BY_CLASSE: (classeId: number | string) => `cahier-texte/classe/${classeId}`,
@@ -147,17 +136,14 @@ export const RH_ROUTES = {
   ABSENCES: 'rh/absences', ABSENCE: (id: number | string) => `rh/absences/${id}`,
 } as const
 
-export const SOUTENANCE_ROUTES = {
-  BASE: 'soutenances', LIST: 'soutenances',
-  DETAIL: (id: number | string) => `soutenances/${id}`,
-  PLANIFIER: 'soutenances/planifier',
-  JURY: (soutenanceId: number | string) => `soutenances/${soutenanceId}/jury`,
-} as const
-
 // ==================== ROUTES FRONTEND ====================
 
 export const FRONTEND_ROUTES = {
-  LOGIN: '/login', REGISTER: '/register', PORTAIL: '/portail', DASHBOARD: '/dashboard',
+  LOGIN:    '/login',
+  REGISTER: '/register',
+  PORTAIL:  '/portail',
+  DASHBOARD: '/dashboard',
+
   INSCRIPTION: {
     BASE: '/inscription', DASHBOARD: '/inscription/dashboard',
     ETUDIANTS: '/inscription/etudiants',
@@ -165,7 +151,10 @@ export const FRONTEND_ROUTES = {
     PENDING_STUDENTS: '/inscription/pending-students',
     ANNEES_ACADEMIQUES: '/inscription/annees-academiques',
   },
-  FINANCE: { BASE: '/finance', PAIEMENTS: '/finance/paiements', QUITTANCES: '/finance/quittances', TARIFS: '/finance/tarifs' },
+  FINANCE: {
+    BASE: '/finance', PAIEMENTS: '/finance/paiements',
+    QUITTANCES: '/finance/quittances', TARIFS: '/finance/tarifs',
+  },
   COURS: { BASE: '/cours', LIST: '/cours/liste', EMPLOI: '/cours/emploi-du-temps' },
   EMPLOI_DU_TEMPS: {
     BASE: '/emploi-du-temps', DASHBOARD: '/emploi-du-temps/dashboard',
@@ -173,14 +162,19 @@ export const FRONTEND_ROUTES = {
     ROOMS: '/emploi-du-temps/rooms', TIME_SLOTS: '/emploi-du-temps/time-slots',
     SCHEDULED_COURSES: '/emploi-du-temps/scheduled-courses', SCHEDULE_VIEW: '/emploi-du-temps/schedule-view',
   },
-  NOTES: { BASE: '/notes', SAISIE: '/notes/saisie', BULLETINS: '/notes/bulletins' },
+  NOTES:    { BASE: '/notes', SAISIE: '/notes/saisie', BULLETINS: '/notes/bulletins' },
   PRESENCE: { BASE: '/presence', SAISIE: '/presence/saisie', LISTE: '/presence/liste' },
   BIBLIOTHEQUE: '/bibliotheque',
   ATTESTATIONS: '/attestations',
   CAHIER_TEXTE: '/cahier-texte',
-  RH: '/rh',
-  SOUTENANCES: '/soutenances',
-  DEMANDES: '/demandes',   // ← ajouté
+  RH:           '/rh',
+  SOUTENANCES:  '/soutenances',
+
+  // ── Module Gestion des Demandes ──────────────────────────────────────────────
+  DEMANDES:           '/demandes',          // rôles secrétaire/comptable/chef-cap (DefaultLayout)
+  DEMANDES_CAP_LOGIN: '/demandes/login',    // page de login dédiée direction
+  DEMANDES_CAP:       '/demandes/cap',      // espace isolé direction (CAPLayout)
+
   PAGE_404: '/404',
   PAGE_500: '/500',
 } as const

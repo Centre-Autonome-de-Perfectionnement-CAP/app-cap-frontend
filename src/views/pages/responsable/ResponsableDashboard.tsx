@@ -1,5 +1,5 @@
 // pages/ResponsableDashboard/ResponsableDashboard.tsx
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   CCard, CCardBody, CCardHeader,
   CCol, CRow, CBadge, CAlert,
@@ -7,85 +7,97 @@ import {
   CTableRow, CTableHeaderCell,
   CTableBody, CTableDataCell, CSpinner,
   CNav, CNavItem, CNavLink, CTabContent, CTabPane,
-  CProgress, CProgressBar,
   CInputGroup, CFormInput, CInputGroupText,
+  CTooltip,
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { 
-  cilPeople, 
-  cilSchool, 
-  cilDescription, 
-  cilPrint, 
+import {
+  cilPeople,
+  cilSchool,
+  cilDescription,
+  cilPrint,
   cilGroup,
   cilCalendar,
-  cilFilter,
   cilSearch,
   cilUser,
   cilUserFemale,
-  cilUserUnfollow,
   cilClipboard,
-  cilZoom,
+  cilArrowLeft,
+  cilWarning,
+  cilCheckCircle,
+  cilClock,
+  cilBook,
+  cilSpreadsheet,
 } from '@coreui/icons';
 import { useAuth } from '@/contexts/AuthContext';
 import inscriptionService from '@/services/inscription.service';
-import type { 
-  ClassGroup, 
-  ClassByYear, 
-  StudentRow 
+import type {
+  ClassGroup,
+  ClassByYear,
+  StudentRow,
+  ProgramRow,
 } from '@/services/inscription.service';
 import Swal from 'sweetalert2';
+import CahierTexteModal from '../../../components/CahierTexteModal/CahierTexteModal';
 import './ResponsableDashboard.scss';
 
+// ─── Contract badge helper ─────────────────────────────────────────────────────
+
+const CONTRACT_BADGE: Record<string, { label: string; color: string }> = {
+  validated: { label: 'Contrat OK',  color: 'success'   },
+  pending:   { label: 'En attente',  color: 'warning'   },
+  rejected:  { label: 'Rejeté',      color: 'danger'    },
+  expired:   { label: 'Expiré',      color: 'secondary' },
+};
+
+// ─── View type ────────────────────────────────────────────────────────────────
+type ViewMode = 'classes' | 'programs' | 'students';
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const ResponsableDashboard: React.FC = () => {
-  // ✅ AuthContext expose nom et prenoms directement (pas un objet 'user')
   const { nom, prenoms } = useAuth();
   const fullName = [prenoms, nom].filter(Boolean).join(' ') || 'Responsable';
 
-  // États
-  const [classesByYear, setClassesByYear] = useState<ClassByYear[]>([]);
-  const [selectedClass, setSelectedClass] = useState<ClassGroup | null>(null);
-  const [students, setStudents] = useState<StudentRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  // ── Classes ──────────────────────────────────────────────────────────────
+  const [classesByYear, setClassesByYear]   = useState<ClassByYear[]>([]);
+  const [selectedClass, setSelectedClass]   = useState<ClassGroup | null>(null);
+  const [loading, setLoading]               = useState(true);
+  const [error, setError]                   = useState<string | null>(null);
+  const [activeTab, setActiveTab]           = useState(0);
+
+  // ── Navigation ────────────────────────────────────────────────────────────
+  // 'classes' → liste des classes
+  // 'programs' → programmes d'une classe (vue principale après clic sur une classe)
+  // 'students' → liste des étudiants (accessible depuis les programmes)
+  const [viewMode, setViewMode]             = useState<ViewMode>('classes');
+
+  // ── Students ──────────────────────────────────────────────────────────────
+  const [students, setStudents]             = useState<StudentRow[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [exportLoading, setExportLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterRedoublant, setFilterRedoublant] = useState<string>('all');
-  const [filterSexe, setFilterSexe] = useState<string>('all');
-  const [stats, setStats] = useState({
-    total: 0,
-    masculin: 0,
-    feminin: 0,
-    redoublants: 0,
-    nouveaux: 0
-  });
+  const [searchTerm, setSearchTerm]         = useState('');
+  const [filterRedoublant, setFilterRedoublant] = useState('all');
+  const [filterSexe, setFilterSexe]         = useState('all');
+  const [exportLoading, setExportLoading]   = useState(false);
+  const [stats, setStats] = useState({ total: 0, masculin: 0, feminin: 0, redoublants: 0, nouveaux: 0 });
 
-  // Chargement initial des données
-  useEffect(() => {
-    loadClasses();
-  }, []);
+  // ── Programs ──────────────────────────────────────────────────────────────
+  const [programs, setPrograms]             = useState<ProgramRow[]>([]);
+  const [loadingPrograms, setLoadingPrograms] = useState(false);
 
-  // Charger les classes du responsable
-  const loadClasses = async () => {
+  // ── Cahier de texte modal ─────────────────────────────────────────────────
+  const [textbookProgram, setTextbookProgram] = useState<ProgramRow | null>(null);
+
+  // ── Load classes ──────────────────────────────────────────────────────────
+  const loadClasses = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // ✅ Plus de cache dans le contexte — on appelle toujours l'API directement
       const response = await inscriptionService.getResponsableClasses();
-        const classesData = response.classes_by_year || [];
-        setClassesByYear(classesData);
-        
-        if (classesData.length > 0) {
-          if (classesData[0]?.classes?.length > 0) {
-            const firstClass = classesData[0].classes[0];
-            setSelectedClass(firstClass);
-            setActiveTab(0);
-            await loadStudentsForClass(firstClass.id);
-          }
-        }
+      const classesData = response.classes_by_year || [];
+      setClassesByYear(classesData);
+      // On reste sur la vue 'classes' — pas de chargement automatique d'étudiants
     } catch (err: any) {
-      console.error('Erreur chargement classes:', err);
       setError(
         err?.response?.data?.message ||
         err?.message ||
@@ -94,125 +106,125 @@ const ResponsableDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Charger les étudiants d'une classe spécifique
-  const loadStudentsForClass = async (classId: number) => {
+  useEffect(() => { loadClasses(); }, [loadClasses]);
+
+  // ── Load students ─────────────────────────────────────────────────────────
+  const loadStudentsForClass = useCallback(async (classId: number) => {
     setLoadingStudents(true);
     try {
       const response = await inscriptionService.getStudentsByClass(classId);
-      const studentsList = response.students || [];
-      setStudents(studentsList);
-      
-      // Calculer les statistiques
-      calculateStats(studentsList);
-    } catch (err: any) {
-      console.error('Erreur chargement étudiants:', err);
-      Swal.fire({
-        icon: 'error',
-        title: 'Erreur',
-        text: 'Impossible de charger la liste des étudiants.'
+      const list = response.students || [];
+      setStudents(list);
+      setStats({
+        total:       list.length,
+        masculin:    list.filter((s: StudentRow) => s.sexe === 'M').length,
+        feminin:     list.filter((s: StudentRow) => s.sexe === 'F').length,
+        redoublants: list.filter((s: StudentRow) => s.redoublant === 'Oui').length,
+        nouveaux:    list.filter((s: StudentRow) => s.redoublant === 'Non').length,
       });
+    } catch {
       setStudents([]);
+      Swal.fire({ icon: 'error', title: 'Erreur', text: 'Impossible de charger la liste des étudiants.' });
     } finally {
       setLoadingStudents(false);
     }
-  };
+  }, []);
 
-  // Calculer les statistiques
-  const calculateStats = (studentsList: StudentRow[]) => {
-    const total = studentsList.length;
-    const masculin = studentsList.filter(s => s.sexe === 'M').length;
-    const feminin = studentsList.filter(s => s.sexe === 'F').length;
-    const redoublants = studentsList.filter(s => s.redoublant === 'Oui').length;
-    const nouveaux = total - redoublants;
+  // ── Load programs ─────────────────────────────────────────────────────────
+  const loadProgramsForClass = useCallback(async (classId: number) => {
+    setLoadingPrograms(true);
+    try {
+      const response = await inscriptionService.getClassPrograms(classId);
+      setPrograms(response.programs || []);
+    } catch {
+      setPrograms([]);
+      Swal.fire({ icon: 'error', title: 'Erreur', text: 'Impossible de charger les programmes.' });
+    } finally {
+      setLoadingPrograms(false);
+    }
+  }, []);
 
-    setStats({ total, masculin, feminin, redoublants, nouveaux });
-  };
-
-  // Filtrer les étudiants
-  const filteredStudents = useMemo(() => {
-    return students.filter(student => {
-      // Filtre par recherche textuelle
-      const matchesSearch = searchTerm === '' || 
-        student.nomPrenoms.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.matricule?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // Filtre par statut (redoublant/nouveau)
-      const matchesRedoublant = filterRedoublant === 'all' || 
-        (filterRedoublant === 'redoublant' && student.redoublant === 'Oui') ||
-        (filterRedoublant === 'nouveau' && student.redoublant === 'Non');
-      
-      // Filtre par sexe
-      const matchesSexe = filterSexe === 'all' || student.sexe === filterSexe;
-      
-      return matchesSearch && matchesRedoublant && matchesSexe;
-    });
-  }, [students, searchTerm, filterRedoublant, filterSexe]);
-
-  // Changer de classe
-  const handleClassChange = async (classGroup: ClassGroup, yearIndex: number) => {
+  // ── Click sur une classe → afficher les programmes ─────────────────────────
+  const handleClassSelect = useCallback(async (classGroup: ClassGroup, yearIndex: number) => {
     setSelectedClass(classGroup);
     setActiveTab(yearIndex);
+    setPrograms([]);
+    setStudents([]);
     setSearchTerm('');
     setFilterRedoublant('all');
     setFilterSexe('all');
-    await loadStudentsForClass(classGroup.id);
-  };
+    setViewMode('programs');
+    await loadProgramsForClass(classGroup.id);
+  }, [loadProgramsForClass]);
 
-  // Exporter les listes
+  // ── Afficher les étudiants (depuis la vue programmes) ─────────────────────
+  const handleShowStudents = useCallback(async () => {
+    if (!selectedClass) return;
+    setViewMode('students');
+    if (students.length === 0) {
+      await loadStudentsForClass(selectedClass.id);
+    }
+  }, [selectedClass, students.length, loadStudentsForClass]);
+
+  // ── Retour programmes depuis étudiants ────────────────────────────────────
+  const handleBackToPrograms = useCallback(() => {
+    setViewMode('programs');
+    setSearchTerm('');
+    setFilterRedoublant('all');
+    setFilterSexe('all');
+  }, []);
+
+  // ── Retour à la liste des classes ────────────────────────────────────────
+  const handleBackToClasses = useCallback(() => {
+    setSelectedClass(null);
+    setPrograms([]);
+    setStudents([]);
+    setViewMode('classes');
+  }, []);
+
+  // ── Filtered students ─────────────────────────────────────────────────────
+  const filteredStudents = useMemo(() => {
+    return students.filter(s => {
+      const matchSearch = searchTerm === '' ||
+        s.nomPrenoms.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (s.matricule ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (s.email ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchRed = filterRedoublant === 'all' ||
+        (filterRedoublant === 'redoublant' && s.redoublant === 'Oui') ||
+        (filterRedoublant === 'nouveau' && s.redoublant === 'Non');
+      const matchSexe = filterSexe === 'all' || s.sexe === filterSexe;
+      return matchSearch && matchRed && matchSexe;
+    });
+  }, [students, searchTerm, filterRedoublant, filterSexe]);
+
+  // ── Export ────────────────────────────────────────────────────────────────
   const handleExport = async (type: 'presence' | 'emargement' | 'liste') => {
     if (!selectedClass) return;
-    
     setExportLoading(true);
     try {
-      const blobUrl = await inscriptionService.exportClassList(
-        selectedClass.id, 
-        type
-      );
-      
-      const labels = {
-        presence: 'fiche-presence',
-        emargement: 'fiche-emargement',
-        liste: 'liste-etudiants'
-      };
-      
+      const blobUrl = await inscriptionService.exportClassList(selectedClass.id, type);
+      const labels = { presence: 'fiche-presence', emargement: 'fiche-emargement', liste: 'liste-etudiants' };
       const fileName = `${labels[type]}-${selectedClass.filiere}-Niveau${selectedClass.study_level}${selectedClass.group_name ? '-Groupe' + selectedClass.group_name : ''}.pdf`;
-      
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = fileName;
       link.click();
       window.URL.revokeObjectURL(blobUrl);
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Téléchargement réussi',
-        text: 'Le document a été généré avec succès.',
-        timer: 2000,
-        showConfirmButton: false
-      });
-    } catch (error) {
-      console.error('Erreur export:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Erreur',
-        text: 'Impossible de générer le document PDF.'
-      });
+      Swal.fire({ icon: 'success', title: 'Téléchargement réussi', timer: 2000, showConfirmButton: false });
+    } catch {
+      Swal.fire({ icon: 'error', title: 'Erreur', text: 'Impossible de générer le document PDF.' });
     } finally {
       setExportLoading(false);
     }
   };
 
-  // Réinitialiser les filtres
-  const resetFilters = () => {
-    setSearchTerm('');
-    setFilterRedoublant('all');
-    setFilterSexe('all');
-  };
+  // ─────────────────────────────────────────────────────────────────────────
+  // Renders
+  // ─────────────────────────────────────────────────────────────────────────
 
-  // Rendu du sélecteur de classes
+  // ── Vue 1 : Sélection de classe ───────────────────────────────────────────
   const renderClassSelector = () => {
     if (classesByYear.length === 0) {
       return (
@@ -228,17 +240,14 @@ const ResponsableDashboard: React.FC = () => {
         <CCardHeader className="bg-light">
           <div className="d-flex align-items-center gap-2">
             <CIcon icon={cilGroup} size="lg" className="text-primary" />
-            <h5 className="mb-0">Mes classes par année académique</h5>
+            <h5 className="mb-0">Mes classes — cliquez sur une classe pour voir ses programmes</h5>
           </div>
         </CCardHeader>
         <CCardBody>
           <CNav variant="tabs" role="tablist" className="mb-3">
             {classesByYear.map((yearData, index) => (
               <CNavItem key={yearData.academic_year_id}>
-                <CNavLink
-                  active={activeTab === index}
-                  onClick={() => setActiveTab(index)}
-                >
+                <CNavLink active={activeTab === index} onClick={() => setActiveTab(index)} style={{ cursor: 'pointer' }}>
                   <CIcon icon={cilCalendar} className="me-2" />
                   {yearData.academic_year_name}
                 </CNavLink>
@@ -248,53 +257,40 @@ const ResponsableDashboard: React.FC = () => {
 
           <CTabContent>
             {classesByYear.map((yearData, index) => (
-              <CTabPane
-                key={yearData.academic_year_id}
-                visible={activeTab === index}
-              >
+              <CTabPane key={yearData.academic_year_id} visible={activeTab === index}>
                 <CRow className="g-3">
                   {yearData.classes.map((classGroup) => (
                     <CCol key={classGroup.id} xs={12} md={6} lg={4}>
                       <CCard
                         className={`h-100 class-card ${selectedClass?.id === classGroup.id ? 'border-primary shadow' : ''}`}
-                        onClick={() => handleClassChange(classGroup, index)}
+                        onClick={() => handleClassSelect(classGroup, index)}
                         style={{ cursor: 'pointer' }}
                       >
                         <CCardBody>
                           <div className="d-flex justify-content-between align-items-start mb-3">
                             <div>
-                              <h6 className="mb-1">{classGroup.filiere}</h6>
+                              <h6 className="mb-1 fw-bold">{classGroup.filiere}</h6>
                               <div className="d-flex gap-2 flex-wrap">
-                                <CBadge color="info">
-                                  Niveau {classGroup.study_level}
-                                </CBadge>
+                                <CBadge color="info">Niveau {classGroup.study_level}</CBadge>
                                 {classGroup.group_name && (
-                                  <CBadge color="success">
-                                    Groupe {classGroup.group_name}
-                                  </CBadge>
+                                  <CBadge color="success">Groupe {classGroup.group_name}</CBadge>
                                 )}
                               </div>
                             </div>
                             <div className="bg-primary bg-opacity-10 rounded p-2">
-                              <CIcon icon={cilPeople} className="text-primary" />
+                              <CIcon icon={cilClipboard} className="text-primary" />
                             </div>
                           </div>
-                          
                           <div className="d-flex justify-content-between align-items-center">
                             <div>
                               <small className="text-muted">Effectif</small>
-                              <div className="fw-bold fs-5">
-                                {classGroup.total_etudiants}
-                              </div>
+                              <div className="fw-bold fs-5">{classGroup.total_etudiants}</div>
                             </div>
                             <div>
-                              <small className="text-muted">Moyenne validation</small>
-                              <div className="fw-bold">
-                                {classGroup.validation_average || 'N/A'}
-                              </div>
+                              <small className="text-muted">Moy. validation</small>
+                              <div className="fw-bold">{classGroup.validation_average || 'N/A'}</div>
                             </div>
                           </div>
-
                           {classGroup.cycle && (
                             <div className="mt-2">
                               <small className="text-muted">
@@ -303,6 +299,12 @@ const ResponsableDashboard: React.FC = () => {
                               </small>
                             </div>
                           )}
+                          <div className="mt-3 pt-2 border-top text-center">
+                            <small className="text-primary fw-semibold">
+                              <CIcon icon={cilClipboard} size="sm" className="me-1" />
+                              Cliquer pour voir les programmes
+                            </small>
+                          </div>
                         </CCardBody>
                       </CCard>
                     </CCol>
@@ -316,321 +318,317 @@ const ResponsableDashboard: React.FC = () => {
     );
   };
 
-  // Rendu de la vue d'une classe sélectionnée
-  const renderClassView = () => {
+  // ── Vue 2 : Programmes d'une classe ──────────────────────────────────────
+  const renderProgramsView = () => {
+    if (!selectedClass) return null;
+
+    return (
+      <CCard className="mb-4 shadow-sm">
+        <CCardHeader>
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div className="d-flex align-items-center gap-2">
+              <CButton color="secondary" variant="outline" size="sm" onClick={handleBackToClasses}>
+                <CIcon icon={cilArrowLeft} className="me-1" />
+                Mes classes
+              </CButton>
+              <CIcon icon={cilClipboard} className="text-primary" />
+              <h5 className="mb-0">
+                Programmes — {selectedClass.filiere} · Niveau {selectedClass.study_level}
+                {selectedClass.group_name && ` · Gr.${selectedClass.group_name}`}
+              </h5>
+            </div>
+            <CButton
+              color="info"
+              variant="outline"
+              size="sm"
+              onClick={handleShowStudents}
+            >
+              <CIcon icon={cilPeople} className="me-1" />
+              Voir les étudiants ({selectedClass.total_etudiants})
+            </CButton>
+          </div>
+        </CCardHeader>
+
+        <CCardBody>
+          {loadingPrograms ? (
+            <div className="text-center py-5">
+              <CSpinner color="primary" />
+              <p className="mt-2 text-muted">Chargement des programmes...</p>
+            </div>
+          ) : programs.length === 0 ? (
+            <CAlert color="info">
+              <CIcon icon={cilBook} className="me-2" />
+              Aucun programme enregistré pour cette classe.
+            </CAlert>
+          ) : (
+            <CTable hover responsive className="align-middle">
+              <CTableHead>
+                <CTableRow className="table-light">
+                  <CTableHeaderCell>ECUE</CTableHeaderCell>
+                  <CTableHeaderCell>Unité d'enseignement</CTableHeaderCell>
+                  <CTableHeaderCell>Enseignant</CTableHeaderCell>
+                  <CTableHeaderCell>Semestre</CTableHeaderCell>
+                  <CTableHeaderCell>Contrat</CTableHeaderCell>
+                  <CTableHeaderCell className="text-center">Cahier de texte</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+              <CTableBody>
+                {programs.map(program => {
+                  const contractBadge = program.contract_status
+                    ? CONTRACT_BADGE[program.contract_status]
+                    : null;
+
+                  return (
+                    <CTableRow key={program.id}>
+                      <CTableDataCell>
+                        <div className="fw-semibold">{program.course_element_name || '—'}</div>
+                        {program.course_element_code && (
+                          <small className="text-muted">{program.course_element_code}</small>
+                        )}
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <small className="text-muted">{program.teaching_unit_name || '—'}</small>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CIcon icon={cilUser} size="sm" className="me-1 text-muted" />
+                        {program.professor_name || '—'}
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge color="light" textColor="dark">
+                          {program.semester || '—'}
+                        </CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        {contractBadge ? (
+                          <CBadge color={contractBadge.color}>{contractBadge.label}</CBadge>
+                        ) : (
+                          <CBadge color="secondary">Aucun</CBadge>
+                        )}
+                      </CTableDataCell>
+
+                      {/* Cahier de texte */}
+                      <CTableDataCell className="text-center">
+                        <div className="d-flex gap-1 justify-content-center">
+                          {/* Bouton consulter (toujours visible) */}
+                          <CTooltip content="Consulter le cahier de texte">
+                            <CButton
+                              color="info"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setTextbookProgram(program)}
+                            >
+                              <CIcon icon={cilDescription} className="me-1" />
+                              ({program.textbook_entries_count})
+                            </CButton>
+                          </CTooltip>
+
+                          {/* Bouton saisir (conditionnel) */}
+                          {program.can_add_textbook ? (
+                            <CTooltip content="Ajouter une entrée">
+                              <CButton
+                                color="primary"
+                                size="sm"
+                                onClick={() => setTextbookProgram(program)}
+                              >
+                                <CIcon icon={cilBook} />
+                              </CButton>
+                            </CTooltip>
+                          ) : (
+                            <CTooltip
+                              content={
+                                program.contract_status
+                                  ? `Saisie bloquée — ${CONTRACT_BADGE[program.contract_status]?.label}`
+                                  : 'Saisie bloquée — Aucun contrat'
+                              }
+                            >
+                              <span>
+                                <CButton color="secondary" size="sm" disabled>
+                                  <CIcon icon={cilWarning} />
+                                </CButton>
+                              </span>
+                            </CTooltip>
+                          )}
+                        </div>
+                      </CTableDataCell>
+
+                    </CTableRow>
+                  );
+                })}
+              </CTableBody>
+            </CTable>
+          )}
+        </CCardBody>
+      </CCard>
+    );
+  };
+
+  // ── Vue 3 : Étudiants d'une classe ────────────────────────────────────────
+  const renderStudentsView = () => {
     if (!selectedClass) return null;
 
     return (
       <>
-        {/* En-tête de la classe */}
-        <CCard className="mb-4 bg-gradient-primary text-white">
-          <CCardBody>
-            <CRow className="align-items-center">
-              <CCol md={8}>
-                <h3 className="mb-2">
-                  {selectedClass.filiere} - Niveau {selectedClass.study_level}
-                  {selectedClass.group_name && (
-                    <CBadge color="light" className="ms-2 text-dark">
-                      Groupe {selectedClass.group_name}
-                    </CBadge>
-                  )}
-                </h3>
-                <div className="d-flex gap-4 flex-wrap">
-                  <div>
-                    <CIcon icon={cilCalendar} className="me-1" />
-                    {selectedClass.academic_year_name}
-                  </div>
-                  <div>
-                    <CIcon icon={cilPeople} className="me-1" />
-                    {stats.total} étudiants
-                  </div>
-                  {selectedClass.cycle && (
-                    <div>
-                      <CIcon icon={cilSchool} className="me-1" />
-                      {selectedClass.cycle}
-                    </div>
-                  )}
-                </div>
-              </CCol>
-              <CCol md={4}>
-                <div className="d-flex gap-2 justify-content-md-end mt-3 mt-md-0 flex-wrap">
-                  <CButton
-                    color="light"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExport('liste')}
-                    disabled={exportLoading || students.length === 0}
-                  >
-                    {exportLoading ? <CSpinner size="sm" /> : <CIcon icon={cilPrint} className="me-1" />}
-                    Liste
-                  </CButton>
-                  <CButton
-                    color="light"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExport('presence')}
-                    disabled={exportLoading || students.length === 0}
-                  >
-                    {exportLoading ? <CSpinner size="sm" /> : <CIcon icon={cilClipboard} className="me-1" />}
-                    Présence
-                  </CButton>
-                  <CButton
-                    color="light"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExport('emargement')}
-                    disabled={exportLoading || students.length === 0}
-                  >
-                    {exportLoading ? <CSpinner size="sm" /> : <CIcon icon={cilDescription} className="me-1" />}
-                    Émargement
-                  </CButton>
-                </div>
-              </CCol>
-            </CRow>
-          </CCardBody>
-        </CCard>
-
-        {/* Statistiques */}
-        <CRow className="mb-4 g-3">
-          <CCol xs={6} md={3}>
-            <CCard className="border-start border-info border-3 h-100">
-              <CCardBody>
-                <div className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small className="text-muted">Total</small>
-                    <h3 className="mb-0 text-info">{stats.total}</h3>
-                  </div>
-                  <CIcon icon={cilPeople} className="text-info" size="xl" />
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-          
-          <CCol xs={6} md={3}>
-            <CCard className="border-start border-primary border-3 h-100">
-              <CCardBody>
-                <div className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small className="text-muted">Masculin</small>
-                    <h3 className="mb-0 text-primary">{stats.masculin}</h3>
-                  </div>
-                  <CIcon icon={cilUser} className="text-primary" size="xl" />
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-          
-          <CCol xs={6} md={3}>
-            <CCard className="border-start border-danger border-3 h-100">
-              <CCardBody>
-                <div className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small className="text-muted">Féminin</small>
-                    <h3 className="mb-0 text-danger">{stats.feminin}</h3>
-                  </div>
-                  <CIcon icon={cilUserFemale} className="text-danger" size="xl" />
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-          
-          <CCol xs={6} md={3}>
-            <CCard className="border-start border-warning border-3 h-100">
-              <CCardBody>
-                <div className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small className="text-muted">Redoublants</small>
-                    <h3 className="mb-0 text-warning">{stats.redoublants}</h3>
-                  </div>
-                  <CIcon icon={cilUserUnfollow} className="text-warning" size="xl" />
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
+        {/* Stats bar */}
+        <CRow className="g-3 mb-4">
+          {[
+            { icon: cilPeople,      label: 'Total',       value: stats.total,       color: 'primary'   },
+            { icon: cilUser,        label: 'Masculin',    value: stats.masculin,    color: 'info'      },
+            { icon: cilUserFemale,  label: 'Féminin',     value: stats.feminin,     color: 'danger'    },
+            { icon: cilClipboard,   label: 'Redoublants', value: stats.redoublants, color: 'warning'   },
+            { icon: cilCheckCircle, label: 'Nouveaux',    value: stats.nouveaux,    color: 'success'   },
+          ].map(({ icon, label, value, color }) => (
+            <CCol key={label} xs={6} md={4} lg>
+              <CCard className="text-center shadow-sm h-100">
+                <CCardBody className="py-3">
+                  <CIcon icon={icon} size="xl" className={`text-${color} mb-2`} />
+                  <div className={`fw-bold fs-4 text-${color}`}>{value}</div>
+                  <small className="text-muted">{label}</small>
+                </CCardBody>
+              </CCard>
+            </CCol>
+          ))}
         </CRow>
 
-        {/* Filtres et recherche */}
-        <CCard className="mb-4">
-          <CCardHeader className="bg-light">
-            <div className="d-flex align-items-center gap-2">
-              <CIcon icon={cilFilter} />
-              <h6 className="mb-0">Filtres</h6>
+        {/* Action bar */}
+        <CCard className="mb-4 shadow-sm">
+          <CCardHeader>
+            <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+              <div className="d-flex align-items-center gap-2">
+                <CButton color="secondary" variant="outline" size="sm" onClick={handleBackToPrograms}>
+                  <CIcon icon={cilArrowLeft} className="me-1" />
+                  Programmes
+                </CButton>
+                <CIcon icon={cilPeople} className="text-primary" />
+                <h5 className="mb-0">
+                  {selectedClass.filiere} — Niveau {selectedClass.study_level}
+                  {selectedClass.group_name && ` — Groupe ${selectedClass.group_name}`}
+                </h5>
+                <CBadge color="primary">{filteredStudents.length} étudiant(s)</CBadge>
+              </div>
+              <div className="d-flex flex-wrap gap-2">
+                <CButton
+                  color="primary" variant="outline" size="sm"
+                  onClick={() => handleExport('presence')}
+                  disabled={exportLoading}
+                >
+                  <CIcon icon={cilPrint} className="me-1" />
+                  Fiche présence
+                </CButton>
+                <CButton
+                  color="success" variant="outline" size="sm"
+                  onClick={() => handleExport('emargement')}
+                  disabled={exportLoading}
+                >
+                  <CIcon icon={cilPrint} className="me-1" />
+                  Fiche émargement
+                </CButton>
+                <CButton
+                  color="warning" variant="outline" size="sm"
+                  onClick={() => handleExport('liste')}
+                  disabled={exportLoading}
+                >
+                  <CIcon icon={cilDescription} className="me-1" />
+                  Liste étudiants
+                </CButton>
+              </div>
             </div>
           </CCardHeader>
+
           <CCardBody>
-            <CRow className="g-3">
-              <CCol md={5}>
+            {/* Filters */}
+            <CRow className="mb-3 g-2">
+              <CCol xs={12} md={5}>
                 <CInputGroup>
-                  <CInputGroupText>
-                    <CIcon icon={cilSearch} />
-                  </CInputGroupText>
+                  <CInputGroupText><CIcon icon={cilSearch} /></CInputGroupText>
                   <CFormInput
-                    placeholder="Rechercher par nom, matricule ou email..."
+                    placeholder="Rechercher par nom, matricule, email..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={e => setSearchTerm(e.target.value)}
                   />
                 </CInputGroup>
               </CCol>
-              
-              <CCol md={3}>
-                <CInputGroup>
-                  <CInputGroupText>Statut</CInputGroupText>
-                  <select
-                    className="form-select"
-                    value={filterRedoublant}
-                    onChange={(e) => setFilterRedoublant(e.target.value)}
-                  >
-                    <option value="all">Tous</option>
-                    <option value="nouveau">Nouveaux</option>
-                    <option value="redoublant">Redoublants</option>
-                  </select>
-                </CInputGroup>
-              </CCol>
-              
-              <CCol md={3}>
-                <CInputGroup>
-                  <CInputGroupText>Sexe</CInputGroupText>
-                  <select
-                    className="form-select"
-                    value={filterSexe}
-                    onChange={(e) => setFilterSexe(e.target.value)}
-                  >
-                    <option value="all">Tous</option>
-                    <option value="M">Masculin</option>
-                    <option value="F">Féminin</option>
-                  </select>
-                </CInputGroup>
-              </CCol>
-              
-              <CCol md={1}>
-                <CButton 
-                  color="secondary" 
-                  variant="outline" 
-                  className="w-100"
-                  onClick={resetFilters}
+              <CCol xs={6} md={3}>
+                <select
+                  className="form-select"
+                  value={filterRedoublant}
+                  onChange={e => setFilterRedoublant(e.target.value)}
                 >
-                  Reset
+                  <option value="all">Tous statuts</option>
+                  <option value="nouveau">Nouveaux</option>
+                  <option value="redoublant">Redoublants</option>
+                </select>
+              </CCol>
+              <CCol xs={6} md={2}>
+                <select
+                  className="form-select"
+                  value={filterSexe}
+                  onChange={e => setFilterSexe(e.target.value)}
+                >
+                  <option value="all">Tous sexes</option>
+                  <option value="M">Masculin</option>
+                  <option value="F">Féminin</option>
+                </select>
+              </CCol>
+              <CCol xs={12} md={2}>
+                <CButton
+                  color="secondary" variant="outline" className="w-100"
+                  onClick={() => { setSearchTerm(''); setFilterRedoublant('all'); setFilterSexe('all'); }}
+                >
+                  Réinitialiser
                 </CButton>
               </CCol>
             </CRow>
-          </CCardBody>
-        </CCard>
 
-        {/* Liste des étudiants */}
-        <CCard className="shadow-sm">
-          <CCardHeader className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span className="fw-bold">
-              <CIcon icon={cilPeople} className="me-2" />
-              Liste des étudiants ({filteredStudents.length} sur {stats.total})
-            </span>
-            <CBadge color="info">
-              {filteredStudents.length === stats.total ? 'Tous' : 'Filtrés'}
-            </CBadge>
-          </CCardHeader>
-
-          <CCardBody>
+            {/* Table */}
             {loadingStudents ? (
               <div className="text-center py-5">
                 <CSpinner color="primary" />
-                <p className="mt-2">Chargement des étudiants...</p>
+                <p className="mt-2 text-muted">Chargement des étudiants...</p>
               </div>
             ) : filteredStudents.length === 0 ? (
-              <CAlert color="warning" className="mb-0">
-                <CIcon icon={cilZoom} className="me-2" />
-                Aucun étudiant ne correspond à vos critères de recherche.
-              </CAlert>
+              <CAlert color="info">Aucun étudiant ne correspond aux critères de filtre.</CAlert>
             ) : (
-              <>
-                <div className="table-responsive">
-                  <CTable hover striped>
-                    <CTableHead>
-                      <CTableRow>
-                        <CTableHeaderCell>#</CTableHeaderCell>
-                        <CTableHeaderCell>Matricule</CTableHeaderCell>
-                        <CTableHeaderCell>Nom et Prénoms</CTableHeaderCell>
-                        <CTableHeaderCell>Email</CTableHeaderCell>
-                        <CTableHeaderCell>Sexe</CTableHeaderCell>
-                        <CTableHeaderCell>Statut</CTableHeaderCell>
-                        <CTableHeaderCell>Actions</CTableHeaderCell>
-                      </CTableRow>
-                    </CTableHead>
-                    <CTableBody>
-                      {filteredStudents.map((student, index) => (
-                        <CTableRow key={student.id}>
-                          <CTableDataCell>{index + 1}</CTableDataCell>
-                          <CTableDataCell>
-                            <CBadge color="dark">{student.matricule || 'N/A'}</CBadge>
-                          </CTableDataCell>
-                          <CTableDataCell className="fw-semibold">
-                            {student.nomPrenoms}
-                          </CTableDataCell>
-                          <CTableDataCell>{student.email}</CTableDataCell>
-                          <CTableDataCell>
-                            {student.sexe === 'M' ? (
-                              <CBadge color="primary">Masculin</CBadge>
-                            ) : (
-                              <CBadge color="danger">Féminin</CBadge>
-                            )}
-                          </CTableDataCell>
-                          <CTableDataCell>
-                            {student.redoublant === 'Oui' ? (
-                              <CBadge color="warning">Redoublant</CBadge>
-                            ) : (
-                              <CBadge color="success">Nouveau</CBadge>
-                            )}
-                          </CTableDataCell>
-                          <CTableDataCell>
-                            <CButton
-                              color="info"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                Swal.fire({
-                                  title: 'Détails de l\'étudiant',
-                                  html: `
-                                    <div style="text-align: left">
-                                      <p><strong>Matricule:</strong> ${student.matricule || 'N/A'}</p>
-                                      <p><strong>Nom complet:</strong> ${student.nomPrenoms}</p>
-                                      <p><strong>Email:</strong> ${student.email}</p>
-                                      <p><strong>Sexe:</strong> ${student.sexe === 'M' ? 'Masculin' : 'Féminin'}</p>
-                                      <p><strong>Statut:</strong> ${student.redoublant === 'Oui' ? 'Redoublant' : 'Nouveau'}</p>
-                                      ${student.telephone ? `<p><strong>Téléphone:</strong> ${student.telephone}</p>` : ''}
-                                    </div>
-                                  `,
-                                  icon: 'info'
-                                });
-                              }}
-                            >
-                              <CIcon icon={cilZoom} />
-                            </CButton>
-                          </CTableDataCell>
-                        </CTableRow>
-                      ))}
-                    </CTableBody>
-                  </CTable>
-                </div>
-
-                {/* Progression */}
-                {stats.total > 0 && (
-                  <div className="mt-3">
-                    <small className="text-muted">Répartition par sexe</small>
-                    <CProgress className="mt-1" height={20}>
-                      <CProgressBar
-                        color="primary"
-                        value={(stats.masculin / stats.total) * 100}
-                      >
-                        {stats.masculin} M
-                      </CProgressBar>
-                      <CProgressBar
-                        color="danger"
-                        value={(stats.feminin / stats.total) * 100}
-                      >
-                        {stats.feminin} F
-                      </CProgressBar>
-                    </CProgress>
-                  </div>
-                )}
-              </>
+              <CTable hover responsive className="align-middle">
+                <CTableHead>
+                  <CTableRow className="table-light">
+                    <CTableHeaderCell>#</CTableHeaderCell>
+                    <CTableHeaderCell>Matricule</CTableHeaderCell>
+                    <CTableHeaderCell>Nom & Prénoms</CTableHeaderCell>
+                    <CTableHeaderCell>Email</CTableHeaderCell>
+                    <CTableHeaderCell>Sexe</CTableHeaderCell>
+                    <CTableHeaderCell>Téléphone</CTableHeaderCell>
+                    <CTableHeaderCell>Statut</CTableHeaderCell>
+                  </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                  {filteredStudents.map((s, idx) => (
+                    <CTableRow key={s.id}>
+                      <CTableDataCell className="text-muted">{idx + 1}</CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge color="light" textColor="dark">{s.matricule || '—'}</CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell className="fw-semibold">{s.nomPrenoms}</CTableDataCell>
+                      <CTableDataCell>
+                        {s.email
+                          ? <a href={`mailto:${s.email}`} className="text-decoration-none">{s.email}</a>
+                          : '—'
+                        }
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge color={s.sexe === 'M' ? 'info' : 'danger'}>
+                          {s.sexe === 'M' ? 'M' : 'F'}
+                        </CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell>{s.telephone || '—'}</CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge color={s.redoublant === 'Oui' ? 'warning' : 'success'}>
+                          {s.redoublant === 'Oui' ? 'Redoublant' : 'Nouveau'}
+                        </CBadge>
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+                </CTableBody>
+              </CTable>
             )}
           </CCardBody>
         </CCard>
@@ -638,7 +636,10 @@ const ResponsableDashboard: React.FC = () => {
     );
   };
 
-  // Rendu principal
+  // ─────────────────────────────────────────────────────────────────────────
+  // Main render
+  // ─────────────────────────────────────────────────────────────────────────
+
   if (loading) {
     return (
       <div className="text-center py-5">
@@ -648,37 +649,87 @@ const ResponsableDashboard: React.FC = () => {
     );
   }
 
+  const totalClasses = classesByYear.reduce((acc, y) => acc + y.classes.length, 0);
+
   return (
     <div className="responsable-dashboard">
-      {/* En-tête de bienvenue */}
+      {/* Header */}
       <CAlert color="primary" className="mb-4 d-flex align-items-center gap-3">
         <CIcon icon={cilSchool} size="xl" />
         <div>
           <h5 className="mb-0">Bienvenue, {fullName} !</h5>
           <small className="text-body-secondary">
-            Vous avez accès à {classesByYear.reduce((acc, year) => acc + year.classes.length, 0)} classe(s)
+            Vous avez accès à {totalClasses} classe(s)
           </small>
         </div>
       </CAlert>
 
-      {/* Message d'erreur */}
+      {/* Breadcrumb navigation */}
+      {viewMode !== 'classes' && selectedClass && (
+        <nav aria-label="breadcrumb" className="mb-3">
+          <ol className="breadcrumb">
+            <li className="breadcrumb-item">
+              <span
+                role="button"
+                className="text-primary"
+                style={{ cursor: 'pointer' }}
+                onClick={handleBackToClasses}
+              >
+                Mes classes
+              </span>
+            </li>
+            <li className={`breadcrumb-item ${viewMode === 'programs' ? 'active' : ''}`}>
+              {viewMode === 'students' ? (
+                <span
+                  role="button"
+                  className="text-primary"
+                  style={{ cursor: 'pointer' }}
+                  onClick={handleBackToPrograms}
+                >
+                  {selectedClass.filiere} · Niv.{selectedClass.study_level}
+                  {selectedClass.group_name && ` · Gr.${selectedClass.group_name}`}
+                </span>
+              ) : (
+                <>
+                  {selectedClass.filiere} · Niv.{selectedClass.study_level}
+                  {selectedClass.group_name && ` · Gr.${selectedClass.group_name}`}
+                </>
+              )}
+            </li>
+            {viewMode === 'students' && (
+              <li className="breadcrumb-item active">Étudiants</li>
+            )}
+          </ol>
+        </nav>
+      )}
+
+      {/* Error */}
       {error && (
         <CAlert color="danger" className="mb-4 d-flex justify-content-between align-items-center">
-          <span>
-            <CIcon icon={cilDescription} className="me-2" />
-            {error}
-          </span>
+          <span><CIcon icon={cilWarning} className="me-2" />{error}</span>
           <CButton color="danger" variant="outline" size="sm" onClick={loadClasses}>
             Réessayer
           </CButton>
         </CAlert>
       )}
 
-      {/* Sélecteur de classes */}
-      {renderClassSelector()}
+      {/* Views */}
+      {viewMode === 'classes'   && renderClassSelector()}
+      {viewMode === 'programs'  && selectedClass && renderProgramsView()}
+      {viewMode === 'students'  && selectedClass && renderStudentsView()}
 
-      {/* Vue de la classe sélectionnée */}
-      {selectedClass && renderClassView()}
+      {/* Cahier de texte modal */}
+      {textbookProgram && (
+        <CahierTexteModal
+          visible={!!textbookProgram}
+          onClose={() => {
+            setTextbookProgram(null);
+            // Rafraîchir le compteur d'entrées dans la liste des programmes
+            if (selectedClass) loadProgramsForClass(selectedClass.id);
+          }}
+          program={textbookProgram}
+        />
+      )}
     </div>
   );
 };

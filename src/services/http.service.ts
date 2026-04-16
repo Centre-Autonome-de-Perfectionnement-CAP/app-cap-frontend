@@ -1,8 +1,7 @@
-import Axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import type { RequestMethod, ApiResponse, ApiError } from '@/types';
 
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8001') + '/';
-Axios.defaults.baseURL = API_URL;
 
 interface RequestOptions extends AxiosRequestConfig {
   method: RequestMethod;
@@ -19,14 +18,19 @@ export class HttpService {
   private _axios: AxiosInstance;
 
   constructor() {
-    this._axios = Axios.create({
+    this._axios = axios.create({
       baseURL: API_URL,
       timeout: 100000,
       headers: {
         Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
     });
   }
+
+  getBaseUrl = (): string => {
+    return API_URL;
+  };
 
   addRequestInterceptor = (onFulfilled?: RequestInterceptorFulfilled, onRejected?: RequestInterceptorRejected): number => {
     return this._axios.interceptors.request.use(onFulfilled, onRejected);
@@ -51,7 +55,7 @@ export class HttpService {
   delete = async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> =>
     this.request<T>({ url, method: 'delete', data, ...(config || {}) });
 
-  downloadFile = async (url: string, options?: { method?: string; body?: string }): Promise<{ success: true; url: string; filename?: string }> => {
+  downloadFile = async (url: string, options?: { method?: string; body?: any }): Promise<{ success: boolean; url: string; filename?: string }> => {
     try {
       const method = options?.method?.toLowerCase() || 'get';
       const token = localStorage.getItem('token');
@@ -64,9 +68,12 @@ export class HttpService {
         },
       };
 
-      const response = method === 'post'
-        ? await this._axios.post(url, options?.body ? JSON.parse(options.body) : {}, config)
-        : await this._axios.get(url, config);
+      let response: AxiosResponse;
+      if (method === 'post') {
+        response = await this._axios.post(url, options?.body || {}, config);
+      } else {
+        response = await this._axios.get(url, config);
+      }
 
       const blob = new Blob([response.data], { type: response.headers['content-type'] || 'application/octet-stream' });
       const blobUrl = URL.createObjectURL(blob);
@@ -93,19 +100,26 @@ export class HttpService {
 
   private request<T = any>(options: RequestOptions): Promise<T> {
     return new Promise((resolve, reject) => {
-      // FormData => multipart, Axios gère le Content-Type
+      // ✅ CORRECTION : FormData => laisser Axios gérer le Content-Type automatiquement
+      // Ne jamais forcer Content-Type: multipart/form-data manuellement (le boundary serait absent)
       if (options.data instanceof FormData) {
-        delete options.headers?.['Content-Type'];
-        delete options.headers?.['content-type'];
-
         this._axios
-          .post(options.url, options.data, { headers: options.headers, timeout: options.timeout })
-          .then((res: AxiosResponse<ApiResponse<T>>) => resolve(res.data as T))
+          .request<T>({
+            method: options.method as any,
+            url: options.url,
+            data: options.data,
+            timeout: options.timeout,
+            headers: {
+              // ✅ Supprimer Content-Type pour que Axios génère le bon boundary automatiquement
+              'Content-Type': undefined,
+            },
+          })
+          .then((res: AxiosResponse) => resolve(res.data as T))
           .catch((ex: any) => reject(this.formatError(ex)));
       } else {
         this._axios
-          .request<ApiResponse<T>>({ ...options, method: options.method as any })
-          .then((res: AxiosResponse<ApiResponse<T>>) => resolve(res.data as T))
+          .request<T>({ ...options, method: options.method as any })
+          .then((res: AxiosResponse) => resolve(res.data))
           .catch((ex: any) => reject(this.formatError(ex)));
       }
     });
@@ -114,7 +128,7 @@ export class HttpService {
   private formatError(ex: any): ApiError {
     return {
       message: ex.response?.data?.message || ex.message || 'Une erreur est survenue',
-      statut: ex.response?.statut || 500,
+      statut: ex.response?.data?.statut || ex.response?.status || 500,
       ...(ex.response?.data || {}),
     };
   }

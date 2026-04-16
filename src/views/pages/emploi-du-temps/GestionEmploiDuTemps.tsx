@@ -1019,7 +1019,7 @@ const GestionEmploiDuTemps: React.FC = () => {
             disabled={deleteLoading}>
             Annuler
           </CButton>
-          <CButton color="danger" onClick={doDelete} disabled={deleteLoading}>
+          <CButton color="Secondary" onClick={doDelete} disabled={deleteLoading}>
             {deleteLoading ? <><CSpinner size="sm" className="me-1" />Suppression…</> : 'Supprimer définitivement'}
           </CButton>
         </CModalFooter>

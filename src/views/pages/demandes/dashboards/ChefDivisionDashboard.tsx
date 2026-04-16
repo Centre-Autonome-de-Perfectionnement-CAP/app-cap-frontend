@@ -13,6 +13,8 @@ import {
 } from '../components'
 import type { DocumentRequest } from '@/types/document-request.types'
 
+import FlaggedValidationAction from '../components/workflow/FlaggedValidationAction'
+
 const DetailModal = ({ demande, visible, onClose, onAction }: {
   demande: DocumentRequest; visible: boolean; onClose: () => void
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
@@ -36,6 +38,13 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
       loading={loading}
       onClick={() => run('chef_division_validate')}
     />
+
+    <FlaggedValidationAction
+  action="chef_division_validate_flagged"
+  loading={loading}
+  run={run}
+/>
+
   </>)
 
   return (<>

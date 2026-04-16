@@ -14,37 +14,39 @@ import {
 } from '../components'
 import type { DocumentRequest } from '@/types/document-request.types'
 
+import FlaggedValidationAction from '../components/workflow/FlaggedValidationAction'
+
 type CapChoice = 'paraphe' | 'signature'
 
 const CAP_CHOICES: {
   value: CapChoice; label: string; desc: string; color: string; nextLabel: string; icon: object
 }[] = [
-  {
-    value: 'paraphe',
-    label: 'Parapher',
-    color: '#7c3aed',
-    icon: cilPen,
-    nextLabel: 'Parapher et transmettre à la Sec. Dir. Adjointe',
-    desc: 'Le dossier passera ensuite chez la Sec. Dir. Adjointe, puis la Directrice Adjointe, la Sec. Directeur et enfin le Directeur.',
-  },
-  {
-    value: 'signature',
-    label: 'Signer',
-    color: '#059669',
-    icon: cilCheck,
-    nextLabel: 'Signer — Document prêt immédiatement',
-    desc: 'Le document est validé directement et sera immédiatement prêt à retirer.',
-  },
-]
+    {
+      value: 'paraphe',
+      label: 'Parapher',
+      color: '#7c3aed',
+      icon: cilPen,
+      nextLabel: 'Parapher et transmettre à la Sec. Dir. Adjointe',
+      desc: 'Le dossier passera ensuite chez la Sec. Dir. Adjointe, puis la Directrice Adjointe, la Sec. Directeur et enfin le Directeur.',
+    },
+    {
+      value: 'signature',
+      label: 'Signer',
+      color: '#059669',
+      icon: cilCheck,
+      nextLabel: 'Signer — Document prêt immédiatement',
+      desc: 'Le document est validé directement et sera immédiatement prêt à retirer.',
+    },
+  ]
 
 const DetailModal = ({ demande, visible, onClose, onAction }: {
   demande: DocumentRequest; visible: boolean; onClose: () => void
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
 }) => {
-  const [choice,        setChoice]        = useState<CapChoice>('paraphe')
-  const [confirmed,     setConfirmed]     = useState(false)
+  const [choice, setChoice] = useState<CapChoice>('paraphe')
+  const [confirmed, setConfirmed] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
-  const [rejectModal,   setRejectModal]   = useState(false)
+  const [rejectModal, setRejectModal] = useState(false)
   const selectedChoice = CAP_CHOICES.find(c => c.value === choice)!
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
@@ -52,6 +54,8 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
     try { await onAction(action, extra) } catch (e) { console.error(e) }
     finally { setActionLoading(false); setConfirmed(false) }
   }
+
+  // Dans ChefCapDashboard.tsx — remplacer uniquement le footer du DetailModal
 
   const footer = (<>
     <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={actionLoading} />
@@ -65,7 +69,16 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
       disabled={!confirmed}
       onClick={() => run('chef_cap_sign', { signature_type: choice })}
     />
+    {/* ── AJOUT : run wrappé pour injecter signature_type ── */}
+    <FlaggedValidationAction
+      action="chef_cap_sign_flagged"
+      loading={actionLoading}
+      disabled={!confirmed}
+      run={async (action, payload) => run(action, { ...payload, signature_type: choice })}
+      label="Signer sous réserve"
+    />
   </>)
+
 
   return (<>
     <DemandeModalShell demande={demande} visible={visible} onClose={onClose}
@@ -118,9 +131,9 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
 
 const BASE_COLUMNS = [
   { header: 'Référence', render: (d: DocumentRequest) => <ReferenceCell d={d} /> },
-  { header: 'Étudiant',  render: (d: DocumentRequest) => <EtudiantCell d={d} showDept /> },
-  { header: 'Type',      render: (d: DocumentRequest) => <TypeCell d={d} /> },
-  { header: 'Date',      render: (d: DocumentRequest) => <DateCell d={d} /> },
+  { header: 'Étudiant', render: (d: DocumentRequest) => <EtudiantCell d={d} showDept /> },
+  { header: 'Type', render: (d: DocumentRequest) => <TypeCell d={d} /> },
+  { header: 'Date', render: (d: DocumentRequest) => <DateCell d={d} /> },
 ]
 
 const ChefCapDashboard = () => {

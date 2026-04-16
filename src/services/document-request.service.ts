@@ -7,7 +7,7 @@ const BASE = 'attestations/document-requests'
 
 class DocumentRequestService {
   /**
-   * Liste les demandes (filtrées automatiquement par le backend selon le rôle)
+   * Liste des demandes
    */
   getAll = async (filters: {
     status?: string
@@ -16,9 +16,11 @@ class DocumentRequestService {
     department?: string
   } = {}) => {
     const params = new URLSearchParams()
+
     Object.entries(filters).forEach(([k, v]) => {
       if (v) params.append(k, v)
     })
+
     const qs = params.toString()
     return HttpService.get(qs ? `${BASE}?${qs}` : BASE)
   }
@@ -31,7 +33,15 @@ class DocumentRequestService {
   }
 
   /**
-   * Effectue une transition de workflow
+   * Historique d'une demande
+   * (✔️ AJOUTÉ — manquait dans ton service)
+   */
+  getHistory = async (id: number) => {
+    return HttpService.get(`${BASE}/${id}/history`)
+  }
+
+  /**
+   * Transition de workflow
    */
   transition = async (id: number, payload: WorkflowAction) => {
     return HttpService.post(`${BASE}/${id}/transition`, payload)

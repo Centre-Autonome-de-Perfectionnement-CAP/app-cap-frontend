@@ -1,10 +1,8 @@
 // src/views/pages/demandes/dashboards/ComptableDashboard.tsx
-// Nouveau circuit : reçoit de Secrétaire → valide vers Resp. Division
-// Le comptable DOIT choisir le type de division lors de sa validation.
 
 import { useState } from 'react'
 import { CAlert } from '@coreui/react'
-import { cilCheckAlt, cilX } from '@coreui/icons'
+import { cilCheckAlt, cilX, cilWarning } from '@coreui/icons'   // ← cilWarning ajouté
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
 import {
@@ -18,9 +16,14 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
   demande: DocumentRequest; visible: boolean; onClose: () => void
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
 }) => {
-  const [loading,      setLoading]      = useState(false)
-  const [rejectModal,  setRejectModal]  = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [rejectModal, setRejectModal] = useState(false)
   const [chefDivModal, setChefDivModal] = useState(false)
+  // ── AJOUT : États pour le flux "sous réserve" en 2 étapes ────────────────
+  const [chefDivFlagModal, setChefDivFlagModal] = useState(false)
+  const [pendingFlagType, setPendingFlagType] = useState<ChefDivisionType | null>(null)
+  const [flagMotifModal, setFlagMotifModal] = useState(false)
+  // ─────────────────────────────────────────────────────────────────────────
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
     setLoading(true)
@@ -29,21 +32,23 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
 
   const footer = (<>
     <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={loading} />
-    <ActionButton
-      label="Rejeter"
-      icon={cilX}
-      color="danger"
-      variant="outline"
-      disabled={loading}
-      onClick={() => setRejectModal(true)}
-    />
+    <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline" disabled={loading}
+      onClick={() => setRejectModal(true)} />
     <ActionButton
       label="Valider → Resp. Division"
       icon={cilCheckAlt}
       color="success"
       loading={loading}
-      // Ouvre le sélecteur de type division AVANT d'envoyer
       onClick={() => setChefDivModal(true)}
+    />
+    {/* ── AJOUT : bouton valider sous réserve ── */}
+    <ActionButton
+      label="Valider sous réserve"
+      icon={cilWarning}
+      color="warning"
+      variant="outline"
+      loading={loading}
+      onClick={() => setChefDivFlagModal(true)}
     />
   </>)
 
@@ -65,17 +70,43 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
       </DemandeDetailBase>
     </DemandeModalShell>
 
-    {/* Sélecteur obligatoire du type de division lors de la validation */}
+    {/* Sélecteur division — validation normale */}
     <ChefDivisionModal
       visible={chefDivModal}
       onClose={() => setChefDivModal(false)}
       onConfirm={(type: ChefDivisionType) => {
         setChefDivModal(false)
-        // chef_division_type est envoyé au backend → enregistré sur comptable_validate
         run('comptable_validate', { chef_division_type: type })
       }}
     />
 
+    {/* ── AJOUT : Sélecteur division — validation sous réserve (étape 1/2) ── */}
+    <ChefDivisionModal
+      visible={chefDivFlagModal}
+      onClose={() => setChefDivFlagModal(false)}
+      onConfirm={(type: ChefDivisionType) => {
+        setChefDivFlagModal(false)
+        setPendingFlagType(type)
+        setFlagMotifModal(true)
+      }}
+    />
+
+    {/* ── AJOUT : Motif réserve — validation sous réserve (étape 2/2) ── */}
+    <MotifModal
+      visible={flagMotifModal}
+      title="Validation sous réserve"
+      confirmLabel="Valider"
+      confirmColor="warning"
+      placeholder="Entrez le commentaire de réserve..."
+      onClose={() => { setFlagMotifModal(false); setPendingFlagType(null) }}
+      onConfirm={async (motif) => {
+        setFlagMotifModal(false)
+        await run('comptable_validate_flagged', { chef_division_type: pendingFlagType, motif })
+        setPendingFlagType(null)
+      }}
+    />
+
+    {/* Rejet */}
     <MotifModal
       visible={rejectModal}
       title="Rejeter — retour à la secrétaire"
@@ -90,9 +121,9 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
 
 const BASE_COLUMNS = [
   { header: 'Référence', render: (d: DocumentRequest) => <ReferenceCell d={d} /> },
-  { header: 'Étudiant',  render: (d: DocumentRequest) => <EtudiantCell d={d} /> },
-  { header: 'Type',      render: (d: DocumentRequest) => <TypeCell d={d} /> },
-  { header: 'Date',      render: (d: DocumentRequest) => <DateCell d={d} /> },
+  { header: 'Étudiant', render: (d: DocumentRequest) => <EtudiantCell d={d} /> },
+  { header: 'Type', render: (d: DocumentRequest) => <TypeCell d={d} /> },
+  { header: 'Date', render: (d: DocumentRequest) => <DateCell d={d} /> },
 ]
 
 const ComptableDashboard = () => {

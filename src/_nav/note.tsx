@@ -37,18 +37,6 @@ const getNoteNavigation = (role: string | null) => {
         name: 'Mes Contrats',
         to: '/notes/professor/contrats',
         icon: <CIcon icon={cilFile} />,
-      },
-      {
-        component: CNavItem,
-        name: 'Contrats en attente',
-        to: '/notes/professor/contrats?status=pending',
-        icon: <CIcon icon={cilClock} />,
-      },
-      {
-        component: CNavItem,
-        name: 'Contrats signés',
-        to: '/notes/professor/contrats?status=signed',
-        icon: <CIcon icon={cilCheckCircle} />,
       }
     )
   }

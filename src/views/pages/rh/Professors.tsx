@@ -626,7 +626,7 @@ const Professors: React.FC = () => {
               </CCol>
               <CCol md={6}>
                 <div className="mb-3">
-                  <CFormLabel htmlFor="district">District</CFormLabel>
+                  <CFormLabel htmlFor="district">Domicile</CFormLabel>
                   <CFormInput
                     id="district"
                     value={formData.district}
@@ -761,7 +761,7 @@ const Professors: React.FC = () => {
                     <span>{selectedProfessor.city || 'Non renseignée'}</span>
                   </div>
                   <div className="mb-3">
-                    <strong className="text-muted d-block mb-1">District</strong>
+                    <strong className="text-muted d-block mb-1">Domicile</strong>
                     <span>{selectedProfessor.district || 'Non renseigné'}</span>
                   </div>
                 </CCol>

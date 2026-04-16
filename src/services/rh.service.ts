@@ -39,7 +39,6 @@ class RhService {
     return response.data!
   }
 
-  // ✅ CORRECTION : plus de header manuel, HttpService gère le FormData automatiquement
   createProfessor = async (data: any): Promise<Professor> => {
     const response = await HttpService.post<ApiResponse<Professor>>('rh/professors', data)
     return response.data!
@@ -47,7 +46,6 @@ class RhService {
 
   updateProfessor = async (id: number | string, data: any): Promise<Professor> => {
     if (data instanceof FormData) {
-      // ✅ CORRECTION : _method PUT pour Laravel (method spoofing) + pas de header manuel
       data.append('_method', 'PUT')
       const response = await HttpService.post<ApiResponse<Professor>>(`rh/professors/${id}`, data)
       return response.data!
@@ -146,7 +144,6 @@ class RhService {
     return response.data || []
   }
 
-  // ✅ CORRECTION : pas de header manuel, HttpService gère automatiquement
   createDocument = async (formData: FormData): Promise<any> => {
     const response = await HttpService.post<ApiResponse<any>>('rh/documents', formData)
     return response.data!
@@ -173,7 +170,6 @@ class RhService {
     return response.data || []
   }
 
-  // ✅ CORRECTION : pas de header manuel
   createImportantInformation = async (data: any): Promise<any> => {
     if (data.file) {
       const formData = new FormData()
@@ -189,7 +185,6 @@ class RhService {
     return response.data!
   }
 
-  // ✅ CORRECTION : pas de header manuel
   updateImportantInformation = async (id: number, data: any): Promise<any> => {
     if (data.file) {
       const formData = new FormData()
@@ -269,6 +264,22 @@ class RhService {
     const response = await HttpService.post<ApiResponse<Contrat>>(
       `rh/contrats/${id}/authorize`,
       {},
+    )
+    return response.data!
+  }
+
+  /**
+   * Upload du PDF final par l'admin (remplace l'ancien chemin)
+   */
+  uploadContratPdf = async (
+    id: number | string,
+    pdfFile: File,
+  ): Promise<Contrat> => {
+    const formData = new FormData()
+    formData.append('pdf_file', pdfFile)
+    const response = await HttpService.post<ApiResponse<Contrat>>(
+      `rh/contrats/${id}/upload-pdf`,
+      formData,
     )
     return response.data!
   }

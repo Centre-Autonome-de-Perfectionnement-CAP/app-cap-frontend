@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   CCard,
   CCardBody,
@@ -25,12 +25,12 @@ import HttpService from '@/services/http.service';
 import type { Contrat } from '@/types/rh.types';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  pending:    { label: 'En attente', color: 'warning', icon: cilClock        },
-  transfered: { label: 'En attente',  color: 'info',    icon: cilFile         },
-  signed:     { label: 'Signé',      color: 'success', icon: cilCheckCircle  },
-  ongoing:    { label: 'En cours',   color: 'primary', icon: cilFile         },
-  completed:  { label: 'Complété',   color: 'dark',    icon: cilCheckCircle  },
-  cancelled:  { label: 'Rejeté',     color: 'danger',  icon: cilXCircle      },
+  pending:    { label: 'En attente',  color: 'warning', icon: cilClock        },
+  transfered: { label: 'En attente',   color: 'info',    icon: cilFile         },
+  signed:     { label: 'Signé',       color: 'success', icon: cilCheckCircle  },
+  ongoing:    { label: 'En cours',    color: 'primary', icon: cilFile         },
+  completed:  { label: 'Complété',    color: 'dark',    icon: cilCheckCircle  },
+  cancelled:  { label: 'Rejeté',      color: 'danger',  icon: cilXCircle      },
 };
 
 const formatDate = (date?: string) =>
@@ -44,12 +44,16 @@ const formatAmount = (amount: number) =>
   new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
 
 const ProfessorContratsList = () => {
-  const navigate = useNavigate();
+  const navigate                 = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [contrats, setContrats] = useState<Contrat[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
   const [search, setSearch]     = useState('');
+
+  // Lire le filtre de statut depuis l'URL (?status=pending ou ?status=signed)
+  const statusFilter = searchParams.get('status') ?? 'all';
 
   useEffect(() => {
     const fetchContrats = async () => {
@@ -69,23 +73,51 @@ const ProfessorContratsList = () => {
     fetchContrats();
   }, []);
 
+  // Filtrage : par statut (query param) puis par recherche texte
   const filtered = contrats.filter((c) => {
-    const q = search.toLowerCase();
-    return (
-      c.contrat_number?.toLowerCase().includes(q) ||
-      c.academicYear?.academic_year?.toLowerCase().includes(q) ||
-      c.cycle?.name?.toLowerCase().includes(q) ||
-      (c.status && STATUS_CONFIG[c.status]?.label.toLowerCase().includes(q))
-    );
+    // Filtre par statut URL
+    if (statusFilter === 'pending') {
+      if (!['pending', 'transfered'].includes(c.status)) return false;
+    } else if (statusFilter === 'signed') {
+      if (!['signed', 'ongoing', 'completed'].includes(c.status)) return false;
+    }
+
+    // Filtre par recherche texte
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      return (
+        c.contrat_number?.toLowerCase().includes(q) ||
+        c.academicYear?.academic_year?.toLowerCase().includes(q) ||
+        c.cycle?.name?.toLowerCase().includes(q) ||
+        (c.status && STATUS_CONFIG[c.status]?.label.toLowerCase().includes(q))
+      );
+    }
+
+    return true;
   });
 
   const pendingCount = contrats.filter((c) =>
     ['pending', 'transfered'].includes(c.status),
   ).length;
 
-  // Chemins corrigés : /notes/professor/… (basename /services → route réelle /services/notes/…)
   const goToDashboard = () => navigate('/notes/professor/dashboard');
   const goToContrat   = (uuid?: string) => uuid && navigate(`/notes/professor/contrats/${uuid}`);
+
+  const setStatusFilter = (status: string) => {
+    if (status === 'all') {
+      searchParams.delete('status');
+    } else {
+      searchParams.set('status', status);
+    }
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const filterLabel =
+    statusFilter === 'pending'
+      ? 'Contrats en attente'
+      : statusFilter === 'signed'
+      ? 'Contrats signés / en cours'
+      : 'Tous les contrats';
 
   return (
     <>
@@ -109,10 +141,40 @@ const ProfessorContratsList = () => {
         </CAlert>
       )}
 
+      {/* Filtres de statut rapides */}
+      <div className="mb-3 d-flex gap-2 flex-wrap">
+        <CButton
+          color={statusFilter === 'all' ? 'primary' : 'outline-primary'}
+          size="sm"
+          onClick={() => setStatusFilter('all')}
+        >
+          Tous
+        </CButton>
+        <CButton
+          color={statusFilter === 'pending' ? 'warning' : 'outline-warning'}
+          size="sm"
+          onClick={() => setStatusFilter('pending')}
+        >
+          <CIcon icon={cilClock} className="me-1" />
+          En attente
+          {pendingCount > 0 && (
+            <CBadge color="dark" className="ms-1">{pendingCount}</CBadge>
+          )}
+        </CButton>
+        <CButton
+          color={statusFilter === 'signed' ? 'success' : 'outline-success'}
+          size="sm"
+          onClick={() => setStatusFilter('signed')}
+        >
+          <CIcon icon={cilCheckCircle} className="me-1" />
+          Signés / En cours
+        </CButton>
+      </div>
+
       <CCard>
         <CCardHeader>
           <div className="d-flex justify-content-between align-items-center">
-            <h5 className="mb-0">Historique des contrats</h5>
+            <h5 className="mb-0">{filterLabel}</h5>
             <CInputGroup style={{ width: '300px' }}>
               <CInputGroupText>
                 <CIcon icon={cilSearch} />
@@ -138,6 +200,8 @@ const ProfessorContratsList = () => {
             <CAlert color="info">
               {search
                 ? 'Aucun contrat ne correspond à votre recherche.'
+                : statusFilter !== 'all'
+                ? `Aucun contrat dans cette catégorie.`
                 : "Vous n'avez pas encore de contrat."}
             </CAlert>
           ) : (
@@ -177,7 +241,7 @@ const ProfessorContratsList = () => {
                             </CBadge>
                           )}
                         </td>
-                        <td>{contrat.academicYear?.academic_year ?? '—'}</td>
+                        <td>{contrat.academic_year?.academic_year ?? '—'}</td>
                         <td>{contrat.cycle?.name ?? '—'}</td>
                         <td>{formatAmount(contrat.amount)}</td>
                         <td>{formatDate(contrat.start_date)}</td>
@@ -193,7 +257,7 @@ const ProfessorContratsList = () => {
                               goToContrat(contrat.uuid);
                             }}
                           >
-                            {isPending ? 'Signer' : 'Voir'}
+                            {isPending ? 'Consulter' : 'Voir'}
                           </CButton>
                         </td>
                       </tr>
@@ -210,4 +274,3 @@ const ProfessorContratsList = () => {
 };
 
 export default ProfessorContratsList;
-

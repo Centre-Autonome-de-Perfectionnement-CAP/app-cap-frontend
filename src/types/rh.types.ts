@@ -81,10 +81,12 @@ export interface ProfessorProgram {
   id: number
   is_primary: boolean
   label: string
+  hours?: number
   course_element: {
     id: number
     name: string
     code: string
+    hours?: number
     teaching_unit: {
       id: number
       name: string
@@ -123,6 +125,22 @@ export interface Contrat {
   is_authorized?: boolean
   authorization_date?: string
 
+  /** Signature électronique */
+  professor_signature_path?: string
+  professor_signature_url?: string
+  professor_signature_type?: 'drawn' | 'uploaded'
+  professor_signed_at?: string
+
+  /** PDF final stocké (généré après validation ou uploadé par l'admin) */
+  pdf_path?: string
+  pdf_url?: string
+  pdf_uploaded_at?: string
+
+  /**
+   * Verrouillé = validé ou autorisé → plus de modification ni suppression
+   */
+  is_locked?: boolean
+
   professor?: {
     id: number
     full_name: string
@@ -139,6 +157,7 @@ export interface Contrat {
     phone?: string
   }
   academicYear?: { id: number; academic_year: string }
+  academic_year?: { id: number; academic_year: string }
   cycle?: { id: number; name: string }
   course_element_professors?: ProfessorProgram[]
   created_at?: string

@@ -98,7 +98,7 @@ const SecDirecteurDashboard = () => {
   const columns = useActionColumns(BASE_COLUMNS, openDetail)
 
   return (
-    <DirectionShell title="Gestion des demandes" subtitle="Secrétariat — Directeur">
+    <DirectionShell title="Gestion des demandes" subtitle="Secrétariat — Directeur" hideHeader>
       <DirectionStatBar stats={stats} loading={statsLoading} />
 
       <CCard className="border-0" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.07)', borderRadius: 14 }}>

@@ -2,6 +2,7 @@
 export { WorkflowBadge, WorkflowTimeline } from './WorkflowBadge'
 export { default as MotifModal }            from './MotifModal'
 export { default as DossierFiles }          from './DossierFiles'
+export { default as DossierFilesSplit }     from './DossierFilesSplit'
 
 // src/hooks/attestation/index.ts — ajouter à l'export existant :
 // export { default as useDocumentRequests } from './useDocumentRequests'

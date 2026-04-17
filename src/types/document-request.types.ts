@@ -34,6 +34,7 @@ export interface DocumentRequest {
   status: DocumentRequestStatus
   email: string | null
   files: Record<string, string> | null | string
+  complement_files: Record<string, string> | null | string
   submitted_at: string
   updated_at: string
   rejected_reason: string | null

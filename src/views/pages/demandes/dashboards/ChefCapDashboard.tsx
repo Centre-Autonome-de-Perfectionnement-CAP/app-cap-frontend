@@ -5,6 +5,12 @@
 import { useState } from 'react'
 import { CAlert } from '@coreui/react'
 import { cilX, cilPen, cilCheck } from '@coreui/icons'
+
+const ICON_MAP: Record<string, object> = {
+  cilPen,
+  cilCheck,
+  cilX,
+}
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
 import {
@@ -19,13 +25,13 @@ import FlaggedValidationAction from '../components/workflow/FlaggedValidationAct
 type CapChoice = 'paraphe' | 'signature'
 
 const CAP_CHOICES: {
-  value: CapChoice; label: string; desc: string; color: string; nextLabel: string; icon: object
+  value: CapChoice; label: string; desc: string; color: string; nextLabel: string; icon: string
 }[] = [
     {
       value: 'paraphe',
       label: 'Parapher',
       color: '#7c3aed',
-      icon: cilPen,
+      icon: 'cilPen',
       nextLabel: 'Parapher et transmettre à la Sec. Dir. Adjointe',
       desc: 'Le dossier passera ensuite chez la Sec. Dir. Adjointe, puis la Directrice Adjointe, la Sec. Directeur et enfin le Directeur.',
     },
@@ -33,7 +39,7 @@ const CAP_CHOICES: {
       value: 'signature',
       label: 'Signer',
       color: '#059669',
-      icon: cilCheck,
+      icon: 'cilCheck',
       nextLabel: 'Signer — Document prêt immédiatement',
       desc: 'Le document est validé directement et sera immédiatement prêt à retirer.',
     },
@@ -98,7 +104,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
                 label={opt.label}
                 description={opt.desc}
                 color={opt.color}
-                icon={opt.icon}
+                icon={ICON_MAP[opt.icon]}
               />
             ))}
           </div>

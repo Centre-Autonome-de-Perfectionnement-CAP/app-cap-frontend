@@ -4,7 +4,7 @@ import { CRow, CCol, CAlert } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilWarning, cilCheckCircle, cilInfo } from '@coreui/icons'
 import { WorkflowTimeline } from '@/components/document-request'
-import DossierFiles from '@/components/document-request/DossierFiles'
+import DossierFilesSplit from '@/components/document-request/DossierFilesSplit'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { TYPE_LABELS, CHEF_DIVISION_LABELS } from '@/types/document-request.types'
 
@@ -119,10 +119,10 @@ const DemandeDetailBase = ({ demande, children, showTimeline = true }: Props) =>
     {children}
 
     <div style={{ marginTop: 16 }}>
-      <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#94a3b8', marginBottom: 8 }}>
-        Pièces jointes
-      </p>
-      <DossierFiles files={demande.files} />
+      <DossierFilesSplit
+        files={demande.files}
+        complementFiles={demande.complement_files}
+      />
     </div>
 
     {/* Commentaires des acteurs du circuit */}

@@ -7,16 +7,17 @@ interface Props {
   title: string
   subtitle: string
   children: React.ReactNode
+  hideHeader?: boolean
 }
 
-const DirectionShell = ({ title, subtitle, children }: Props) => (
+const DirectionShell = ({ title, subtitle, children, hideHeader = false }: Props) => (
   <div style={{
     minHeight: '100vh',
     background: '#f1f5f9',
     display: 'flex',
     flexDirection: 'column',
   }}>
-    <DirectionHeader title={title} subtitle={subtitle} />
+    {!hideHeader && <DirectionHeader title={title} subtitle={subtitle} />}
     <main style={{ flex: 1, padding: '32px 36px' }}>
       {children}
     </main>

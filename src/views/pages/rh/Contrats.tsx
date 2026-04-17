@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import rhService from '@/services/rh.service';
 import { getAssetUrl } from '@/utils/assets';
 import type {
@@ -52,7 +52,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   signed:     { label: 'Signé',      color: '#065f46', bg: '#f0fdf4', dot: '#10b981' },
   ongoing:    { label: 'En cours',   color: '#1e3a8a', bg: '#eff6ff', dot: '#3b82f6' },
   completed:  { label: 'Terminé',    color: '#374151', bg: '#f9fafb', dot: '#9ca3af' },
-  cancelled:  { label: 'Résilié',    color: '#7f1d1d', bg: '#fef2f2', dot: '#ef4444' },
+  cancelled:  { label: 'Rejeté',     color: '#7f1d1d', bg: '#fef2f2', dot: '#ef4444' },
   transfered: { label: 'Transféré',  color: '#3b0764', bg: '#faf5ff', dot: '#a855f7' },
 };
 
@@ -170,6 +170,9 @@ const GLOBAL_STYLE = `
   /* Lock badge */
   .ctr-lock-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 
+  /* Rejection badge */
+  .ctr-reject-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
   /* Filter bar */
   .ctr-filters { background: #fff; border-radius: 12px; border: 1.5px solid #f1f5f9; box-shadow: 0 1px 6px rgba(0,0,0,.04); padding: 16px 20px; margin-bottom: 16px; }
   .ctr-filters-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
@@ -196,6 +199,7 @@ const Icon = {
   FilePdf:       () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><path d="M9 11h1.5a1.5 1.5 0 0 1 0 3H9v-3z"/></svg>,
   FileUpload:    () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
   Send:          () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  Refresh:       () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
   Edit:          () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
   Trash:         () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
   Download:      () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
@@ -214,6 +218,7 @@ const Icon = {
   ExternalLink:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
   Filter:        () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
   Close:         () => <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  MessageX:      () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,
 };
 
 if (typeof document !== 'undefined' && !document.getElementById('ctr-spin')) {
@@ -649,12 +654,12 @@ const UploadPdfModal: React.FC<{
 
 // ─── FilterBar ─────────────────────────────────────────────────────────────────
 interface FilterState {
-  search:        string;   // recherche texte libre (N° contrat, professeur)
+  search:        string;
   division:      string;
   cycle_id:      string;
   regroupement:  string;
   professor_id:  string;
-  academic_year: string;   // texte de l'année ex: "2023-2024"
+  academic_year: string;
   status:        string;
 }
 const emptyFilters: FilterState = {
@@ -679,7 +684,6 @@ const FILTER_STATUS_OPTS = [
 
 function applyFilters(contrats: Contrat[], f: FilterState): Contrat[] {
   return contrats.filter(c => {
-    // Recherche texte libre
     if (f.search.trim()) {
       const q = f.search.toLowerCase();
       const matchNum  = c.contrat_number?.toLowerCase().includes(q);
@@ -726,7 +730,6 @@ const FilterBar: React.FC<{
     ...academicYears.map(y => ({ value: y.academic_year, label: y.academic_year })),
   ];
 
-  // Labels pour les chips de filtres actifs
   const chipLabel = (key: keyof FilterState, val: string): string => {
     if (!val) return '';
     switch (key) {
@@ -744,7 +747,6 @@ const FilterBar: React.FC<{
   return (
     <div className="ctr-filters">
       <div className="ctr-filters-row">
-        {/* Icône + titre */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', marginRight: 4, alignSelf: 'center' }}>
           <Icon.Filter />
           <span style={{ fontSize: 12.5, fontWeight: 700, color: '#374151', whiteSpace: 'nowrap' }}>
@@ -752,7 +754,6 @@ const FilterBar: React.FC<{
           </span>
         </div>
 
-        {/* Recherche texte */}
         <div className="ctr-filters-field" style={{ flex: '1 1 200px', minWidth: 180 }}>
           <span className="ctr-filters-label">N° / Professeur</span>
           <div style={{ position: 'relative' }}>
@@ -767,7 +768,6 @@ const FilterBar: React.FC<{
           </div>
         </div>
 
-        {/* Division */}
         <div className="ctr-filters-field" style={{ flex: '0 0 130px' }}>
           <span className="ctr-filters-label">Division</span>
           <select className="ctr-input ctr-select" value={filters.division} onChange={e => set('division')(e.target.value)}>
@@ -775,7 +775,6 @@ const FilterBar: React.FC<{
           </select>
         </div>
 
-        {/* Cycle */}
         <div className="ctr-filters-field" style={{ flex: '0 0 170px' }}>
           <span className="ctr-filters-label">Cycle</span>
           <select className="ctr-input ctr-select" value={filters.cycle_id} onChange={e => set('cycle_id')(e.target.value)}>
@@ -783,7 +782,6 @@ const FilterBar: React.FC<{
           </select>
         </div>
 
-        {/* Regroupement */}
         <div className="ctr-filters-field" style={{ flex: '0 0 150px' }}>
           <span className="ctr-filters-label">Regroupement</span>
           <select className="ctr-input ctr-select" value={filters.regroupement} onChange={e => set('regroupement')(e.target.value)}>
@@ -791,7 +789,6 @@ const FilterBar: React.FC<{
           </select>
         </div>
 
-        {/* Professeur */}
         <div className="ctr-filters-field" style={{ flex: '1 1 200px', minWidth: 180 }}>
           <span className="ctr-filters-label">Professeur</span>
           <select className="ctr-input ctr-select" value={filters.professor_id} onChange={e => set('professor_id')(e.target.value)}>
@@ -799,7 +796,6 @@ const FilterBar: React.FC<{
           </select>
         </div>
 
-        {/* Année */}
         <div className="ctr-filters-field" style={{ flex: '0 0 155px' }}>
           <span className="ctr-filters-label">Année académique</span>
           <select className="ctr-input ctr-select" value={filters.academic_year} onChange={e => set('academic_year')(e.target.value)}>
@@ -807,7 +803,6 @@ const FilterBar: React.FC<{
           </select>
         </div>
 
-        {/* Statut */}
         <div className="ctr-filters-field" style={{ flex: '0 0 145px' }}>
           <span className="ctr-filters-label">Statut</span>
           <select className="ctr-input ctr-select" value={filters.status} onChange={e => set('status')(e.target.value)}>
@@ -815,7 +810,6 @@ const FilterBar: React.FC<{
           </select>
         </div>
 
-        {/* Bouton reset */}
         {hasActive && (
           <div className="ctr-filters-field" style={{ flex: '0 0 auto', alignSelf: 'flex-end' }}>
             <button type="button" className="ctr-btn ctr-btn-ghost" style={{ height: 40 }} onClick={onReset}>
@@ -825,7 +819,6 @@ const FilterBar: React.FC<{
         )}
       </div>
 
-      {/* Chips des filtres actifs + compteur résultats */}
       {hasActive && (
         <div className="ctr-filters-active">
           <span style={{ fontSize: 11.5, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginRight: 4 }}>Actifs :</span>
@@ -851,36 +844,40 @@ const FilterBar: React.FC<{
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 const Contrats: React.FC = () => {
-  const [contrats, setContrats]         = useState<Contrat[]>([]);
-  const [professors, setProfessors]     = useState<Professor[]>([]);
-  const [cycles, setCycles]             = useState<{ id: number; name: string }[]>([]);
+  const [contrats, setContrats]           = useState<Contrat[]>([]);
+  const [professors, setProfessors]       = useState<Professor[]>([]);
+  const [cycles, setCycles]               = useState<{ id: number; name: string }[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState('');
+  const [loading, setLoading]             = useState(true);
+  const [error, setError]                 = useState('');
 
-  // ─── Filtres ──────────────────────────────────────────────────────────────────
   const [filters, setFilters] = useState<FilterState>({ ...emptyFilters });
 
   // Modal states
-  const [showCreate, setShowCreate]         = useState(false);
-  const [editingContrat, setEditingContrat] = useState<Contrat | null>(null);
+  const [showCreate, setShowCreate]             = useState(false);
+  const [editingContrat, setEditingContrat]     = useState<Contrat | null>(null);
   const [uploadPdfContrat, setUploadPdfContrat] = useState<Contrat | null>(null);
 
   // Confirm modals
-  const [deleteConfirm, setDeleteConfirm]     = useState<Contrat | null>(null);
-  const [transferConfirm, setTransferConfirm] = useState<Contrat | null>(null);
+  const [deleteConfirm, setDeleteConfirm]       = useState<Contrat | null>(null);
+  const [transferConfirm, setTransferConfirm]   = useState<Contrat | null>(null);
   const [authorizeConfirm, setAuthorizeConfirm] = useState<Contrat | null>(null);
+  // ── NOUVEAU : relance d'un contrat rejeté ──────────────────────────────────
+  const [relaunchConfirm, setRelaunchConfirm]   = useState<Contrat | null>(null);
+
   const [deleteLoading, setDeleteLoading]       = useState(false);
   const [transferLoading, setTransferLoading]   = useState(false);
   const [authorizeLoading, setAuthorizeLoading] = useState(false);
+  // ── NOUVEAU ────────────────────────────────────────────────────────────────
+  const [relaunchLoading, setRelaunchLoading]   = useState(false);
 
   // Forms
-  const [createForm, setCreateForm] = useState<FormState>({ ...emptyForm });
-  const [editForm, setEditForm]     = useState<FormState>({ ...emptyForm });
-  const [createLoading, setCreateLoading] = useState(false);
-  const [editLoading, setEditLoading]     = useState(false);
-  const [createError, setCreateError]     = useState('');
-  const [editError, setEditError]         = useState('');
+  const [createForm, setCreateForm]         = useState<FormState>({ ...emptyForm });
+  const [editForm, setEditForm]             = useState<FormState>({ ...emptyForm });
+  const [createLoading, setCreateLoading]   = useState(false);
+  const [editLoading, setEditLoading]       = useState(false);
+  const [createError, setCreateError]       = useState('');
+  const [editError, setEditError]           = useState('');
 
   const { toasts, add: addToast, remove: removeToast } = useToasts();
 
@@ -898,7 +895,7 @@ const Contrats: React.FC = () => {
     rhService.getAcademicYears().then(setAcademicYears).catch(() => {});
   }, [reload]);
 
-  // ─── Ouvrir PDF stocké (ou aperçu si pas encore de PDF) ──────────────────────
+  // ─── Ouvrir PDF stocké ───────────────────────────────────────────────────────
   const openPdf = useCallback((c: Contrat) => {
     if (c.pdf_url) {
       window.open(c.pdf_url, '_blank');
@@ -1056,6 +1053,40 @@ const Contrats: React.FC = () => {
     }
   };
 
+  // ── NOUVEAU : Relancer un contrat rejeté ─────────────────────────────────────
+  const handleRelaunchConfirm = async () => {
+    const c = relaunchConfirm;
+    if (!c) return;
+    setRelaunchLoading(true);
+    try {
+      await rhService.updateContrat(c.id, {
+        division:                     c.division ?? null,
+        professor_id:                 c.professor_id,
+        academic_year_id:             c.academic_year_id,
+        cycle_id:                     c.cycle_id ?? null,
+        regroupement:                 c.regroupement ?? null,
+        start_date:                   c.start_date?.substring(0, 10) ?? '',
+        end_date:                     c.end_date?.substring(0, 10) ?? null,
+        amount:                       Number(c.amount),
+        notes:                        c.notes ?? null,
+        status:                       'pending' as ContratStatus,
+        course_element_professor_ids: (c.course_element_professors ?? []).map(p => p.id),
+      });
+      addToast(
+        'success',
+        'Contrat relancé',
+        `Le contrat N° ${c.contrat_number} est de nouveau en attente. Vous pouvez le modifier puis le retransférer.`,
+      );
+      setRelaunchConfirm(null);
+      reload();
+    } catch (err: any) {
+      addToast('error', 'Erreur', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
+      setRelaunchConfirm(null);
+    } finally {
+      setRelaunchLoading(false);
+    }
+  };
+
   const filteredContrats = applyFilters(contrats, filters);
 
   const COLS = ['N° Contrat', 'Division', 'Cycle', 'Regroupement', 'Professeur', 'Année', 'Programmes', 'Début', 'Fin', 'Montant', 'Statut', 'Actions'];
@@ -1122,15 +1153,17 @@ const Contrats: React.FC = () => {
                     </td>
                   </tr>
                 ) : filteredContrats.map(c => {
-                  const st              = STATUS_CONFIG[c.status] ?? { label: c.status, color: '#374151', bg: '#f9fafb', dot: '#9ca3af' };
-                  const isTransferred   = c.status === 'transfered';
-                  const isLocked        = c.is_locked === true;
-                  const isValidated     = c.is_validated === true;
-                  const isAuthorized    = (c as any).is_authorized === true;
-                  const hasPdf          = !!c.pdf_url;
+                  const st            = STATUS_CONFIG[c.status] ?? { label: c.status, color: '#374151', bg: '#f9fafb', dot: '#9ca3af' };
+                  const isTransferred = c.status === 'transfered';
+                  const isCancelled   = c.status === 'cancelled';
+                  const isLocked      = c.is_locked === true;
+                  const isValidated   = c.is_validated === true;
+                  const isAuthorized  = (c as any).is_authorized === true;
+                  const hasPdf        = !!c.pdf_url;
 
                   return (
                     <tr key={c.id}>
+                      {/* ── N° Contrat ── */}
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, color: '#1a1a2e', fontSize: 13 }}>{c.contrat_number || `#${c.id}`}</span>
@@ -1139,13 +1172,31 @@ const Contrats: React.FC = () => {
                               <Icon.Lock /> Verrouillé
                             </span>
                           )}
+                          {/* ── Badge "Rejeté par prof" visible sur le numéro ── */}
+                          {isCancelled && (
+                            <span className="ctr-reject-badge">
+                              <Icon.MessageX /> Rejeté
+                            </span>
+                          )}
                         </div>
                       </td>
+
+                      {/* ── Division ── */}
                       <td>{c.division ? <span style={{ background: c.division === 'RD-FC' ? '#faf5ff' : '#fdf2f8', color: c.division === 'RD-FC' ? '#7c3aed' : '#9d174d', padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700 }}>{c.division}</span> : <span style={{ color: '#d1d5db' }}>—</span>}</td>
+
+                      {/* ── Cycle ── */}
                       <td style={{ color: '#64748b', fontSize: 13 }}>{c.cycle?.name ?? <span style={{ color: '#d1d5db' }}>—</span>}</td>
+
+                      {/* ── Regroupement ── */}
                       <td style={{ color: '#64748b', fontSize: 13 }}>{c.regroupement ? `Reg. ${c.regroupement === '1' ? 'I' : 'II'}` : <span style={{ color: '#d1d5db' }}>—</span>}</td>
+
+                      {/* ── Professeur ── */}
                       <td><span style={{ fontWeight: 500, color: '#0f172a', fontSize: 13 }}>{c.professor?.full_name ?? `Prof. #${c.professor_id}`}</span></td>
+
+                      {/* ── Année ── */}
                       <td style={{ color: '#64748b', fontSize: 13, whiteSpace: 'nowrap' }}>{(c as any).academic_year?.academic_year ?? <span style={{ color: '#d1d5db' }}>—</span>}</td>
+
+                      {/* ── Programmes ── */}
                       <td style={{ maxWidth: 190 }}>
                         {c.course_element_professors && c.course_element_professors.length > 0 ? (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
@@ -1160,14 +1211,48 @@ const Contrats: React.FC = () => {
                           </div>
                         ) : <span style={{ color: '#d1d5db' }}>—</span>}
                       </td>
+
+                      {/* ── Dates ── */}
                       <td style={{ color: '#64748b', fontSize: 12.5, whiteSpace: 'nowrap' }}>{formatDate(c.start_date)}</td>
                       <td style={{ color: '#64748b', fontSize: 12.5, whiteSpace: 'nowrap' }}>{formatDate(c.end_date)}</td>
+
+                      {/* ── Montant ── */}
                       <td><span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, color: '#0f172a', fontSize: 12.5 }}>{formatAmount(c.amount)}</span></td>
-                      <td><span className="ctr-badge" style={{ background: st.bg, color: st.color }}><span className="ctr-badge-dot" style={{ background: st.dot }} />{st.label}</span></td>
+
+                      {/* ── Statut + motif de rejet ── */}
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <span className="ctr-badge" style={{ background: st.bg, color: st.color }}>
+                            <span className="ctr-badge-dot" style={{ background: st.dot }} />
+                            {st.label}
+                          </span>
+                          {/* ── Motif du rejet affiché sous le badge ── */}
+                          {isCancelled && c.rejection_reason && (
+                            <span
+                              title={c.rejection_reason}
+                              style={{
+                                fontSize: 10.5,
+                                color: '#b91c1c',
+                                fontStyle: 'italic',
+                                maxWidth: 150,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                display: 'block',
+                                cursor: 'help',
+                              }}
+                            >
+                              ↳ {c.rejection_reason}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* ── Actions ── */}
                       <td>
                         <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
 
-                          {/* ── PDF : ouvre le PDF stocké si disponible, sinon info ── */}
+                          {/* ── PDF ── */}
                           <button
                             className="ctr-btn-icon"
                             title={hasPdf ? 'Voir le PDF stocké' : 'Aperçu du contrat (PDF non encore disponible)'}
@@ -1177,18 +1262,35 @@ const Contrats: React.FC = () => {
                             {hasPdf ? <Icon.FilePdf /> : <Icon.FileText />}
                           </button>
 
-                          {/* ── Transférer ── */}
-                          <button
-                            className="ctr-btn-icon"
-                            title={isLocked ? 'Contrat verrouillé' : isTransferred ? 'Contrat déjà transféré' : 'Transférer et notifier l\'enseignant'}
-                            disabled={isTransferred || isLocked}
-                            onClick={() => !isTransferred && !isLocked && setTransferConfirm(c)}
-                            style={isTransferred || isLocked ? {} : { borderColor: '#c4b5fd', color: '#7c3aed' }}
-                          >
-                            <Icon.Send />
-                          </button>
+                          {/* ── Transférer OU Relancer si rejeté ── */}
+                          {isCancelled ? (
+                            // Contrat rejeté par le professeur → bouton Relancer (orange)
+                            <button
+                              className="ctr-btn-icon"
+                              title={
+                                c.rejection_reason
+                                  ? `Relancer ce contrat (motif : ${c.rejection_reason})`
+                                  : 'Relancer ce contrat rejeté'
+                              }
+                              onClick={() => setRelaunchConfirm(c)}
+                              style={{ borderColor: '#fed7aa', color: '#ea580c', background: '#fff7ed' }}
+                            >
+                              <Icon.Refresh />
+                            </button>
+                          ) : (
+                            // Contrat normal → bouton Transférer
+                            <button
+                              className="ctr-btn-icon"
+                              title={isLocked ? 'Contrat verrouillé' : isTransferred ? 'Contrat déjà transféré' : 'Transférer et notifier l\'enseignant'}
+                              disabled={isTransferred || isLocked}
+                              onClick={() => !isTransferred && !isLocked && setTransferConfirm(c)}
+                              style={isTransferred || isLocked ? {} : { borderColor: '#c4b5fd', color: '#7c3aed' }}
+                            >
+                              <Icon.Send />
+                            </button>
+                          )}
 
-                          {/* ── Autoriser + Upload PDF (visible si validé, non encore autorisé) ── */}
+                          {/* ── Autoriser + Upload PDF ── */}
                           <button
                             className="ctr-btn-icon"
                             title={
@@ -1276,7 +1378,6 @@ const Contrats: React.FC = () => {
           onSuccess={(updated) => {
             addToast('success', 'PDF mis à jour', 'Le PDF du contrat a été enregistré avec succès.');
             setUploadPdfContrat(null);
-            // Proposer d'autoriser si pas encore fait
             if (!uploadPdfContrat.is_authorized && uploadPdfContrat.is_validated) {
               setAuthorizeConfirm(updated);
             } else {
@@ -1332,16 +1433,29 @@ const Contrats: React.FC = () => {
         />
       )}
 
+      {/* ── NOUVEAU — Confirm : Relancer un contrat rejeté ── */}
+      {relaunchConfirm && (
+        <ConfirmModal
+          title="Relancer le contrat rejeté"
+          message={`Remettre le contrat N° ${relaunchConfirm.contrat_number} en statut « En attente » ?`}
+          detail={
+            relaunchConfirm.rejection_reason
+              ? `Motif du rejet : « ${relaunchConfirm.rejection_reason} ». Vous pourrez le modifier puis le retransférer à l'enseignant.`
+              : "Vous pourrez modifier le contrat puis le retransférer à l'enseignant."
+          }
+          confirmLabel="Relancer le contrat"
+          confirmClass="ctr-btn-orange"
+          iconBg="#fff7ed" iconColor="#ea580c"
+          icon={<Icon.Refresh />}
+          loading={relaunchLoading}
+          onConfirm={handleRelaunchConfirm}
+          onCancel={() => setRelaunchConfirm(null)}
+        />
+      )}
+
       <ToastContainer toasts={toasts} remove={removeToast} />
     </div>
   );
 };
 
 export default Contrats;
-
-
-
-
-
-
-//Fin

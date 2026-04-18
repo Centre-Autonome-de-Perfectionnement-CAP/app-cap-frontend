@@ -18,23 +18,22 @@ import {
 import CIcon from '@coreui/icons-react';
 import {
   cilBook,
-  cilPeople,
-  cilSchool,
   cilPlus,
-  cilCalendar,
   cilFile,
 } from '@coreui/icons';
 import { LoadingSpinner } from '@/components';
 import useProfessorGrades from '@/hooks/notes/useProfessorGrades';
 import useAnneeAcademiquesData from '@/hooks/inscription/useAnneeAcademiqueData';
-import { FRONTEND_ROUTES } from '@/constants';
 import { useAuth } from '@/contexts';
 import HttpService from '@/services/http.service';
 
 const ProfessorDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const fullName = user?.full_name || user?.prenoms && user?.nom ? `${user.prenoms} ${user.nom}` : 'Professeur';
+  const fullName =
+    user?.full_name || (user?.prenoms && user?.nom)
+      ? `${user.prenoms} ${user.nom}`
+      : 'Professeur';
 
   const {
     classes,
@@ -104,17 +103,16 @@ const ProfessorDashboard = () => {
 
   return (
     <>
-
       {/* ── En-tête de bienvenue ── */}
       <CRow className="mb-4 align-items-center">
         <CCol>
-          <h2 className="mb-1">Bonjour, {fullName} </h2>
+          <h2 className="mb-1">Bonjour, {fullName}</h2>
           <p className="text-muted mb-0">
             Gérez vos notes et consultez l'emploi du temps depuis cet espace.
           </p>
         </CCol>
+        
       </CRow>
-
 
       {/* Filtres et classes */}
       <CCard className="mb-4">
@@ -183,7 +181,9 @@ const ProfessorDashboard = () => {
                             <div className="d-flex justify-content-between align-items-center">
                               <div>
                                 <strong>{classGroup.name}</strong>
-                                {classGroup.level && <span className="ms-2 text-muted">({classGroup.level})</span>}
+                                {classGroup.level && (
+                                  <span className="ms-2 text-muted">({classGroup.level})</span>
+                                )}
                               </div>
                               <div>
                                 <CBadge color="success" className="me-2">

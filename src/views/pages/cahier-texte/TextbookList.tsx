@@ -18,10 +18,14 @@ import {
   CPagination,
   CPaginationItem,
 } from '@coreui/react'
-import { cilPlus, cilPencil, cilTrash, cilCheckAlt } from '@coreui/icons'
+// ✅ CORRIGÉ : cilPencil remplacé par cilCheckCircle pour l'icône "Valider"
+import { cilCheckCircle, cilTrash, cilCheckAlt } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import CahierService from '@/services/cahier.service'
-import type { TextbookEntry, TextbookEntryStatus } from '@/types/cahier-texte.types'
+// ✅ CORRIGÉ : TextbookEntryStatus importé en tant que valeur (pas seulement type)
+//    pour pouvoir l'utiliser dans les comparaisons et l'objet badges
+import { TextbookEntryStatus } from '@/types/cahier-texte.types'
+import type { TextbookEntry } from '@/types/cahier-texte.types'
 
 const TextbookList = () => {
   const [entries, setEntries] = useState<TextbookEntry[]>([])
@@ -29,10 +33,13 @@ const TextbookList = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [search, setSearch] = useState('')
+  // ✅ CORRIGÉ : statusFilter vide = affiche published + validated par défaut
+  //    (le backend filtre automatiquement, pas besoin de passer un statut)
   const [statusFilter, setStatusFilter] = useState<string>('')
 
   useEffect(() => {
     loadEntries()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, search, statusFilter])
 
   const loadEntries = async () => {
@@ -42,6 +49,8 @@ const TextbookList = () => {
         page: currentPage,
         per_page: 15,
         search: search || undefined,
+        // ✅ CORRIGÉ : on passe le filtre tel quel — quand vide, le backend
+        //    applique le filtre par défaut (published + validated)
         status: statusFilter || undefined,
       })
       setEntries(data)
@@ -53,13 +62,14 @@ const TextbookList = () => {
     }
   }
 
+  // ✅ CORRIGÉ : utilise l'enum importé comme valeur (plus de type-only)
   const getStatusBadge = (status: TextbookEntryStatus) => {
-    const badges = {
-      draft: { color: 'warning', text: 'Brouillon' },
-      published: { color: 'info', text: 'Publié' },
-      validated: { color: 'success', text: 'Validé' },
+    const badges: Record<TextbookEntryStatus, { color: string; text: string }> = {
+      [TextbookEntryStatus.DRAFT]:     { color: 'warning', text: 'Brouillon' },
+      [TextbookEntryStatus.PUBLISHED]: { color: 'info',    text: 'Signé' },
+      [TextbookEntryStatus.VALIDATED]: { color: 'success', text: 'Validé' },
     }
-    const badge = badges[status] || badges.draft
+    const badge = badges[status] ?? badges[TextbookEntryStatus.DRAFT]
     return <CBadge color={badge.color}>{badge.text}</CBadge>
   }
 
@@ -83,16 +93,24 @@ const TextbookList = () => {
     }
   }
 
+  // ✅ CORRIGÉ : fonction handleValidate connectée au service
+  const handleValidate = async (id: number) => {
+    if (window.confirm('Confirmer la validation de cette entrée ?')) {
+      try {
+        await CahierService.validateEntry(id)
+        loadEntries()
+      } catch (error) {
+        console.error('Erreur validation:', error)
+      }
+    }
+  }
+
   return (
     <CRow>
       <CCol xs={12}>
         <CCard className="mb-4">
           <CCardHeader className="d-flex justify-content-between align-items-center">
             <strong>Liste des entrées du cahier de texte</strong>
-            <CButton color="primary" size="sm">
-              <CIcon icon={cilPlus} className="me-2" />
-              Nouvelle entrée
-            </CButton>
           </CCardHeader>
           <CCardBody>
             <CRow className="mb-3">
@@ -101,24 +119,38 @@ const TextbookList = () => {
                   type="text"
                   placeholder="Rechercher..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    setSearch(e.target.value)
+                    setCurrentPage(1) // reset page on new search
+                  }}
                 />
               </CCol>
               <CCol md={3}>
                 <CFormSelect
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value)
+                    setCurrentPage(1) // reset page on filter change
+                  }}
                 >
-                  <option value="">Tous les statuts</option>
-                  <option value="draft">Brouillon</option>
-                  <option value="published">Publié</option>
+                  {/*
+                    ✅ CORRIGÉ : l'option vide déclenche le filtre par défaut
+                    du backend (published + validated uniquement)
+                  */}
+                  <option value="">Signé &amp; Validé (défaut)</option>
+                  <option value="published">Signé</option>
                   <option value="validated">Validé</option>
+                  <option value="draft">Brouillon</option>
                 </CFormSelect>
               </CCol>
             </CRow>
 
             {loading ? (
               <div>Chargement...</div>
+            ) : entries.length === 0 ? (
+              <div className="text-center text-muted py-4">
+                Aucune entrée trouvée.
+              </div>
             ) : (
               <>
                 <CTable hover responsive>
@@ -126,7 +158,9 @@ const TextbookList = () => {
                     <CTableRow>
                       <CTableHeaderCell>Date</CTableHeaderCell>
                       <CTableHeaderCell>Titre</CTableHeaderCell>
-                      <CTableHeaderCell>Cours</CTableHeaderCell>
+                      {/* ✅ CORRIGÉ : affiché via course_element.name (relation chargée côté backend) */}
+                      <CTableHeaderCell>Cours (ECUE)</CTableHeaderCell>
+                      {/* ✅ CORRIGÉ : affiché via class_group.group_name (relation chargée côté backend) */}
                       <CTableHeaderCell>Classe</CTableHeaderCell>
                       <CTableHeaderCell>Heures</CTableHeaderCell>
                       <CTableHeaderCell>Statut</CTableHeaderCell>
@@ -138,42 +172,58 @@ const TextbookList = () => {
                       <CTableRow key={entry.id}>
                         <CTableDataCell>{entry.session_date}</CTableDataCell>
                         <CTableDataCell>{entry.session_title}</CTableDataCell>
+                        {/* ✅ CORRIGÉ : course_element et class_group maintenant renseignés */}
                         <CTableDataCell>
-                          {entry.course_element?.name || '-'}
+                          {entry.course_element?.name ?? '-'}
                         </CTableDataCell>
                         <CTableDataCell>
-                          {entry.class_group?.group_name || '-'}
+                          {entry.class_group?.group_name ?? '-'}
                         </CTableDataCell>
                         <CTableDataCell>{entry.hours_taught}h</CTableDataCell>
                         <CTableDataCell>{getStatusBadge(entry.status)}</CTableDataCell>
                         <CTableDataCell>
-                          <CButton
-                            color="info"
-                            size="sm"
-                            className="me-2"
-                            title="Modifier"
-                          >
-                            <CIcon icon={cilPencil} />
-                          </CButton>
-                          {entry.status === 'draft' && (
+                          {/*
+                            ✅ CORRIGÉ :
+                            - L'icône est cilCheckCircle (valider) et non cilPencil (modifier)
+                            - Le bouton "Valider" n'apparaît que pour les entrées published
+                            - handleValidate() est bien appelé au clic
+                          */}
+                          {entry.status === TextbookEntryStatus.PUBLISHED && (
+                            <CButton
+                              color="info"
+                              size="sm"
+                              className="me-2"
+                              title="Valider"
+                              onClick={() => handleValidate(entry.id)}
+                            >
+                              <CIcon icon={cilCheckCircle} />
+                            </CButton>
+                          )}
+
+                          {/* Publier : uniquement pour les brouillons */}
+                          {entry.status === TextbookEntryStatus.DRAFT && (
                             <CButton
                               color="success"
                               size="sm"
                               className="me-2"
-                              title="Publier"
+                              title="Signer / Publier"
                               onClick={() => handlePublish(entry.id)}
                             >
                               <CIcon icon={cilCheckAlt} />
                             </CButton>
                           )}
-                          <CButton
-                            color="danger"
-                            size="sm"
-                            title="Supprimer"
-                            onClick={() => handleDelete(entry.id)}
-                          >
-                            <CIcon icon={cilTrash} />
-                          </CButton>
+
+                          {/* Supprimer : uniquement pour les brouillons */}
+                          {entry.status === TextbookEntryStatus.DRAFT && (
+                            <CButton
+                              color="danger"
+                              size="sm"
+                              title="Supprimer"
+                              onClick={() => handleDelete(entry.id)}
+                            >
+                              <CIcon icon={cilTrash} />
+                            </CButton>
+                          )}
                         </CTableDataCell>
                       </CTableRow>
                     ))}

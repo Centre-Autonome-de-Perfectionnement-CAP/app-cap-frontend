@@ -1,7 +1,6 @@
 import CIcon from '@coreui/icons-react'
 import {
   cilBook,
-  cilPeople,
   cilClipboard,
   cilFile,
   cilUser,
@@ -9,13 +8,19 @@ import {
   cilDescription,
   cilCheckCircle,
   cilClock,
+  cilPeople,
+  cilNotes,    // icône cahier
 } from '@coreui/icons'
 import { CNavItem, CNavTitle, CNavGroup } from '@coreui/react'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CORRECTION : ajout de l'item "Cahier de texte" dans la section professeur
+// ─────────────────────────────────────────────────────────────────────────────
 
 const getNoteNavigation = (role: string | null) => {
   const navigation: any[] = []
 
-  // Navigation pour les professeurs
+  // ── Navigation pour les professeurs ────────────────────────────────────────
   if (role === 'professeur') {
     navigation.push(
       {
@@ -28,6 +33,13 @@ const getNoteNavigation = (role: string | null) => {
         to: '/notes/professor/dashboard',
         icon: <CIcon icon={cilBook} />,
       },
+      // ✅ AJOUT : bouton Cahier de texte
+      {
+        component: CNavItem,
+        name: 'Cahier de texte',
+        to: '/notes/professor/textbook',
+        icon: <CIcon icon={cilNotes} />,
+      },
       {
         component: CNavTitle,
         name: 'Gestion RH',
@@ -37,12 +49,17 @@ const getNoteNavigation = (role: string | null) => {
         name: 'Mes Contrats',
         to: '/notes/professor/contrats',
         icon: <CIcon icon={cilFile} />,
-      }
+      },
     )
   }
 
-  // Navigation pour les administrateurs (chef-division, admin, scolarite, direction)
-  if (role === 'chef-division' || role === 'admin' || role === 'scolarite' || role === 'direction') {
+  // ── Navigation pour les administrateurs ────────────────────────────────────
+  if (
+    role === 'chef-division' ||
+    role === 'admin'         ||
+    role === 'scolarite'     ||
+    role === 'direction'
+  ) {
     navigation.push(
       {
         component: CNavTitle,
@@ -98,7 +115,7 @@ const getNoteNavigation = (role: string | null) => {
         name: 'Contrats validés',
         to: '/rh/contrats?status=signed',
         icon: <CIcon icon={cilCheckCircle} />,
-      }
+      },
     )
   }
 

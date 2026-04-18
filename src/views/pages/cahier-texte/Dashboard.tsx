@@ -49,7 +49,7 @@ const Dashboard = () => {
                   <CCard className="mb-4 border-warning">
                     <CCardBody className="text-center">
                       <h3 className="text-warning">{stats?.draft_entries || 0}</h3>
-                      <p className="text-muted mb-0">Brouillons</p>
+                      <p className="text-muted mb-0">En attente</p>
                     </CCardBody>
                   </CCard>
                 </CCol>
@@ -57,7 +57,7 @@ const Dashboard = () => {
                   <CCard className="mb-4 border-info">
                     <CCardBody className="text-center">
                       <h3 className="text-info">{stats?.published_entries || 0}</h3>
-                      <p className="text-muted mb-0">Publiées</p>
+                      <p className="text-muted mb-0">Signés</p>
                     </CCardBody>
                   </CCard>
                 </CCol>

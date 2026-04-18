@@ -12,6 +12,7 @@ const DecisionSemester       = React.lazy(() => import('./DecisionSemester'));
 const DecisionYear           = React.lazy(() => import('./DecisionYear'));
 const ProfessorContratsList  = React.lazy(() => import('./ProfessorContratsList'));
 const ProfessorContratDetail = React.lazy(() => import('./ProfessorContratDetail'));
+const ProfessorTextbookPage  = React.lazy(() => import('./ProfessorTextbookPage'));
 
 const NoteRoutes = () => {
   const { isAuthenticated, role, isLoading } = useAuth();
@@ -24,11 +25,7 @@ const NoteRoutes = () => {
   const isProfesseur = role === 'professeur';
   const isAdmin      = role === 'admin' || role === 'scolarite' || role === 'direction';
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // ROUTES CONTRATS : publiques (accessibles même sans authentification).
-  // ProfessorContratDetail gère lui-même l'affichage selon l'état de connexion.
-  // Cela permet au lien envoyé par email de fonctionner directement.
-  // ─────────────────────────────────────────────────────────────────────────────
+  // Routes contrats : publiques (accessibles même sans authentification)
   const publicContratRoutes = (
     <>
       <Route path="professor/contrats"       element={<ProfessorContratsList />} />
@@ -36,10 +33,7 @@ const NoteRoutes = () => {
     </>
   );
 
-  // ── Non authentifié ──────────────────────────────────────────────────────────
-  // Seules les routes contrats restent accessibles.
-  // Toutes les autres → login avec l'URL courante passée dans location.state
-  // (pas en query param, pour être cohérent avec ce que Login.tsx lit).
+  // Non authentifié
   if (!isAuthenticated) {
     return (
       <Suspense fallback={<LoadingSpinner fullPage message="Chargement..." />}>
@@ -60,16 +54,18 @@ const NoteRoutes = () => {
     );
   }
 
-  // ── Authentifié ──────────────────────────────────────────────────────────────
+  // Authentifié
   return (
     <Suspense fallback={<LoadingSpinner fullPage message="Chargement du module notes..." />}>
       <Routes>
         {/* Routes Professeur */}
         {isProfesseur && (
           <>
-            <Route path="professor/dashboard"                element={<ProfessorDashboard />} />
+            <Route path="professor/dashboard"     element={<ProfessorDashboard />} />
             <Route path="professor/grade-sheet/:programUuid" element={<GradeSheet />} />
-            <Route path="professor/evaluation/:programUuid"  element={<CreateEvaluation />} />
+            {/* ✅ CORRECTION : le chemin doit correspondre à /notes/professor/textbook */}
+            <Route path="professor/textbook"      element={<ProfessorTextbookPage />} />
+            <Route path="professor/evaluation/:programUuid" element={<CreateEvaluation />} />
             {publicContratRoutes}
           </>
         )}

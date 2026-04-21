@@ -1,7 +1,4 @@
 // src/types/document-request.types.ts
-// Statuts conformes à l'enum BD — nouveau circuit :
-// Secrétaire → Comptable → Resp. Division → Chef CAP →
-// Sec. Dir. Adjointe → Dir. Adjointe → Sec. Directeur → Directeur → Secrétaire (clôture)
 
 export type DocumentRequestStatus =
   | 'pending'
@@ -10,9 +7,9 @@ export type DocumentRequestStatus =
   | 'comptable_review'
   | 'chef_division_review'
   | 'chef_cap_review'
-  | 'sec_dir_adjointe_review'      // NOUVEAU — Secrétaire Directrice Adjointe
-  | 'directrice_adjointe_review'   // MODIFIÉ  — ex directeur_adjoint_review
-  | 'sec_directeur_review'         // NOUVEAU — Secrétaire Directeur
+  | 'sec_dir_adjointe_review'
+  | 'directrice_adjointe_review'
+  | 'sec_directeur_review'
   | 'directeur_review'
   | 'ready'
   | 'delivered'
@@ -24,7 +21,7 @@ export type DocumentRequestType =
   | 'attestation_inscription'
   | 'bulletin_notes'
 
-export type SignatureType = 'paraphe' | 'signature'
+export type SignatureType    = 'paraphe' | 'signature'
 export type ChefDivisionType = 'formation_distance' | 'formation_continue'
 
 export interface DocumentRequest {
@@ -59,6 +56,11 @@ export interface DocumentRequest {
   academic_year: string
   study_level?: string
   student_pending_student_id?: number
+  has_flag?: boolean
+  // ── Circuit de correction (ajoutés par la migration 2026_04_18 + 2026_04_19) ──
+  is_in_correction_circuit?: boolean  // true = boucle active, acteurs verrouillés
+  correction_origin_role?: string | null   // slug du rôle ayant déclenché le rejet
+  correction_origin_status?: string | null // statut BD avant le rejet
 }
 
 export interface WorkflowAction {
@@ -67,6 +69,7 @@ export interface WorkflowAction {
   signature_type?: SignatureType
   chef_division_type?: ChefDivisionType
   resend_to?: string
+  comment?: string
 }
 
 export const STATUS_LABELS: Record<DocumentRequestStatus, string> = {
@@ -113,8 +116,6 @@ export const CHEF_DIVISION_LABELS: Record<ChefDivisionType, string> = {
   formation_continue: 'Formation Continue',
 }
 
-// ─── Étapes de la timeline — dans l'ordre exact du nouveau circuit ─────────────
-
 export const WORKFLOW_STEPS: { status: DocumentRequestStatus; label: string }[] = [
   { status: 'pending',                    label: 'Soumis'         },
   { status: 'secretaire_review',          label: 'Secrétariat'    },
@@ -130,13 +131,29 @@ export const WORKFLOW_STEPS: { status: DocumentRequestStatus; label: string }[] 
 ]
 
 // ─── Options de renvoi depuis secretaire_correction ───────────────────────────
+// IMPORTANT : les valeurs utilisent des TIRETS (pas des underscores).
+// Le backend WorkflowConstants::ACTION_MATRIX attend exactement ces slugs :
+//   'comptable', 'chef-division', 'chef-cap', 'sec-da',
+//   'directrice-adjointe', 'sec-dir', 'directeur'
+// La valeur spéciale 'origin' déclenche la sortie du circuit de correction.
 
-export const RESEND_OPTIONS: { value: string; label: string; status: DocumentRequestStatus }[] = [
-  { value: 'comptable',           label: 'Comptable',            status: 'comptable_review'           },
-  { value: 'chef_division',       label: 'Responsable Division', status: 'chef_division_review'       },
-  { value: 'chef_cap',            label: 'Chef CAP',             status: 'chef_cap_review'            },
-  { value: 'sec_dir_adjointe',    label: 'Sec. Dir. Adjointe',   status: 'sec_dir_adjointe_review'    },
-  { value: 'directrice_adjointe', label: 'Directrice Adjointe',  status: 'directrice_adjointe_review' },
-  { value: 'sec_directeur',       label: 'Sec. Directeur',       status: 'sec_directeur_review'       },
-  { value: 'directeur',           label: 'Directeur',            status: 'directeur_review'           },
+export const RESEND_OPTIONS: { value: string; label: string }[] = [
+  { value: 'comptable',           label: 'Comptable'            },
+  { value: 'chef-division',       label: 'Responsable Division' },
+  { value: 'chef-cap',            label: 'Chef CAP'             },
+  { value: 'sec-da',              label: 'Sec. Dir. Adjointe'   },
+  { value: 'directrice-adjointe', label: 'Directrice Adjointe'  },
+  { value: 'sec-dir',             label: 'Sec. Directeur'       },
+  { value: 'directeur',           label: 'Directeur'            },
 ]
+
+// Label lisible pour un correction_origin_role
+export const ROLE_LABELS: Record<string, string> = {
+  'comptable':           'Comptable',
+  'chef-division':       'Responsable Division',
+  'chef-cap':            'Chef CAP',
+  'sec-da':              'Sec. Dir. Adjointe',
+  'directrice-adjointe': 'Directrice Adjointe',
+  'sec-dir':             'Sec. Directeur',
+  'directeur':           'Directeur',
+}

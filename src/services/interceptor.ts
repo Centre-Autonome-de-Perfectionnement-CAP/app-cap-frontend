@@ -15,12 +15,17 @@ export const setupAxiosInterceptors = (onUnauthenticated: any) => {
   const onResponseSuccess = (response: any) => response;
 
   const onResponseFail = (error: any) => {
-    const status = error.status || error.response.status;
-    if (status === 403 || status === 401) {
+    const status = error.status || error.response?.status;
+
+    // Seul le 401 (token expiré/invalide) déclenche la déconnexion.
+    // Le 403 = erreur métier (action non autorisée) → ne pas déconnecter.
+    // Le 422 = validation échouée → ne pas déconnecter.
+    if (status === 401) {
       onUnauthenticated();
     }
 
     return Promise.reject(error);
   };
+
   HttpService.addResponseInterceptor(onResponseSuccess, onResponseFail);
 };

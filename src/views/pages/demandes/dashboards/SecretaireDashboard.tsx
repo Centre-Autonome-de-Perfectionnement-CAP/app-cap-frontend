@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CRow, CCol } from '@coreui/react'
+import { CRow, CCol, CBadge } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilInbox, cilWarning, cilFlagAlt, cilCheckAlt, cilFolder,
-  cilX, cilReload,
+  cilX, cilReload, cilArrowCircleRight,
 } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
@@ -14,12 +14,64 @@ import {
   DemandeTable, DemandeModalShell, DemandeDetailBase,
   ResendModal, TabBar, ActionButton, StatCard, useActionColumns,
   ReferenceCell, EtudiantCell, TypeCell, DateCell, StatutCell,
-  SECRETAIRE_TABS,
-  DemandeSearchBar,
+  SECRETAIRE_TABS, DemandeSearchBar,
 } from '../components'
 import { STATUS_COLORS } from '../constants/workflow'
 import { CCard, CCardBody, CCardHeader } from '@coreui/react'
 import type { DocumentRequest } from '@/types/document-request.types'
+import { ROLE_LABELS } from '@/types/document-request.types'
+
+// ─── Bannière circuit de correction ───────────────────────────────────────────
+// Affichée dans la modal de détail quand is_in_correction_circuit = true.
+
+const CorrectionCircuitBanner = ({ demande }: { demande: DocumentRequest }) => {
+  const originLabel = demande.correction_origin_role
+    ? (ROLE_LABELS[demande.correction_origin_role] ?? demande.correction_origin_role)
+    : null
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%)',
+      border: '1.5px solid #fca5a5',
+      borderRadius: 10,
+      padding: '14px 16px',
+      marginBottom: 16,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 22, height: 22, borderRadius: '50%',
+          background: '#dc2626', color: '#fff',
+          fontSize: '0.8rem', fontWeight: 900, flexShrink: 0,
+        }}>⟳</span>
+        <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#7f1d1d' }}>
+          Circuit de correction actif
+        </span>
+        <CBadge color="danger" style={{ fontSize: '0.62rem', marginLeft: 'auto' }}>
+          Mode correction
+        </CBadge>
+      </div>
+
+      <div style={{ fontSize: '0.80rem', color: '#991b1b', lineHeight: 1.5 }}>
+        Tous les acteurs ne peuvent que renvoyer le dossier ici. Choisissez
+        <strong> "Renvoyer"</strong> pour l'envoyer à quelqu'un, ou
+        <strong> "Sortir du circuit"</strong> pour reprendre le workflow normal.
+      </div>
+
+      {originLabel && (
+        <div style={{
+          marginTop: 10, padding: '8px 12px', borderRadius: 7,
+          background: 'rgba(255,255,255,0.7)', border: '1px solid #fecaca',
+          fontSize: '0.79rem', color: '#7f1d1d',
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}>
+          <CIcon icon={cilArrowCircleRight} style={{ width: 13, color: '#dc2626', flexShrink: 0 }} />
+          En sortant du circuit, le dossier retourne chez <strong>{originLabel}</strong>.
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ─── Modal de détail ──────────────────────────────────────────────────────────
 
@@ -30,9 +82,9 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
   onReload: () => Promise<void>
 }) => {
-  const [loading, setLoading] = useState(false)
-  const [resendModal, setResendModal] = useState(false)
-  const [rejectModal, setRejectModal] = useState(false)
+  const [loading,          setLoading]          = useState(false)
+  const [resendModal,      setResendModal]      = useState(false)
+  const [rejectModal,      setRejectModal]      = useState(false)
   const [rejectFinalModal, setRejectFinalModal] = useState(false)
   const s = demande.status
 
@@ -50,14 +102,18 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
           disabled={loading} onClick={() => setRejectModal(true)} />
         <ActionButton label="Valider vers Comptable" icon={cilCheckAlt} color="primary"
           loading={loading} onClick={() => run('secretaire_validate')} />
-
       </>)}
 
       {s === 'secretaire_correction' && (<>
         <ActionButton label="Rejeter définitivement" icon={cilX} customBg="#dc2626"
           disabled={loading} onClick={() => setRejectFinalModal(true)} />
-        <ActionButton label="Renvoyer" icon={cilReload} color="primary"
-          disabled={loading} onClick={() => setResendModal(true)} />
+        <ActionButton
+          label={demande.is_in_correction_circuit ? 'Gérer le circuit' : 'Renvoyer'}
+          icon={cilReload}
+          color={demande.is_in_correction_circuit ? 'danger' : 'primary'}
+          disabled={loading}
+          onClick={() => setResendModal(true)}
+        />
       </>)}
 
       {s === 'ready' && (
@@ -73,17 +129,23 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       canClearFlag
       onFlagCleared={async () => { await onReload() }}
     >
+      {/* Bannière circuit — affichée uniquement quand le circuit est actif */}
+      {demande.is_in_correction_circuit && s === 'secretaire_correction' && (
+        <CorrectionCircuitBanner demande={demande} />
+      )}
       <DemandeDetailBase demande={demande} />
     </DemandeModalShell>
 
     <ResendModal
-      demande={demande} visible={resendModal}
+      demande={demande}
+      visible={resendModal}
       onClose={() => setResendModal(false)}
       onConfirm={(resendTo, chefDivType) => {
         setResendModal(false)
         run('secretaire_resend', { resend_to: resendTo, chef_division_type: chefDivType })
       }}
     />
+
     <MotifModal
       visible={rejectModal} title="Rejeter la demande"
       confirmLabel="Rejeter" confirmColor="danger"
@@ -103,43 +165,18 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
 
 const BASE_COLUMNS = [
   { header: 'Référence', render: (d: DocumentRequest) => <ReferenceCell d={d} /> },
-  { header: 'Étudiant', render: (d: DocumentRequest) => <EtudiantCell d={d} /> },
-  { header: 'Type', render: (d: DocumentRequest) => <TypeCell d={d} /> },
-  { header: 'Date', render: (d: DocumentRequest) => <DateCell d={d} /> },
-  { header: 'Statut', render: (d: DocumentRequest) => <StatutCell d={d} /> },
+  { header: 'Étudiant',  render: (d: DocumentRequest) => <EtudiantCell d={d} /> },
+  { header: 'Type',      render: (d: DocumentRequest) => <TypeCell d={d} /> },
+  { header: 'Date',      render: (d: DocumentRequest) => <DateCell d={d} /> },
+  { header: 'Statut',    render: (d: DocumentRequest) => <StatutCell d={d} /> },
 ]
 
 const STAT_DEFS = [
-  {
-    key: 'pending',
-    label: 'Nouvelles demandes',
-    urgent: true,
-    icon: cilInbox,
-  },
-  {
-    key: 'secretaire_correction',
-    label: 'À corriger',
-    urgent: true,
-    icon: cilWarning,
-  },
-  {
-    key: 'flagged',
-    label: 'Réserves actives',
-    urgent: true,
-    icon: cilFlagAlt,
-  },
-  {
-    key: 'ready',
-    label: 'Prêts à retirer',
-    urgent: false,
-    icon: cilCheckAlt,
-  },
-  {
-    key: 'delivered',
-    label: 'Archivés',
-    urgent: false,
-    icon: cilFolder,
-  },
+  { key: 'pending',               label: 'Nouvelles demandes', urgent: true,  icon: cilInbox    },
+  { key: 'secretaire_correction', label: 'À corriger',         urgent: true,  icon: cilWarning  },
+  { key: 'flagged',               label: 'Réserves actives',   urgent: true,  icon: cilFlagAlt  },
+  { key: 'ready',                 label: 'Prêts à retirer',    urgent: false, icon: cilCheckAlt },
+  { key: 'delivered',             label: 'Archivés',           urgent: false, icon: cilFolder   },
 ]
 
 const SecretaireDashboard = () => {
@@ -153,16 +190,16 @@ const SecretaireDashboard = () => {
     acc[tab.key] = demandes.filter(d => d.status === tab.key).length
     return acc
   }, {} as Record<string, number>)
-  counts['flagged'] = demandes.filter(d => !!(d as any).has_flag).length
+  counts['flagged'] = demandes.filter(d => !!d.has_flag).length
+
   const columns = useActionColumns(BASE_COLUMNS, openDetail)
 
   const visibleDemandes = activeTab === 'flagged'
-    ? demandes.filter(d => !!(d as any).has_flag)
+    ? demandes.filter(d => !!d.has_flag)
     : demandes.filter(d => d.status === activeTab)
 
   return (
     <div>
-      {/* Stat cards — même hauteur, toutes identiques sauf animation */}
       <CRow className="mb-4 g-3">
         {STAT_DEFS.map(s => {
           const palette = STATUS_COLORS[s.key] ?? STATUS_COLORS['pending']
@@ -184,14 +221,9 @@ const SecretaireDashboard = () => {
       </CRow>
 
       <CCard className="border-0" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.07)', borderRadius: 14 }}>
-        <CCardHeader
-          className="bg-white"
-          style={{
-            borderBottom: '1px solid #f1f5f9',
-            borderRadius: '14px 14px 0 0',
-            padding: '16px 20px 12px',
-          }}
-        >
+        <CCardHeader className="bg-white" style={{
+          borderBottom: '1px solid #f1f5f9', borderRadius: '14px 14px 0 0', padding: '16px 20px 12px',
+        }}>
           <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
             <div>
               <div style={{ fontWeight: 700, fontSize: '1.05rem', color: '#111827' }}>

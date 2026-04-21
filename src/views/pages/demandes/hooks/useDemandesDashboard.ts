@@ -1,5 +1,4 @@
 // src/views/pages/demandes/hooks/useDemandesDashboard.ts
-// Hook partagé par tous les dashboards — centralise chargement, filtres, action, sélection.
 
 import { useState, useEffect, useCallback } from 'react'
 import documentRequestService from '@/services/document-request.service'
@@ -42,16 +41,29 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
   useEffect(() => { load() }, [load])
 
   const openDetail  = (d: DocumentRequest) => { setSelected(d); setDetailOpen(true) }
-  const closeDetail = () => { setSelected(null); setDetailOpen(false) }
+  const closeDetail = useCallback(() => { setSelected(null); setDetailOpen(false) }, [])
 
   const handleAction = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     if (!selected) return
-    await documentRequestService.transition(selected.id, { action, ...extra } as any)
-    closeDetail()
-    await load()
-  }, [selected, load])
+    try {
+      await documentRequestService.transition(selected.id, { action, ...extra } as any)
+      // Succès : ferme la modal et rafraîchit
+      closeDetail()
+      await load()
+    } catch (e: any) {
+      // Échec : on laisse la modal ouverte pour que l'utilisateur voie l'erreur
+      // et puisse réessayer. Le composant parent affichera l'erreur via console.
+      console.error('Erreur transition:', e?.message || e)
+      // On propage l'erreur pour que le dashboard local puisse l'afficher si besoin
+      throw e
+    }
+  }, [selected, load, closeDetail])
 
-  return { demandes, loading, filters, setFilters, selected, detailOpen, openDetail, closeDetail, handleAction, reload: load }
+  return {
+    demandes, loading, filters, setFilters,
+    selected, detailOpen, openDetail, closeDetail,
+    handleAction, reload: load,
+  }
 }
 
 export default useDemandesDashboard

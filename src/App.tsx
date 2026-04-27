@@ -28,6 +28,7 @@ const PresenceRoutes = React.lazy(() => import('./views/pages/presence/PresenceR
 const FinanceRoutes = React.lazy(() => import('./views/pages/finance/FinanceRoutes.tsx'))
 const BibliothequeRoutes = React.lazy(() => import('./views/pages/bibliotheque/BibliothequeRoutes.tsx'))
 const Register = React.lazy(() => import('./views/pages/register/Register.tsx'))
+const AlumniList = React.lazy(() => import('./views/pages/alumni/AlumniList.tsx'))
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404.tsx'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500.tsx'))
 
@@ -175,6 +176,18 @@ const App = () => {
                 <ProtectedRoute module={MODULES.BIBLIOTHEQUE}>
                   <DefaultLayout>
                     <BibliothequeRoutes />
+                  </DefaultLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/alumni/*"
+              element={
+                <ProtectedRoute module="portail">
+                  <DefaultLayout>
+                    <Routes>
+                      <Route path="list" element={<AlumniList />} />
+                    </Routes>
                   </DefaultLayout>
                 </ProtectedRoute>
               }

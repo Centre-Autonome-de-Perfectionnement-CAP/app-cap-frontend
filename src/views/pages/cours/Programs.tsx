@@ -255,7 +255,7 @@ const Programs: React.FC = () => {
                     <option value="">Toutes les classes</option>
                     {(classGroups || []).map((group) => (
                       <option key={group.id} value={group.id}>
-                        {group.name}
+                        {group.group_name || `Groupe ${group.id}`}
                       </option>
                     ))}
                   </CFormSelect>
@@ -396,7 +396,7 @@ const Programs: React.FC = () => {
               label="Classe"
               value={formData.class_group_id}
               onChange={(value) => setFormData({ ...formData, class_group_id: value.toString() })}
-              options={classGroups.map(g => ({ value: g.id, label: g.name }))}
+              options={classGroups.map(g => ({ value: g.id, label: g.group_name || `Groupe ${g.id}` }))}
               placeholder="Sélectionner une classe"
               required
             />

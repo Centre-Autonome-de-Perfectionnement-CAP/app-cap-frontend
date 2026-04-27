@@ -165,20 +165,15 @@ const ScheduleViews: React.FC = () => {
       showCancelButton: true,
       confirmButtonText: 'PDF',
       cancelButtonText: 'Annuler',
-      showDenyButton: true,
-      denyButtonText: 'Word',
       confirmButtonColor: '#d33',
-      denyButtonColor: '#0d6efd',
     })
 
     if (!format && format !== false) return
 
-    const exportFormat = format ? 'pdf' : 'word'
-
     // Afficher le loader
     Swal.fire({
       title: 'Génération en cours...',
-      html: `Création du fichier ${exportFormat.toUpperCase()}`,
+      html: 'Création du fichier PDF',
       allowOutsideClick: false,
       allowEscapeKey: false,
       didOpen: () => {
@@ -201,10 +196,9 @@ const ScheduleViews: React.FC = () => {
         entityType = 'room'
       }
 
-      await EmploiDuTempsService.downloadSchedulePDF(entityType, entityId, {
+      await EmploiDuTempsService.downloadSchedulePDF(entityType as 'room' | 'professor' | 'class_group', entityId, {
         start_date: startDate || undefined,
         end_date: endDate || undefined,
-        format: exportFormat,
       })
 
       Swal.fire({
@@ -342,14 +336,14 @@ const ScheduleViews: React.FC = () => {
               <CButtonGroup className="me-2">
                 <CButton
                   color={viewMode === 'list' ? 'primary' : 'secondary'}
-                  variant={viewMode === 'list' ? '' : 'outline'}
+                  variant={viewMode === 'list' ? undefined : 'outline'}
                   onClick={() => setViewMode('list')}
                 >
                   <CIcon icon={cilList} /> Liste
                 </CButton>
                 <CButton
                   color={viewMode === 'grid' ? 'primary' : 'secondary'}
-                  variant={viewMode === 'grid' ? '' : 'outline'}
+                  variant={viewMode === 'grid' ? undefined : 'outline'}
                   onClick={() => setViewMode('grid')}
                 >
                   <CIcon icon={cilGrid} /> Grille

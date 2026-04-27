@@ -18,7 +18,6 @@ import {
   CBadge,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
-import { cilEye } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import CahierService from '@/services/cahier.service'
 import InscriptionService from '@/services/inscription.service'
@@ -39,7 +38,16 @@ const ViewByClass: React.FC = () => {
 
   const loadClassGroups = async () => {
     try {
-      const response = await InscriptionService.getClassGroups({ per_page: 1000 })
+      // Get current academic year and default values
+      const years = await InscriptionService.academicYears()
+      const currentYear = years.find((y: any) => y.is_current)
+      if (!currentYear) return
+      
+      const response = await InscriptionService.getClassGroups(
+        currentYear.id,
+        1, // default department
+        'L1' // default level
+      )
       setClassGroups(response.data || [])
     } catch (error) {
       console.error('Erreur chargement groupes:', error)
@@ -177,7 +185,7 @@ const ViewByClass: React.FC = () => {
                           size="sm"
                           onClick={() => navigate(`/cahier-texte/detail/${entry.id}`)}
                         >
-                          <CIcon icon={cilEye} />
+                          👁️
                         </CButton>
                       </CTableDataCell>
                     </CTableRow>

@@ -24,6 +24,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import CahierService from '@/services/cahier.service'
 import type { TextbookEntry, TextbookComment, TextbookEntryStatus } from '@/types/cahier-texte.types'
+import { CommentType } from '@/types/cahier-texte.types'
 import Swal from 'sweetalert2'
 
 const EntryDetail: React.FC = () => {
@@ -171,7 +172,7 @@ const EntryDetail: React.FC = () => {
     try {
       await CahierService.createComment(parseInt(id), {
         comment: newComment,
-        type: 'comment',
+        type: CommentType.COMMENT,
       })
       setNewComment('')
       loadComments()

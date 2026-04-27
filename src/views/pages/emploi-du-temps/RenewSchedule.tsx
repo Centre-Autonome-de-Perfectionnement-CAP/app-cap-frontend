@@ -39,8 +39,8 @@ const RenewSchedule: React.FC = () => {
 
   const loadAcademicYears = async () => {
     try {
-      const response = await InscriptionService.getAcademicYears({ per_page: 100 })
-      setAcademicYears(response.data || [])
+      const response = await InscriptionService.academicYears()
+      setAcademicYears(response || [])
     } catch (error) {
       console.error('Erreur lors du chargement des années académiques:', error)
     }
@@ -255,12 +255,10 @@ const RenewSchedule: React.FC = () => {
                     <CProgress
                       color="success"
                       value={(result.created / result.total) * 100}
-                      label={`${result.created} créés`}
                     />
                     <CProgress
                       color="warning"
                       value={(result.skipped / result.total) * 100}
-                      label={`${result.skipped} ignorés`}
                     />
                   </CProgress>
                   <p>

@@ -21,6 +21,7 @@ import CIcon from '@coreui/icons-react'
 import CahierService from '@/services/cahier.service'
 import CoursService from '@/services/cours.service'
 import type { CreateTextbookEntryRequest, TextbookEntry } from '@/types/cahier-texte.types'
+import { TextbookEntryStatus } from '@/types/cahier-texte.types'
 import Swal from 'sweetalert2'
 
 const EntryForm: React.FC = () => {
@@ -45,7 +46,7 @@ const EntryForm: React.FC = () => {
     students_present: 0,
     students_absent: 0,
     observations: '',
-    status: 'draft',
+    status: TextbookEntryStatus.DRAFT,
   })
 
   useEffect(() => {
@@ -123,7 +124,7 @@ const EntryForm: React.FC = () => {
     try {
       const dataToSend = {
         ...formData,
-        status: publish ? 'published' : formData.status,
+        status: publish ? TextbookEntryStatus.PUBLISHED : formData.status,
       }
 
       if (isEdit) {

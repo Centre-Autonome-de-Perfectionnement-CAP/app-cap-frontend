@@ -19,7 +19,7 @@ import {
   CPagination,
   CPaginationItem,
 } from '@coreui/react'
-import { cilPlus, cilPencil, cilTrash, cilCheckAlt, cilEye } from '@coreui/icons'
+import { cilPlus, cilPencil, cilTrash, cilCheckAlt } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import CahierService from '@/services/cahier.service'
 import type { TextbookEntry, TextbookEntryStatus } from '@/types/cahier-texte.types'
@@ -189,7 +189,7 @@ const TextbookList = () => {
                             title="Voir"
                             onClick={() => navigate(`/cahier-texte/detail/${entry.id}`)}
                           >
-                            <CIcon icon={cilEye} />
+                            👁️
                           </CButton>
                           <CButton
                             color="warning"

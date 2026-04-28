@@ -1,4 +1,4 @@
- import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import rhService from '@/services/rh.service';
 import { getAssetUrl } from '@/utils/assets';
 import type {
@@ -69,6 +69,29 @@ const extractError = (data: any, status: number): string => {
     return msgs[0] ?? 'Données invalides';
   }
   return data?.message ?? 'Une erreur est survenue';
+};
+
+// ─── Validation des dates par rapport à l'année académique ────────────────────
+const validateDatesInAcademicYear = (startDate: string, endDate: string | null, academicYearStart: string, academicYearEnd: string): string | null => {
+  const start = new Date(startDate);
+  const acStart = new Date(academicYearStart);
+  const acEnd = new Date(academicYearEnd);
+  
+  if (start < acStart) {
+    return `La date de début (${formatDate(startDate)}) ne peut pas être antérieure au début de l'année académique (${formatDate(academicYearStart)})`;
+  }
+  
+  if (endDate) {
+    const end = new Date(endDate);
+    if (end > acEnd) {
+      return `La date de fin (${formatDate(endDate)}) ne peut pas être postérieure à la fin de l'année académique (${formatDate(academicYearEnd)})`;
+    }
+    if (end < start) {
+      return "La date de fin doit être postérieure à la date de début";
+    }
+  }
+  
+  return null;
 };
 
 // ─── CSS global injecté une fois ────────────────────────────────────────────────
@@ -430,10 +453,12 @@ const ContratFormFields: React.FC<{
   onFieldChange: (name: string, value: string | number[]) => void;
   onSubmit: (e: React.FormEvent) => void; onCancel: () => void;
   loading: boolean; error: string; submitLabel: string;
-}> = ({ form, professors, isEdit, onFieldChange, onSubmit, onCancel, loading, error, submitLabel }) => {
+  selectedAcademicYear?: AcademicYear;
+}> = ({ form, professors, isEdit, onFieldChange, onSubmit, onCancel, loading, error, submitLabel, selectedAcademicYear }) => {
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [cycles, setCycles]               = useState<Cycle[]>([]);
   const [programs, setPrograms]           = useState<ProfessorProgram[]>([]);
+  const [dateError, setDateError]         = useState<string>('');
 
   useEffect(() => {
     rhService.getAcademicYears().then(setAcademicYears).catch(() => {});
@@ -447,8 +472,34 @@ const ContratFormFields: React.FC<{
     } else { setPrograms([]); }
   }, [form.professor_id]);
 
+  // Validation des dates par rapport à l'année académique sélectionnée
+  useEffect(() => {
+    if (form.academic_year_id && form.start_date) {
+      const selectedYear = academicYears.find(y => String(y.id) === form.academic_year_id);
+      // Utilisation de year_start et year_end au lieu de start_date et end_date
+      if (selectedYear && selectedYear.year_start && selectedYear.year_end) {
+        const errorMsg = validateDatesInAcademicYear(
+          form.start_date,
+          form.end_date || null,
+          selectedYear.year_start,
+          selectedYear.year_end
+        );
+        setDateError(errorMsg || '');
+      } else {
+        setDateError('');
+      }
+    } else {
+      setDateError('');
+    }
+  }, [form.academic_year_id, form.start_date, form.end_date, academicYears]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    onFieldChange(e.target.name, e.target.value);
+    const { name, value } = e.target;
+    onFieldChange(name, value);
+    
+    if (name === 'start_date' || name === 'end_date' || name === 'academic_year_id') {
+      setDateError('');
+    }
   };
 
   const profOptions   = professors.map(p => ({ value: p.id, label: p.full_name }));
@@ -459,6 +510,9 @@ const ContratFormFields: React.FC<{
     label:  `(${p.course_element?.code ?? '?'}) ${p.course_element?.name ?? p.label}`,
     sub:    p.class_group?.name ?? '',
   }));
+
+  // Récupérer l'année académique sélectionnée - utilisation de year_start et year_end
+  const selectedYear = academicYears.find(y => String(y.id) === form.academic_year_id);
 
   return (
     <form onSubmit={onSubmit} autoComplete="off">
@@ -489,6 +543,12 @@ const ContratFormFields: React.FC<{
           <SearchableSelect options={yearOptions} value={form.academic_year_id}
             placeholder="Sélectionner une année…"
             onChange={v => onFieldChange('academic_year_id', v)} />
+          {/* Utilisation de year_start et year_end */}
+          {selectedYear && selectedYear.year_start && selectedYear.year_end && (
+            <p className="ctr-hint" style={{ color: '#059669' }}>
+                Année valable du {formatDate(selectedYear.year_start)} au {formatDate(selectedYear.year_end)}
+            </p>
+          )}
         </div>
         <div>
           <label className="ctr-label">Cycle</label>
@@ -511,11 +571,29 @@ const ContratFormFields: React.FC<{
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
         <div>
           <label className="ctr-label">Date de début *</label>
-          <input className="ctr-input" type="date" name="start_date" value={form.start_date} onChange={handleChange} required />
+          <input 
+            className="ctr-input" 
+            type="date" 
+            name="start_date" 
+            value={form.start_date} 
+            onChange={handleChange} 
+            required 
+            // Utilisation de year_start et year_end
+            min={selectedYear?.year_start ? selectedYear.year_start.substring(0, 10) : undefined}
+            max={selectedYear?.year_end ? selectedYear.year_end.substring(0, 10) : undefined}
+          />
         </div>
         <div>
           <label className="ctr-label">Date de fin</label>
-          <input className="ctr-input" type="date" name="end_date" value={form.end_date} onChange={handleChange} min={form.start_date} />
+          <input 
+            className="ctr-input" 
+            type="date" 
+            name="end_date" 
+            value={form.end_date} 
+            onChange={handleChange} 
+            min={form.start_date || (selectedYear?.year_start ? selectedYear.year_start.substring(0, 10) : undefined)}
+            max={selectedYear?.year_end ? selectedYear.year_end.substring(0, 10) : undefined}
+          />
         </div>
         <div style={{ gridColumn: '1/-1' }}>
           <label className="ctr-label">Montant (FCFA) *</label>
@@ -525,6 +603,12 @@ const ContratFormFields: React.FC<{
           )}
         </div>
       </div>
+
+      {dateError && (
+        <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: '#fef2f2', border: '1.5px solid #fecaca', color: '#991b1b', fontSize: 13 }}>
+          ⚠️ {dateError}
+        </div>
+      )}
 
       {isEdit && (
         <>
@@ -546,7 +630,11 @@ const ContratFormFields: React.FC<{
 
       <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
         <button type="button" className="ctr-btn ctr-btn-ghost" onClick={onCancel} disabled={loading}>Annuler</button>
-        <button type="submit" className="ctr-btn ctr-btn-primary" disabled={loading}>
+        <button 
+          type="submit" 
+          className="ctr-btn ctr-btn-primary" 
+          disabled={loading || !!dateError}
+        >
           {loading ? <><Icon.Loader /> Enregistrement…</> : submitLabel}
         </button>
       </div>
@@ -824,7 +912,7 @@ const FilterBar: React.FC<{
           <span style={{ fontSize: 11.5, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginRight: 4 }}>Actifs :</span>
           {(Object.entries(filters) as [keyof FilterState, string][])
             .filter(([, v]) => v !== '')
-            .map(([key, val]) => (
+                         .map(([key, val]) => (
               <span key={key} className="ctr-filters-chip">
                 {chipLabel(key, val)}
                 <span className="ctr-filters-chip-remove" onClick={() => onChange({ ...filters, [key]: '' })}>
@@ -862,13 +950,11 @@ const Contrats: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm]       = useState<Contrat | null>(null);
   const [transferConfirm, setTransferConfirm]   = useState<Contrat | null>(null);
   const [authorizeConfirm, setAuthorizeConfirm] = useState<Contrat | null>(null);
-  // ── NOUVEAU : relance d'un contrat rejeté ──────────────────────────────────
   const [relaunchConfirm, setRelaunchConfirm]   = useState<Contrat | null>(null);
 
   const [deleteLoading, setDeleteLoading]       = useState(false);
   const [transferLoading, setTransferLoading]   = useState(false);
   const [authorizeLoading, setAuthorizeLoading] = useState(false);
-  // ── NOUVEAU ────────────────────────────────────────────────────────────────
   const [relaunchLoading, setRelaunchLoading]   = useState(false);
 
   // Forms
@@ -894,6 +980,28 @@ const Contrats: React.FC = () => {
     rhService.getCycles().then(setCycles).catch(() => {});
     rhService.getAcademicYears().then(setAcademicYears).catch(() => {});
   }, [reload]);
+
+  // Récupérer l'année académique sélectionnée pour le formulaire
+  const getSelectedAcademicYear = (academicYearId: string) => {
+    return academicYears.find(y => String(y.id) === academicYearId);
+  };
+
+  // Validation des dates pour la création/modification
+  const validateContractDates = (formData: FormState): string | null => {
+    if (!formData.academic_year_id) return null;
+    const selectedYear = academicYears.find(y => String(y.id) === formData.academic_year_id);
+    // Utilisation de year_start et year_end
+    if (!selectedYear || !selectedYear.year_start || !selectedYear.year_end) {
+      return "L'année académique sélectionnée n'a pas de dates valides";
+    }
+    
+    return validateDatesInAcademicYear(
+      formData.start_date,
+      formData.end_date || null,
+      selectedYear.year_start,
+      selectedYear.year_end
+    );
+  };
 
   // ─── Ouvrir PDF stocké ───────────────────────────────────────────────────────
   const openPdf = useCallback((c: Contrat) => {
@@ -957,6 +1065,11 @@ const Contrats: React.FC = () => {
     if (!f.regroupement)     return 'Veuillez sélectionner un regroupement.';
     if (!f.start_date)       return 'La date de début est obligatoire.';
     if (!f.amount || Number(f.amount) < 100) return "Le montant doit être d'au moins 100 FCFA.";
+    
+    // Validation des dates par rapport à l'année académique
+    const dateValidationError = validateContractDates(f);
+    if (dateValidationError) return dateValidationError;
+    
     return null;
   };
 
@@ -1053,7 +1166,6 @@ const Contrats: React.FC = () => {
     }
   };
 
-  // ── NOUVEAU : Relancer un contrat rejeté ─────────────────────────────────────
   const handleRelaunchConfirm = async () => {
     const c = relaunchConfirm;
     if (!c) return;
@@ -1163,7 +1275,6 @@ const Contrats: React.FC = () => {
 
                   return (
                     <tr key={c.id}>
-                      {/* ── N° Contrat ── */}
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, color: '#1a1a2e', fontSize: 13 }}>{c.contrat_number || `#${c.id}`}</span>
@@ -1172,7 +1283,6 @@ const Contrats: React.FC = () => {
                               <Icon.Lock /> Verrouillé
                             </span>
                           )}
-                          {/* ── Badge "Rejeté par prof" visible sur le numéro ── */}
                           {isCancelled && (
                             <span className="ctr-reject-badge">
                               <Icon.MessageX /> Rejeté
@@ -1180,23 +1290,11 @@ const Contrats: React.FC = () => {
                           )}
                         </div>
                       </td>
-
-                      {/* ── Division ── */}
                       <td>{c.division ? <span style={{ background: c.division === 'RD-FC' ? '#faf5ff' : '#fdf2f8', color: c.division === 'RD-FC' ? '#7c3aed' : '#9d174d', padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700 }}>{c.division}</span> : <span style={{ color: '#d1d5db' }}>—</span>}</td>
-
-                      {/* ── Cycle ── */}
                       <td style={{ color: '#64748b', fontSize: 13 }}>{c.cycle?.name ?? <span style={{ color: '#d1d5db' }}>—</span>}</td>
-
-                      {/* ── Regroupement ── */}
                       <td style={{ color: '#64748b', fontSize: 13 }}>{c.regroupement ? `Reg. ${c.regroupement === '1' ? 'I' : 'II'}` : <span style={{ color: '#d1d5db' }}>—</span>}</td>
-
-                      {/* ── Professeur ── */}
                       <td><span style={{ fontWeight: 500, color: '#0f172a', fontSize: 13 }}>{c.professor?.full_name ?? `Prof. #${c.professor_id}`}</span></td>
-
-                      {/* ── Année ── */}
                       <td style={{ color: '#64748b', fontSize: 13, whiteSpace: 'nowrap' }}>{(c as any).academic_year?.academic_year ?? <span style={{ color: '#d1d5db' }}>—</span>}</td>
-
-                      {/* ── Programmes ── */}
                       <td style={{ maxWidth: 190 }}>
                         {c.course_element_professors && c.course_element_professors.length > 0 ? (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
@@ -1211,22 +1309,15 @@ const Contrats: React.FC = () => {
                           </div>
                         ) : <span style={{ color: '#d1d5db' }}>—</span>}
                       </td>
-
-                      {/* ── Dates ── */}
                       <td style={{ color: '#64748b', fontSize: 12.5, whiteSpace: 'nowrap' }}>{formatDate(c.start_date)}</td>
                       <td style={{ color: '#64748b', fontSize: 12.5, whiteSpace: 'nowrap' }}>{formatDate(c.end_date)}</td>
-
-                      {/* ── Montant ── */}
                       <td><span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, color: '#0f172a', fontSize: 12.5 }}>{formatAmount(c.amount)}</span></td>
-
-                      {/* ── Statut + motif de rejet ── */}
                       <td>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           <span className="ctr-badge" style={{ background: st.bg, color: st.color }}>
                             <span className="ctr-badge-dot" style={{ background: st.dot }} />
                             {st.label}
                           </span>
-                          {/* ── Motif du rejet affiché sous le badge ── */}
                           {isCancelled && c.rejection_reason && (
                             <span
                               title={c.rejection_reason}
@@ -1247,12 +1338,8 @@ const Contrats: React.FC = () => {
                           )}
                         </div>
                       </td>
-
-                      {/* ── Actions ── */}
                       <td>
                         <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-
-                          {/* ── PDF ── */}
                           <button
                             className="ctr-btn-icon"
                             title={hasPdf ? 'Voir le PDF stocké' : 'Aperçu du contrat (PDF non encore disponible)'}
@@ -1262,9 +1349,7 @@ const Contrats: React.FC = () => {
                             {hasPdf ? <Icon.FilePdf /> : <Icon.FileText />}
                           </button>
 
-                          {/* ── Transférer OU Relancer si rejeté ── */}
                           {isCancelled ? (
-                            // Contrat rejeté par le professeur → bouton Relancer (orange)
                             <button
                               className="ctr-btn-icon"
                               title={
@@ -1278,7 +1363,6 @@ const Contrats: React.FC = () => {
                               <Icon.Refresh />
                             </button>
                           ) : (
-                            // Contrat normal → bouton Transférer
                             <button
                               className="ctr-btn-icon"
                               title={isLocked ? 'Contrat verrouillé' : isTransferred ? 'Contrat déjà transféré' : 'Transférer et notifier l\'enseignant'}
@@ -1290,7 +1374,6 @@ const Contrats: React.FC = () => {
                             </button>
                           )}
 
-                          {/* ── Autoriser + Upload PDF ── */}
                           <button
                             className="ctr-btn-icon"
                             title={
@@ -1313,7 +1396,6 @@ const Contrats: React.FC = () => {
                             <Icon.ShieldCheck />
                           </button>
 
-                          {/* ── Modifier ── */}
                           <button
                             className="ctr-btn-icon"
                             title={isLocked ? 'Contrat verrouillé — modification impossible' : 'Modifier'}
@@ -1323,7 +1405,6 @@ const Contrats: React.FC = () => {
                             <Icon.Edit />
                           </button>
 
-                          {/* ── Supprimer ── */}
                           <button
                             className="ctr-btn-icon"
                             title={isLocked ? 'Contrat verrouillé — suppression impossible' : 'Supprimer'}
@@ -1333,7 +1414,6 @@ const Contrats: React.FC = () => {
                           >
                             <Icon.Trash />
                           </button>
-
                         </div>
                       </td>
                     </tr>
@@ -1345,15 +1425,20 @@ const Contrats: React.FC = () => {
         </div>
       )}
 
-      {/* ── Modals CRUD ── */}
+      {/* Modals CRUD */}
       {showCreate && (
         <Modal title="Nouveau contrat" subtitle="Renseigner les informations du contrat de prestation" onClose={closeCreate}>
           <ContratFormFields
-            form={createForm} professors={professors}
+            form={createForm} 
+            professors={professors}
+            selectedAcademicYear={getSelectedAcademicYear(createForm.academic_year_id)}
             onFieldChange={onFieldChange(setCreateForm)}
-            onSubmit={handleCreateSubmit} onCancel={closeCreate}
-            loading={createLoading} error={createError}
-            submitLabel="Créer le contrat" isEdit={false}
+            onSubmit={handleCreateSubmit} 
+            onCancel={closeCreate}
+            loading={createLoading} 
+            error={createError}
+            submitLabel="Créer le contrat" 
+            isEdit={false}
           />
         </Modal>
       )}
@@ -1361,16 +1446,21 @@ const Contrats: React.FC = () => {
       {editingContrat && (
         <Modal title="Modifier le contrat" subtitle={`Contrat N° ${editingContrat.contrat_number || `#${editingContrat.id}`}`} onClose={closeEdit}>
           <ContratFormFields
-            form={editForm} professors={professors}
+            form={editForm} 
+            professors={professors}
+            selectedAcademicYear={getSelectedAcademicYear(editForm.academic_year_id)}
             onFieldChange={onFieldChange(setEditForm)}
-            onSubmit={handleEditSubmit} onCancel={closeEdit}
-            loading={editLoading} error={editError}
-            submitLabel="Enregistrer les modifications" isEdit={true}
+            onSubmit={handleEditSubmit} 
+            onCancel={closeEdit}
+            loading={editLoading} 
+            error={editError}
+            submitLabel="Enregistrer les modifications" 
+            isEdit={true}
           />
         </Modal>
       )}
 
-      {/* ── Modal Upload PDF / Autoriser ── */}
+      {/* Modal Upload PDF / Autoriser */}
       {uploadPdfContrat && (
         <UploadPdfModal
           contrat={uploadPdfContrat}
@@ -1387,7 +1477,7 @@ const Contrats: React.FC = () => {
         />
       )}
 
-      {/* ── Confirm : Supprimer ── */}
+      {/* Confirm : Supprimer */}
       {deleteConfirm && (
         <ConfirmModal
           title="Supprimer le contrat"
@@ -1401,7 +1491,7 @@ const Contrats: React.FC = () => {
         />
       )}
 
-      {/* ── Confirm : Transférer ── */}
+      {/* Confirm : Transférer */}
       {transferConfirm && (
         <ConfirmModal
           title="Transférer le contrat"
@@ -1417,7 +1507,7 @@ const Contrats: React.FC = () => {
         />
       )}
 
-      {/* ── Confirm : Autoriser ── */}
+      {/* Confirm : Autoriser */}
       {authorizeConfirm && (
         <ConfirmModal
           title="Autoriser le contrat"
@@ -1433,7 +1523,7 @@ const Contrats: React.FC = () => {
         />
       )}
 
-      {/* ── NOUVEAU — Confirm : Relancer un contrat rejeté ── */}
+      {/* Confirm : Relancer un contrat rejeté */}
       {relaunchConfirm && (
         <ConfirmModal
           title="Relancer le contrat rejeté"

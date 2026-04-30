@@ -1,0 +1,440 @@
+// src/views/pages/demandes/components/layout/DirectionDashboardShell.tsx
+//
+// Enveloppe commune aux 4 rôles direction.
+// Fournit :
+//   - Header institutionnel avec profil acteur bien visible (nom, rôle, avatar)
+//   - Rangée de StatCards adaptées selon le rôle
+//   - Zone principale (children)
+//   - Pas de bouton portail — ces acteurs n'ont pas accès au portail
+
+import React from 'react'
+import { CRow, CCol } from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import {
+  cilUser, cilSync, cilWarning, cilFlagAlt,
+  cilCheckCircle, cilXCircle, cilClock,
+} from '@coreui/icons'
+import { useAuth } from '@/contexts'
+import capLogo from '@/assets/images/cap.png'
+import type { DirectionStatsData } from '../../hooks/useDirectionStats'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface StatDef {
+  key: keyof DirectionStatsData
+  label: string
+  icon: object
+  color: string
+  bg: string
+  border: string
+  urgent?: boolean
+}
+
+interface Props {
+  /** Intitulé du rôle (affiché dans le header) */
+  roleLabel: string
+  /** Couleur accent du rôle (barre header + stat principale) */
+  accentColor: string
+  /** Action du rôle — ex: "Documents à transmettre" */
+  actionLabel: string
+  /** Stats calculées par useDirectionStats */
+  stats: DirectionStatsData
+  statsLoading: boolean
+  /** Définitions des StatCards à afficher pour ce rôle */
+  statDefs: StatDef[]
+  children: React.ReactNode
+}
+
+// ─── Utilitaire ───────────────────────────────────────────────────────────────
+
+const getInitials = (nom: string, prenoms: string) => {
+  const parts = [prenoms.split(' ')[0], nom].filter(Boolean)
+  return parts.map(w => w[0]).join('').toUpperCase().slice(0, 2)
+}
+
+// ─── StatCard ────────────────────────────────────────────────────────────────
+
+interface StatCardProps extends StatDef {
+  value: number
+  loading: boolean
+}
+
+const StatCard = ({ label, icon, color, bg, border, urgent, value, loading }: StatCardProps) => {
+  const isAlerting = urgent && value > 0
+  return (
+    <div
+      style={{
+        background: bg,
+        border: `1px solid ${border}`,
+        borderLeft: `4px solid ${color}`,
+        borderRadius: 10,
+        padding: '16px 18px',
+        minHeight: 90,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        boxShadow: isAlerting
+          ? `0 2px 12px ${color}44`
+          : '0 1px 4px rgba(0,0,0,0.05)',
+        animation: isAlerting ? 'dirStatPulse 1.8s ease-in-out infinite' : 'none',
+        ['--pulse-color' as any]: color,
+      }}
+    >
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        fontSize: '0.72rem', color, fontWeight: 600, opacity: 0.85,
+      }}>
+        <CIcon icon={icon} style={{ width: 13, flexShrink: 0 }} />
+        {label}
+      </div>
+      <div style={{
+        fontSize: isAlerting ? '2.3rem' : '2rem',
+        fontWeight: 800, color, lineHeight: 1,
+        transition: 'font-size 0.2s',
+      }}>
+        {loading ? '—' : value}
+      </div>
+    </div>
+  )
+}
+
+// ─── Header ──────────────────────────────────────────────────────────────────
+
+const DirHeader = ({
+  roleLabel, accentColor, actionLabel,
+}: { roleLabel: string; accentColor: string; actionLabel: string }) => {
+  const { nom, prenoms, logout } = useAuth() as any
+  const fullNom    = nom    ?? ''
+  const fullPrenom = prenoms ?? ''
+  const displayName = [fullPrenom, fullNom].filter(Boolean).join(' ') || 'Utilisateur'
+  const initials    = getInitials(fullNom, fullPrenom)
+
+  return (
+    <>
+      <style>{`
+        @keyframes dirStatPulse {
+          0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 0 0 0 var(--pulse-color); transform: scale(1); }
+          50%       { box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 8px transparent; transform: scale(1.025); }
+        }
+        .dir-logout-btn:hover {
+          background: #dc2626 !important;
+          color: #fff !important;
+          border-color: #dc2626 !important;
+        }
+      `}</style>
+
+      <header style={{
+        background: 'linear-gradient(135deg, #0c1e3e 0%, #1a3a6b 60%, #0f4c8a 100%)',
+        borderBottom: `3px solid ${accentColor}`,
+        padding: '0 32px',
+        height: 76,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 20,
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+      }}>
+
+        {/* Gauche — logos */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+          <div style={{
+            background: '#fff', borderRadius: 10, padding: '5px 10px',
+            display: 'flex', alignItems: 'center', height: 50,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          }}>
+            <img src={capLogo} alt="CAP" style={{ height: 38, width: 'auto', objectFit: 'contain' }} />
+          </div>
+          <div style={{ width: 1, height: 36, background: 'rgba(255,255,255,0.2)' }} />
+          <div style={{
+            border: `1.5px solid ${accentColor}99`,
+            borderRadius: 8, padding: '5px 12px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+          }}>
+            <span style={{
+              fontSize: '1.05rem', fontWeight: 900,
+              color: accentColor, letterSpacing: '0.12em', lineHeight: 1,
+            }}>EPAC</span>
+            <span style={{
+              fontSize: '0.53rem', color: `${accentColor}99`,
+              letterSpacing: '0.05em', textTransform: 'uppercase',
+              lineHeight: 1, textAlign: 'center',
+            }}>École Polytechnique</span>
+          </div>
+        </div>
+
+        {/* Centre — titre */}
+        <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+          <div style={{
+            fontSize: '1rem', fontWeight: 800, color: '#fff',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>
+            {actionLabel}
+          </div>
+          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+            CAP Demandes — Gestion documentaire
+          </div>
+        </div>
+
+        {/* Droite — profil acteur */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+
+          {/* Bloc identité — bien visible */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: 'rgba(255,255,255,0.07)',
+            border: `1px solid ${accentColor}55`,
+            borderRadius: 10,
+            padding: '8px 14px',
+          }}>
+            {/* Avatar */}
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%',
+              background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
+              border: `2px solid ${accentColor}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.82rem', fontWeight: 900, color: '#fff',
+              flexShrink: 0,
+              boxShadow: `0 2px 8px ${accentColor}66`,
+            }}>
+              {initials || <CIcon icon={cilUser} style={{ width: 18 }} />}
+            </div>
+
+            {/* Nom + rôle */}
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontSize: '0.85rem', fontWeight: 800, color: '#fff',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                maxWidth: 180,
+              }}>
+                {displayName}
+              </div>
+              <div style={{
+                fontSize: '0.68rem', color: accentColor,
+                fontWeight: 600, marginTop: 1,
+                whiteSpace: 'nowrap',
+              }}>
+                {roleLabel}
+              </div>
+            </div>
+          </div>
+
+          {/* Déconnexion */}
+          <button
+            className="dir-logout-btn"
+            onClick={() => logout?.()}
+            style={{
+              background: 'transparent',
+              border: '1.5px solid rgba(255,255,255,0.25)',
+              color: 'rgba(255,255,255,0.7)',
+              borderRadius: 7,
+              padding: '7px 15px',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Déconnexion
+          </button>
+        </div>
+      </header>
+    </>
+  )
+}
+
+// ─── Shell principal ──────────────────────────────────────────────────────────
+
+const DirectionDashboardShell = ({
+  roleLabel, accentColor, actionLabel,
+  stats, statsLoading, statDefs, children,
+}: Props) => (
+  <div style={{ minHeight: '100vh', background: '#f1f5f9', display: 'flex', flexDirection: 'column' }}>
+    <DirHeader roleLabel={roleLabel} accentColor={accentColor} actionLabel={actionLabel} />
+
+    <main style={{ flex: 1, padding: '28px 36px' }}>
+
+      {/* Rangée de StatCards */}
+      <CRow className="mb-4 g-3">
+        {statDefs.map(def => (
+          <CCol key={def.key} md={Math.floor(12 / statDefs.length)} sm={6} xs={12}>
+            <StatCard {...def} value={stats[def.key]} loading={statsLoading} />
+          </CCol>
+        ))}
+      </CRow>
+
+      {children}
+    </main>
+  </div>
+)
+
+// ─── Exports des définitions de stats par rôle ────────────────────────────────
+
+export const SEC_DA_STAT_DEFS: StatDef[] = [
+  {
+    key: 'pendingAtMyLevel',
+    label: 'À transmettre',
+    icon: cilClock,
+    color: '#9333ea', bg: '#faf5ff', border: '#d8b4fe',
+  },
+  {
+    key: 'inCircuit',
+    label: 'En circuit de correction',
+    icon: cilSync,
+    color: '#f97316', bg: '#fff7ed', border: '#fed7aa',
+    urgent: true,
+  },
+  {
+    key: 'hasFlag',
+    label: 'Avec réserve',
+    icon: cilFlagAlt,
+    color: '#d97706', bg: '#fffbeb', border: '#fde68a',
+    urgent: true,
+  },
+  {
+    key: 'totalInProgress',
+    label: 'En circulation totale',
+    icon: cilSync,
+    color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe',
+  },
+  {
+    key: 'totalValidated',
+    label: 'Transmis',
+    icon: cilCheckCircle,
+    color: '#059669', bg: '#ecfdf5', border: '#6ee7b7',
+  },
+  {
+    key: 'totalRejected',
+    label: 'Rejetés',
+    icon: cilXCircle,
+    color: '#dc2626', bg: '#fef2f2', border: '#fca5a5',
+  },
+]
+
+export const DIRECTRICE_ADJOINTE_STAT_DEFS: StatDef[] = [
+  {
+    key: 'pendingAtMyLevel',
+    label: 'À signer',
+    icon: cilClock,
+    color: '#6d28d9', bg: '#f5f3ff', border: '#c4b5fd',
+  },
+  {
+    key: 'inCircuit',
+    label: 'En circuit de correction',
+    icon: cilSync,
+    color: '#f97316', bg: '#fff7ed', border: '#fed7aa',
+    urgent: true,
+  },
+  {
+    key: 'hasFlag',
+    label: 'Avec réserve',
+    icon: cilFlagAlt,
+    color: '#d97706', bg: '#fffbeb', border: '#fde68a',
+    urgent: true,
+  },
+  {
+    key: 'totalInProgress',
+    label: 'En circulation totale',
+    icon: cilSync,
+    color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe',
+  },
+  {
+    key: 'totalValidated',
+    label: 'Signés',
+    icon: cilCheckCircle,
+    color: '#059669', bg: '#ecfdf5', border: '#6ee7b7',
+  },
+  {
+    key: 'totalRejected',
+    label: 'Rejetés',
+    icon: cilXCircle,
+    color: '#dc2626', bg: '#fef2f2', border: '#fca5a5',
+  },
+]
+
+export const SEC_DIR_STAT_DEFS: StatDef[] = [
+  {
+    key: 'pendingAtMyLevel',
+    label: 'À transmettre',
+    icon: cilClock,
+    color: '#c2410c', bg: '#fff7ed', border: '#fdba74',
+  },
+  {
+    key: 'inCircuit',
+    label: 'En circuit de correction',
+    icon: cilSync,
+    color: '#f97316', bg: '#fff7ed', border: '#fed7aa',
+    urgent: true,
+  },
+  {
+    key: 'hasFlag',
+    label: 'Avec réserve',
+    icon: cilFlagAlt,
+    color: '#d97706', bg: '#fffbeb', border: '#fde68a',
+    urgent: true,
+  },
+  {
+    key: 'totalInProgress',
+    label: 'En circulation totale',
+    icon: cilSync,
+    color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe',
+  },
+  {
+    key: 'totalValidated',
+    label: 'Transmis',
+    icon: cilCheckCircle,
+    color: '#059669', bg: '#ecfdf5', border: '#6ee7b7',
+  },
+  {
+    key: 'totalRejected',
+    label: 'Rejetés',
+    icon: cilXCircle,
+    color: '#dc2626', bg: '#fef2f2', border: '#fca5a5',
+  },
+]
+
+export const DIRECTEUR_STAT_DEFS: StatDef[] = [
+  {
+    key: 'pendingAtMyLevel',
+    label: 'À signer',
+    icon: cilClock,
+    color: '#15803d', bg: '#f0fdf4', border: '#6ee7b7',
+  },
+  {
+    key: 'inCircuit',
+    label: 'En circuit de correction',
+    icon: cilSync,
+    color: '#f97316', bg: '#fff7ed', border: '#fed7aa',
+    urgent: true,
+  },
+  {
+    key: 'hasFlag',
+    label: 'Avec réserve',
+    icon: cilFlagAlt,
+    color: '#d97706', bg: '#fffbeb', border: '#fde68a',
+    urgent: true,
+  },
+  {
+    key: 'totalInProgress',
+    label: 'En circulation totale',
+    icon: cilSync,
+    color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe',
+  },
+  {
+    key: 'totalValidated',
+    label: 'Documents prêts',
+    icon: cilCheckCircle,
+    color: '#059669', bg: '#ecfdf5', border: '#6ee7b7',
+  },
+  {
+    key: 'totalRejected',
+    label: 'Rejetés',
+    icon: cilXCircle,
+    color: '#dc2626', bg: '#fef2f2', border: '#fca5a5',
+  },
+]
+
+export default DirectionDashboardShell

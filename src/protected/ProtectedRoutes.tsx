@@ -1,3 +1,8 @@
+// src/protected/ProtectedRoutes.tsx
+// MODIFICATION : les 4 rôles direction sont redirigés vers /demandes
+// s'ils tentent d'accéder à /portail (ou à n'importe quelle autre route interdite).
+// Ces acteurs ignorent l'existence du portail.
+
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts';
@@ -5,6 +10,9 @@ import { useNavigate } from 'react-router-dom';
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } from '@coreui/react';
 import { FRONTEND_ROUTES } from '@/constants';
 import { LoadingSpinner } from '@/components';
+
+// Rôles direction : accès uniquement à /demandes, jamais au portail
+const DIRECTION_ROLES = ['sec-da', 'directrice-adjointe', 'sec-dir', 'directeur']
 
 // Permissions par rôle : false = module interdit, absent = autorisé par défaut
 const rolePermissions = {
@@ -32,11 +40,11 @@ const rolePermissions = {
     presence: false,
     soutenance: false,
   },
-  // Nouveaux rôles : accès au module demandes uniquement
-  // ⚠️ Ne PAS mettre demandes: false ici — laisser absent = autorisé
+  // Rôles direction : accès au module demandes uniquement
   'sec-da': {
     bibliotheque: false, cahier: false, cours: false, emploi: false,
     inscription: false, notes: false, presence: false, soutenance: false, finance: false,
+    // portail: implicitement interdit (redirect ci-dessous)
   },
   'directrice-adjointe': {
     bibliotheque: false, cahier: false, cours: false, emploi: false,
@@ -99,7 +107,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, module }) => 
     return <Navigate to="/notes/professor/dashboard" replace />;
   }
 
+  // Rôles direction : si accès au portail tenté → redirect silencieux vers /demandes
+  // Ces acteurs n'ont pas de portail. On ne leur montre pas de message d'erreur,
+  // on les envoie directement là où ils doivent être.
+  if (DIRECTION_ROLES.includes(role as string) && module === 'portail') {
+    return <Navigate to={FRONTEND_ROUTES.DEMANDES} replace />;
+  }
+
   if (module && !isAllowed(role, module)) {
+    // Rôles direction : pas de modal "portail" — redirect directe vers demandes
+    if (DIRECTION_ROLES.includes(role as string)) {
+      return <Navigate to={FRONTEND_ROUTES.DEMANDES} replace />;
+    }
+
     return (
       <CModal visible={true} onClose={() => navigate(FRONTEND_ROUTES.PORTAIL)}>
         <CModalHeader>

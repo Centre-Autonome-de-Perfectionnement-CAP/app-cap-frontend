@@ -24,6 +24,7 @@ export { default as FinancialPanel }    from './modal/FinancialPanel'
 export { default as ConfirmCheckbox }   from './modal/ConfirmCheckbox'
 export { default as HistoriquePanel }   from './modal/HistoriquePanel'
 export { ResendModal, ChefDivisionModal, ChefDivisionPicker } from './modal/SecretaireModals'
+export { default as RetourSecretaireModal } from './modal/RetourSecretaireModal'
 
 // Layout direction
 export { default as DirectionShell }    from './layout/DirectionShell'

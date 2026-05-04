@@ -1,0 +1,76 @@
+.admin-fingerprint {
+  padding: 25px;
+  background: #f4f6f9;
+  min-height: 100vh;
+
+  h3 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+  }
+
+  /* FILTRES */
+  .filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+
+    input,
+    select {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #321fdb;
+    }
+  }
+
+  /* TABLE */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  }
+
+  thead {
+    background: #321fdb;
+    color: white;
+  }
+
+  th, td {
+    padding: 12px;
+    text-align: left;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #eee;
+  }
+
+  tbody tr:hover {
+    background: #f5f7ff;
+  }
+
+  /* STATUS */
+  .status {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .ok {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .no {
+    background: #f8d7da;
+    color: #721c24;
+  }
+}

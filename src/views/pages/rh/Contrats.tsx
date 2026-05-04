@@ -76,11 +76,11 @@ const validateDatesInAcademicYear = (startDate: string, endDate: string | null, 
   const start = new Date(startDate);
   const acStart = new Date(academicYearStart);
   const acEnd = new Date(academicYearEnd);
-  
+
   if (start < acStart) {
     return `La date de début (${formatDate(startDate)}) ne peut pas être antérieure au début de l'année académique (${formatDate(academicYearStart)})`;
   }
-  
+
   if (endDate) {
     const end = new Date(endDate);
     if (end > acEnd) {
@@ -90,7 +90,7 @@ const validateDatesInAcademicYear = (startDate: string, endDate: string | null, 
       return "La date de fin doit être postérieure à la date de début";
     }
   }
-  
+
   return null;
 };
 
@@ -350,6 +350,33 @@ const ConfirmModal: React.FC<{
   </div>
 );
 
+// ─── SuccessModal ──────────────────────────────────────────────────────────────
+const SuccessModal: React.FC<{
+  title: string; message: string; detail?: string;
+  iconBg?: string; iconColor?: string; icon?: React.ReactNode;
+  onClose: () => void;
+}> = ({ title, message, detail, iconBg = '#f0fdf4', iconColor = '#16a34a', icon, onClose }) => (
+  <div className="ctr-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="ctr-modal" style={{ width: 'min(90vw, 420px)' }}>
+      <div className="ctr-modal-body">
+        <div className="ctr-confirm-body">
+          <div className="ctr-confirm-icon" style={{ background: iconBg, color: iconColor }}>
+            {icon ?? <Icon.Check />}
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 17, color: '#0f172a', marginBottom: 8 }}>{title}</div>
+          <div style={{ fontSize: 14, color: '#374151', marginBottom: detail ? 6 : 0 }}>{message}</div>
+          {detail && <div style={{ fontSize: 12.5, color: '#6b7280', lineHeight: 1.5 }}>{detail}</div>}
+        </div>
+      </div>
+      <div className="ctr-modal-footer" style={{ justifyContent: 'center', borderTop: '1px solid #f3f4f6' }}>
+        <button className="ctr-btn ctr-btn-success" onClick={onClose} style={{ minWidth: 120, justifyContent: 'center' }}>
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 // ─── SearchableSelect ──────────────────────────────────────────────────────────
 const SearchableSelect: React.FC<{
   options: { value: string | number; label: string }[];
@@ -496,7 +523,7 @@ const ContratFormFields: React.FC<{
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     onFieldChange(name, value);
-    
+
     if (name === 'start_date' || name === 'end_date' || name === 'academic_year_id') {
       setDateError('');
     }
@@ -560,24 +587,24 @@ const ContratFormFields: React.FC<{
 
       <p className="ctr-section-title">Programmes associés</p>
       <div>
-        <label className="ctr-label">Programmes (ECUE)</label>
+        <label className="ctr-label">Programmes (ECUE) *</label>
         <MultiSelect options={progOptions} value={form.program_ids}
           placeholder={form.professor_id ? "Sélectionner les programmes…" : "Sélectionnez d'abord un professeur"}
           onChange={ids => onFieldChange('program_ids', ids)} />
-        <p className="ctr-hint">Les programmes listés correspondent aux cours assignés au professeur sélectionné.</p>
+        <p className="ctr-hint">Obligatoire — les programmes listés correspondent aux cours assignés au professeur sélectionné.</p>
       </div>
 
       <p className="ctr-section-title">Dates et montant</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
         <div>
           <label className="ctr-label">Date de début *</label>
-          <input 
-            className="ctr-input" 
-            type="date" 
-            name="start_date" 
-            value={form.start_date} 
-            onChange={handleChange} 
-            required 
+          <input
+            className="ctr-input"
+            type="date"
+            name="start_date"
+            value={form.start_date}
+            onChange={handleChange}
+            required
             // Utilisation de year_start et year_end
             min={selectedYear?.year_start ? selectedYear.year_start.substring(0, 10) : undefined}
             max={selectedYear?.year_end ? selectedYear.year_end.substring(0, 10) : undefined}
@@ -585,12 +612,12 @@ const ContratFormFields: React.FC<{
         </div>
         <div>
           <label className="ctr-label">Date de fin</label>
-          <input 
-            className="ctr-input" 
-            type="date" 
-            name="end_date" 
-            value={form.end_date} 
-            onChange={handleChange} 
+          <input
+            className="ctr-input"
+            type="date"
+            name="end_date"
+            value={form.end_date}
+            onChange={handleChange}
             min={form.start_date || (selectedYear?.year_start ? selectedYear.year_start.substring(0, 10) : undefined)}
             max={selectedYear?.year_end ? selectedYear.year_end.substring(0, 10) : undefined}
           />
@@ -630,9 +657,9 @@ const ContratFormFields: React.FC<{
 
       <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
         <button type="button" className="ctr-btn ctr-btn-ghost" onClick={onCancel} disabled={loading}>Annuler</button>
-        <button 
-          type="submit" 
-          className="ctr-btn ctr-btn-primary" 
+        <button
+          type="submit"
+          className="ctr-btn ctr-btn-primary"
           disabled={loading || !!dateError}
         >
           {loading ? <><Icon.Loader /> Enregistrement…</> : submitLabel}
@@ -952,6 +979,11 @@ const Contrats: React.FC = () => {
   const [authorizeConfirm, setAuthorizeConfirm] = useState<Contrat | null>(null);
   const [relaunchConfirm, setRelaunchConfirm]   = useState<Contrat | null>(null);
 
+  // Success modal
+  type SuccessInfo = { title: string; message: string; detail?: string; iconBg?: string; iconColor?: string; icon?: React.ReactNode };
+  const [successModal, setSuccessModal] = useState<SuccessInfo | null>(null);
+  const showSuccess = useCallback((info: SuccessInfo) => setSuccessModal(info), []);
+
   const [deleteLoading, setDeleteLoading]       = useState(false);
   const [transferLoading, setTransferLoading]   = useState(false);
   const [authorizeLoading, setAuthorizeLoading] = useState(false);
@@ -994,7 +1026,7 @@ const Contrats: React.FC = () => {
     if (!selectedYear || !selectedYear.year_start || !selectedYear.year_end) {
       return "L'année académique sélectionnée n'a pas de dates valides";
     }
-    
+
     return validateDatesInAcademicYear(
       formData.start_date,
       formData.end_date || null,
@@ -1063,13 +1095,16 @@ const Contrats: React.FC = () => {
     if (!f.professor_id)     return 'Veuillez sélectionner un professeur.';
     if (!f.academic_year_id) return 'Veuillez sélectionner une année académique.';
     if (!f.regroupement)     return 'Veuillez sélectionner un regroupement.';
+    if (!f.cycle_id)         return 'Veuillez sélectionner un cycle.';
+    if (!f.program_ids || f.program_ids.length === 0) return 'Veuillez sélectionner au moins un programme (ECUE).';
+
     if (!f.start_date)       return 'La date de début est obligatoire.';
     if (!f.amount || Number(f.amount) < 100) return "Le montant doit être d'au moins 100 FCFA.";
-    
+
     // Validation des dates par rapport à l'année académique
     const dateValidationError = validateContractDates(f);
     if (dateValidationError) return dateValidationError;
-    
+
     return null;
   };
 
@@ -1080,9 +1115,14 @@ const Contrats: React.FC = () => {
     setCreateLoading(true); setCreateError('');
     try {
       await rhService.createContrat(buildCreate(createForm));
-      addToast('success', 'Contrat créé', 'Le contrat a été créé avec succès.');
       reload();
-      setTimeout(closeCreate, 300);
+      closeCreate();
+      showSuccess({
+        title: 'Contrat créé avec succès',
+        message: 'Le nouveau contrat de prestation a bien été enregistré.',
+        detail: 'Vous pouvez maintenant le transférer au professeur pour signature.',
+        iconBg: '#f0fdf4', iconColor: '#16a34a', icon: <Icon.Check />,
+      });
     } catch (err: any) {
       setCreateError(err?.response?.data ? extractError(err.response.data, err?.response?.status || 500) : err.message || 'Erreur');
     } finally { setCreateLoading(false); }
@@ -1096,9 +1136,13 @@ const Contrats: React.FC = () => {
     setEditLoading(true); setEditError('');
     try {
       await rhService.updateContrat(editingContrat.id, buildUpdate(editForm));
-      addToast('success', 'Contrat modifié', 'Les modifications ont été enregistrées.');
       reload();
-      setTimeout(closeEdit, 300);
+      closeEdit();
+      showSuccess({
+        title: 'Contrat modifié',
+        message: 'Les modifications ont été enregistrées avec succès.',
+        iconBg: '#eff6ff', iconColor: '#2563eb', icon: <Icon.Check />,
+      });
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? (err?.response?.data ? extractError(err.response.data, err?.response?.status || 500) : err.message || 'Erreur');
       setEditError(msg);
@@ -1110,9 +1154,14 @@ const Contrats: React.FC = () => {
     setDeleteLoading(true);
     try {
       await rhService.deleteContrat(deleteConfirm.id);
-      addToast('success', 'Contrat supprimé', `Le contrat ${deleteConfirm.contrat_number} a été supprimé.`);
+      const num = deleteConfirm.contrat_number;
       setDeleteConfirm(null);
       reload();
+      showSuccess({
+        title: 'Contrat supprimé',
+        message: `Le contrat ${num} a été supprimé définitivement.`,
+        iconBg: '#fef2f2', iconColor: '#dc2626', icon: <Icon.Trash />,
+      });
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue';
       addToast('error', 'Erreur de suppression', msg);
@@ -1139,9 +1188,15 @@ const Contrats: React.FC = () => {
         course_element_professor_ids: (c.course_element_professors ?? []).map(p => p.id),
       });
       await rhService.sendTransferEmail(c.id);
-      addToast('success', 'Contrat transféré', `Un e-mail a été envoyé à ${c.professor?.full_name ?? "l'enseignant"}.`);
+      const profName = c.professor?.full_name ?? "l'enseignant";
       setTransferConfirm(null);
       reload();
+      showSuccess({
+        title: 'Contrat transféré',
+        message: `Le contrat N° ${c.contrat_number} a été transféré à ${profName}.`,
+        detail: `Un e-mail de notification a été envoyé à ${profName} avec un lien pour consulter et valider le contrat.`,
+        iconBg: '#faf5ff', iconColor: '#7c3aed', icon: <Icon.Mail />,
+      });
     } catch (err: any) {
       addToast('error', 'Erreur de transfert', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
     } finally {
@@ -1155,9 +1210,14 @@ const Contrats: React.FC = () => {
     setAuthorizeLoading(true);
     try {
       await rhService.authorizeContrat(c.id);
-      addToast('success', 'Contrat autorisé', `Le contrat N° ${c.contrat_number} est maintenant autorisé.`);
       setAuthorizeConfirm(null);
       reload();
+      showSuccess({
+        title: 'Contrat autorisé',
+        message: `Le contrat N° ${c.contrat_number} est maintenant autorisé et verrouillé.`,
+        detail: 'Le contrat est passé au statut « En cours ». Cette action est irréversible.',
+        iconBg: '#f0fdf4', iconColor: '#059669', icon: <Icon.ShieldCheck />,
+      });
     } catch (err: any) {
       addToast('error', 'Erreur d\'autorisation', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
       setAuthorizeConfirm(null);
@@ -1184,13 +1244,14 @@ const Contrats: React.FC = () => {
         status:                       'pending' as ContratStatus,
         course_element_professor_ids: (c.course_element_professors ?? []).map(p => p.id),
       });
-      addToast(
-        'success',
-        'Contrat relancé',
-        `Le contrat N° ${c.contrat_number} est de nouveau en attente. Vous pouvez le modifier puis le retransférer.`,
-      );
       setRelaunchConfirm(null);
       reload();
+      showSuccess({
+        title: 'Contrat relancé',
+        message: `Le contrat N° ${c.contrat_number} est de nouveau en attente.`,
+        detail: "Vous pouvez le modifier puis le retransférer à l'enseignant.",
+        iconBg: '#fff7ed', iconColor: '#ea580c', icon: <Icon.Refresh />,
+      });
     } catch (err: any) {
       addToast('error', 'Erreur', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
       setRelaunchConfirm(null);
@@ -1429,15 +1490,15 @@ const Contrats: React.FC = () => {
       {showCreate && (
         <Modal title="Nouveau contrat" subtitle="Renseigner les informations du contrat de prestation" onClose={closeCreate}>
           <ContratFormFields
-            form={createForm} 
+            form={createForm}
             professors={professors}
             selectedAcademicYear={getSelectedAcademicYear(createForm.academic_year_id)}
             onFieldChange={onFieldChange(setCreateForm)}
-            onSubmit={handleCreateSubmit} 
+            onSubmit={handleCreateSubmit}
             onCancel={closeCreate}
-            loading={createLoading} 
+            loading={createLoading}
             error={createError}
-            submitLabel="Créer le contrat" 
+            submitLabel="Créer le contrat"
             isEdit={false}
           />
         </Modal>
@@ -1446,15 +1507,15 @@ const Contrats: React.FC = () => {
       {editingContrat && (
         <Modal title="Modifier le contrat" subtitle={`Contrat N° ${editingContrat.contrat_number || `#${editingContrat.id}`}`} onClose={closeEdit}>
           <ContratFormFields
-            form={editForm} 
+            form={editForm}
             professors={professors}
             selectedAcademicYear={getSelectedAcademicYear(editForm.academic_year_id)}
             onFieldChange={onFieldChange(setEditForm)}
-            onSubmit={handleEditSubmit} 
+            onSubmit={handleEditSubmit}
             onCancel={closeEdit}
-            loading={editLoading} 
+            loading={editLoading}
             error={editError}
-            submitLabel="Enregistrer les modifications" 
+            submitLabel="Enregistrer les modifications"
             isEdit={true}
           />
         </Modal>
@@ -1466,8 +1527,12 @@ const Contrats: React.FC = () => {
           contrat={uploadPdfContrat}
           onClose={() => setUploadPdfContrat(null)}
           onSuccess={(updated) => {
-            addToast('success', 'PDF mis à jour', 'Le PDF du contrat a été enregistré avec succès.');
             setUploadPdfContrat(null);
+            showSuccess({
+              title: 'PDF enregistré',
+              message: 'Le PDF du contrat a été mis à jour avec succès.',
+              iconBg: '#fff7ed', iconColor: '#ea580c', icon: <Icon.FilePdf />,
+            });
             if (!uploadPdfContrat.is_authorized && uploadPdfContrat.is_validated) {
               setAuthorizeConfirm(updated);
             } else {
@@ -1540,6 +1605,19 @@ const Contrats: React.FC = () => {
           loading={relaunchLoading}
           onConfirm={handleRelaunchConfirm}
           onCancel={() => setRelaunchConfirm(null)}
+        />
+      )}
+
+      {/* Success Modal */}
+      {successModal && (
+        <SuccessModal
+          title={successModal.title}
+          message={successModal.message}
+          detail={successModal.detail}
+          iconBg={successModal.iconBg}
+          iconColor={successModal.iconColor}
+          icon={successModal.icon}
+          onClose={() => setSuccessModal(null)}
         />
       )}
 

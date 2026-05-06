@@ -30,8 +30,8 @@ axios.interceptors.request.use(
 )
 
 // ─── URLs centralisées ────────────────────────────────────────────────────────
-const API     = 'http://localhost:8001/emploi-temps'
-const API_SEL = 'http://localhost:8001/emploi-temps/selects'
+const API     = 'http://localhost:8001/api/emploi-temps'
+const API_SEL = 'http://localhost:8001/api/emploi-temps/selects'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface AcademicYear  { id: number; academic_year: string; libelle: string; is_current: boolean }

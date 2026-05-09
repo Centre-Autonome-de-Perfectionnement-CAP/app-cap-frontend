@@ -11,6 +11,9 @@ import {
   CTooltip,
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
+
+import { formatDateTime, formatDate, formatTime } from '@/utils/timezone.utils';
+
 import {
   cilPeople,
   cilSchool,
@@ -67,9 +70,6 @@ const ResponsableDashboard: React.FC = () => {
   const [activeTab, setActiveTab]           = useState(0);
 
   // ── Navigation ────────────────────────────────────────────────────────────
-  // 'classes' → liste des classes
-  // 'programs' → programmes d'une classe (vue principale après clic sur une classe)
-  // 'students' → liste des étudiants (accessible depuis les programmes)
   const [viewMode, setViewMode]             = useState<ViewMode>('classes');
 
   // ── Students ──────────────────────────────────────────────────────────────
@@ -96,7 +96,6 @@ const ResponsableDashboard: React.FC = () => {
       const response = await inscriptionService.getResponsableClasses();
       const classesData = response.classes_by_year || [];
       setClassesByYear(classesData);
-      // On reste sur la vue 'classes' — pas de chargement automatique d'étudiants
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
@@ -724,7 +723,6 @@ const ResponsableDashboard: React.FC = () => {
           visible={!!textbookProgram}
           onClose={() => {
             setTextbookProgram(null);
-            // Rafraîchir le compteur d'entrées dans la liste des programmes
             if (selectedClass) loadProgramsForClass(selectedClass.id);
           }}
           program={textbookProgram}

@@ -4,9 +4,10 @@ import {
   cilCalendar,
   cilClock,
   cilList,
-  cilBuilding,
-  cilRoom,
-  cilNotes,
+  cilPlus,
+  cilPeople,
+  cilHome,
+  cilSettings,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -29,37 +30,43 @@ const emploiNavigation = [
   },
   {
     component: CNavItem,
-    name: 'Cours Planifiés',
+    name: 'Créneaux Horaires',
+    to: '/emploi-du-temps/time-slots',
+    icon: <CIcon icon={cilClock} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Cours Programmés',
     to: '/emploi-du-temps/scheduled-courses',
     icon: <CIcon icon={cilList} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
-    name: 'Emploi du Temps',
-    to: '/emploi-du-temps/gestion',
-    icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
+    name: 'Nouveau Cours',
+    to: '/emploi-du-temps/new-course',
+    icon: <CIcon icon={cilPlus} customClassName="nav-icon" />,
   },
   {
     component: CNavTitle,
-    name: 'Configuration',
+    name: 'Gestion',
   },
   {
     component: CNavItem,
-    name: 'Bâtiments',
-    to: '/emploi-du-temps/buildings',
-    icon: <CIcon icon={cilBuilding} customClassName="nav-icon" />,
+    name: 'Professeurs',
+    to: '/emploi/professors',
+    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
     name: 'Salles',
-    to: '/emploi-du-temps/rooms',
-    icon: <CIcon icon={cilRoom} customClassName="nav-icon" />,
+    to: '/emploi/rooms',
+    icon: <CIcon icon={cilHome} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
-    name: 'Créneaux Horaires',
-    to: '/emploi-du-temps/time-slots',
-    icon: <CIcon icon={cilClock} customClassName="nav-icon" />,
+    name: 'Configuration',
+    to: '/emploi/settings',
+    icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
   },
 ]
 

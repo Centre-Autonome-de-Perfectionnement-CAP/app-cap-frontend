@@ -242,6 +242,10 @@ const Icon = {
   Filter:        () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
   Close:         () => <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
   MessageX:      () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,
+  // WhatsApp icon added as a component
+  WhatsApp:      () => <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+  </svg>,
 };
 
 if (typeof document !== 'undefined' && !document.getElementById('ctr-spin')) {
@@ -354,28 +358,72 @@ const ConfirmModal: React.FC<{
 const SuccessModal: React.FC<{
   title: string; message: string; detail?: string;
   iconBg?: string; iconColor?: string; icon?: React.ReactNode;
+  whatsapp?: { phone?: string; text: string };   // ← NOUVEAU
   onClose: () => void;
-}> = ({ title, message, detail, iconBg = '#f0fdf4', iconColor = '#16a34a', icon, onClose }) => (
-  <div className="ctr-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-    <div className="ctr-modal" style={{ width: 'min(90vw, 420px)' }}>
-      <div className="ctr-modal-body">
-        <div className="ctr-confirm-body">
-          <div className="ctr-confirm-icon" style={{ background: iconBg, color: iconColor }}>
-            {icon ?? <Icon.Check />}
+}> = ({ title, message, detail, iconBg = '#f0fdf4', iconColor = '#16a34a', icon, whatsapp, onClose }) => {
+
+  const openWhatsapp = () => {
+    const phone   = whatsapp?.phone ? whatsapp.phone.replace(/\D/g, '') : '';
+    const encoded = encodeURIComponent(whatsapp?.text ?? '');
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      // Mobile : ouvre directement l'app WhatsApp
+      const nativeUrl = phone
+        ? `whatsapp://send?phone=${phone}&text=${encoded}`
+        : `whatsapp://send?text=${encoded}`;
+      window.location.href = nativeUrl;
+    } else {
+      // Desktop : tente whatsapp:// (app desktop), sinon bascule sur wa.me
+      const nativeUrl = phone
+        ? `whatsapp://send?phone=${phone}&text=${encoded}`
+        : `whatsapp://send?text=${encoded}`;
+      const webUrl = phone
+        ? `https://wa.me/${phone}?text=${encoded}`
+        : `https://wa.me/?text=${encoded}`;
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      iframe.src = nativeUrl;
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        window.open(webUrl, '_blank');
+      }, 1500);
+    }
+  };
+
+  return (
+    <div className="ctr-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="ctr-modal" style={{ width: 'min(90vw, 440px)' }}>
+        <div className="ctr-modal-body">
+          <div className="ctr-confirm-body">
+            <div className="ctr-confirm-icon" style={{ background: iconBg, color: iconColor }}>
+              {icon ?? <Icon.Check />}
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: '#0f172a', marginBottom: 8 }}>{title}</div>
+            <div style={{ fontSize: 14, color: '#374151', marginBottom: detail ? 6 : 0 }}>{message}</div>
+            {detail && <div style={{ fontSize: 12.5, color: '#6b7280', lineHeight: 1.5 }}>{detail}</div>}
           </div>
-          <div style={{ fontWeight: 700, fontSize: 17, color: '#0f172a', marginBottom: 8 }}>{title}</div>
-          <div style={{ fontSize: 14, color: '#374151', marginBottom: detail ? 6 : 0 }}>{message}</div>
-          {detail && <div style={{ fontSize: 12.5, color: '#6b7280', lineHeight: 1.5 }}>{detail}</div>}
+        </div>
+        <div className="ctr-modal-footer" style={{ justifyContent: 'center', borderTop: '1px solid #f3f4f6', gap: 10, flexWrap: 'wrap' }}>
+          {whatsapp && (
+            <button
+              className="ctr-btn"
+              onClick={openWhatsapp}
+              style={{ background: '#25d366', color: '#fff', gap: 8 }}
+            >
+              <Icon.WhatsApp />
+              Transférer une copie via WhatsApp
+            </button>
+          )}
+          <button className="ctr-btn ctr-btn-success" onClick={onClose} style={{ minWidth: 100, justifyContent: 'center' }}>
+            OK
+          </button>
         </div>
       </div>
-      <div className="ctr-modal-footer" style={{ justifyContent: 'center', borderTop: '1px solid #f3f4f6' }}>
-        <button className="ctr-btn ctr-btn-success" onClick={onClose} style={{ minWidth: 120, justifyContent: 'center' }}>
-          OK
-        </button>
-      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── SearchableSelect ──────────────────────────────────────────────────────────
 const SearchableSelect: React.FC<{
@@ -980,7 +1028,7 @@ const Contrats: React.FC = () => {
   const [relaunchConfirm, setRelaunchConfirm]   = useState<Contrat | null>(null);
 
   // Success modal
-  type SuccessInfo = { title: string; message: string; detail?: string; iconBg?: string; iconColor?: string; icon?: React.ReactNode };
+  type SuccessInfo = { title: string; message: string; detail?: string; iconBg?: string; iconColor?: string; whatsapp?: { phone?: string; text: string }; icon?: React.ReactNode };
   const [successModal, setSuccessModal] = useState<SuccessInfo | null>(null);
   const showSuccess = useCallback((info: SuccessInfo) => setSuccessModal(info), []);
 
@@ -1169,41 +1217,89 @@ const Contrats: React.FC = () => {
     } finally { setDeleteLoading(false); }
   };
 
-  const handleTransferConfirm = async () => {
-    const c = transferConfirm;
-    if (!c) return;
-    setTransferLoading(true);
-    try {
-      await rhService.updateContrat(c.id, {
-        division:                     c.division ?? null,
-        professor_id:                 c.professor_id,
-        academic_year_id:             c.academic_year_id,
-        cycle_id:                     c.cycle_id ?? null,
-        regroupement:                 c.regroupement ?? null,
-        start_date:                   c.start_date?.substring(0, 10) ?? '',
-        end_date:                     c.end_date?.substring(0, 10) ?? null,
-        amount:                       Number(c.amount),
-        notes:                        c.notes ?? null,
-        status:                       'transfered' as ContratStatus,
-        course_element_professor_ids: (c.course_element_professors ?? []).map(p => p.id),
-      });
-      await rhService.sendTransferEmail(c.id);
-      const profName = c.professor?.full_name ?? "l'enseignant";
-      setTransferConfirm(null);
-      reload();
-      showSuccess({
-        title: 'Contrat transféré',
-        message: `Le contrat N° ${c.contrat_number} a été transféré à ${profName}.`,
-        detail: `Un e-mail de notification a été envoyé à ${profName} avec un lien pour consulter et valider le contrat.`,
-        iconBg: '#faf5ff', iconColor: '#7c3aed', icon: <Icon.Mail />,
-      });
-    } catch (err: any) {
-      addToast('error', 'Erreur de transfert', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
-    } finally {
-      setTransferLoading(false);
-    }
-  };
+ const handleTransferConfirm = async () => {
+  const c = transferConfirm;
+  if (!c) return;
+  setTransferLoading(true);
+  try {
+    await rhService.updateContrat(c.id, {
+      division:                     c.division ?? null,
+      professor_id:                 c.professor_id,
+      academic_year_id:             c.academic_year_id,
+      cycle_id:                     c.cycle_id ?? null,
+      regroupement:                 c.regroupement ?? null,
+      start_date:                   c.start_date?.substring(0, 10) ?? '',
+      end_date:                     c.end_date?.substring(0, 10) ?? null,
+      amount:                       Number(c.amount),
+      notes:                        c.notes ?? null,
+      status:                       'transfered' as ContratStatus,
+      course_element_professor_ids: (c.course_element_professors ?? []).map(p => p.id),
+    });
+    await rhService.sendTransferEmail(c.id);
+    const profName = c.professor?.full_name ?? "l'enseignant";
 
+    // Construction du message WhatsApp — texte fluide, lien cliquable
+    const contratUrl = `${window.location.origin}/services/professor/login`;
+    const programsList = (c.course_element_professors ?? [])
+      .map(p => `- ${p.course_element?.code ?? p.label} : ${p.course_element?.name ?? ''}`)
+      .join('\n');
+
+    const divisionLabel     = c.division === 'RD-FC' ? 'Formation Continue (RD-FC)' : 'Formation à Distance (RD-FAD)';
+    const regroupementLabel = c.regroupement === '1' ? 'Regroupement I' : 'Regroupement II';
+    const periodeLabel      = `${formatDate(c.start_date)} au ${c.end_date ? formatDate(c.end_date) : 'Non spécifiée'}`;
+    const professorEmail    = c.professor?.email ?? 'votre adresse e-mail';
+
+    const academicYearLabel = c.academic_year?.academic_year ?? 'l\'année académique en cours';
+
+    const whatsappMessage = `Bonjour ${profName},
+
+Le Centre Autonome de Perfectionnement (CAP) de l'École Polytechnique d'Abomey-Calavi vous a adressé un contrat d'enseignement pour l'année académique ${academicYearLabel}. Veuillez en prendre connaissance et procéder à sa validation dans les meilleurs délais.
+
+Votre contrat de prestation N° ${c.contrat_number} est disponible et en attente de votre signature.
+
+Détails du contrat :
+Division : ${divisionLabel}
+Regroupement : ${regroupementLabel}
+Cycle : ${c.cycle?.name || 'Non spécifié'}
+Période : du ${periodeLabel}
+Montant : ${formatAmount(Number(c.amount))}
+
+Programmes concernés :
+${programsList || 'Aucun programme renseigné'}
+
+Procédure de signature :
+1. Connectez-vous à votre espace sur le lien ci-dessous
+2. Consultez votre e-mail (${professorEmail}) pour le lien de signature sécurisé
+3. Vérifiez toutes les informations du contrat
+4. Signez électroniquement
+
+Accéder à votre espace :
+${contratUrl}
+
+Attention : Ce lien est valable pendant 72 heures à compter de la réception de ce message. Passé ce délai, veuillez contacter le service RH du CAP.
+
+Ce lien est strictement personnel et confidentiel.
+
+Cordialement,
+Service des Ressources Humaines — CAP-EPAC`;
+    setTransferConfirm(null);
+    reload();
+    showSuccess({
+      title: 'Contrat transféré',
+      message: `Le contrat N° ${c.contrat_number} a été transféré à ${profName}.`,
+      detail: `Un e-mail de notification a été envoyé à ${profName} avec un lien pour consulter et valider le contrat.`,
+      iconBg: '#faf5ff', iconColor: '#7c3aed', icon: <Icon.Mail />,
+      whatsapp: {
+        phone: c.professor?.phone ?? undefined,
+        text: whatsappMessage,
+      },
+    });
+  } catch (err: any) {
+    addToast('error', 'Erreur de transfert', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
+  } finally {
+    setTransferLoading(false);
+  }
+};
   const handleAuthorizeConfirm = async () => {
     const c = authorizeConfirm;
     if (!c) return;
@@ -1617,6 +1713,7 @@ const Contrats: React.FC = () => {
           iconBg={successModal.iconBg}
           iconColor={successModal.iconColor}
           icon={successModal.icon}
+          whatsapp={successModal.whatsapp}
           onClose={() => setSuccessModal(null)}
         />
       )}

@@ -1,16 +1,3 @@
-/**
- * ProfessorTextbookPage.tsx — Page Cahier de texte (vue Professeur)
- *
- * CORRECTIONS APPLIQUÉES :
- * 1. handlePublish / handleUnpublish retournent désormais une vraie Promise<void>
- *    → le .then(() => setDetailEntry(null)) dans la modal fonctionne correctement.
- * 2. CAlert "dismissible" remplacé par fermeture manuelle (compatibilité CoreUI v4/v5).
- * 3. Toutes les classes Bootstrap 5.3 "subtle" remplacées par des variantes inline
- *    compatibles avec CoreUI (bg-opacity, etc.).
- * 4. Gestion du cas où res.data est un tableau enveloppé dans { data: [] } ou pas.
- * 5. useCallback ajouté sur loadStats / loadPrograms / loadEntries pour éviter
- *    les boucles de re-render avec useEffect.
- */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import Select from 'react-select'
@@ -48,9 +35,6 @@ import {
 } from '@coreui/icons'
 import NotesService from '@/services/notes.service'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
 
 interface TextbookStats {
   total_hours_published: number
@@ -603,19 +587,7 @@ const ProfessorTextbookPage = () => {
                             </CButton>
                           )}
 
-                          {/* Dépublier */}
-                          {entry.status === 'published' && (
-                            <CButton
-                              size="sm"
-                              color="warning"
-                              disabled={isBusy}
-                              onClick={() => handleUnpublish(entry)}
-                            >
-                              {isUnpublishing
-                                ? <CSpinner size="sm" />
-                                : <><CIcon icon={cilReload} className="me-1" />Retirer signature</>}
-                            </CButton>
-                          )}
+                          
 
                           {/* Validé — non modifiable */}
                           {entry.status === 'validated' && (

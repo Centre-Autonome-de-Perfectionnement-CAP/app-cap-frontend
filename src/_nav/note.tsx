@@ -33,7 +33,7 @@ const getNoteNavigation = (role: string | null) => {
         to: '/notes/professor/dashboard',
         icon: <CIcon icon={cilBook} />,
       },
-      // ✅ AJOUT : bouton Cahier de texte
+      
       {
         component: CNavItem,
         name: 'Cahier de texte',

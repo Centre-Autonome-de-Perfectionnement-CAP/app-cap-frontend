@@ -21,6 +21,7 @@ import type {
   TextbookEntryPayload,
   CanAddResult,
 } from '@/services/inscription.service';
+import { formatDate, formatTime, getCurrentDateInput, nowInTimezone } from '@/utils/timezone.utils';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -44,17 +45,6 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   published: { label: 'Publié',     color: 'info'      },
   validated: { label: 'Validé',     color: 'success'   },
 };
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '—';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-function formatTime(timeStr: string): string {
-  if (!timeStr) return '—';
-  return timeStr.slice(0, 5); // HH:mm
-}
 
 // ─── Empty form ───────────────────────────────────────────────────────────────
 
@@ -139,7 +129,16 @@ const CahierTexteModal: React.FC<CahierTexteModalProps> = ({ visible, onClose, p
 
   const openAddForm = () => {
     setEditingEntry(null);
-    setForm(emptyForm());
+    // Pré-remplir la date de rendu avec la date actuelle + 7 jours
+    const today = nowInTimezone();
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+    const defaultDueDate = nextWeek.toISOString().split('T')[0];
+    
+    setForm({
+      ...emptyForm(),
+      homework_due_date: defaultDueDate,
+    });
     setFormErrors({});
     setShowForm(true);
   };
@@ -502,7 +501,7 @@ const CahierTexteModal: React.FC<CahierTexteModalProps> = ({ visible, onClose, p
                   {formatDate(entry.session_date)}
                 </CTableDataCell>
                 <CTableDataCell className="text-nowrap text-muted small">
-                  {formatTime(entry.start_time)} – {formatTime(entry.end_time)}
+                  {entry.start_time} – {entry.end_time}
                 </CTableDataCell>
                 <CTableDataCell>
                   <div className="fw-semibold">{entry.session_title}</div>

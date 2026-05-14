@@ -301,7 +301,7 @@ const SignatureModal = ({ visible, contratNumber, onClose, onConfirm, loading }:
     <CModal visible={visible} onClose={handleClose} alignment="center" size="lg" backdrop="static">
       <CModalHeader className="border-bottom-0 pb-0">
         <CModalTitle style={{ color: '#1a3a8f', fontWeight: 700 }}>
-          ✍️ Valider le contrat N°{contratNumber}
+           Valider le contrat N°{contratNumber}
         </CModalTitle>
       </CModalHeader>
 

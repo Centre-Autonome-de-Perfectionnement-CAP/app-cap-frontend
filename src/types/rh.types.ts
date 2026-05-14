@@ -63,6 +63,20 @@ export interface RhStats {
   active_professors: number
 }
 
+// ─── Support de cours ─────────────────────────────────────────────────────────
+
+/**
+ * Une entrée dans le tableau JSON stocké dans contrat_programs.course_support_file
+ */
+export interface CourseSupport {
+  /** Titre du support (ex: "Cours Chapitre 1 — Introduction") */
+  title: string
+  /** Chemin relatif du fichier sur le serveur (ex: "supports/uuid.pdf") */
+  file?: string
+  /** URL publique du fichier PDF (reconstruite côté serveur) */
+  url?: string
+}
+
 // ─── Contrat ──────────────────────────────────────────────────────────────────
 
 export type ContratStatus =
@@ -82,6 +96,8 @@ export interface ProfessorProgram {
   is_primary: boolean
   label: string
   hours?: number
+  /** Supports de cours associés à ce programme dans le contexte d'un contrat */
+  course_support_file?: CourseSupport[]
   course_element: {
     id: number
     name: string
@@ -159,6 +175,10 @@ export interface Contrat {
   academicYear?: { id: number; academic_year: string }
   academic_year?: { id: number; academic_year: string }
   cycle?: { id: number; name: string }
+  /**
+   * Programmes (course_element_professor) rattachés au contrat.
+   * Chaque programme peut contenir ses supports de cours via `course_support_file`.
+   */
   course_element_professors?: ProfessorProgram[]
   created_at?: string
   updated_at?: string

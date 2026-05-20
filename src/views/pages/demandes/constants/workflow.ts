@@ -2,7 +2,7 @@
 
 import {
   cilInbox, cilDollar, cilUser, cilPen, cilTask,
-  cilCheckAlt, cilWarning, cilFolder, cilBan, cilFlagAlt,
+  cilCheckAlt, cilWarning, cilFolder, cilBan, cilFlagAlt, cilSync,
 } from '@coreui/icons'
 
 export const STATUS_COLORS: Record<string, { color: string; bg: string; text: string }> = {
@@ -37,8 +37,8 @@ export const SECRETAIRE_TABS: TabConfig[] = [
   { key: 'directeur_review',           label: 'Directeur',        icon: cilTask     },
   { key: 'ready',                      label: 'Prêts',            icon: cilCheckAlt },
   { key: 'secretaire_correction',      label: 'À corriger',       icon: cilWarning  },
-  { key: 'circuit_correction',         label: '↺ Navette active', icon: cilWarning  },
-  { key: 'flagged',                    label: '⚑ Réserves',       icon: cilFlagAlt  },
+  { key: 'circuit_correction',         label: 'Navette active',   icon: cilSync     },
+  { key: 'flagged',                    label: 'Réserves',         icon: cilFlagAlt  },
   { key: 'delivered',                  label: 'Archivés',         icon: cilFolder   },
   { key: 'rejected',                   label: 'Rejetés',          icon: cilBan      },
 ]

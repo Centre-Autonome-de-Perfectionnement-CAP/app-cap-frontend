@@ -20,6 +20,7 @@ export type DocumentRequestType =
   | 'attestation_definitive'
   | 'attestation_inscription'
   | 'bulletin_notes'
+  | 'bulletin_annuel'
 
 export type SignatureType    = 'paraphe' | 'signature'
 export type ChefDivisionType = 'formation_distance' | 'formation_continue'
@@ -33,6 +34,7 @@ export interface DocumentRequest {
   files: Record<string, string> | null | string
   complement_files: Record<string, string> | null | string
   submitted_at: string
+  created_at?: string
   updated_at: string
   rejected_reason: string | null
   rejected_by: string | null
@@ -109,6 +111,7 @@ export const TYPE_LABELS: Record<DocumentRequestType, string> = {
   attestation_definitive:  'Attestation Définitive',
   attestation_inscription: "Attestation d'Inscription",
   bulletin_notes:          'Bulletin de Notes',
+  bulletin_annuel:         'Bulletin annuel',
 }
 
 export const CHEF_DIVISION_LABELS: Record<ChefDivisionType, string> = {

@@ -76,7 +76,7 @@ const AppSidebar = () => {
   return (
     <CSidebar
       className="border-end" colorScheme="dark" position="fixed"
-      unfoldable={unfoldable} visible={sidebarShow}
+      unfoldable={unfoldable} narrow={unfoldable} visible={sidebarShow}
       onVisibleChange={(visible: any) => dispatch({ type: 'set', sidebarShow: visible })}
     >
       <CSidebarHeader className="border-bottom">

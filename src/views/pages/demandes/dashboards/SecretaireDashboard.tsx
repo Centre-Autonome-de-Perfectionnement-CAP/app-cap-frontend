@@ -6,7 +6,7 @@ import { CRow, CCol, CBadge } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilInbox, cilWarning, cilFlagAlt, cilCheckAlt, cilFolder,
-  cilX, cilArrowCircleRight, cilBan, cilSend,
+  cilX, cilArrowCircleRight, cilBan, cilSend, cilSync,
 } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
@@ -47,7 +47,7 @@ const CorrectionCircuitBanner = ({ demande }: { demande: DocumentRequest }) => {
         <span style={{ fontWeight: 800, fontSize: '1rem', color: '#7f1d1d' }}>
           Circuit de correction actif
         </span>
-        <CBadge color="danger" style={{ fontSize: '0.7rem', marginLeft: 'auto', padding: '5px 10px' }}>
+        <CBadge color="danger" style={{ fontSize: '0.875rem', marginLeft: 'auto', padding: '5px 10px' }}>
           Mode navette
         </CBadge>
       </div>
@@ -62,7 +62,7 @@ const CorrectionCircuitBanner = ({ demande }: { demande: DocumentRequest }) => {
         <div style={{
           marginTop: 12, padding: '10px 14px', borderRadius: 8,
           background: 'rgba(255,255,255,0.75)', border: '1px solid #fecaca',
-          fontSize: '0.84rem', color: '#7f1d1d',
+          fontSize: '0.875rem', color: '#7f1d1d',
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
           <CIcon icon={cilArrowCircleRight} style={{ width: 15, color: '#dc2626', flexShrink: 0 }} />
@@ -111,7 +111,7 @@ const NavetteEnCoursBanner = ({ demande }: { demande: DocumentRequest }) => {
         <span style={{ fontWeight: 800, fontSize: '1rem', color: '#7c2d12' }}>
           Navette active — dossier chez {statusLabels[status] ?? status}
         </span>
-        <CBadge color="warning" style={{ fontSize: '0.7rem', marginLeft: 'auto', padding: '5px 10px', color: '#fff' }}>
+        <CBadge color="warning" style={{ fontSize: '0.875rem', marginLeft: 'auto', padding: '5px 10px', color: '#fff' }}>
           En attente de correction
         </CBadge>
       </div>
@@ -263,7 +263,7 @@ const BASE_COLUMNS = [
 const STAT_DEFS = [
   { key: 'pending',               label: 'Nouvelles demandes', urgent: true,  icon: cilInbox    },
   { key: 'secretaire_correction', label: 'À corriger',         urgent: true,  icon: cilWarning  },
-  { key: 'circuit_correction',    label: 'Navette active',     urgent: true,  icon: cilFlagAlt  },
+  { key: 'circuit_correction',    label: 'Navette active',     urgent: true,  icon: cilSync     },
   { key: 'flagged',               label: 'Réserves actives',   urgent: true,  icon: cilFlagAlt  },
   { key: 'ready',                 label: 'Prêts à retirer',    urgent: false, icon: cilCheckAlt },
   { key: 'delivered',             label: 'Archivés',           urgent: false, icon: cilFolder   },
@@ -323,10 +323,10 @@ const SecretaireDashboard = () => {
         }}>
           <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
             <div>
-              <div style={{ fontWeight: 800, fontSize: '1.15rem', color: '#111827' }}>
+              <div style={{ fontWeight: 800, fontSize: '1.45rem', color: '#0f172a', letterSpacing: '-0.025em' }}>
                 Gestion des demandes
               </div>
-              <div style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: 3 }}>
+              <div style={{ fontSize: '1rem', color: '#64748b', marginTop: 2, fontWeight: 500 }}>
                 Tableau de bord — Secrétariat
               </div>
             </div>

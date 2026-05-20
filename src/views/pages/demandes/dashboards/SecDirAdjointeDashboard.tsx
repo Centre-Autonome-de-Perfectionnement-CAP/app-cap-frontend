@@ -36,7 +36,7 @@ const CorrectionBanner = ({ demande }: { demande: DocumentRequest }) => (
       <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#78350f' }}>
         Dossier en circuit de correction
       </span>
-      <CBadge color="warning" style={{ marginLeft: 'auto', fontSize: '0.75rem', padding: '6px 12px', color: '#fff' }}>
+      <CBadge color="warning" style={{ marginLeft: 'auto', fontSize: '0.875rem', padding: '6px 12px', color: '#fff' }}>
         Navette active
       </CBadge>
     </div>
@@ -168,8 +168,8 @@ export const SecDirAdjointeDashboard = () => {
         <CCardHeader className="bg-white" style={{ borderBottom: '1px solid #f1f5f9', padding: '20px 24px 16px' }}>
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-              <div style={{ fontWeight: 800, fontSize: '1.15rem', color: '#111827' }}>Documents à transmettre</div>
-              <div style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: 3 }}>
+              <div style={{ fontWeight: 800, fontSize: '1.45rem', color: '#0f172a', letterSpacing: '-0.025em' }}>Documents à transmettre</div>
+              <div style={{ fontSize: '1rem', color: '#64748b', marginTop: 2, fontWeight: 500 }}>
                 {demandes.length} dossier{demandes.length !== 1 ? 's' : ''} en attente
               </div>
             </div>

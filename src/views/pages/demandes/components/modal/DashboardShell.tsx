@@ -70,8 +70,8 @@ const DashboardShell = ({
         >
           <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
             <div>
-              <div style={{ fontWeight: 700, fontSize: '1.05rem', color: '#111827' }}>{title}</div>
-              <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: 2 }}>{subtitle}</div>
+              <div style={{ fontWeight: 800, fontSize: '1.45rem', color: '#0f172a', letterSpacing: '-0.025em' }}>{title}</div>
+              <div style={{ fontSize: '1rem', color: '#64748b', marginTop: 2, fontWeight: 500 }}>{subtitle}</div>
             </div>
             <DemandeSearchBar
               search={search}

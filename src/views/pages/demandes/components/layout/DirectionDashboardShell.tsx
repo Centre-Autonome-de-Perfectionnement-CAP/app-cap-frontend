@@ -67,9 +67,9 @@ const StatCard = ({ label, icon, color, bg, border, urgent, value, loading }: St
         background: bg,
         border: `1px solid ${border}`,
         borderLeft: `4px solid ${color}`,
-        borderRadius: 10,
-        padding: '16px 18px',
-        minHeight: 90,
+        borderRadius: 8,
+        padding: '8px 12px',
+        minHeight: 60,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -82,15 +82,16 @@ const StatCard = ({ label, icon, color, bg, border, urgent, value, loading }: St
     >
       <div style={{
         display: 'flex', alignItems: 'center', gap: 6,
-        fontSize: '0.72rem', color, fontWeight: 600, opacity: 0.85,
+        fontSize: '0.9rem', color, fontWeight: 750, opacity: 0.9,
       }}>
-        <CIcon icon={icon} style={{ width: 13, flexShrink: 0 }} />
+        <CIcon icon={icon as any} style={{ width: 14, flexShrink: 0 }} />
         {label}
       </div>
       <div style={{
-        fontSize: isAlerting ? '2.3rem' : '2rem',
+        fontSize: isAlerting ? '2.3rem' : '2.0rem',
         fontWeight: 800, color, lineHeight: 1,
         transition: 'font-size 0.2s',
+        letterSpacing: '-0.025em',
       }}>
         {loading ? '—' : value}
       </div>
@@ -158,7 +159,7 @@ const DirHeader = ({
               color: accentColor, letterSpacing: '0.12em', lineHeight: 1,
             }}>EPAC</span>
             <span style={{
-              fontSize: '0.53rem', color: `${accentColor}99`,
+              fontSize: '0.62rem', color: `${accentColor}99`,
               letterSpacing: '0.05em', textTransform: 'uppercase',
               lineHeight: 1, textAlign: 'center',
             }}>École Polytechnique</span>
@@ -168,12 +169,13 @@ const DirHeader = ({
         {/* Centre — titre */}
         <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
           <div style={{
-            fontSize: '1rem', fontWeight: 800, color: '#fff',
+            fontSize: '1.25rem', fontWeight: 800, color: '#fff',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            letterSpacing: '-0.02em',
           }}>
             {actionLabel}
           </div>
-          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+          <div style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)', marginTop: 1, fontWeight: 500 }}>
             CAP Demandes — Gestion documentaire
           </div>
         </div>
@@ -212,7 +214,7 @@ const DirHeader = ({
                 {displayName}
               </div>
               <div style={{
-                fontSize: '0.68rem', color: accentColor,
+                fontSize: '0.875rem', color: accentColor,
                 fontWeight: 600, marginTop: 1,
                 whiteSpace: 'nowrap',
               }}>
@@ -231,7 +233,7 @@ const DirHeader = ({
               color: 'rgba(255,255,255,0.7)',
               borderRadius: 7,
               padding: '7px 15px',
-              fontSize: '0.75rem',
+              fontSize: '0.875rem',
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.15s',

@@ -34,8 +34,8 @@ const StatCard = ({
         background: bg,
         border: `1px solid ${color}30`,
         borderLeft: `4px solid ${color}`,
-        borderRadius: 10,
-        padding: '14px 18px',
+        borderRadius: 8,
+        padding: '8px 12px',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'transform 0.15s, box-shadow 0.15s',
         outline: 'none',
@@ -43,7 +43,7 @@ const StatCard = ({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        minHeight: 88,
+        minHeight: 60,
 
         // 👉 variable CSS pour animation
         ['--pulse-color' as any]: color,
@@ -91,11 +91,11 @@ const StatCard = ({
           display: 'flex',
           alignItems: 'center',
           gap: 6,
-          fontSize: '0.73rem',
+          fontSize: '0.9rem',
           color: labelColor,
-          marginBottom: 6,
-          fontWeight: 600,
-          opacity: 0.85,
+          marginBottom: 3,
+          fontWeight: 750,
+          opacity: 0.9,
         }}
       >
         {icon && (
@@ -109,11 +109,12 @@ const StatCard = ({
       {/* COUNT */}
       <div
         style={{
-          fontSize: isAlerting ? '2.4rem' : '2rem',
+          fontSize: isAlerting ? '2.3rem' : '2.0rem',
           fontWeight: 800,
           color,
           lineHeight: 1,
           transition: 'font-size 0.2s',
+          letterSpacing: '-0.025em',
         }}
       >
         {count}

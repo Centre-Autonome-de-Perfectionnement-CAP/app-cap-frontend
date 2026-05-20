@@ -18,8 +18,8 @@ const DemandeSearchBar = ({
   typeFilter = '', onTypeChange,
   showTypeFilter = false,
 }: Props) => (
-  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-    <CInputGroup size="sm" style={{ width: 200 }}>
+  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+    <CInputGroup style={{ width: 250, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
       <CInputGroupText><CIcon icon={cilSearch} /></CInputGroupText>
       <CFormInput
         placeholder="Référence, nom…"
@@ -29,8 +29,7 @@ const DemandeSearchBar = ({
     </CInputGroup>
     {showTypeFilter && onTypeChange && (
       <CFormSelect
-        size="sm"
-        style={{ width: 170 }}
+        style={{ width: 190, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
         value={typeFilter}
         onChange={e => onTypeChange(e.target.value)}
       >

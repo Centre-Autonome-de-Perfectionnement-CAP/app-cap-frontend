@@ -38,7 +38,7 @@ const ComptableDetailModal = ({ demande, logs, visible, onClose, onAction }: any
       title="Vérification financière — Comptabilité" footer={footer}>
       <DemandeDetailBase demande={demande} logs={logs}>
         <FinancialPanel demande={demande} />
-        <CAlert color="info" className="mt-3 py-2" style={{ fontSize: '0.82rem' }}>
+        <CAlert color="info" className="mt-3 py-2" style={{ fontSize: '0.875rem' }}>
           Vérifiez la situation financière avant de valider.
           En cas de problème, rejetez avec un commentaire explicite.
         </CAlert>

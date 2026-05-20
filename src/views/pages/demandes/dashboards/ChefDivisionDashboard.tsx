@@ -33,7 +33,7 @@ const CorrectionBanner = ({ demande }: { demande: DocumentRequest }) => (
       <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#78350f' }}>
         Dossier en circuit de correction
       </span>
-      <CBadge color="warning" style={{ marginLeft: 'auto', fontSize: '0.75rem', padding: '6px 12px', color: '#fff' }}>
+      <CBadge color="warning" style={{ marginLeft: 'auto', fontSize: '0.875rem', padding: '6px 12px', color: '#fff' }}>
         Navette active
       </CBadge>
     </div>

@@ -12,7 +12,7 @@ interface Props {
 }
 
 const TabBar = ({ tabs, activeKey, counts, onSelect }: Props) => (
-  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, padding: '2px 0' }}>
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '4px 0' }}>
     {tabs.map(tab => {
       const palette = STATUS_COLORS[tab.key] ?? { color: '#6b7280', bg: '#f9fafb', text: '#374151' }
       const isActive = activeKey === tab.key
@@ -25,32 +25,32 @@ const TabBar = ({ tabs, activeKey, counts, onSelect }: Props) => (
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 6,
-            padding: '5px 11px',
-            borderRadius: 20,
+            gap: 9,
+            padding: '7px 14px',
+            borderRadius: 8,
             cursor: 'pointer',
-            fontSize: '0.74rem',
-            fontWeight: isActive ? 700 : 400,
-            border: `1.5px solid ${isActive ? palette.color : '#e5e7eb'}`,
+            fontSize: '0.92rem',
+            fontWeight: isActive ? 800 : 600,
+            border: `1.5px solid ${isActive ? palette.color : '#cbd5e1'}`,
             background: isActive ? palette.color : 'white',
-            color: isActive ? 'white' : '#64748b',
+            color: isActive ? 'white' : '#334155',
             transition: 'all 0.15s ease',
-            boxShadow: isActive ? `0 2px 10px ${palette.color}44` : 'none',
+            boxShadow: isActive ? `0 3px 12px ${palette.color}38` : 'none',
           }}
         >
-          <CIcon icon={tab.icon} style={{ width: 12, height: 12, flexShrink: 0 }} />
+          <CIcon icon={tab.icon} style={{ width: 15, height: 15, flexShrink: 0 }} />
           <span>{tab.label}</span>
           {count > 0 && (
             <span style={{
-              background: isActive ? 'rgba(255,255,255,0.25)' : `${palette.color}20`,
+              background: isActive ? 'rgba(255,255,255,0.3)' : `${palette.color}20`,
               color: isActive ? 'white' : palette.color,
-              borderRadius: 10,
-              padding: '0 6px',
-              fontSize: '0.66rem',
-              fontWeight: 700,
-              minWidth: 18,
+              borderRadius: 6,
+              padding: '2px 8px',
+              fontSize: '0.85rem',
+              fontWeight: 800,
+              minWidth: 20,
               textAlign: 'center',
-              lineHeight: '16px',
+              lineHeight: '14px',
               display: 'inline-block',
             }}>
               {count}

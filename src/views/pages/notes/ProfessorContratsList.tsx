@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import {
   CCard,
   CCardBody,
@@ -72,6 +72,7 @@ const formatAmount = (amount: number) =>
 
 const ProfessorContratsList = () => {
   const navigate                              = useNavigate()
+  const location                              = useLocation()
   const [searchParams, setSearchParams]       = useSearchParams()
 
   const [contrats, setContrats]               = useState<Contrat[]>([])
@@ -118,6 +119,24 @@ const ProfessorContratsList = () => {
       if (stored) setPendingSupportContrats(JSON.parse(stored))
     } catch { /* ignore */ }
   }, [])
+
+  // Lire le state passé par navigate() depuis ProfessorContratDetail
+  // quand le professeur clique "Plus tard" dans le dialog post-validation
+  useEffect(() => {
+    const state = location.state as { pendingSupportContrat?: { id: number; uuid?: string; contrat_number: string } } | null
+    if (!state?.pendingSupportContrat) return
+
+    const incoming = state.pendingSupportContrat
+    setPendingSupportContrats((prev) => {
+      // Éviter les doublons
+      if (prev.some((c) => c.id === incoming.id)) return prev
+      const updated = [...prev, incoming as Contrat]
+      try { sessionStorage.setItem('pendingSupportContrats', JSON.stringify(updated)) } catch { /* ignore */ }
+      return updated
+    })
+    // Effacer le state pour ne pas réappliquer si le composant se remonte
+    window.history.replaceState({}, '')
+  }, [location.state])
 
   // ─── Filtrage ─────────────────────────────────────────────────────────────
   const filtered = contrats.filter((c) => {
@@ -256,41 +275,7 @@ const ProfessorContratsList = () => {
         </CAlert>
       )}
 
-      {/* ── Alertes "supports non ajoutés" (différés) ───────────────────── */}
-      {pendingSupportContrats.map((c) => (
-        <CAlert
-          key={c.id}
-          color="info"
-          className="mb-2 d-flex align-items-center justify-content-between"
-        >
-          <div>
-            <CIcon icon={cilInfo} className="me-2" />
-            Vous n'avez pas encore ajouté les supports de cours du contrat{' '}
-            <strong>N° {c.contrat_number}</strong>.
-          </div>
-          <div className="d-flex gap-2">
-            <CButton
-              size="sm"
-              color="primary"
-              onClick={() => {
-                removePendingSupport(c)
-                setSelectedContrat(c)
-                setSupportModalVisible(true)
-              }}
-            >
-              Ajouter maintenant
-            </CButton>
-            <CButton
-              size="sm"
-              color="light"
-              onClick={() => removePendingSupport(c)}
-              title="Ignorer ce rappel"
-            >
-              ✕
-            </CButton>
-          </div>
-        </CAlert>
-      ))}
+     
 
       {/* ── Filtres rapides ──────────────────────────────────────────────── */}
       <div className="mb-3 d-flex gap-2 flex-wrap">
@@ -395,11 +380,7 @@ const ProfessorContratsList = () => {
                               Signature requise
                             </CBadge>
                           )}
-                          {pendingSupportContrats.some((c) => c.id === contrat.id) && (
-                            <CBadge color="info" className="ms-1" title="Supports non ajoutés">
-                              Supports manquants
-                            </CBadge>
-                          )}
+                          
                         </td>
                         <td>{contrat.academic_year?.academic_year ?? contrat.academicYear?.academic_year ?? '—'}</td>
                         <td>{contrat.cycle?.name ?? '—'}</td>

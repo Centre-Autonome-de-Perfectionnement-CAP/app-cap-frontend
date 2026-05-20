@@ -96,6 +96,10 @@ export interface ProfessorProgram {
   is_primary: boolean
   label: string
   hours?: number
+  /** Nombre de monographies saisies par l'admin pour ce programme */
+  number_monographie?: number | null
+  /** Montant de la monographie pour ce programme */
+  amount_monographie?: number | null
   /** Supports de cours associés à ce programme dans le contexte d'un contrat */
   course_support_file?: CourseSupport[]
   course_element: {
@@ -152,6 +156,9 @@ export interface Contrat {
   pdf_url?: string
   pdf_uploaded_at?: string
 
+  /** Montant de la monographie (calculé = nb PDFs × montant unitaire) */
+  amount_monographie?: number
+
   /**
    * Verrouillé = validé ou autorisé → plus de modification ni suppression
    */
@@ -195,6 +202,7 @@ export interface CreateContratPayload {
   amount: number
   notes?: string | null
   course_element_professor_ids?: number[]
+  amount_monographie?: number | null
 }
 
 export interface UpdateContratPayload extends CreateContratPayload {

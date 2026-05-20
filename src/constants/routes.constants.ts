@@ -289,14 +289,10 @@ export const FRONTEND_ROUTES = {
   PAGE_404: '/404',
   PAGE_500: '/500',
 
-  
  
   // Dashboard
   DASHBOARD: '/dashboard',
 
-  // ✅ AJOUTER CES DEUX LIGNES
   RESPONSABLE_DASHBOARD: '/responsable/dashboard',
-
-  
   
 } as const;

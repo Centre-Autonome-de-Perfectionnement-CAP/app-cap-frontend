@@ -11,6 +11,11 @@ import type {
   ProfessorProgram,
 } from '@/types/rh.types';
 
+// ─── Constantes rôles (droits d'accès page Contrats) ─────────────────────────
+const ROLE_CHEF_CAP = 3;   // accès complet SAUF supports de cours
+const ROLE_RD_FC    = 13;  // supports uniquement RD-FC ; autres boutons bloqués
+const ROLE_RD_FAD   = 12;  // supports uniquement RD-FAD ; autres boutons bloqués
+
 // ─── Types locaux ──────────────────────────────────────────────────────────────
 type Professor = {
   id: number;
@@ -76,11 +81,11 @@ const validateDatesInAcademicYear = (startDate: string, endDate: string | null, 
   const start = new Date(startDate);
   const acStart = new Date(academicYearStart);
   const acEnd = new Date(academicYearEnd);
-  
+
   if (start < acStart) {
     return `La date de début (${formatDate(startDate)}) ne peut pas être antérieure au début de l'année académique (${formatDate(academicYearStart)})`;
   }
-  
+
   if (endDate) {
     const end = new Date(endDate);
     if (end > acEnd) {
@@ -90,7 +95,7 @@ const validateDatesInAcademicYear = (startDate: string, endDate: string | null, 
       return "La date de fin doit être postérieure à la date de début";
     }
   }
-  
+
   return null;
 };
 
@@ -237,11 +242,16 @@ const Icon = {
   Printer:       () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>,
   Mail:          () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
   ShieldCheck:   () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>,
+  BookOpen:      () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
   Lock:          () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
   ExternalLink:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
   Filter:        () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
   Close:         () => <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
   MessageX:      () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,
+  // WhatsApp icon added as a component
+  WhatsApp:      () => <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+  </svg>,
 };
 
 if (typeof document !== 'undefined' && !document.getElementById('ctr-spin')) {
@@ -349,6 +359,77 @@ const ConfirmModal: React.FC<{
     </div>
   </div>
 );
+
+// ─── SuccessModal ──────────────────────────────────────────────────────────────
+const SuccessModal: React.FC<{
+  title: string; message: string; detail?: string;
+  iconBg?: string; iconColor?: string; icon?: React.ReactNode;
+  whatsapp?: { phone?: string; text: string };   // ← NOUVEAU
+  onClose: () => void;
+}> = ({ title, message, detail, iconBg = '#f0fdf4', iconColor = '#16a34a', icon, whatsapp, onClose }) => {
+
+  const openWhatsapp = () => {
+    const phone   = whatsapp?.phone ? whatsapp.phone.replace(/\D/g, '') : '';
+    const encoded = encodeURIComponent(whatsapp?.text ?? '');
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      // Mobile : ouvre directement l'app WhatsApp
+      const nativeUrl = phone
+        ? `whatsapp://send?phone=${phone}&text=${encoded}`
+        : `whatsapp://send?text=${encoded}`;
+      window.location.href = nativeUrl;
+    } else {
+      // Desktop : tente whatsapp:// (app desktop), sinon bascule sur wa.me
+      const nativeUrl = phone
+        ? `whatsapp://send?phone=${phone}&text=${encoded}`
+        : `whatsapp://send?text=${encoded}`;
+      const webUrl = phone
+        ? `https://wa.me/${phone}?text=${encoded}`
+        : `https://wa.me/?text=${encoded}`;
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      iframe.src = nativeUrl;
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        window.open(webUrl, '_blank');
+      }, 1500);
+    }
+  };
+
+  return (
+    <div className="ctr-modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="ctr-modal" style={{ width: 'min(90vw, 440px)' }}>
+        <div className="ctr-modal-body">
+          <div className="ctr-confirm-body">
+            <div className="ctr-confirm-icon" style={{ background: iconBg, color: iconColor }}>
+              {icon ?? <Icon.Check />}
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: '#0f172a', marginBottom: 8 }}>{title}</div>
+            <div style={{ fontSize: 14, color: '#374151', marginBottom: detail ? 6 : 0 }}>{message}</div>
+            {detail && <div style={{ fontSize: 12.5, color: '#6b7280', lineHeight: 1.5 }}>{detail}</div>}
+          </div>
+        </div>
+        <div className="ctr-modal-footer" style={{ justifyContent: 'center', borderTop: '1px solid #f3f4f6', gap: 10, flexWrap: 'wrap' }}>
+          {whatsapp && (
+            <button
+              className="ctr-btn"
+              onClick={openWhatsapp}
+              style={{ background: '#25d366', color: '#fff', gap: 8 }}
+            >
+              <Icon.WhatsApp />
+              Transférer une copie via WhatsApp
+            </button>
+          )}
+          <button className="ctr-btn ctr-btn-success" onClick={onClose} style={{ minWidth: 100, justifyContent: 'center' }}>
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ─── SearchableSelect ──────────────────────────────────────────────────────────
 const SearchableSelect: React.FC<{
@@ -496,7 +577,7 @@ const ContratFormFields: React.FC<{
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     onFieldChange(name, value);
-    
+
     if (name === 'start_date' || name === 'end_date' || name === 'academic_year_id') {
       setDateError('');
     }
@@ -560,24 +641,24 @@ const ContratFormFields: React.FC<{
 
       <p className="ctr-section-title">Programmes associés</p>
       <div>
-        <label className="ctr-label">Programmes (ECUE)</label>
+        <label className="ctr-label">Programmes (ECUE) *</label>
         <MultiSelect options={progOptions} value={form.program_ids}
           placeholder={form.professor_id ? "Sélectionner les programmes…" : "Sélectionnez d'abord un professeur"}
           onChange={ids => onFieldChange('program_ids', ids)} />
-        <p className="ctr-hint">Les programmes listés correspondent aux cours assignés au professeur sélectionné.</p>
+        <p className="ctr-hint">Obligatoire — les programmes listés correspondent aux cours assignés au professeur sélectionné.</p>
       </div>
 
       <p className="ctr-section-title">Dates et montant</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
         <div>
           <label className="ctr-label">Date de début *</label>
-          <input 
-            className="ctr-input" 
-            type="date" 
-            name="start_date" 
-            value={form.start_date} 
-            onChange={handleChange} 
-            required 
+          <input
+            className="ctr-input"
+            type="date"
+            name="start_date"
+            value={form.start_date}
+            onChange={handleChange}
+            required
             // Utilisation de year_start et year_end
             min={selectedYear?.year_start ? selectedYear.year_start.substring(0, 10) : undefined}
             max={selectedYear?.year_end ? selectedYear.year_end.substring(0, 10) : undefined}
@@ -585,12 +666,12 @@ const ContratFormFields: React.FC<{
         </div>
         <div>
           <label className="ctr-label">Date de fin</label>
-          <input 
-            className="ctr-input" 
-            type="date" 
-            name="end_date" 
-            value={form.end_date} 
-            onChange={handleChange} 
+          <input
+            className="ctr-input"
+            type="date"
+            name="end_date"
+            value={form.end_date}
+            onChange={handleChange}
             min={form.start_date || (selectedYear?.year_start ? selectedYear.year_start.substring(0, 10) : undefined)}
             max={selectedYear?.year_end ? selectedYear.year_end.substring(0, 10) : undefined}
           />
@@ -630,15 +711,566 @@ const ContratFormFields: React.FC<{
 
       <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
         <button type="button" className="ctr-btn ctr-btn-ghost" onClick={onCancel} disabled={loading}>Annuler</button>
-        <button 
-          type="submit" 
-          className="ctr-btn ctr-btn-primary" 
+        <button
+          type="submit"
+          className="ctr-btn ctr-btn-primary"
           disabled={loading || !!dateError}
         >
           {loading ? <><Icon.Loader /> Enregistrement…</> : submitLabel}
         </button>
       </div>
     </form>
+  );
+};
+
+// ─── Modal Support de cours (Admin) ───────────────────────────────────────────
+const AdminCourseSupportModal: React.FC<{
+  contrat: Contrat;
+  onClose: () => void;
+  onSaved: () => void;
+  /** null = pas de filtre (accès complet) ; 'RD-FC' ou 'RD-FAD' = filtré */
+  divisionFilter?: string | null;
+}> = ({ contrat, onClose, onSaved, divisionFilter = null }) => {
+
+  // Bloquer si la division du contrat ne correspond pas au filtre du rôle
+  const divisionMismatch = divisionFilter !== null && contrat.division !== divisionFilter;
+
+  const programs = contrat.course_element_professors ?? [];
+
+  type SupportEntry = { title: string; file?: string; url?: string };
+  type MonoData = {
+    number_monographie: string;
+    amount_monographie: string;
+    saving: boolean;
+    saved: boolean;
+    error: string | null;
+    editing: boolean;
+  };
+  type ProgState = { supports: SupportEntry[]; loading: boolean; error: string | null; mono: MonoData };
+
+  const defaultMono = (): MonoData => ({
+    number_monographie: '', amount_monographie: '',
+    saving: false, saved: false, error: null, editing: true,
+  });
+
+  // ─── Clé de montage : change à chaque ouverture du modal pour forcer
+  // la réinitialisation complète de l'état interne ───────────────────────────
+  const mountKeyRef = useRef(Date.now());
+
+  const [progStates, setProgStates]   = useState<Record<number, ProgState>>({});
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [newTitle, setNewTitle]       = useState('');
+  const [newFile, setNewFile]         = useState<File | null>(null);
+  const [adding, setAdding]           = useState(false);
+  const [addError, setAddError]       = useState<string | null>(null);
+  const [addSuccess, setAddSuccess]   = useState(false);
+  const [deleting, setDeleting]       = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ─── Charger les supports ET la monographie depuis l'API ──────────────────
+  const loadSupports = useCallback(async (program: ProfessorProgram) => {
+    // Marquer ce programme comme "en chargement"
+    setProgStates(prev => ({
+      ...prev,
+      [program.id]: {
+        supports: [],
+        loading:  true,
+        error:    null,
+        mono:     defaultMono(),
+      },
+    }));
+
+    try {
+      const http = (await import('@/services/http.service')).default;
+
+      // L'API retourne : { success, data: SupportEntry[], number_monographie, amount_monographie }
+      const res = await (http as any).get(
+        `rh/contrats/${contrat.id}/programs/${program.id}/supports`
+      );
+
+      // Extraire les valeurs — gérer les deux cas :
+      // HttpService retourne le corps complet  →  res.number_monographie
+      // HttpService unwrap .data               →  impossible ici car on type any
+      const body: {
+        success?: boolean;
+        data?: SupportEntry[];
+        number_monographie?: number | null;
+        amount_monographie?: number | null;
+      } = res ?? {};
+
+      const supports: SupportEntry[] = Array.isArray(body.data) ? body.data : [];
+      const nbRaw  = body.number_monographie  ?? null;
+      const amtRaw = body.amount_monographie  ?? null;
+
+      const hasExisting =
+        nbRaw !== null && nbRaw !== undefined &&
+        amtRaw !== null && amtRaw !== undefined;
+
+      setProgStates(prev => ({
+        ...prev,
+        [program.id]: {
+          supports,
+          loading: false,
+          error:   null,
+          mono: {
+            number_monographie: hasExisting ? String(nbRaw)  : '',
+            amount_monographie:  hasExisting ? String(amtRaw) : '',
+            saving:  false,
+            saved:   false,
+            error:   null,
+            editing: !hasExisting,
+          },
+        },
+      }));
+    } catch (err: any) {
+      setProgStates(prev => ({
+        ...prev,
+        [program.id]: {
+          supports: [],
+          loading:  false,
+          error:    err?.message ?? 'Erreur de chargement',
+          mono:     defaultMono(),
+        },
+      }));
+    }
+  }, [contrat.id]);
+
+  // ─── Charger TOUS les programmes à l'ouverture ────────────────────────────
+  useEffect(() => {
+    // Réinitialiser tout l'état local à chaque ouverture
+    setProgStates({});
+    setSelectedIdx(0);
+    setNewTitle('');
+    setNewFile(null);
+    setAddError(null);
+    setAddSuccess(false);
+    // Puis charger chaque programme
+    programs.forEach(p => loadSupports(p));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contrat.id]);
+
+  // ─── Rechargement manuel d'un programme (après ajout/suppression/save) ────
+  const reloadProgram = useCallback((program: ProfessorProgram) => {
+    loadSupports(program);
+  }, [loadSupports]);
+
+  const currentProg     = programs[selectedIdx];
+  const currentState    = currentProg ? progStates[currentProg.id] : undefined;
+  const currentSupports = currentState?.supports ?? [];
+  const isLoading       = currentState?.loading ?? false;
+  const mono            = currentState?.mono ?? defaultMono();
+
+  /** Détermine si la monographie a déjà été définie pour le programme courant */
+  const monoAlreadyDefined =
+    mono.number_monographie !== '' && mono.amount_monographie !== '' && !mono.editing;
+
+  const setMono = (key: keyof MonoData, value: string | boolean | null) => {
+    if (!currentProg) return;
+    setProgStates(prev => ({
+      ...prev,
+      [currentProg.id]: {
+        ...prev[currentProg.id],
+        mono: { ...(prev[currentProg.id]?.mono ?? defaultMono()), [key]: value },
+      },
+    }));
+  };
+
+  const handleAdd = async () => {
+    if (!currentProg) return;
+    if (!newTitle.trim()) { setAddError('Veuillez saisir un titre.'); return; }
+    if (!newFile)         { setAddError('Veuillez sélectionner un fichier PDF.'); return; }
+    setAddError(null); setAdding(true); setAddSuccess(false);
+    try {
+      const fd = new FormData();
+      fd.append('title', newTitle.trim());
+      fd.append('pdf_file', newFile);
+      fd.append('program_id', String(currentProg.id));
+      const http = (await import('@/services/http.service')).default;
+      await http.post(`rh/contrats/${contrat.id}/programs/${currentProg.id}/supports`, fd);
+      setNewTitle(''); setNewFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setAddSuccess(true);
+      setTimeout(() => setAddSuccess(false), 3500);
+      await loadSupports(currentProg);
+    } catch (err: any) {
+      setAddError(err?.message ?? "Erreur lors de l'ajout.");
+    } finally { setAdding(false); }
+  };
+
+  const handleDelete = async (idx: number) => {
+    if (!currentProg) return;
+    setDeleting(idx);
+    try {
+      const http = (await import('@/services/http.service')).default;
+      await http.delete(`rh/contrats/${contrat.id}/programs/${currentProg.id}/supports/${idx}`);
+      await loadSupports(currentProg);
+    } catch (err: any) {
+      alert('Erreur de suppression : ' + (err?.message ?? ''));
+    } finally { setDeleting(null); }
+  };
+
+  const handleSaveMono = async () => {
+    if (!currentProg) return;
+    const nb  = parseInt(mono.number_monographie, 10);
+    const amt = parseFloat(mono.amount_monographie);
+    if (isNaN(nb) || nb < 0)   { setMono('error', 'Nombre de monographies invalide.'); return; }
+    if (isNaN(amt) || amt < 0) { setMono('error', 'Montant invalide.'); return; }
+    setMono('saving', true); setMono('error', null); setMono('saved', false);
+    try {
+      const http = (await import('@/services/http.service')).default;
+      await (http as any).put(
+        `rh/contrats/${contrat.id}/programs/${currentProg.id}/monographie`,
+        { number_monographie: nb, amount_monographie: amt }
+      );
+      // Recharger depuis l'API — loadSupports lira les vraies valeurs stockées
+      // et repassera en lecture seule automatiquement (editing: false si hasExisting)
+      await reloadProgram(currentProg);
+      // Afficher le message de succès
+      setProgStates(prev => ({
+        ...prev,
+        [currentProg.id]: {
+          ...prev[currentProg.id],
+          mono: { ...prev[currentProg.id]!.mono, saved: true },
+        },
+      }));
+      setTimeout(() => setMono('saved', false), 3500);
+      onSaved();
+    } catch (err: any) {
+      setMono('saving', false);
+      setMono('error', err?.response?.data?.message ?? err.message ?? 'Erreur lors de la sauvegarde.');
+    }
+  };
+
+  const progLabel = (p: ProfessorProgram) =>
+    `${p.course_element?.name ?? p.label ?? '—'} — ${p.class_group?.name ?? '—'}`;
+
+  // ── Icônes SVG inline ──────────────────────────────────────────────────────
+  const IcoPdf  = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><path d="M9 11h1.5a1.5 1.5 0 0 1 0 3H9v-3z"/></svg>;
+  const IcoLink = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
+  const IcoUp   = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
+  const IcoSave = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
+  const IcoCoin = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="18"/><line x1="9" y1="12" x2="15" y2="12"/></svg>;
+  const IcoHash = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>;
+  const IcoEdit = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
+  const IcoLock = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+
+  const SectionHead = ({ icon, label, count }: { icon: React.ReactNode; label: string; count?: number }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+      <div style={{ width: 28, height: 28, borderRadius: 7, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', flexShrink: 0 }}>
+        {icon}
+      </div>
+      <span style={{ fontWeight: 700, fontSize: 13.5, color: '#0f172a' }}>{label}</span>
+      {count !== undefined && (
+        <span style={{ marginLeft: 2, background: '#e2e8f0', color: '#64748b', borderRadius: 999, padding: '1px 9px', fontSize: 11.5, fontWeight: 700 }}>
+          {count}
+        </span>
+      )}
+    </div>
+  );
+
+  const Divider = () => <div style={{ height: 1, background: '#f1f5f9', margin: '20px 0' }} />;
+
+  // ── Rendu bloqué si division ne correspond pas au rôle ─────────────────────
+  if (divisionMismatch) {
+    const divLabel = divisionFilter === 'RD-FC'
+      ? 'Formation Continue (RD-FC)'
+      : 'Formation à Distance (RD-FAD)';
+    return (
+      <Modal
+        title="Supports de cours"
+        subtitle={`Contrat N° ${contrat.contrat_number} — ${contrat.professor?.full_name ?? ''}`}
+        onClose={onClose}
+        wide
+        footer={<button className="ctr-btn ctr-btn-ghost" onClick={onClose}>Fermer</button>}
+      >
+        <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+          <div style={{ width: 60, height: 60, borderRadius: 18, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#dc2626' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+          </div>
+          <p style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', margin: '0 0 8px' }}>Accès restreint</p>
+          <p style={{ fontSize: 14, color: '#374151', margin: '0 0 6px' }}>
+            Vous n'avez accès qu'aux supports de la division&nbsp;<strong>{divLabel}</strong>.
+          </p>
+          <p style={{ fontSize: 12.5, color: '#9ca3af', margin: 0 }}>
+            Ce contrat appartient à la division&nbsp;<strong>{contrat.division ?? 'non définie'}</strong>.
+          </p>
+        </div>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal
+      title="Supports de cours"
+      subtitle={`Contrat N° ${contrat.contrat_number} — ${contrat.professor?.full_name ?? ''}`}
+      onClose={onClose}
+      wide
+      footer={<button className="ctr-btn ctr-btn-ghost" onClick={onClose}>Fermer</button>}
+    >
+      {programs.length === 0 ? (
+        <div style={{ padding: '32px', textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', color: '#94a3b8' }}>
+            <Icon.FileText />
+          </div>
+          Aucun programme associé à ce contrat.
+        </div>
+      ) : (
+        <>
+          {/* ── Sélecteur de programme ─────────────────────────────────────── */}
+          <div style={{ marginBottom: 20 }}>
+            <label className="ctr-label">Programme sélectionné</label>
+            <select
+              className="ctr-input ctr-select"
+              value={selectedIdx}
+              onChange={e => {
+                setSelectedIdx(Number(e.target.value));
+                setNewTitle(''); setNewFile(null); setAddError(null); setAddSuccess(false);
+              }}
+            >
+              {programs.map((p, idx) => (
+                <option key={p.id} value={idx}>{progLabel(p)}</option>
+              ))}
+            </select>
+            {currentProg && (
+              <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                {currentProg.course_element?.teaching_unit?.name && (
+                  <span style={{ fontSize: 11.5, fontWeight: 600, background: '#eff6ff', color: '#1d4ed8', padding: '2px 9px', borderRadius: 999, border: '1px solid #bfdbfe' }}>
+                    UE : {currentProg.course_element.teaching_unit.name}
+                  </span>
+                )}
+                {currentProg.class_group?.name && (
+                  <span style={{ fontSize: 11.5, fontWeight: 600, background: '#f0fdf4', color: '#166534', padding: '2px 9px', borderRadius: 999, border: '1px solid #bbf7d0' }}>
+                    {currentProg.class_group.name}
+                  </span>
+                )}
+                <span style={{ fontSize: 11.5, fontWeight: 600, background: '#f5f3ff', color: '#5b21b6', padding: '2px 9px', borderRadius: 999, border: '1px solid #ddd6fe' }}>
+                  {currentSupports.length} support{currentSupports.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <Divider />
+
+          {/* ── Layout 2 colonnes : supports + upload ──────────────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 4 }}>
+
+            {/* Colonne gauche : supports existants */}
+            <div>
+              <SectionHead icon={<IcoPdf />} label="Supports existants" count={isLoading ? undefined : currentSupports.length} />
+
+              {isLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9ca3af', fontSize: 13, padding: '12px 0' }}>
+                  <Icon.Loader /> Chargement…
+                </div>
+              ) : currentState?.error ? (
+                <div style={{ padding: '10px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 12.5 }}>
+                  {currentState.error}
+                </div>
+              ) : currentSupports.length === 0 ? (
+                <div style={{ border: '1.5px dashed #e2e8f0', borderRadius: 10, padding: '28px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', color: '#cbd5e1' }}>
+                    <IcoPdf />
+                  </div>
+                  Aucun support uploadé
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  {currentSupports.map((s, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 9, border: '1.5px solid #f1f5f9', background: '#fff' }}>
+                      <div style={{ width: 30, height: 30, borderRadius: 7, background: '#fff1f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#e11d48', flexShrink: 0 }}>
+                        <IcoPdf />
+                      </div>
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {s.title}
+                      </span>
+                      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                        {s.url && (
+                          <a href={s.url} target="_blank" rel="noopener noreferrer"
+                            className="ctr-btn-icon"
+                            style={{ width: 28, height: 28, borderColor: '#bfdbfe', color: '#2563eb', background: '#eff6ff', textDecoration: 'none' }}
+                            title="Ouvrir">
+                            <IcoLink />
+                          </a>
+                        )}
+                        <button className="ctr-btn-icon"
+                          style={{ width: 28, height: 28, borderColor: '#fecaca', color: '#dc2626' }}
+                          disabled={deleting === idx}
+                          onClick={() => handleDelete(idx)}
+                          title="Supprimer">
+                          {deleting === idx ? <Icon.Loader /> : <Icon.Trash />}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Colonne droite : ajouter un support */}
+            <div>
+              <SectionHead icon={<IcoUp />} label="Ajouter un support" />
+
+              {addSuccess && (
+                <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontSize: 12.5, fontWeight: 600 }}>
+                  <Icon.Check /> Support ajouté avec succès
+                </div>
+              )}
+              {addError && (
+                <div style={{ marginBottom: 12, padding: '9px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 12.5 }}>
+                  {addError}
+                </div>
+              )}
+
+              <div style={{ marginBottom: 10 }}>
+                <label className="ctr-label">Titre du support <span style={{ color: '#dc2626' }}>*</span></label>
+                <input className="ctr-input" placeholder="Ex : Cours Chapitre 1 — Introduction"
+                  value={newTitle} onChange={e => setNewTitle(e.target.value)} disabled={adding} />
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <label className="ctr-label">Fichier PDF <span style={{ color: '#dc2626' }}>*</span></label>
+                <div
+                  style={{ border: `1.5px dashed ${newFile ? '#059669' : '#d1d5db'}`, borderRadius: 9, padding: '16px', textAlign: 'center', cursor: 'pointer', background: newFile ? '#f0fdf4' : '#fafafa', transition: 'all .18s' }}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {newFile ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+                        <IcoPdf />
+                      </div>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: '#065f46' }}>{newFile.name}</span>
+                      <span style={{ fontSize: 11.5, color: '#6b7280' }}>{(newFile.size / 1024).toFixed(1)} Ko — Cliquer pour changer</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+                        <IcoUp />
+                      </div>
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: '#475569' }}>Cliquer pour sélectionner</span>
+                      <span style={{ fontSize: 11.5, color: '#9ca3af' }}>PDF uniquement</span>
+                    </div>
+                  )}
+                </div>
+                <input ref={fileInputRef} type="file" accept="application/pdf" style={{ display: 'none' }}
+                  onChange={e => setNewFile(e.target.files?.[0] ?? null)} disabled={adding} />
+              </div>
+
+              <button className="ctr-btn ctr-btn-primary" style={{ width: '100%', justifyContent: 'center' }}
+                onClick={handleAdd} disabled={adding || !newTitle.trim() || !newFile}>
+                {adding ? <><Icon.Loader /> Envoi en cours…</> : <><Icon.Plus /> Ajouter le support</>}
+              </button>
+            </div>
+          </div>
+
+          <Divider />
+
+          {/* ── Monographie par programme ──────────────────────────────────── */}
+          <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: '18px 20px' }}>
+
+            {/* En-tête avec badge "Déjà définie" si applicable */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <SectionHead icon={<IcoCoin />} label="Monographie — Programme courant" />
+              {monoAlreadyDefined && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700, background: '#fef9c3', color: '#713f12', border: '1px solid #fde68a' }}>
+                  <IcoLock /> Déjà définie
+                </span>
+              )}
+            </div>
+
+            <p style={{ fontSize: 12.5, color: '#64748b', marginTop: -6, marginBottom: 16 }}>
+              Nombre de monographies et montant pour le programme sélectionné. Stockés par programme dans le contrat.
+            </p>
+
+            {/* Bandeau d'info si lecture seule */}
+            {monoAlreadyDefined && (
+              <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 9, background: '#fffbeb', border: '1.5px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#78350f', fontWeight: 500 }}>
+                  <IcoLock />
+                  Monographie déjà définie — souhaitez-vous modifier ces valeurs ?
+                </div>
+                <button
+                  className="ctr-btn"
+                  style={{ height: 32, padding: '0 14px', fontSize: 12.5, background: '#d97706', color: '#fff', flexShrink: 0 }}
+                  onClick={() => setMono('editing', true)}
+                >
+                  <IcoEdit /> Modifier
+                </button>
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div>
+                <label className="ctr-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <IcoHash /> Nombre de monographies
+                </label>
+                <input
+                  className="ctr-input"
+                  type="number" min="0" step="1"
+                  placeholder="Ex : 3"
+                  value={mono.number_monographie}
+                  onChange={e => setMono('number_monographie', e.target.value)}
+                  disabled={mono.saving || monoAlreadyDefined}
+                  readOnly={monoAlreadyDefined}
+                  style={{
+                    fontFamily: "'DM Mono', monospace", fontWeight: 600,
+                    background: monoAlreadyDefined ? '#f1f5f9' : '#fff',
+                    color: monoAlreadyDefined ? '#475569' : '#0f172a',
+                    cursor: monoAlreadyDefined ? 'not-allowed' : 'text',
+                    borderColor: monoAlreadyDefined ? '#e2e8f0' : undefined,
+                  }}
+                />
+              </div>
+              <div>
+                <label className="ctr-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <IcoCoin /> Montant monographie (FCFA)
+                </label>
+                <input
+                  className="ctr-input"
+                  type="number" min="0" step="any"
+                  placeholder="Ex : 15000"
+                  value={mono.amount_monographie}
+                  onChange={e => setMono('amount_monographie', e.target.value)}
+                  disabled={mono.saving || monoAlreadyDefined}
+                  readOnly={monoAlreadyDefined}
+                  style={{
+                    fontFamily: "'DM Mono', monospace", fontWeight: 600,
+                    background: monoAlreadyDefined ? '#f1f5f9' : '#fff',
+                    color: monoAlreadyDefined ? '#475569' : '#0f172a',
+                    cursor: monoAlreadyDefined ? 'not-allowed' : 'text',
+                    borderColor: monoAlreadyDefined ? '#e2e8f0' : undefined,
+                  }}
+                />
+              </div>
+            </div>
+
+            {mono.saved && (
+              <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontSize: 12.5, fontWeight: 600 }}>
+                <Icon.Check /> Monographie enregistrée avec succès
+              </div>
+            )}
+            {mono.error && (
+              <div style={{ marginBottom: 12, padding: '9px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 12.5 }}>
+                {mono.error as string}
+              </div>
+            )}
+
+            {/* Bouton enregistrer — visible uniquement si en mode édition */}
+            {!monoAlreadyDefined && (
+              <button className="ctr-btn ctr-btn-primary"
+                onClick={handleSaveMono}
+                disabled={mono.saving || mono.number_monographie === '' || mono.amount_monographie === ''}>
+                {mono.saving
+                  ? <><Icon.Loader /> Enregistrement…</>
+                  : <><IcoSave /> Enregistrer la monographie</>}
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </Modal>
   );
 };
 
@@ -664,16 +1296,13 @@ const UploadPdfModal: React.FC<{
 
   const handleSubmit = async () => {
     if (!file) { setError('Veuillez sélectionner un fichier PDF.'); return; }
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
       const updated = await rhService.uploadContratPdf(contrat.id, file);
       onSuccess(updated);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? err.message ?? 'Erreur lors de l\'upload.');
-    } finally {
-      setLoading(false);
-    }
+      setError(err?.response?.data?.message ?? err.message ?? "Erreur lors de l'upload.");
+    } finally { setLoading(false); }
   };
 
   return (
@@ -699,25 +1328,24 @@ const UploadPdfModal: React.FC<{
       >
         {file ? (
           <div>
-            <div style={{ fontSize: 32, marginBottom: 8 }}>📄</div>
-            <div style={{ fontWeight: 700, color: '#065f46', fontSize: 14 }}>{file.name}</div>
-            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
-              {(file.size / 1024).toFixed(1)} Ko — Cliquez pour changer
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a', margin: '0 auto 8px' }}>
+              <Icon.FilePdf />
             </div>
+            <div style={{ fontWeight: 700, color: '#065f46', fontSize: 14 }}>{file.name}</div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{(file.size / 1024).toFixed(1)} Ko — Cliquez pour changer</div>
           </div>
         ) : (
           <div>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>📂</div>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fff7ed', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ea580c', margin: '0 auto 8px' }}>
+              <Icon.FileUpload />
+            </div>
             <div style={{ fontWeight: 600, color: '#ea580c', fontSize: 14 }}>Cliquez ou glissez le PDF ici</div>
             <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Format PDF uniquement — max 10 Mo</div>
           </div>
         )}
       </div>
-      <input
-        ref={inputRef} type="file" accept=".pdf,application/pdf"
-        style={{ display: 'none' }}
-        onChange={e => handleFile(e.target.files?.[0] ?? null)}
-      />
+      <input ref={inputRef} type="file" accept=".pdf,application/pdf" style={{ display: 'none' }}
+        onChange={e => handleFile(e.target.files?.[0] ?? null)} />
       {contrat.pdf_url && (
         <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: '#f0f9ff', border: '1px solid #bae6fd', fontSize: 12.5, color: '#0369a1' }}>
           <strong>PDF actuel :</strong>{' '}
@@ -725,9 +1353,7 @@ const UploadPdfModal: React.FC<{
             Voir le PDF stocké <Icon.ExternalLink />
           </a>
           {contrat.pdf_uploaded_at && (
-            <span style={{ marginLeft: 8, color: '#6b7280' }}>
-              (uploadé le {formatDate(contrat.pdf_uploaded_at)})
-            </span>
+            <span style={{ marginLeft: 8, color: '#6b7280' }}>(uploadé le {formatDate(contrat.pdf_uploaded_at)})</span>
           )}
         </div>
       )}
@@ -932,6 +1558,31 @@ const FilterBar: React.FC<{
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 const Contrats: React.FC = () => {
+  // ─── Rôle de l'utilisateur connecté (récupéré via /auth/me) ────────────────
+  const [currentRoleId, setCurrentRoleId] = useState<number | null>(null);
+
+  useEffect(() => {
+    // On récupère le rôle via la route auth/me — HttpService ajoute le token automatiquement
+    import('@/services/http.service').then(({ default: http }) => {
+      (http as any).get('auth/me')
+        .then((res: any) => {
+          // La réponse peut être { data: { role_id } } ou { role_id } directement
+          const roleId = res?.data?.role_id ?? res?.role_id ?? null;
+          setCurrentRoleId(roleId !== null ? Number(roleId) : null);
+        })
+        .catch(() => { /* silencieux — on laisse null, pas de restriction */ });
+    });
+  }, []);
+
+  // Dérivations des droits
+  const isChefCAP    = currentRoleId === ROLE_CHEF_CAP;   // 3 : complet sauf supports
+  const isRdFC       = currentRoleId === ROLE_RD_FC;      // 13 : supports RD-FC seulement
+  const isRdFAD      = currentRoleId === ROLE_RD_FAD;     // 12 : supports RD-FAD seulement
+  const isRestricted = isRdFC || isRdFAD;                 // boutons hors-supports bloqués
+
+  const supportDivisionFilter: string | null =
+    isRdFC ? 'RD-FC' : isRdFAD ? 'RD-FAD' : null;
+
   const [contrats, setContrats]           = useState<Contrat[]>([]);
   const [professors, setProfessors]       = useState<Professor[]>([]);
   const [cycles, setCycles]               = useState<{ id: number; name: string }[]>([]);
@@ -945,12 +1596,20 @@ const Contrats: React.FC = () => {
   const [showCreate, setShowCreate]             = useState(false);
   const [editingContrat, setEditingContrat]     = useState<Contrat | null>(null);
   const [uploadPdfContrat, setUploadPdfContrat] = useState<Contrat | null>(null);
+  const [supportContrat, setSupportContrat]     = useState<Contrat | null>(null);
+  const [modalOpenKey, setModalOpenKey]         = useState(0);
 
   // Confirm modals
   const [deleteConfirm, setDeleteConfirm]       = useState<Contrat | null>(null);
   const [transferConfirm, setTransferConfirm]   = useState<Contrat | null>(null);
   const [authorizeConfirm, setAuthorizeConfirm] = useState<Contrat | null>(null);
   const [relaunchConfirm, setRelaunchConfirm]   = useState<Contrat | null>(null);
+
+  // Success modal
+  type SuccessInfo = { title: string; message: string; detail?: string; iconBg?: string; iconColor?: string; whatsapp?: { phone?: string; text: string }; icon?: React.ReactNode };
+  const [successModal, setSuccessModal] = useState<SuccessInfo | null>(null);
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const showSuccess = useCallback((info: SuccessInfo) => setSuccessModal(info), []);
 
   const [deleteLoading, setDeleteLoading]       = useState(false);
   const [transferLoading, setTransferLoading]   = useState(false);
@@ -967,10 +1626,15 @@ const Contrats: React.FC = () => {
 
   const { toasts, add: addToast, remove: removeToast } = useToasts();
 
-  const reload = useCallback(() => {
+  const reload = useCallback((onDone?: (freshContrats: Contrat[]) => void) => {
     setLoading(true);
     rhService.getContrats()
-      .then(r => { setContrats(r.data || []); setLoading(false); })
+      .then(r => {
+        const list = r.data || [];
+        setContrats(list);
+        setLoading(false);
+        onDone?.(list);
+      })
       .catch(() => { setError('Impossible de charger les contrats'); setLoading(false); });
   }, []);
 
@@ -994,7 +1658,7 @@ const Contrats: React.FC = () => {
     if (!selectedYear || !selectedYear.year_start || !selectedYear.year_end) {
       return "L'année académique sélectionnée n'a pas de dates valides";
     }
-    
+
     return validateDatesInAcademicYear(
       formData.start_date,
       formData.end_date || null,
@@ -1063,13 +1727,16 @@ const Contrats: React.FC = () => {
     if (!f.professor_id)     return 'Veuillez sélectionner un professeur.';
     if (!f.academic_year_id) return 'Veuillez sélectionner une année académique.';
     if (!f.regroupement)     return 'Veuillez sélectionner un regroupement.';
+    if (!f.cycle_id)         return 'Veuillez sélectionner un cycle.';
+    if (!f.program_ids || f.program_ids.length === 0) return 'Veuillez sélectionner au moins un programme (ECUE).';
+
     if (!f.start_date)       return 'La date de début est obligatoire.';
     if (!f.amount || Number(f.amount) < 100) return "Le montant doit être d'au moins 100 FCFA.";
-    
+
     // Validation des dates par rapport à l'année académique
     const dateValidationError = validateContractDates(f);
     if (dateValidationError) return dateValidationError;
-    
+
     return null;
   };
 
@@ -1080,9 +1747,14 @@ const Contrats: React.FC = () => {
     setCreateLoading(true); setCreateError('');
     try {
       await rhService.createContrat(buildCreate(createForm));
-      addToast('success', 'Contrat créé', 'Le contrat a été créé avec succès.');
       reload();
-      setTimeout(closeCreate, 300);
+      closeCreate();
+      showSuccess({
+        title: 'Contrat créé avec succès',
+        message: 'Le nouveau contrat de prestation a bien été enregistré.',
+        detail: 'Vous pouvez maintenant le transférer au professeur pour signature.',
+        iconBg: '#f0fdf4', iconColor: '#16a34a', icon: <Icon.Check />,
+      });
     } catch (err: any) {
       setCreateError(err?.response?.data ? extractError(err.response.data, err?.response?.status || 500) : err.message || 'Erreur');
     } finally { setCreateLoading(false); }
@@ -1096,9 +1768,13 @@ const Contrats: React.FC = () => {
     setEditLoading(true); setEditError('');
     try {
       await rhService.updateContrat(editingContrat.id, buildUpdate(editForm));
-      addToast('success', 'Contrat modifié', 'Les modifications ont été enregistrées.');
       reload();
-      setTimeout(closeEdit, 300);
+      closeEdit();
+      showSuccess({
+        title: 'Contrat modifié',
+        message: 'Les modifications ont été enregistrées avec succès.',
+        iconBg: '#eff6ff', iconColor: '#2563eb', icon: <Icon.Check />,
+      });
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? (err?.response?.data ? extractError(err.response.data, err?.response?.status || 500) : err.message || 'Erreur');
       setEditError(msg);
@@ -1110,9 +1786,14 @@ const Contrats: React.FC = () => {
     setDeleteLoading(true);
     try {
       await rhService.deleteContrat(deleteConfirm.id);
-      addToast('success', 'Contrat supprimé', `Le contrat ${deleteConfirm.contrat_number} a été supprimé.`);
+      const num = deleteConfirm.contrat_number;
       setDeleteConfirm(null);
       reload();
+      showSuccess({
+        title: 'Contrat supprimé',
+        message: `Le contrat ${num} a été supprimé définitivement.`,
+        iconBg: '#fef2f2', iconColor: '#dc2626', icon: <Icon.Trash />,
+      });
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue';
       addToast('error', 'Erreur de suppression', msg);
@@ -1120,44 +1801,103 @@ const Contrats: React.FC = () => {
     } finally { setDeleteLoading(false); }
   };
 
-  const handleTransferConfirm = async () => {
-    const c = transferConfirm;
-    if (!c) return;
-    setTransferLoading(true);
-    try {
-      await rhService.updateContrat(c.id, {
-        division:                     c.division ?? null,
-        professor_id:                 c.professor_id,
-        academic_year_id:             c.academic_year_id,
-        cycle_id:                     c.cycle_id ?? null,
-        regroupement:                 c.regroupement ?? null,
-        start_date:                   c.start_date?.substring(0, 10) ?? '',
-        end_date:                     c.end_date?.substring(0, 10) ?? null,
-        amount:                       Number(c.amount),
-        notes:                        c.notes ?? null,
-        status:                       'transfered' as ContratStatus,
-        course_element_professor_ids: (c.course_element_professors ?? []).map(p => p.id),
-      });
-      await rhService.sendTransferEmail(c.id);
-      addToast('success', 'Contrat transféré', `Un e-mail a été envoyé à ${c.professor?.full_name ?? "l'enseignant"}.`);
-      setTransferConfirm(null);
-      reload();
-    } catch (err: any) {
-      addToast('error', 'Erreur de transfert', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
-    } finally {
-      setTransferLoading(false);
-    }
-  };
+ const handleTransferConfirm = async () => {
+  const c = transferConfirm;
+  if (!c) return;
+  setTransferLoading(true);
+  try {
+    await rhService.updateContrat(c.id, {
+      division:                     c.division ?? null,
+      professor_id:                 c.professor_id,
+      academic_year_id:             c.academic_year_id,
+      cycle_id:                     c.cycle_id ?? null,
+      regroupement:                 c.regroupement ?? null,
+      start_date:                   c.start_date?.substring(0, 10) ?? '',
+      end_date:                     c.end_date?.substring(0, 10) ?? null,
+      amount:                       Number(c.amount),
+      notes:                        c.notes ?? null,
+      status:                       'transfered' as ContratStatus,
+      course_element_professor_ids: (c.course_element_professors ?? []).map(p => p.id),
+    });
+    await rhService.sendTransferEmail(c.id);
+    const profName = c.professor?.full_name ?? "l'enseignant";
 
+    // Construction du message WhatsApp — texte fluide, lien cliquable
+    const contratUrl = `${window.location.origin}/services/professor/login`;
+    const programsList = (c.course_element_professors ?? [])
+      .map(p => `- ${p.course_element?.code ?? p.label} : ${p.course_element?.name ?? ''}`)
+      .join('\n');
+
+    const divisionLabel     = c.division === 'RD-FC' ? 'Formation Continue (RD-FC)' : 'Formation à Distance (RD-FAD)';
+    const regroupementLabel = c.regroupement === '1' ? 'Regroupement I' : 'Regroupement II';
+    const periodeLabel      = `${formatDate(c.start_date)} au ${c.end_date ? formatDate(c.end_date) : 'Non spécifiée'}`;
+    const professorEmail    = c.professor?.email ?? 'votre adresse e-mail';
+
+    const academicYearLabel = c.academic_year?.academic_year ?? 'l\'année académique en cours';
+
+    const whatsappMessage = `Bonjour ${profName},
+
+Le Centre Autonome de Perfectionnement (CAP) de l'École Polytechnique d'Abomey-Calavi vous a adressé un contrat d'enseignement pour l'année académique ${academicYearLabel}. Veuillez en prendre connaissance et procéder à sa validation dans les meilleurs délais.
+
+Votre contrat de prestation N° ${c.contrat_number} est disponible et en attente de votre signature.
+
+Détails du contrat :
+Division : ${divisionLabel}
+Regroupement : ${regroupementLabel}
+Cycle : ${c.cycle?.name || 'Non spécifié'}
+Période : du ${periodeLabel}
+Montant : ${formatAmount(Number(c.amount))}
+
+Programmes concernés :
+${programsList || 'Aucun programme renseigné'}
+
+Procédure de signature :
+1. Connectez-vous à votre espace sur le lien ci-dessous
+2. Consultez votre e-mail (${professorEmail}) pour le lien de signature sécurisé
+3. Vérifiez toutes les informations du contrat
+4. Signez électroniquement
+
+Accéder à votre espace :
+${contratUrl}
+
+Attention : Ce lien est valable pendant 72 heures à compter de la réception de ce message. Passé ce délai, veuillez contacter le service RH du CAP.
+
+Ce lien est strictement personnel et confidentiel.
+
+Cordialement,
+Service des Ressources Humaines — CAP-EPAC`;
+    setTransferConfirm(null);
+    reload();
+    showSuccess({
+      title: 'Contrat transféré',
+      message: `Le contrat N° ${c.contrat_number} a été transféré à ${profName}.`,
+      detail: `Un e-mail de notification a été envoyé à ${profName} avec un lien pour consulter et valider le contrat.`,
+      iconBg: '#faf5ff', iconColor: '#7c3aed', icon: <Icon.Mail />,
+      whatsapp: {
+        phone: c.professor?.phone ?? undefined,
+        text: whatsappMessage,
+      },
+    });
+  } catch (err: any) {
+    addToast('error', 'Erreur de transfert', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
+  } finally {
+    setTransferLoading(false);
+  }
+};
   const handleAuthorizeConfirm = async () => {
     const c = authorizeConfirm;
     if (!c) return;
     setAuthorizeLoading(true);
     try {
       await rhService.authorizeContrat(c.id);
-      addToast('success', 'Contrat autorisé', `Le contrat N° ${c.contrat_number} est maintenant autorisé.`);
       setAuthorizeConfirm(null);
       reload();
+      showSuccess({
+        title: 'Contrat autorisé',
+        message: `Le contrat N° ${c.contrat_number} est maintenant autorisé et verrouillé.`,
+        detail: 'Le contrat est passé au statut « En cours ». Cette action est irréversible.',
+        iconBg: '#f0fdf4', iconColor: '#059669', icon: <Icon.ShieldCheck />,
+      });
     } catch (err: any) {
       addToast('error', 'Erreur d\'autorisation', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
       setAuthorizeConfirm(null);
@@ -1184,13 +1924,14 @@ const Contrats: React.FC = () => {
         status:                       'pending' as ContratStatus,
         course_element_professor_ids: (c.course_element_professors ?? []).map(p => p.id),
       });
-      addToast(
-        'success',
-        'Contrat relancé',
-        `Le contrat N° ${c.contrat_number} est de nouveau en attente. Vous pouvez le modifier puis le retransférer.`,
-      );
       setRelaunchConfirm(null);
       reload();
+      showSuccess({
+        title: 'Contrat relancé',
+        message: `Le contrat N° ${c.contrat_number} est de nouveau en attente.`,
+        detail: "Vous pouvez le modifier puis le retransférer à l'enseignant.",
+        iconBg: '#fff7ed', iconColor: '#ea580c', icon: <Icon.Refresh />,
+      });
     } catch (err: any) {
       addToast('error', 'Erreur', err?.response?.data?.message ?? err.message ?? 'Une erreur est survenue');
       setRelaunchConfirm(null);
@@ -1214,13 +1955,15 @@ const Contrats: React.FC = () => {
               : `${contrats.length} contrat${contrats.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <button
-          className="ctr-btn"
-          style={{ height: 38, background: '#4F46E5', color: '#fff', border: 'none' }}
-          onClick={() => { setShowCreate(true); setCreateError(''); setCreateForm({ ...emptyForm }); }}
-        >
-          <Icon.Plus /> Nouveau contrat
-        </button>
+        {!isRestricted && (
+          <button
+            className="ctr-btn"
+            style={{ height: 38, background: '#4F46E5', color: '#fff', border: 'none' }}
+            onClick={() => { setShowCreate(true); setCreateError(''); setCreateForm({ ...emptyForm }); }}
+          >
+            <Icon.Plus /> Nouveau contrat
+          </button>
+        )}
       </div>
 
       {!loading && !error && (
@@ -1340,6 +2083,8 @@ const Contrats: React.FC = () => {
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+
+                          {/* PDF — visible pour tous */}
                           <button
                             className="ctr-btn-icon"
                             title={hasPdf ? 'Voir le PDF stocké' : 'Aperçu du contrat (PDF non encore disponible)'}
@@ -1349,71 +2094,119 @@ const Contrats: React.FC = () => {
                             {hasPdf ? <Icon.FilePdf /> : <Icon.FileText />}
                           </button>
 
+                          {/* Relancer / Transférer — visible mais désactivé si restreint */}
                           {isCancelled ? (
                             <button
                               className="ctr-btn-icon"
                               title={
-                                c.rejection_reason
+                                isRestricted ? "Droit d'accès non requis"
+                                  : c.rejection_reason
                                   ? `Relancer ce contrat (motif : ${c.rejection_reason})`
                                   : 'Relancer ce contrat rejeté'
                               }
-                              onClick={() => setRelaunchConfirm(c)}
-                              style={{ borderColor: '#fed7aa', color: '#ea580c', background: '#fff7ed' }}
+                              disabled={isRestricted}
+                              onClick={() => { if (!isRestricted) setRelaunchConfirm(c); }}
+                              style={isRestricted ? { opacity: 0.4 } : { borderColor: '#fed7aa', color: '#ea580c', background: '#fff7ed' }}
                             >
                               <Icon.Refresh />
                             </button>
                           ) : (
                             <button
                               className="ctr-btn-icon"
-                              title={isLocked ? 'Contrat verrouillé' : isTransferred ? 'Contrat déjà transféré' : 'Transférer et notifier l\'enseignant'}
-                              disabled={isTransferred || isLocked}
-                              onClick={() => !isTransferred && !isLocked && setTransferConfirm(c)}
-                              style={isTransferred || isLocked ? {} : { borderColor: '#c4b5fd', color: '#7c3aed' }}
+                              title={
+                                isRestricted ? "Droit d'accès non requis"
+                                  : isLocked ? 'Contrat verrouillé'
+                                  : isTransferred ? 'Contrat déjà transféré'
+                                  : "Transférer et notifier l'enseignant"
+                              }
+                              disabled={isTransferred || isLocked || isRestricted}
+                              onClick={() => { if (!isTransferred && !isLocked && !isRestricted) setTransferConfirm(c); }}
+                              style={(!isTransferred && !isLocked && !isRestricted) ? { borderColor: '#c4b5fd', color: '#7c3aed' } : (isRestricted ? { opacity: 0.4 } : {})}
                             >
                               <Icon.Send />
                             </button>
                           )}
 
+                          {/* Autoriser / Upload — visible mais désactivé si restreint */}
                           <button
                             className="ctr-btn-icon"
                             title={
-                              isAuthorized
-                                ? 'Contrat déjà autorisé — uploader un nouveau PDF'
-                                : isValidated
-                                ? 'Autoriser le contrat / Uploader le PDF final'
-                                : 'Le contrat doit d\'abord être signé par le professeur'
+                              isRestricted ? "Droit d'accès non requis"
+                                : isAuthorized ? 'Contrat déjà autorisé — uploader un nouveau PDF'
+                                : isValidated ? 'Autoriser le contrat / Uploader le PDF final'
+                                : "Le contrat doit d'abord être signé par le professeur"
                             }
-                            disabled={!isValidated && !isAuthorized}
-                            onClick={() => setUploadPdfContrat(c)}
+                            disabled={isRestricted || (!isValidated && !isAuthorized)}
+                            onClick={() => { if (!isRestricted) setUploadPdfContrat(c); }}
                             style={
-                              isAuthorized
-                                ? { borderColor: '#86efac', color: '#16a34a', background: '#f0fdf4' }
-                                : isValidated
-                                ? { borderColor: '#fed7aa', color: '#ea580c', background: '#fff7ed' }
+                              isRestricted ? { opacity: 0.4 }
+                                : isAuthorized ? { borderColor: '#86efac', color: '#16a34a', background: '#f0fdf4' }
+                                : isValidated  ? { borderColor: '#fed7aa', color: '#ea580c', background: '#fff7ed' }
                                 : {}
                             }
                           >
                             <Icon.ShieldCheck />
                           </button>
 
+                          {/* Supports de cours — bloqué pour role_id=3, filtré pour 12/13 */}
                           <button
                             className="ctr-btn-icon"
-                            title={isLocked ? 'Contrat verrouillé — modification impossible' : 'Modifier'}
-                            onClick={() => openEdit(c)}
-                            disabled={isLocked}
+                            title={
+                              isChefCAP
+                                ? "Droit d'accès non requis"
+                                : 'Supports de cours — voir et gérer les PDFs et monographies'
+                            }
+                            onClick={() => {
+                              if (isChefCAP) {
+                                setShowAccessDenied(true);
+                              } else {
+                                setSupportContrat(c);
+                                setModalOpenKey(k => k + 1);
+                              }
+                            }}
+                            style={
+                              isChefCAP
+                                ? { borderColor: '#fecaca', color: '#dc2626', background: '#fef2f2', opacity: 0.75 }
+                                : { borderColor: '#c7d2fe', color: '#4338ca', background: '#eef2ff' }
+                            }
+                          >
+                            <Icon.BookOpen />
+                          </button>
+
+                          {/* Modifier — visible mais désactivé si restreint */}
+                          <button
+                            className="ctr-btn-icon"
+                            title={
+                              isRestricted ? "Droit d'accès non requis"
+                                : isLocked ? 'Contrat verrouillé — modification impossible'
+                                : 'Modifier'
+                            }
+                            disabled={isLocked || isRestricted}
+                            onClick={() => { if (!isRestricted) openEdit(c); }}
+                            style={isRestricted ? { opacity: 0.4 } : {}}
                           >
                             <Icon.Edit />
                           </button>
 
+                          {/* Supprimer — visible mais désactivé si restreint */}
                           <button
                             className="ctr-btn-icon"
-                            title={isLocked ? 'Contrat verrouillé — suppression impossible' : 'Supprimer'}
-                            onClick={() => !isLocked && setDeleteConfirm(c)}
-                            disabled={isLocked}
-                            style={isLocked ? {} : { borderColor: '#fecaca', color: '#dc2626' }}
+                            title={
+                              isRestricted ? "Droit d'accès non requis"
+                                : isLocked ? 'Contrat verrouillé — suppression impossible'
+                                : 'Supprimer'
+                            }
+                            disabled={isLocked || isRestricted}
+                            onClick={() => { if (!isLocked && !isRestricted) setDeleteConfirm(c); }}
+                            style={
+                              isRestricted ? { opacity: 0.4 }
+                                : isLocked ? {}
+                                : { borderColor: '#fecaca', color: '#dc2626' }
+                            }
                           >
                             <Icon.Trash />
                           </button>
+
                         </div>
                       </td>
                     </tr>
@@ -1429,15 +2222,15 @@ const Contrats: React.FC = () => {
       {showCreate && (
         <Modal title="Nouveau contrat" subtitle="Renseigner les informations du contrat de prestation" onClose={closeCreate}>
           <ContratFormFields
-            form={createForm} 
+            form={createForm}
             professors={professors}
             selectedAcademicYear={getSelectedAcademicYear(createForm.academic_year_id)}
             onFieldChange={onFieldChange(setCreateForm)}
-            onSubmit={handleCreateSubmit} 
+            onSubmit={handleCreateSubmit}
             onCancel={closeCreate}
-            loading={createLoading} 
+            loading={createLoading}
             error={createError}
-            submitLabel="Créer le contrat" 
+            submitLabel="Créer le contrat"
             isEdit={false}
           />
         </Modal>
@@ -1446,15 +2239,15 @@ const Contrats: React.FC = () => {
       {editingContrat && (
         <Modal title="Modifier le contrat" subtitle={`Contrat N° ${editingContrat.contrat_number || `#${editingContrat.id}`}`} onClose={closeEdit}>
           <ContratFormFields
-            form={editForm} 
+            form={editForm}
             professors={professors}
             selectedAcademicYear={getSelectedAcademicYear(editForm.academic_year_id)}
             onFieldChange={onFieldChange(setEditForm)}
-            onSubmit={handleEditSubmit} 
+            onSubmit={handleEditSubmit}
             onCancel={closeEdit}
-            loading={editLoading} 
+            loading={editLoading}
             error={editError}
-            submitLabel="Enregistrer les modifications" 
+            submitLabel="Enregistrer les modifications"
             isEdit={true}
           />
         </Modal>
@@ -1466,13 +2259,69 @@ const Contrats: React.FC = () => {
           contrat={uploadPdfContrat}
           onClose={() => setUploadPdfContrat(null)}
           onSuccess={(updated) => {
-            addToast('success', 'PDF mis à jour', 'Le PDF du contrat a été enregistré avec succès.');
             setUploadPdfContrat(null);
+            showSuccess({
+              title: 'PDF enregistré',
+              message: 'Le PDF du contrat a été mis à jour avec succès.',
+              iconBg: '#fff7ed', iconColor: '#ea580c', icon: <Icon.FilePdf />,
+            });
             if (!uploadPdfContrat.is_authorized && uploadPdfContrat.is_validated) {
               setAuthorizeConfirm(updated);
             } else {
               reload();
             }
+          }}
+        />
+      )}
+
+      {/* Modal accès refusé — role_id = 3 sur bouton supports */}
+      {showAccessDenied && (
+        <div className="ctr-modal-backdrop" onClick={() => setShowAccessDenied(false)}>
+          <div className="ctr-modal" style={{ width: 'min(90vw, 420px)' }} onClick={e => e.stopPropagation()}>
+            <div className="ctr-modal-header">
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: '#0f172a' }}>Accès refusé</div>
+              </div>
+              <button className="ctr-modal-close" onClick={() => setShowAccessDenied(false)}>
+                <Icon.X />
+              </button>
+            </div>
+            <div className="ctr-modal-body">
+              <div className="ctr-confirm-body">
+                <div className="ctr-confirm-icon" style={{ background: '#fef2f2', color: '#dc2626' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                  </svg>
+                </div>
+                <p style={{ fontWeight: 700, fontSize: 15, color: '#0f172a', margin: '0 0 8px' }}>
+                  Droit d'accès non requis
+                </p>
+                <p style={{ fontSize: 13.5, color: '#6b7280', margin: 0, lineHeight: 1.5 }}>
+                  Vous n'avez pas les permissions nécessaires pour accéder aux supports de cours.
+                </p>
+              </div>
+            </div>
+            <div className="ctr-modal-footer" style={{ justifyContent: 'center' }}>
+              <button className="ctr-btn ctr-btn-ghost" onClick={() => setShowAccessDenied(false)} style={{ minWidth: 100 }}>
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Supports de cours (Admin) */}
+      {supportContrat && (
+        <AdminCourseSupportModal
+          key={`support-${supportContrat.id}-${modalOpenKey}`}
+          contrat={supportContrat}
+          divisionFilter={supportDivisionFilter}
+          onClose={() => setSupportContrat(null)}
+          onSaved={() => {
+            reload(freshList => {
+              const fresh = freshList.find(c => c.id === supportContrat.id);
+              if (fresh) setSupportContrat(fresh);
+            });
           }}
         />
       )}
@@ -1540,6 +2389,20 @@ const Contrats: React.FC = () => {
           loading={relaunchLoading}
           onConfirm={handleRelaunchConfirm}
           onCancel={() => setRelaunchConfirm(null)}
+        />
+      )}
+
+      {/* Success Modal */}
+      {successModal && (
+        <SuccessModal
+          title={successModal.title}
+          message={successModal.message}
+          detail={successModal.detail}
+          iconBg={successModal.iconBg}
+          iconColor={successModal.iconColor}
+          icon={successModal.icon}
+          whatsapp={successModal.whatsapp}
+          onClose={() => setSuccessModal(null)}
         />
       )}
 

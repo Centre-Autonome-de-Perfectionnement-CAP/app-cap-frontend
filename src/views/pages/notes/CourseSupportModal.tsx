@@ -58,6 +58,11 @@ interface Props {
   visible: boolean
   onClose: () => void
   contrat: Contrat
+  /**
+   * inlineMode=true : le composant est déjà rendu dans un CModal parent.
+   * Il rend alors uniquement son contenu (header + body + footer) sans CModal wrapper.
+   */
+  inlineMode?: boolean
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -70,7 +75,7 @@ const programLabel = (p: ProfessorProgram): string => {
 
 // ─── Composant principal ─────────────────────────────────────────────────────
 
-const CourseSupportModal = ({ visible, onClose, contrat }: Props) => {
+const CourseSupportModal = ({ visible, onClose, contrat, inlineMode = false }: Props) => {
   const programs: ProfessorProgram[] = contrat.course_element_professors ?? []
 
   // Index du programme sélectionné dans la liste déroulante
@@ -200,14 +205,9 @@ const CourseSupportModal = ({ visible, onClose, contrat }: Props) => {
   }
 
   // ─── Render ───────────────────────────────────────────────────────────────
-  return (
-    <CModal
-      visible={visible}
-      onClose={onClose}
-      size="lg"
-      backdrop="static"
-      scrollable
-    >
+
+  const modalContent = (
+    <>
       <CModalHeader>
         <CModalTitle>
           <CIcon icon={cilFile} className="me-2" />
@@ -422,6 +422,21 @@ const CourseSupportModal = ({ visible, onClose, contrat }: Props) => {
           Fermer
         </CButton>
       </CModalFooter>
+    </>
+  )
+
+  // En mode inline, on est déjà dans un CModal parent — on rend juste le contenu
+  if (inlineMode) return modalContent
+
+  return (
+    <CModal
+      visible={visible}
+      onClose={onClose}
+      size="lg"
+      backdrop="static"
+      scrollable
+    >
+      {modalContent}
     </CModal>
   )
 }

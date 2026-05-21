@@ -13,6 +13,7 @@ const DecisionYear           = React.lazy(() => import('./DecisionYear'));
 const ProfessorContratsList  = React.lazy(() => import('./ProfessorContratsList'));
 const ProfessorContratDetail = React.lazy(() => import('./ProfessorContratDetail'));
 const ProfessorTextbookPage  = React.lazy(() => import('./ProfessorTextbookPage'));
+const MesFactures = React.lazy(() => import('../rh/MesFactures'))
 
 const NoteRoutes = () => {
   const { isAuthenticated, role, isLoading } = useAuth();
@@ -61,11 +62,11 @@ const NoteRoutes = () => {
         {/* Routes Professeur */}
         {isProfesseur && (
           <>
-            <Route path="professor/dashboard"     element={<ProfessorDashboard />} />
+            <Route path="professor/dashboard"               element={<ProfessorDashboard />} />
             <Route path="professor/grade-sheet/:programUuid" element={<GradeSheet />} />
-            {/* ✅ CORRECTION : le chemin doit correspondre à /notes/professor/textbook */}
-            <Route path="professor/textbook"      element={<ProfessorTextbookPage />} />
+            <Route path="professor/textbook"                element={<ProfessorTextbookPage />} />
             <Route path="professor/evaluation/:programUuid" element={<CreateEvaluation />} />
+            <Route path="professor/factures"                element={<MesFactures />} /> {/* ← AJOUT */}
             {publicContratRoutes}
           </>
         )}

@@ -723,18 +723,17 @@ const ContratFormFields: React.FC<{
   );
 };
 
-// ─── Modal Support de cours (Admin) ───────────────────────────────────────────
+
+// ─── AdminCourseSupportModal (version corrigée avec gestion correcte des monographies) ──────────────────────────────────────────────
+
 const AdminCourseSupportModal: React.FC<{
   contrat: Contrat;
   onClose: () => void;
   onSaved: () => void;
-  /** null = pas de filtre (accès complet) ; 'RD-FC' ou 'RD-FAD' = filtré */
   divisionFilter?: string | null;
 }> = ({ contrat, onClose, onSaved, divisionFilter = null }) => {
 
-  // Bloquer si la division du contrat ne correspond pas au filtre du rôle
   const divisionMismatch = divisionFilter !== null && contrat.division !== divisionFilter;
-
   const programs = contrat.course_element_professors ?? [];
 
   type SupportEntry = { title: string; file?: string; url?: string };
@@ -744,81 +743,87 @@ const AdminCourseSupportModal: React.FC<{
     saving: boolean;
     saved: boolean;
     error: string | null;
-    editing: boolean;
+    hasExisting: boolean;      // true si des valeurs existent déjà en BDD
+    isEditing: boolean;        // true si l'utilisateur est en train de modifier
   };
   type ProgState = { supports: SupportEntry[]; loading: boolean; error: string | null; mono: MonoData };
 
-  const defaultMono = (): MonoData => ({
-    number_monographie: '', amount_monographie: '',
-    saving: false, saved: false, error: null, editing: true,
-  });
+  const defaultMono = (existingNumber?: number | null, existingAmount?: number | null): MonoData => {
+    const hasNumber = existingNumber !== null && existingNumber !== undefined && existingNumber !== 0;
+    const hasAmount = existingAmount !== null && existingAmount !== undefined && existingAmount !== 0;
+    const hasValues = hasNumber || hasAmount;
 
-  // ─── Clé de montage : change à chaque ouverture du modal pour forcer
-  // la réinitialisation complète de l'état interne ───────────────────────────
-  const mountKeyRef = useRef(Date.now());
+    return {
+      number_monographie: hasNumber ? String(existingNumber) : '',
+      amount_monographie: hasAmount ? String(existingAmount) : '',
+      saving: false,
+      saved: false,
+      error: null,
+      hasExisting: hasValues,
+      isEditing: !hasValues, // Si des valeurs existent, on est en lecture seule
+    };
+  };
 
-  const [progStates, setProgStates]   = useState<Record<number, ProgState>>({});
+  // État principal
+  const [progStates, setProgStates] = useState<Record<number, ProgState>>({});
   const [selectedIdx, setSelectedIdx] = useState(0);
-  const [newTitle, setNewTitle]       = useState('');
-  const [newFile, setNewFile]         = useState<File | null>(null);
-  const [adding, setAdding]           = useState(false);
-  const [addError, setAddError]       = useState<string | null>(null);
-  const [addSuccess, setAddSuccess]   = useState(false);
-  const [deleting, setDeleting]       = useState<number | null>(null);
+  const [newTitle, setNewTitle] = useState('');
+  const [newFile, setNewFile] = useState<File | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [addSuccess, setAddSuccess] = useState(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ─── Charger les supports ET la monographie depuis l'API ──────────────────
-  const loadSupports = useCallback(async (program: ProfessorProgram) => {
-    // Marquer ce programme comme "en chargement"
+  // Fonction pour charger les supports ET les monographies depuis l'API
+  const loadProgramData = useCallback(async (program: ProfessorProgram) => {
+    // Initialiser l'état du programme avec les valeurs du contrat (si disponibles)
+    const existingNumber = program.number_monographie ?? null;
+    const existingAmount = program.amount_monographie ?? null;
+    
     setProgStates(prev => ({
       ...prev,
       [program.id]: {
         supports: [],
-        loading:  true,
-        error:    null,
-        mono:     defaultMono(),
+        loading: true,
+        error: null,
+        mono: defaultMono(existingNumber, existingAmount),
       },
     }));
 
     try {
       const http = (await import('@/services/http.service')).default;
-
-      // L'API retourne : { success, data: SupportEntry[], number_monographie, amount_monographie }
+      
+      // Appel API qui retourne : { success, data, number_monographie, amount_monographie }
       const res = await (http as any).get(
         `rh/contrats/${contrat.id}/programs/${program.id}/supports`
       );
 
-      // Extraire les valeurs — gérer les deux cas :
-      // HttpService retourne le corps complet  →  res.number_monographie
-      // HttpService unwrap .data               →  impossible ici car on type any
-      const body: {
-        success?: boolean;
-        data?: SupportEntry[];
-        number_monographie?: number | null;
-        amount_monographie?: number | null;
-      } = res ?? {};
-
+      const body = res ?? {};
       const supports: SupportEntry[] = Array.isArray(body.data) ? body.data : [];
-      const nbRaw  = body.number_monographie  ?? null;
-      const amtRaw = body.amount_monographie  ?? null;
-
-      const hasExisting =
-        nbRaw !== null && nbRaw !== undefined &&
-        amtRaw !== null && amtRaw !== undefined;
+      
+      // Récupérer les valeurs de monographie depuis la réponse API
+      const nbRaw = body.number_monographie ?? existingNumber ?? null;
+      const amtRaw = body.amount_monographie ?? existingAmount ?? null;
+      
+      const hasNumber = nbRaw !== null && nbRaw !== undefined && nbRaw !== 0;
+      const hasAmount = amtRaw !== null && amtRaw !== undefined && amtRaw !== 0;
+      const hasExisting = hasNumber || hasAmount;
 
       setProgStates(prev => ({
         ...prev,
         [program.id]: {
           supports,
           loading: false,
-          error:   null,
+          error: null,
           mono: {
-            number_monographie: hasExisting ? String(nbRaw)  : '',
-            amount_monographie:  hasExisting ? String(amtRaw) : '',
-            saving:  false,
-            saved:   false,
-            error:   null,
-            editing: !hasExisting,
+            number_monographie: hasNumber ? String(nbRaw) : '',
+            amount_monographie: hasAmount ? String(amtRaw) : '',
+            saving: false,
+            saved: false,
+            error: null,
+            hasExisting: hasExisting,
+            isEditing: !hasExisting, // Si valeurs existent, mode lecture seule
           },
         },
       }));
@@ -827,127 +832,236 @@ const AdminCourseSupportModal: React.FC<{
         ...prev,
         [program.id]: {
           supports: [],
-          loading:  false,
-          error:    err?.message ?? 'Erreur de chargement',
-          mono:     defaultMono(),
+          loading: false,
+          error: err?.message ?? 'Erreur de chargement',
+          mono: defaultMono(program.number_monographie ?? null, program.amount_monographie ?? null),
         },
       }));
     }
   }, [contrat.id]);
 
-  // ─── Charger TOUS les programmes à l'ouverture ────────────────────────────
+  // Charger tous les programmes à l'ouverture
   useEffect(() => {
-    // Réinitialiser tout l'état local à chaque ouverture
     setProgStates({});
     setSelectedIdx(0);
     setNewTitle('');
     setNewFile(null);
     setAddError(null);
     setAddSuccess(false);
-    // Puis charger chaque programme
-    programs.forEach(p => loadSupports(p));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contrat.id]);
+    
+    programs.forEach(program => loadProgramData(program));
+  }, [contrat.id, programs, loadProgramData]);
 
-  // ─── Rechargement manuel d'un programme (après ajout/suppression/save) ────
+  // Recharger un programme spécifique
   const reloadProgram = useCallback((program: ProfessorProgram) => {
-    loadSupports(program);
-  }, [loadSupports]);
+    loadProgramData(program);
+  }, [loadProgramData]);
 
-  const currentProg     = programs[selectedIdx];
-  const currentState    = currentProg ? progStates[currentProg.id] : undefined;
+  const currentProg = programs[selectedIdx];
+  const currentState = currentProg ? progStates[currentProg.id] : undefined;
   const currentSupports = currentState?.supports ?? [];
-  const isLoading       = currentState?.loading ?? false;
-  const mono            = currentState?.mono ?? defaultMono();
+  const isLoading = currentState?.loading ?? false;
+  const mono = currentState?.mono ?? defaultMono(null, null);
 
-  /** Détermine si la monographie a déjà été définie pour le programme courant */
-  const monoAlreadyDefined =
-    mono.number_monographie !== '' && mono.amount_monographie !== '' && !mono.editing;
-
-  const setMono = (key: keyof MonoData, value: string | boolean | null) => {
+  const setMono = (key: 'number_monographie' | 'amount_monographie', value: string) => {
     if (!currentProg) return;
     setProgStates(prev => ({
       ...prev,
       [currentProg.id]: {
         ...prev[currentProg.id],
-        mono: { ...(prev[currentProg.id]?.mono ?? defaultMono()), [key]: value },
+        mono: {
+          ...(prev[currentProg.id]?.mono ?? defaultMono(null, null)),
+          [key]: value,
+          saved: false,
+          error: null,
+        },
       },
     }));
   };
 
-  const handleAdd = async () => {
+  // Activer le mode édition (rendre les champs modifiables)
+  const enableEditing = () => {
     if (!currentProg) return;
-    if (!newTitle.trim()) { setAddError('Veuillez saisir un titre.'); return; }
-    if (!newFile)         { setAddError('Veuillez sélectionner un fichier PDF.'); return; }
-    setAddError(null); setAdding(true); setAddSuccess(false);
-    try {
-      const fd = new FormData();
-      fd.append('title', newTitle.trim());
-      fd.append('pdf_file', newFile);
-      fd.append('program_id', String(currentProg.id));
-      const http = (await import('@/services/http.service')).default;
-      await http.post(`rh/contrats/${contrat.id}/programs/${currentProg.id}/supports`, fd);
-      setNewTitle(''); setNewFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      setAddSuccess(true);
-      setTimeout(() => setAddSuccess(false), 3500);
-      await loadSupports(currentProg);
-    } catch (err: any) {
-      setAddError(err?.message ?? "Erreur lors de l'ajout.");
-    } finally { setAdding(false); }
+    setProgStates(prev => ({
+      ...prev,
+      [currentProg.id]: {
+        ...prev[currentProg.id],
+        mono: {
+          ...(prev[currentProg.id]?.mono ?? defaultMono(null, null)),
+          isEditing: true,
+          error: null,
+        },
+      },
+    }));
   };
 
-  const handleDelete = async (idx: number) => {
+  // Annuler l'édition et revenir aux valeurs originales
+  const cancelEditing = () => {
     if (!currentProg) return;
-    setDeleting(idx);
-    try {
-      const http = (await import('@/services/http.service')).default;
-      await http.delete(`rh/contrats/${contrat.id}/programs/${currentProg.id}/supports/${idx}`);
-      await loadSupports(currentProg);
-    } catch (err: any) {
-      alert('Erreur de suppression : ' + (err?.message ?? ''));
-    } finally { setDeleting(null); }
+    const existingNumber = currentProg.number_monographie ?? null;
+    const existingAmount = currentProg.amount_monographie ?? null;
+    const hasNumber = existingNumber !== null && existingNumber !== undefined && existingNumber !== 0;
+    const hasAmount = existingAmount !== null && existingAmount !== undefined && existingAmount !== 0;
+    
+    setProgStates(prev => ({
+      ...prev,
+      [currentProg.id]: {
+        ...prev[currentProg.id],
+        mono: {
+          ...(prev[currentProg.id]?.mono ?? defaultMono(null, null)),
+          number_monographie: hasNumber ? String(existingNumber) : '',
+          amount_monographie: hasAmount ? String(existingAmount) : '',
+          isEditing: false,
+          saved: false,
+          error: null,
+        },
+      },
+    }));
   };
 
+  // Sauvegarder la monographie
   const handleSaveMono = async () => {
     if (!currentProg) return;
-    const nb  = parseInt(mono.number_monographie, 10);
+    
+    const nb = parseInt(mono.number_monographie, 10);
     const amt = parseFloat(mono.amount_monographie);
-    if (isNaN(nb) || nb < 0)   { setMono('error', 'Nombre de monographies invalide.'); return; }
-    if (isNaN(amt) || amt < 0) { setMono('error', 'Montant invalide.'); return; }
-    setMono('saving', true); setMono('error', null); setMono('saved', false);
+    
+    if (isNaN(nb) || nb < 0) {
+      setMono('number_monographie', mono.number_monographie);
+      setProgStates(prev => ({
+        ...prev,
+        [currentProg.id]: {
+          ...prev[currentProg.id],
+          mono: { ...prev[currentProg.id]!.mono, error: 'Nombre de monographies invalide.' },
+        },
+      }));
+      return;
+    }
+    if (isNaN(amt) || amt < 0) {
+      setProgStates(prev => ({
+        ...prev,
+        [currentProg.id]: {
+          ...prev[currentProg.id],
+          mono: { ...prev[currentProg.id]!.mono, error: 'Montant invalide.' },
+        },
+      }));
+      return;
+    }
+    
+    setProgStates(prev => ({
+      ...prev,
+      [currentProg.id]: {
+        ...prev[currentProg.id],
+        mono: { ...prev[currentProg.id]!.mono, saving: true, error: null, saved: false },
+      },
+    }));
+    
     try {
       const http = (await import('@/services/http.service')).default;
       await (http as any).put(
         `rh/contrats/${contrat.id}/programs/${currentProg.id}/monographie`,
         { number_monographie: nb, amount_monographie: amt }
       );
-      // Recharger depuis l'API — loadSupports lira les vraies valeurs stockées
-      // et repassera en lecture seule automatiquement (editing: false si hasExisting)
-      await reloadProgram(currentProg);
-      // Afficher le message de succès
+      
+      // Mettre à jour le programme courant avec les nouvelles valeurs
+      const updatedProgram = { ...currentProg, number_monographie: nb, amount_monographie: amt };
+      
       setProgStates(prev => ({
         ...prev,
         [currentProg.id]: {
           ...prev[currentProg.id],
-          mono: { ...prev[currentProg.id]!.mono, saved: true },
+          mono: {
+            ...prev[currentProg.id]!.mono,
+            saving: false,
+            saved: true,
+            hasExisting: true,
+            isEditing: false, // Retour en mode lecture seule après sauvegarde
+            error: null,
+          },
         },
       }));
-      setTimeout(() => setMono('saved', false), 3500);
+      
+      // Mettre à jour le contrat parent
       onSaved();
+      
+      setTimeout(() => {
+        setProgStates(prev => ({
+          ...prev,
+          [currentProg.id]: {
+            ...prev[currentProg.id],
+            mono: { ...prev[currentProg.id]!.mono, saved: false },
+          },
+        }));
+      }, 3000);
     } catch (err: any) {
-      setMono('saving', false);
-      setMono('error', err?.response?.data?.message ?? err.message ?? 'Erreur lors de la sauvegarde.');
+      setProgStates(prev => ({
+        ...prev,
+        [currentProg.id]: {
+          ...prev[currentProg.id],
+          mono: {
+            ...prev[currentProg.id]!.mono,
+            saving: false,
+            error: err?.response?.data?.message ?? err.message ?? 'Erreur lors de la sauvegarde.',
+          },
+        },
+      }));
+    }
+  };
+
+  // Ajouter un support
+  const handleAdd = async () => {
+    if (!currentProg) return;
+    if (!newTitle.trim()) { setAddError('Veuillez saisir un titre.'); return; }
+    if (!newFile) { setAddError('Veuillez sélectionner un fichier PDF.'); return; }
+    
+    setAddError(null);
+    setAdding(true);
+    setAddSuccess(false);
+    
+    try {
+      const fd = new FormData();
+      fd.append('title', newTitle.trim());
+      fd.append('pdf_file', newFile);
+      
+      const http = (await import('@/services/http.service')).default;
+      await http.post(`rh/contrats/${contrat.id}/programs/${currentProg.id}/supports`, fd);
+      
+      setNewTitle('');
+      setNewFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setAddSuccess(true);
+      setTimeout(() => setAddSuccess(false), 3500);
+      
+      await reloadProgram(currentProg);
+    } catch (err: any) {
+      setAddError(err?.message ?? "Erreur lors de l'ajout.");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  // Supprimer un support
+  const handleDelete = async (idx: number) => {
+    if (!currentProg) return;
+    setDeleting(idx);
+    try {
+      const http = (await import('@/services/http.service')).default;
+      await http.delete(`rh/contrats/${contrat.id}/programs/${currentProg.id}/supports/${idx}`);
+      await reloadProgram(currentProg);
+    } catch (err: any) {
+      alert('Erreur de suppression : ' + (err?.message ?? ''));
+    } finally {
+      setDeleting(null);
     }
   };
 
   const progLabel = (p: ProfessorProgram) =>
     `${p.course_element?.name ?? p.label ?? '—'} — ${p.class_group?.name ?? '—'}`;
 
-  // ── Icônes SVG inline ──────────────────────────────────────────────────────
-  const IcoPdf  = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><path d="M9 11h1.5a1.5 1.5 0 0 1 0 3H9v-3z"/></svg>;
+  // Icônes
+  const IcoPdf = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><path d="M9 11h1.5a1.5 1.5 0 0 1 0 3H9v-3z"/></svg>;
   const IcoLink = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
-  const IcoUp   = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
+  const IcoUp = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
   const IcoSave = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
   const IcoCoin = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="18"/><line x1="9" y1="12" x2="15" y2="12"/></svg>;
   const IcoHash = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>;
@@ -970,11 +1084,9 @@ const AdminCourseSupportModal: React.FC<{
 
   const Divider = () => <div style={{ height: 1, background: '#f1f5f9', margin: '20px 0' }} />;
 
-  // ── Rendu bloqué si division ne correspond pas au rôle ─────────────────────
+  // Blocage si division ne correspond pas
   if (divisionMismatch) {
-    const divLabel = divisionFilter === 'RD-FC'
-      ? 'Formation Continue (RD-FC)'
-      : 'Formation à Distance (RD-FAD)';
+    const divLabel = divisionFilter === 'RD-FC' ? 'Formation Continue (RD-FC)' : 'Formation à Distance (RD-FAD)';
     return (
       <Modal
         title="Supports de cours"
@@ -991,10 +1103,10 @@ const AdminCourseSupportModal: React.FC<{
           </div>
           <p style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', margin: '0 0 8px' }}>Accès restreint</p>
           <p style={{ fontSize: 14, color: '#374151', margin: '0 0 6px' }}>
-            Vous n'avez accès qu'aux supports de la division&nbsp;<strong>{divLabel}</strong>.
+            Vous n'avez accès qu'aux supports de la division <strong>{divLabel}</strong>.
           </p>
           <p style={{ fontSize: 12.5, color: '#9ca3af', margin: 0 }}>
-            Ce contrat appartient à la division&nbsp;<strong>{contrat.division ?? 'non définie'}</strong>.
+            Ce contrat appartient à la division <strong>{contrat.division ?? 'non définie'}</strong>.
           </p>
         </div>
       </Modal>
@@ -1018,7 +1130,7 @@ const AdminCourseSupportModal: React.FC<{
         </div>
       ) : (
         <>
-          {/* ── Sélecteur de programme ─────────────────────────────────────── */}
+          {/* Sélecteur de programme */}
           <div style={{ marginBottom: 20 }}>
             <label className="ctr-label">Programme sélectionné</label>
             <select
@@ -1026,7 +1138,10 @@ const AdminCourseSupportModal: React.FC<{
               value={selectedIdx}
               onChange={e => {
                 setSelectedIdx(Number(e.target.value));
-                setNewTitle(''); setNewFile(null); setAddError(null); setAddSuccess(false);
+                setNewTitle('');
+                setNewFile(null);
+                setAddError(null);
+                setAddSuccess(false);
               }}
             >
               {programs.map((p, idx) => (
@@ -1054,7 +1169,7 @@ const AdminCourseSupportModal: React.FC<{
 
           <Divider />
 
-          {/* ── Layout 2 colonnes : supports + upload ──────────────────────── */}
+          {/* Layout 2 colonnes : supports + upload */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 4 }}>
 
             {/* Colonne gauche : supports existants */}
@@ -1167,13 +1282,13 @@ const AdminCourseSupportModal: React.FC<{
 
           <Divider />
 
-          {/* ── Monographie par programme ──────────────────────────────────── */}
+          {/* Section Monographie */}
           <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: '18px 20px' }}>
 
-            {/* En-tête avec badge "Déjà définie" si applicable */}
+            {/* En-tête avec badge */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
               <SectionHead icon={<IcoCoin />} label="Monographie — Programme courant" />
-              {monoAlreadyDefined && (
+              {mono.hasExisting && !mono.isEditing && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700, background: '#fef9c3', color: '#713f12', border: '1px solid #fde68a' }}>
                   <IcoLock /> Déjà définie
                 </span>
@@ -1184,8 +1299,8 @@ const AdminCourseSupportModal: React.FC<{
               Nombre de monographies et montant pour le programme sélectionné. Stockés par programme dans le contrat.
             </p>
 
-            {/* Bandeau d'info si lecture seule */}
-            {monoAlreadyDefined && (
+            {/* Bandeau d'info si des valeurs existent et qu'on est en lecture seule */}
+            {mono.hasExisting && !mono.isEditing && (
               <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 9, background: '#fffbeb', border: '1.5px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#78350f', fontWeight: 500 }}>
                   <IcoLock />
@@ -1194,78 +1309,95 @@ const AdminCourseSupportModal: React.FC<{
                 <button
                   className="ctr-btn"
                   style={{ height: 32, padding: '0 14px', fontSize: 12.5, background: '#d97706', color: '#fff', flexShrink: 0 }}
-                  onClick={() => setMono('editing', true)}
+                  onClick={enableEditing}
                 >
                   <IcoEdit /> Modifier
                 </button>
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-              <div>
-                <label className="ctr-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <IcoHash /> Nombre de monographies
-                </label>
-                <input
-                  className="ctr-input"
-                  type="number" min="0" step="1"
-                  placeholder="Ex : 3"
-                  value={mono.number_monographie}
-                  onChange={e => setMono('number_monographie', e.target.value)}
-                  disabled={mono.saving || monoAlreadyDefined}
-                  readOnly={monoAlreadyDefined}
-                  style={{
-                    fontFamily: "'DM Mono', monospace", fontWeight: 600,
-                    background: monoAlreadyDefined ? '#f1f5f9' : '#fff',
-                    color: monoAlreadyDefined ? '#475569' : '#0f172a',
-                    cursor: monoAlreadyDefined ? 'not-allowed' : 'text',
-                    borderColor: monoAlreadyDefined ? '#e2e8f0' : undefined,
-                  }}
-                />
-              </div>
-              <div>
-                <label className="ctr-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <IcoCoin /> Montant monographie (FCFA)
-                </label>
-                <input
-                  className="ctr-input"
-                  type="number" min="0" step="any"
-                  placeholder="Ex : 15000"
-                  value={mono.amount_monographie}
-                  onChange={e => setMono('amount_monographie', e.target.value)}
-                  disabled={mono.saving || monoAlreadyDefined}
-                  readOnly={monoAlreadyDefined}
-                  style={{
-                    fontFamily: "'DM Mono', monospace", fontWeight: 600,
-                    background: monoAlreadyDefined ? '#f1f5f9' : '#fff',
-                    color: monoAlreadyDefined ? '#475569' : '#0f172a',
-                    cursor: monoAlreadyDefined ? 'not-allowed' : 'text',
-                    borderColor: monoAlreadyDefined ? '#e2e8f0' : undefined,
-                  }}
-                />
-              </div>
-            </div>
-
-            {mono.saved && (
-              <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontSize: 12.5, fontWeight: 600 }}>
-                <Icon.Check /> Monographie enregistrée avec succès
-              </div>
-            )}
-            {mono.error && (
-              <div style={{ marginBottom: 12, padding: '9px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 12.5 }}>
-                {mono.error as string}
+            {/* Affichage des valeurs si elles existent et qu'on est en lecture seule */}
+            {mono.hasExisting && !mono.isEditing && (
+              <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 9, background: '#f0fdf4', border: '1.5px solid #bbf7d0' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: '#166534' }}>Nombre de monographies actuel :</span>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: '#065f46', margin: '4px 0 0' }}>{mono.number_monographie || '—'}</p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: '#166534' }}>Montant monographie actuel :</span>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: '#065f46', margin: '4px 0 0' }}>{mono.amount_monographie ? formatAmount(parseFloat(mono.amount_monographie)) : '—'}</p>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Bouton enregistrer — visible uniquement si en mode édition */}
-            {!monoAlreadyDefined && (
-              <button className="ctr-btn ctr-btn-primary"
-                onClick={handleSaveMono}
-                disabled={mono.saving || mono.number_monographie === '' || mono.amount_monographie === ''}>
-                {mono.saving
-                  ? <><Icon.Loader /> Enregistrement…</>
-                  : <><IcoSave /> Enregistrer la monographie</>}
-              </button>
+            {/* Champs de saisie - visibles uniquement si pas de valeurs existantes OU en mode édition */}
+            {(!mono.hasExisting || mono.isEditing) && (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+                  <div>
+                    <label className="ctr-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <IcoHash /> Nombre de monographies
+                    </label>
+                    <input
+                      className="ctr-input"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Ex : 3"
+                      value={mono.number_monographie}
+                      onChange={e => setMono('number_monographie', e.target.value)}
+                      disabled={mono.saving}
+                      style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600 }}
+                    />
+                  </div>
+                  <div>
+                    <label className="ctr-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <IcoCoin /> Montant monographie (FCFA)
+                    </label>
+                    <input
+                      className="ctr-input"
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="Ex : 15000"
+                      value={mono.amount_monographie}
+                      onChange={e => setMono('amount_monographie', e.target.value)}
+                      disabled={mono.saving}
+                      style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600 }}
+                    />
+                  </div>
+                </div>
+
+                {mono.saved && (
+                  <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', fontSize: 12.5, fontWeight: 600 }}>
+                    <Icon.Check /> Monographie enregistrée avec succès
+                  </div>
+                )}
+                {mono.error && (
+                  <div style={{ marginBottom: 12, padding: '9px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 12.5 }}>
+                    {mono.error}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {mono.hasExisting && mono.isEditing && (
+                    <button className="ctr-btn ctr-btn-ghost" onClick={cancelEditing} disabled={mono.saving}>
+                      Annuler
+                    </button>
+                  )}
+                  <button
+                    className="ctr-btn ctr-btn-primary"
+                    onClick={handleSaveMono}
+                    disabled={mono.saving || mono.number_monographie === '' || mono.amount_monographie === ''}
+                  >
+                    {mono.saving
+                      ? <><Icon.Loader /> Enregistrement…</>
+                      : <><IcoSave /> Enregistrer la monographie</>}
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </>

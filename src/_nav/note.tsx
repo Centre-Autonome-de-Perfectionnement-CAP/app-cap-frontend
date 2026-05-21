@@ -3,57 +3,52 @@ import {
   cilBook,
   cilClipboard,
   cilFile,
-  cilUser,
   cilList,
   cilDescription,
   cilCheckCircle,
   cilClock,
   cilPeople,
-  cilNotes,    // icône cahier
+  cilNotes,
+  cilCloudUpload,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle, CNavGroup } from '@coreui/react'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CORRECTION : ajout de l'item "Cahier de texte" dans la section professeur
-// ─────────────────────────────────────────────────────────────────────────────
 
 const getNoteNavigation = (role: string | null) => {
   const navigation: any[] = []
 
-  // ── Navigation pour les professeurs ────────────────────────────────────────
+  // ── Professeurs ────────────────────────────────────────────────────────────
   if (role === 'professeur') {
     navigation.push(
-      {
-        component: CNavTitle,
-        name: 'Enseignement',
-      },
+      { component: CNavTitle, name: 'Enseignement' },
       {
         component: CNavItem,
         name: 'Mes Classes',
         to: '/notes/professor/dashboard',
         icon: <CIcon icon={cilBook} />,
       },
-      
       {
         component: CNavItem,
         name: 'Cahier de texte',
         to: '/notes/professor/textbook',
         icon: <CIcon icon={cilNotes} />,
       },
-      {
-        component: CNavTitle,
-        name: 'Gestion RH',
-      },
+      { component: CNavTitle, name: 'Gestion RH' },
       {
         component: CNavItem,
         name: 'Mes Contrats',
         to: '/notes/professor/contrats',
         icon: <CIcon icon={cilFile} />,
       },
+      {
+        component: CNavItem,
+        name: 'Mes Factures',
+        to: '/notes/professor/factures',   // ← vraie route, plus de hack hash
+        icon: <CIcon icon={cilCloudUpload} />,
+      },
     )
   }
 
-  // ── Navigation pour les administrateurs ────────────────────────────────────
+  // ── Administrateurs ────────────────────────────────────────────────────────
   if (
     role === 'chef-division' ||
     role === 'admin'         ||
@@ -61,10 +56,7 @@ const getNoteNavigation = (role: string | null) => {
     role === 'direction'
   ) {
     navigation.push(
-      {
-        component: CNavTitle,
-        name: 'Notes et Évaluations',
-      },
+      { component: CNavTitle, name: 'Notes et Évaluations' },
       {
         component: CNavItem,
         name: 'Dashboard Notes',
@@ -82,22 +74,11 @@ const getNoteNavigation = (role: string | null) => {
         name: 'Décisions',
         icon: <CIcon icon={cilDescription} />,
         items: [
-          {
-            component: CNavItem,
-            name: 'Décisions Semestre',
-            to: '/notes/admin/decision-semester',
-          },
-          {
-            component: CNavItem,
-            name: 'Décisions Année',
-            to: '/notes/admin/decision-year',
-          },
+          { component: CNavItem, name: 'Décisions Semestre', to: '/notes/admin/decision-semester' },
+          { component: CNavItem, name: 'Décisions Année',    to: '/notes/admin/decision-year'     },
         ],
       },
-      {
-        component: CNavTitle,
-        name: 'Gestion des Contrats RH',
-      },
+      { component: CNavTitle, name: 'Gestion des Contrats RH' },
       {
         component: CNavItem,
         name: 'Tous les contrats',

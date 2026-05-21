@@ -7,6 +7,7 @@ import type {
   CreateContratPayload,
   UpdateContratPayload,
   ProfessorProgram,
+  FactureEntry,
 } from '@/types/rh.types'
 import type { ApiResponse } from '@/types'
 
@@ -268,9 +269,6 @@ class RhService {
     return response.data!
   }
 
-  /**
-   * Upload du PDF final par l'admin (remplace l'ancien chemin)
-   */
   uploadContratPdf = async (
     id: number | string,
     pdfFile: File,
@@ -303,6 +301,30 @@ class RhService {
     return HttpService.downloadFile(`rh/contrats/${idOrToken}/download`)
   }
 
+  // ─── Factures normalisées ────────────────────────────────────────────────────
+
+  /**
+   * Retourne tous les contrats du professeur connecté
+   * ayant au moins une facture normalisée uploadée.
+   */
+  getMyFactures = async (): Promise<ApiResponse<FactureEntry[]>> => {
+    return HttpService.get<ApiResponse<FactureEntry[]>>('rh/professor/my-factures')
+  }
+
+  /**
+   * Upload des factures normalisées (et optionnellement le RIB) pour un contrat.
+   * Les fichiers sont stockés dans la colonne `factures_normalisees` (JSON).
+   */
+  uploadFacturesNormalisees = async (
+    id: number | string,
+    formData: FormData,
+  ): Promise<{ message: string; data: string[] }> => {
+    return HttpService.post<{ message: string; data: string[] }>(
+      `rh/contrats/${id}/factures-normalisees`,
+      formData,
+    )
+  }
+
   // ─── Academic Years ──────────────────────────────────────────────────────────
 
   getAcademicYears = async (): Promise<any[]> => {
@@ -320,15 +342,9 @@ class RhService {
   getProfessorProgram = async (professorId: number | string, programId: number | string): Promise<ProfessorProgram> => {
     const response = await HttpService.get<ApiResponse<ProfessorProgram>>(
       `rh/professors/${professorId}/programs/${programId}`
-    );
-    return response.data!;
+    )
+    return response.data!
   }
 }
 
 export default new RhService()
-
-
-
-
-
-

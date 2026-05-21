@@ -54,6 +54,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   completed:  { label: 'Terminé',    color: '#374151', bg: '#f9fafb', dot: '#9ca3af' },
   cancelled:  { label: 'Rejeté',     color: '#7f1d1d', bg: '#fef2f2', dot: '#ef4444' },
   transfered: { label: 'Transféré',  color: '#3b0764', bg: '#faf5ff', dot: '#a855f7' },
+  resiliated: { label: 'Résilié',     color: 'red'    },
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────

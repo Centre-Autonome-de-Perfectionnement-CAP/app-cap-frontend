@@ -35,10 +35,12 @@ import {
   cilImage,
   cilReload,
   cilPrint,
+  cilBook,
 } from '@coreui/icons';
 import HttpService from '@/services/http.service';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Contrat } from '@/types/rh.types';
+import CourseSupportModal from './CourseSupportModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,11 +50,11 @@ type SignatureMode = 'drawn' | 'uploaded' | 'manual';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   pending:    { label: 'En attente', color: 'warning' },
-  transfered: { label: 'En attente',  color: 'info'    },
-  signed:     { label: 'Signé',      color: 'success' },
-  ongoing:    { label: 'En cours',   color: 'primary' },
-  completed:  { label: 'Complété',   color: 'dark'    },
-  cancelled:  { label: 'Rejeté',     color: 'danger'  },
+  transfered: { label: 'En attente', color: 'info'    },
+  signed:     { label: 'Signé',     color: 'success' },
+  ongoing:    { label: 'En cours',  color: 'primary' },
+  completed:  { label: 'Complété',  color: 'dark'    },
+  cancelled:  { label: 'Rejeté',    color: 'danger'  },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -171,7 +173,7 @@ const SignatureCanvas = ({ onSignatureChange }: SignatureCanvasProps) => {
   );
 };
 
-// ─── Composant SignatureUpload ──────────────────────────────────────────────────
+// ─── Composant SignatureUpload ─────────────────────────────────────────────────
 
 interface SignatureUploadProps {
   onFileChange: (file: File | null) => void;
@@ -179,9 +181,9 @@ interface SignatureUploadProps {
 }
 
 const SignatureUpload = ({ onFileChange, previewUrl }: SignatureUploadProps) => {
-  const inputRef      = useRef<HTMLInputElement>(null);
-  const [error, setError]           = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const inputRef                        = useRef<HTMLInputElement>(null);
+  const [error, setError]               = useState<string | null>(null);
+  const [isDragging, setIsDragging]     = useState(false);
 
   const handleFile = (file: File | null) => {
     setError(null);
@@ -287,7 +289,6 @@ const SignatureModal = ({ visible, contratNumber, onClose, onConfirm, loading }:
       if (!uploadedFile) { setLocalError('Veuillez sélectionner une image de signature.'); return; }
       await onConfirm(null, uploadedFile, 'uploaded');
     } else {
-      // mode 'manual' : signer après impression — on valide sans signature numérique
       await onConfirm(null, null, 'manual');
     }
   };
@@ -295,7 +296,7 @@ const SignatureModal = ({ visible, contratNumber, onClose, onConfirm, loading }:
   const hasSignature =
     activeTab === 'drawn'    ? !!drawnData :
     activeTab === 'uploaded' ? !!uploadedFile :
-    true; // manual : toujours prêt
+    true;
 
   return (
     <CModal visible={visible} onClose={handleClose} alignment="center" size="lg" backdrop="static">
@@ -315,7 +316,6 @@ const SignatureModal = ({ visible, contratNumber, onClose, onConfirm, loading }:
           </p>
         </div>
 
-        {/* 3 onglets */}
         <CNav variant="tabs" className="mb-3">
           <CNavItem>
             <CNavLink active={activeTab === 'drawn'} onClick={() => { setActiveTab('drawn'); setLocalError(null); }}
@@ -338,7 +338,6 @@ const SignatureModal = ({ visible, contratNumber, onClose, onConfirm, loading }:
         </CNav>
 
         <CTabContent>
-          {/* Onglet : Dessin */}
           <CTabPane visible={activeTab === 'drawn'}>
             <SignatureCanvas onSignatureChange={setDrawnData} />
             {drawnData && (
@@ -355,12 +354,10 @@ const SignatureModal = ({ visible, contratNumber, onClose, onConfirm, loading }:
             )}
           </CTabPane>
 
-          {/* Onglet : Upload */}
           <CTabPane visible={activeTab === 'uploaded'}>
             <SignatureUpload onFileChange={setUploadedFile} previewUrl={previewUrl} />
           </CTabPane>
 
-          {/* Onglet : Signer manuellement après impression */}
           <CTabPane visible={activeTab === 'manual'}>
             <div style={{ textAlign: 'center', padding: '24px 16px' }}>
               <div style={{ fontSize: 56, marginBottom: 12 }}>🖨️</div>
@@ -425,6 +422,11 @@ const ProfessorContratDetail = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectionError, setRejectionError]   = useState<string | null>(null);
 
+  // ── Dialog post-validation : "Voulez-vous ajouter les supports ?" ──────────
+  const [showCourseSupportPrompt, setShowCourseSupportPrompt] = useState(false);
+  // ── Modal support de cours (ouvert depuis le dialog "Continuer") ────────────
+  const [showCourseSupportModal, setShowCourseSupportModal]   = useState(false);
+
   // ─── Chargement du contrat ─────────────────────────────────────────────────
 
   const fetchContrat = useCallback(async () => {
@@ -473,7 +475,6 @@ const ProfessorContratDetail = () => {
       } else if (mode === 'uploaded' && signatureFile) {
         formData.append('signature_file', signatureFile);
       }
-      // Pour 'manual' : on envoie uniquement signature_type=manual
 
       await HttpService.post(
         `rh/contrats/by-token/${uuid}/validate`,
@@ -488,13 +489,45 @@ const ProfessorContratDetail = () => {
 
       setSuccessMessage(modeMsg);
       setShowSignModal(false);
+
+      // ── Recharger le contrat puis afficher le dialog supports ───────────
       await fetchContrat();
+      setShowCourseSupportPrompt(true);
+
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Une erreur est survenue lors de la validation.';
       setError(msg);
     } finally {
       setActionLoading(false);
     }
+  };
+
+  // ─── Dialog post-validation : actions ─────────────────────────────────────
+
+  /**
+   * "Continuer" → fermer le dialog et ouvrir le modal de supports de cours
+   */
+  const handleCourseSupportContinue = () => {
+    setShowCourseSupportPrompt(false);
+    setShowCourseSupportModal(true);
+  };
+
+  /**
+   * "Plus tard" → fermer le dialog et naviguer vers la liste avec un state
+   * portant le numéro du contrat. La liste affichera l'alerte "supports manquants".
+   */
+  const handleCourseSupportLater = () => {
+    setShowCourseSupportPrompt(false);
+    navigate('/notes/professor/contrats', {
+      state: {
+        pendingSupportContrat: {
+          id:              contrat?.id,
+          uuid:            contrat?.uuid,
+          contrat_number:  contrat?.contrat_number,
+          course_element_professors: contrat?.course_element_professors ?? [],
+        },
+      },
+    });
   };
 
   // ─── Action : Rejeter ─────────────────────────────────────────────────────
@@ -523,12 +556,11 @@ const ProfessorContratDetail = () => {
     }
   };
 
-  // ─── Action : Télécharger le PDF stocké ───────────────────────────────────
+  // ─── Action : Télécharger le PDF ──────────────────────────────────────────
 
   const handleDownload = async () => {
     if (!uuid || !contrat) return;
 
-    // Si un PDF est directement stocké, l'ouvrir
     if ((contrat as any).pdf_url) {
       window.open((contrat as any).pdf_url, '_blank');
       return;
@@ -648,33 +680,48 @@ const ProfessorContratDetail = () => {
               </div>
             </div>
 
-            {/* Bouton Télécharger */}
-            <div className="d-flex flex-column align-items-end">
-              <CButton
-                color="success"
-                variant={canDownload ? undefined : 'outline'}
-                onClick={handleDownload}
-                disabled={!canDownload || downloadLoading}
-                title={
-                  isRejected
-                    ? 'Téléchargement impossible : contrat rejeté'
-                    : !contrat.is_validated && !hasPdf
-                    ? 'Vous devez d\'abord valider le contrat'
-                    : hasPdf
-                    ? 'Ouvrir le PDF officiel du contrat'
-                    : 'Télécharger le PDF du contrat signé'
-                }
-              >
-                {downloadLoading
-                  ? <CSpinner size="sm" className="me-2" />
-                  : <CIcon icon={cilCloudDownload} className="me-2" />}
-                {hasPdf ? 'Voir le PDF officiel' : 'Télécharger le PDF'}
-              </CButton>
-              {!canDownload && !isRejected && (
-                <small className="text-muted mt-1" style={{ fontSize: '0.75rem' }}>
-                  Disponible après votre validation
-                </small>
+            {/* Boutons header */}
+            <div className="d-flex flex-wrap gap-2 align-items-center">
+              {/* Bouton Supports de cours (visible après validation) */}
+              {contrat.is_validated && (
+                <CButton
+                  color="info"
+                  variant="outline"
+                  onClick={() => setShowCourseSupportModal(true)}
+                >
+                  <CIcon icon={cilBook} className="me-2" />
+                  Supports de cours
+                </CButton>
               )}
+
+              {/* Bouton Télécharger */}
+              <div className="d-flex flex-column align-items-end">
+                <CButton
+                  color="success"
+                  variant={canDownload ? undefined : 'outline'}
+                  onClick={handleDownload}
+                  disabled={!canDownload || downloadLoading}
+                  title={
+                    isRejected
+                      ? 'Téléchargement impossible : contrat rejeté'
+                      : !contrat.is_validated && !hasPdf
+                      ? 'Vous devez d\'abord valider le contrat'
+                      : hasPdf
+                      ? 'Ouvrir le PDF officiel du contrat'
+                      : 'Télécharger le PDF du contrat signé'
+                  }
+                >
+                  {downloadLoading
+                    ? <CSpinner size="sm" className="me-2" />
+                    : <CIcon icon={cilCloudDownload} className="me-2" />}
+                  {hasPdf ? 'Voir le PDF officiel' : 'Télécharger le PDF'}
+                </CButton>
+                {!canDownload && !isRejected && (
+                  <small className="text-muted mt-1" style={{ fontSize: '0.75rem' }}>
+                    Disponible après votre validation
+                  </small>
+                )}
+              </div>
             </div>
           </div>
         </CCardHeader>
@@ -766,7 +813,7 @@ const ProfessorContratDetail = () => {
             </CCard>
           )}
 
-          {/* Validation manuelle (pas de signature numérique) */}
+          {/* Validation manuelle */}
           {contrat.is_validated && !(contrat as any).professor_signature_url && (
             <CCard className="mb-3 border-warning">
               <CCardHeader className="bg-warning bg-opacity-10 text-warning fw-semibold">
@@ -834,7 +881,7 @@ const ProfessorContratDetail = () => {
             </CCard>
           )}
 
-          {/* ── Boutons d'action ── */}
+          {/* Boutons d'action */}
           {canAct && !isRejected && (
             <CCard className="mb-3 border-0" style={{ background: '#f5f8ff' }}>
               <CCardBody>
@@ -856,7 +903,7 @@ const ProfessorContratDetail = () => {
         </CCardBody>
       </CCard>
 
-      {/* ── Modal : Signature/Validation ── */}
+      {/* ── Modal : Signature/Validation ─────────────────────────────────────── */}
       <SignatureModal
         visible={showSignModal}
         contratNumber={contrat.contrat_number}
@@ -865,7 +912,7 @@ const ProfessorContratDetail = () => {
         loading={actionLoading}
       />
 
-      {/* ── Modal : Rejeter ── */}
+      {/* ── Modal : Rejeter ──────────────────────────────────────────────────── */}
       <CModal
         visible={showRejectModal}
         onClose={() => { setShowRejectModal(false); setRejectionError(null); }}
@@ -902,6 +949,90 @@ const ProfessorContratDetail = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+
+      {/* ── Dialog post-validation : supports de cours ───────────────────────── */}
+      <CModal
+        visible={showCourseSupportPrompt}
+        onClose={handleCourseSupportLater}
+        alignment="center"
+        backdrop="static"
+        size="md"
+      >
+        <CModalHeader className="border-bottom-0 pb-1">
+          <CModalTitle style={{ color: '#1a3a8f' }}>
+            <CIcon icon={cilBook} className="me-2" />
+            Supports de cours
+          </CModalTitle>
+        </CModalHeader>
+
+        <CModalBody className="pt-2">
+          {/* Illustration */}
+          <div className="text-center mb-3">
+            <div style={{ fontSize: 52 }}></div>
+          </div>
+
+          <p className="mb-2" style={{ fontSize: '0.97rem' }}>
+            Souhaitez-vous ajouter les supports de cours des programmes issus du contrat{' '}
+            <strong>N° {contrat.contrat_number}</strong> que vous venez de valider ?
+          </p>
+
+          {/* Liste des programmes concernés */}
+          {(contrat.course_element_professors?.length ?? 0) > 0 && (
+            <div
+              className="rounded p-2 mb-2"
+              style={{ background: '#f0f4ff', border: '1px solid #c7d4f0', fontSize: '0.85rem' }}
+            >
+              <p className="mb-1 fw-semibold text-muted" style={{ fontSize: '0.8rem' }}>
+                Programmes concernés :
+              </p>
+              <ul className="mb-0" style={{ paddingLeft: 18 }}>
+                {contrat.course_element_professors!.map((p, i) => (
+                  <li key={i}>
+                    <span className="fw-medium">{p.course_element?.name ?? p.label}</span>
+                    {p.class_group?.name ? (
+                      <span className="text-muted"> — {p.class_group.name}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <p className="text-muted mb-0" style={{ fontSize: '0.83rem' }}>
+            Vous pouvez le faire maintenant ou y revenir plus tard depuis la liste de vos contrats.
+          </p>
+        </CModalBody>
+
+        <CModalFooter className="border-top-0 pt-1 d-flex justify-content-between">
+          {/* "Plus tard" à gauche */}
+          <CButton
+            color="secondary"
+            variant="outline"
+            onClick={handleCourseSupportLater}
+          >
+            Plus tard
+          </CButton>
+
+          {/* "Continuer" à droite */}
+          <CButton
+            color="primary"
+            onClick={handleCourseSupportContinue}
+            style={{ minWidth: 220 }}
+          >
+            <CIcon icon={cilBook} className="me-2" />
+            Continuer — Ajouter les supports
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* ── Modal supports de cours (ouvert via "Continuer" ou bouton header) ── */}
+      {contrat && (
+        <CourseSupportModal
+          visible={showCourseSupportModal}
+          onClose={() => setShowCourseSupportModal(false)}
+          contrat={contrat}
+        />
+      )}
     </>
   );
 };

@@ -1,5 +1,18 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+/**
+ * ProfessorContratsList.tsx
+ *
+ * Liste des contrats du professeur connecté.
+ *
+ * Nouvelles fonctionnalités :
+ * - Bouton "Supports" dans la colonne Action pour ouvrir CourseSupportModal
+ * - Après la validation d'un contrat : dialog demandant si le professeur souhaite
+ *   ajouter les supports de cours immédiatement ou plus tard.
+ * - Si le professeur répond "plus tard", une alerte rappelle qu'il n'a pas encore
+ *   ajouté les supports pour ce contrat.
+ */
+
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   CCard,
   CCardBody,
@@ -11,8 +24,13 @@ import {
   CInputGroup,
   CInputGroupText,
   CFormInput,
-} from '@coreui/react';
-import CIcon from '@coreui/icons-react';
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
 import {
   cilFile,
   cilSearch,
@@ -20,107 +38,203 @@ import {
   cilCheckCircle,
   cilXCircle,
   cilClock,
-} from '@coreui/icons';
-import HttpService from '@/services/http.service';
-import type { Contrat } from '@/types/rh.types';
+  cilBook,
+  cilInfo,
+} from '@coreui/icons'
+import HttpService from '@/services/http.service'
+import type { Contrat } from '@/types/rh.types'
+import CourseSupportModal from './CourseSupportModal'
+
+// ─── Config statuts ──────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   pending:    { label: 'En attente',  color: 'warning', icon: cilClock        },
-  transfered: { label: 'En attente',   color: 'info',    icon: cilFile         },
-  signed:     { label: 'Signé',       color: 'success', icon: cilCheckCircle  },
-  ongoing:    { label: 'En cours',    color: 'primary', icon: cilFile         },
-  completed:  { label: 'Complété',    color: 'dark',    icon: cilCheckCircle  },
-  cancelled:  { label: 'Rejeté',      color: 'danger',  icon: cilXCircle      },
-};
+  transfered: { label: 'Transféré',  color: 'info',    icon: cilFile         },
+  signed:     { label: 'Signé',      color: 'success', icon: cilCheckCircle  },
+  ongoing:    { label: 'En cours',   color: 'primary', icon: cilFile         },
+  completed:  { label: 'Complété',   color: 'dark',    icon: cilCheckCircle  },
+  cancelled:  { label: 'Rejeté',     color: 'danger',  icon: cilXCircle      },
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const formatDate = (date?: string) =>
   date
     ? new Date(date).toLocaleDateString('fr-FR', {
         day: '2-digit', month: 'short', year: 'numeric',
       })
-    : '—';
+    : '—'
 
 const formatAmount = (amount: number) =>
-  new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+  new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA'
+
+// ─── Composant principal ──────────────────────────────────────────────────────
 
 const ProfessorContratsList = () => {
-  const navigate                 = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate                              = useNavigate()
+  const [searchParams, setSearchParams]       = useSearchParams()
 
-  const [contrats, setContrats] = useState<Contrat[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState<string | null>(null);
-  const [search, setSearch]     = useState('');
+  const [contrats, setContrats]               = useState<Contrat[]>([])
+  const [loading, setLoading]                 = useState(true)
+  const [error, setError]                     = useState<string | null>(null)
+  const [search, setSearch]                   = useState('')
 
-  // Lire le filtre de statut depuis l'URL (?status=pending ou ?status=signed)
-  const statusFilter = searchParams.get('status') ?? 'all';
+  // ── Modal support de cours ──────────────────────────────────────────────
+  const [supportModalVisible, setSupportModalVisible] = useState(false)
+  const [selectedContrat, setSelectedContrat]         = useState<Contrat | null>(null)
+
+  // ── Dialog post-validation : "Voulez-vous ajouter les supports ?" ──────
+  const [postValidationModal, setPostValidationModal]       = useState(false)
+  const [postValidationContrat, setPostValidationContrat]   = useState<Contrat | null>(null)
+
+  // ── Contrats dont le professeur a différé l'ajout des supports ─────────
+  const [pendingSupportContrats, setPendingSupportContrats] = useState<Contrat[]>([])
+
+  // Filtre de statut via URL (?status=pending | signed | all)
+  const statusFilter = searchParams.get('status') ?? 'all'
+
+  // ─── Chargement des contrats ──────────────────────────────────────────────
+  const fetchContrats = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await HttpService.get<{ success: boolean; data: Contrat[] }>(
+        'rh/professor/my-contrats',
+      )
+      setContrats(response.data ?? [])
+    } catch (err: any) {
+      setError(err.message || 'Impossible de charger vos contrats. Veuillez réessayer.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchContrats = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await HttpService.get<{ success: boolean; data: Contrat[] }>(
-          'rh/professor/my-contrats',
-        );
-        setContrats(response.data ?? []);
-      } catch (err: any) {
-        setError(err.message || 'Impossible de charger vos contrats. Veuillez réessayer.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchContrats();
-  }, []);
+    fetchContrats()
 
-  // Filtrage : par statut (query param) puis par recherche texte
+    // Lire les contrats "en attente de supports" depuis le sessionStorage
+    try {
+      const stored = sessionStorage.getItem('pendingSupportContrats')
+      if (stored) setPendingSupportContrats(JSON.parse(stored))
+    } catch { /* ignore */ }
+  }, [])
+
+  // ─── Filtrage ─────────────────────────────────────────────────────────────
   const filtered = contrats.filter((c) => {
-    // Filtre par statut URL
     if (statusFilter === 'pending') {
-      if (!['pending', 'transfered'].includes(c.status)) return false;
+      if (!['pending', 'transfered'].includes(c.status)) return false
     } else if (statusFilter === 'signed') {
-      if (!['signed', 'ongoing', 'completed'].includes(c.status)) return false;
+      if (!['signed', 'ongoing', 'completed'].includes(c.status)) return false
     }
-
-    // Filtre par recherche texte
     if (search.trim()) {
-      const q = search.toLowerCase();
+      const q = search.toLowerCase()
       return (
         c.contrat_number?.toLowerCase().includes(q) ||
         c.academicYear?.academic_year?.toLowerCase().includes(q) ||
         c.cycle?.name?.toLowerCase().includes(q) ||
         (c.status && STATUS_CONFIG[c.status]?.label.toLowerCase().includes(q))
-      );
+      )
     }
-
-    return true;
-  });
+    return true
+  })
 
   const pendingCount = contrats.filter((c) =>
     ['pending', 'transfered'].includes(c.status),
-  ).length;
+  ).length
 
-  const goToDashboard = () => navigate('/notes/professor/dashboard');
-  const goToContrat   = (uuid?: string) => uuid && navigate(`/notes/professor/contrats/${uuid}`);
+  // ─── Navigation ───────────────────────────────────────────────────────────
+  const goToDashboard = () => navigate('/notes/professor/dashboard')
+  const goToContrat   = (uuid?: string) => uuid && navigate(`/notes/professor/contrats/${uuid}`)
 
   const setStatusFilter = (status: string) => {
     if (status === 'all') {
-      searchParams.delete('status');
+      searchParams.delete('status')
     } else {
-      searchParams.set('status', status);
+      searchParams.set('status', status)
     }
-    setSearchParams(searchParams, { replace: true });
-  };
+    setSearchParams(searchParams, { replace: true })
+  }
 
   const filterLabel =
     statusFilter === 'pending'
       ? 'Contrats en attente'
       : statusFilter === 'signed'
       ? 'Contrats signés / en cours'
-      : 'Tous les contrats';
+      : 'Tous les contrats'
 
+  // ─── Ouverture du modal support de cours ─────────────────────────────────
+  const openSupportModal = (contrat: Contrat, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedContrat(contrat)
+    setSupportModalVisible(true)
+  }
+
+  const closeSupportModal = () => {
+    setSupportModalVisible(false)
+    setSelectedContrat(null)
+  }
+
+  // ─── Appelé depuis ContratDetail (page de signature) après validation ────
+  // La page parente peut déclencher ce dialog via un événement custom ou via
+  // un query param ?just_signed=<uuid>. On le détecte ici au montage.
+  useEffect(() => {
+    const justSigned = searchParams.get('just_signed')
+    if (justSigned && contrats.length > 0) {
+      const contrat = contrats.find((c) => c.uuid === justSigned)
+      if (contrat) {
+        // Retirer le param de l'URL
+        searchParams.delete('just_signed')
+        setSearchParams(searchParams, { replace: true })
+        // Afficher le dialog post-validation
+        setPostValidationContrat(contrat)
+        setPostValidationModal(true)
+      }
+    }
+  }, [contrats])
+
+  // ─── Actions du dialog post-validation ───────────────────────────────────
+
+  /** L'utilisateur veut ajouter les supports maintenant */
+  const handlePostValidationContinue = () => {
+    setPostValidationModal(false)
+    if (postValidationContrat) {
+      // Retirer de la liste "en attente de supports" si présent
+      removePendingSupport(postValidationContrat)
+      // Ouvrir le modal supports
+      setSelectedContrat(postValidationContrat)
+      setSupportModalVisible(true)
+    }
+  }
+
+  /** L'utilisateur décide d'ajouter les supports plus tard */
+  const handlePostValidationLater = () => {
+    setPostValidationModal(false)
+    if (postValidationContrat) {
+      // Mémoriser que ce contrat est en attente d'ajout de supports
+      const updated = [
+        ...pendingSupportContrats.filter((c) => c.id !== postValidationContrat.id),
+        postValidationContrat,
+      ]
+      setPendingSupportContrats(updated)
+      try {
+        sessionStorage.setItem('pendingSupportContrats', JSON.stringify(updated))
+      } catch { /* ignore */ }
+    }
+    setPostValidationContrat(null)
+  }
+
+  const removePendingSupport = (contrat: Contrat) => {
+    const updated = pendingSupportContrats.filter((c) => c.id !== contrat.id)
+    setPendingSupportContrats(updated)
+    try {
+      sessionStorage.setItem('pendingSupportContrats', JSON.stringify(updated))
+    } catch { /* ignore */ }
+  }
+
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <>
+      {/* ── En-tête ─────────────────────────────────────────────────────── */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1>Mes contrats</h1>
@@ -133,15 +247,52 @@ const ProfessorContratsList = () => {
         </CButton>
       </div>
 
+      {/* ── Alerte contrats en attente de signature ──────────────────────── */}
       {pendingCount > 0 && (
-        <CAlert color="warning" className="mb-4">
+        <CAlert color="warning" className="mb-3">
           <CIcon icon={cilWarning} className="me-2" />
           Vous avez {pendingCount} contrat{pendingCount > 1 ? 's' : ''} en attente de votre
           signature.
         </CAlert>
       )}
 
-      {/* Filtres de statut rapides */}
+      {/* ── Alertes "supports non ajoutés" (différés) ───────────────────── */}
+      {pendingSupportContrats.map((c) => (
+        <CAlert
+          key={c.id}
+          color="info"
+          className="mb-2 d-flex align-items-center justify-content-between"
+        >
+          <div>
+            <CIcon icon={cilInfo} className="me-2" />
+            Vous n'avez pas encore ajouté les supports de cours du contrat{' '}
+            <strong>N° {c.contrat_number}</strong>.
+          </div>
+          <div className="d-flex gap-2">
+            <CButton
+              size="sm"
+              color="primary"
+              onClick={() => {
+                removePendingSupport(c)
+                setSelectedContrat(c)
+                setSupportModalVisible(true)
+              }}
+            >
+              Ajouter maintenant
+            </CButton>
+            <CButton
+              size="sm"
+              color="light"
+              onClick={() => removePendingSupport(c)}
+              title="Ignorer ce rappel"
+            >
+              ✕
+            </CButton>
+          </div>
+        </CAlert>
+      ))}
+
+      {/* ── Filtres rapides ──────────────────────────────────────────────── */}
       <div className="mb-3 d-flex gap-2 flex-wrap">
         <CButton
           color={statusFilter === 'all' ? 'primary' : 'outline-primary'}
@@ -171,6 +322,7 @@ const ProfessorContratsList = () => {
         </CButton>
       </div>
 
+      {/* ── Tableau des contrats ─────────────────────────────────────────── */}
       <CCard>
         <CCardHeader>
           <div className="d-flex justify-content-between align-items-center">
@@ -192,7 +344,7 @@ const ProfessorContratsList = () => {
           {loading ? (
             <div className="text-center py-5">
               <CSpinner />
-              <p className="mt-2">Chargement...</p>
+              <p className="mt-2">Chargement…</p>
             </div>
           ) : error ? (
             <CAlert color="danger">{error}</CAlert>
@@ -201,7 +353,7 @@ const ProfessorContratsList = () => {
               {search
                 ? 'Aucun contrat ne correspond à votre recherche.'
                 : statusFilter !== 'all'
-                ? `Aucun contrat dans cette catégorie.`
+                ? 'Aucun contrat dans cette catégorie.'
                 : "Vous n'avez pas encore de contrat."}
             </CAlert>
           ) : (
@@ -215,7 +367,7 @@ const ProfessorContratsList = () => {
                     <th>Montant</th>
                     <th>Date de début</th>
                     <th>Statut</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -224,8 +376,11 @@ const ProfessorContratsList = () => {
                       label: contrat.status,
                       color: 'secondary',
                       icon: cilFile,
-                    };
-                    const isPending = ['pending', 'transfered'].includes(contrat.status);
+                    }
+                    const isPending = ['pending', 'transfered'].includes(contrat.status)
+                    // Le bouton "Supports" n'est visible que si le contrat a des programmes
+                    const hasPrograms =
+                      (contrat.course_element_professors?.length ?? 0) > 0
 
                     return (
                       <tr
@@ -240,28 +395,45 @@ const ProfessorContratsList = () => {
                               Signature requise
                             </CBadge>
                           )}
+                          {pendingSupportContrats.some((c) => c.id === contrat.id) && (
+                            <CBadge color="info" className="ms-1" title="Supports non ajoutés">
+                              Supports manquants
+                            </CBadge>
+                          )}
                         </td>
-                        <td>{contrat.academic_year?.academic_year ?? '—'}</td>
+                        <td>{contrat.academic_year?.academic_year ?? contrat.academicYear?.academic_year ?? '—'}</td>
                         <td>{contrat.cycle?.name ?? '—'}</td>
                         <td>{formatAmount(contrat.amount)}</td>
                         <td>{formatDate(contrat.start_date)}</td>
                         <td>
                           <CBadge color={statusCfg.color}>{statusCfg.label}</CBadge>
                         </td>
-                        <td>
-                          <CButton
-                            size="sm"
-                            color={isPending ? 'warning' : 'primary'}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              goToContrat(contrat.uuid);
-                            }}
-                          >
-                            {isPending ? 'Consulter' : 'Voir'}
-                          </CButton>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <div className="d-flex gap-1 flex-wrap">
+                            {/* Bouton Consulter / Voir le contrat */}
+                            <CButton
+                              size="sm"
+                              color={isPending ? 'warning' : 'primary'}
+                              onClick={() => goToContrat(contrat.uuid)}
+                            >
+                              {isPending ? 'Consulter' : 'Voir'}
+                            </CButton>
+
+                            {/* ── Bouton Supports de cours ─────────────── */}
+                            <CButton
+                              size="sm"
+                              color="info"
+                              variant="outline"
+                              onClick={(e) => openSupportModal(contrat, e)}
+                              title="Gérer les supports de cours"
+                            >
+                              <CIcon icon={cilBook} className="me-1" />
+                              Supports
+                            </CButton>
+                          </div>
                         </td>
                       </tr>
-                    );
+                    )
                   })}
                 </tbody>
               </table>
@@ -269,8 +441,52 @@ const ProfessorContratsList = () => {
           )}
         </CCardBody>
       </CCard>
-    </>
-  );
-};
 
-export default ProfessorContratsList;
+      {/* ── Modal supports de cours ──────────────────────────────────────── */}
+      {selectedContrat && (
+        <CourseSupportModal
+          visible={supportModalVisible}
+          onClose={closeSupportModal}
+          contrat={selectedContrat}
+        />
+      )}
+
+      {/* ── Dialog post-validation ───────────────────────────────────────── */}
+      <CModal
+        visible={postValidationModal}
+        onClose={handlePostValidationLater}
+        backdrop="static"
+        alignment="center"
+      >
+        <CModalHeader>
+          <CModalTitle>
+            <CIcon icon={cilBook} className="me-2 text-primary" />
+            Supports de cours
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <p>
+            Souhaitez-vous ajouter les supports de cours des programmes issus du contrat{' '}
+            <strong>N° {postValidationContrat?.contrat_number}</strong> que vous venez de
+            valider ?
+          </p>
+          <p className="text-muted small mb-0">
+            Vous pouvez le faire maintenant ou revenir le faire plus tard depuis la liste de
+            vos contrats.
+          </p>
+        </CModalBody>
+        <CModalFooter className="d-flex justify-content-end gap-2">
+          <CButton color="secondary" variant="outline" onClick={handlePostValidationLater}>
+            Plus tard
+          </CButton>
+          <CButton color="primary" onClick={handlePostValidationContinue}>
+            <CIcon icon={cilBook} className="me-2" />
+            Continuer — Ajouter les supports
+          </CButton>
+        </CModalFooter>
+      </CModal>
+    </>
+  )
+}
+
+export default ProfessorContratsList

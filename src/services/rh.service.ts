@@ -316,6 +316,13 @@ class RhService {
     const response = await HttpService.get<ApiResponse<any[]>>('rh/cycles')
     return response.data || []
   }
+
+  getProfessorProgram = async (professorId: number | string, programId: number | string): Promise<ProfessorProgram> => {
+    const response = await HttpService.get<ApiResponse<ProfessorProgram>>(
+      `rh/professors/${professorId}/programs/${programId}`
+    );
+    return response.data!;
+  }
 }
 
 export default new RhService()

@@ -86,7 +86,7 @@ export type ContratStatus =
   | 'completed'
   | 'cancelled'
   | 'transfered'
-  | 'resiliated'
+  | 'resiliated'   // Lien expiré — 72 h dépassées sans signature du professeur
 
 /**
  * Un programme = assignation Professeur + Matière (ECUE) + Classe
@@ -130,7 +130,7 @@ export interface Contrat {
   amount: number
   status: ContratStatus
   notes?: string
-transferred_at?: string
+
   /** Validé par le professeur via le lien email */
   is_validated?: boolean
   validation_date?: string
@@ -141,6 +141,12 @@ transferred_at?: string
   /** Autorisé par l'admin après validation du professeur */
   is_authorized?: boolean
   authorization_date?: string
+
+  /**
+   * Date/heure d'envoi de l'e-mail de transfert.
+   * Référence pour l'expiration du lien après 72 heures.
+   */
+  transferred_at?: string
 
   /** Signature électronique */
   professor_signature_path?: string
@@ -223,3 +229,4 @@ export interface Cycle {
   name: string
   abbreviation?: string
 }
+

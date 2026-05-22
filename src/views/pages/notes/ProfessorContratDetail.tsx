@@ -422,10 +422,9 @@ const ProfessorContratDetail = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectionError, setRejectionError]   = useState<string | null>(null);
 
-  // ── Dialog post-validation : "Voulez-vous ajouter les supports ?" ──────────
-  const [showCourseSupportPrompt, setShowCourseSupportPrompt] = useState(false);
-  // ── Modal support de cours (ouvert depuis le dialog "Continuer") ────────────
-  const [showCourseSupportModal, setShowCourseSupportModal]   = useState(false);
+  // ── Modal supports : 'closed' | 'prompt' (choix) | 'form' (ajout)
+  // Un seul CModal, deux étapes — évite les conflits de transition CoreUI
+  const [courseSupportStep, setCourseSupportStep] = useState<'closed' | 'prompt' | 'form'>('closed');
 
   // ─── Chargement du contrat ─────────────────────────────────────────────────
 
@@ -492,7 +491,7 @@ const ProfessorContratDetail = () => {
 
       // ── Recharger le contrat puis afficher le dialog supports ───────────
       await fetchContrat();
-      setShowCourseSupportPrompt(true);
+      setCourseSupportStep('prompt');
 
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Une erreur est survenue lors de la validation.';
@@ -508,8 +507,8 @@ const ProfessorContratDetail = () => {
    * "Continuer" → fermer le dialog et ouvrir le modal de supports de cours
    */
   const handleCourseSupportContinue = () => {
-    setShowCourseSupportPrompt(false);
-    setShowCourseSupportModal(true);
+    // Basculer directement vers le formulaire dans le même CModal (pas de fermeture/réouverture)
+    setCourseSupportStep('form');
   };
 
   /**
@@ -517,7 +516,7 @@ const ProfessorContratDetail = () => {
    * portant le numéro du contrat. La liste affichera l'alerte "supports manquants".
    */
   const handleCourseSupportLater = () => {
-    setShowCourseSupportPrompt(false);
+    setCourseSupportStep('closed');
     navigate('/notes/professor/contrats', {
       state: {
         pendingSupportContrat: {
@@ -687,7 +686,7 @@ const ProfessorContratDetail = () => {
                 <CButton
                   color="info"
                   variant="outline"
-                  onClick={() => setShowCourseSupportModal(true)}
+                  onClick={() => setCourseSupportStep('form')}
                 >
                   <CIcon icon={cilBook} className="me-2" />
                   Supports de cours
@@ -950,89 +949,108 @@ const ProfessorContratDetail = () => {
         </CModalFooter>
       </CModal>
 
-      {/* ── Dialog post-validation : supports de cours ───────────────────────── */}
+      {/* ───────────────────────────────────────────────────────────────────────
+           Modal supports de cours — deux étapes dans UN SEUL CModal
+           Étape 'prompt' : demande si le prof veut ajouter maintenant ou plus tard
+           Étape 'form'   : formulaire d'ajout (CourseSupportModal inline)
+           → Aucune fermeture/réouverture : évite les conflits de transition CoreUI
+      ─────────────────────────────────────────────────────────────────────────── */}
       <CModal
-        visible={showCourseSupportPrompt}
+        visible={courseSupportStep !== 'closed'}
         onClose={handleCourseSupportLater}
         alignment="center"
         backdrop="static"
-        size="md"
+        size={courseSupportStep === 'form' ? 'lg' : 'md'}
+        scrollable={courseSupportStep === 'form'}
       >
-        <CModalHeader className="border-bottom-0 pb-1">
-          <CModalTitle style={{ color: '#1a3a8f' }}>
-            <CIcon icon={cilBook} className="me-2" />
-            Supports de cours
-          </CModalTitle>
-        </CModalHeader>
+        {/* ── Étape 1 : Prompt ─────────────────────────────────────────────── */}
+        {courseSupportStep === 'prompt' && (
+          <>
+            <CModalHeader className="border-bottom-0 pb-1">
+              <CModalTitle style={{ color: '#1a3a8f' }}>
+                <CIcon icon={cilBook} className="me-2" />
+                Supports de cours
+              </CModalTitle>
+            </CModalHeader>
 
+<<<<<<< HEAD
         <CModalBody className="pt-2">
           {/* Illustration */}
           <div className="text-center mb-3">
             <div style={{ fontSize: 52 }}></div>
           </div>
+=======
+            <CModalBody className="pt-2">
+              <div className="text-center mb-3">
+                <div style={{ fontSize: 52 }}>📚</div>
+              </div>
+>>>>>>> 8d598d09dc3f4eba53455e1052403d21209e7df8
 
-          <p className="mb-2" style={{ fontSize: '0.97rem' }}>
-            Souhaitez-vous ajouter les supports de cours des programmes issus du contrat{' '}
-            <strong>N° {contrat.contrat_number}</strong> que vous venez de valider ?
-          </p>
-
-          {/* Liste des programmes concernés */}
-          {(contrat.course_element_professors?.length ?? 0) > 0 && (
-            <div
-              className="rounded p-2 mb-2"
-              style={{ background: '#f0f4ff', border: '1px solid #c7d4f0', fontSize: '0.85rem' }}
-            >
-              <p className="mb-1 fw-semibold text-muted" style={{ fontSize: '0.8rem' }}>
-                Programmes concernés :
+              <p className="mb-2" style={{ fontSize: '0.97rem' }}>
+                Souhaitez-vous ajouter les supports de cours des programmes issus du contrat{' '}
+                <strong>N° {contrat.contrat_number}</strong> que vous venez de valider ?
               </p>
-              <ul className="mb-0" style={{ paddingLeft: 18 }}>
-                {contrat.course_element_professors!.map((p, i) => (
-                  <li key={i}>
-                    <span className="fw-medium">{p.course_element?.name ?? p.label}</span>
-                    {p.class_group?.name ? (
-                      <span className="text-muted"> — {p.class_group.name}</span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
 
-          <p className="text-muted mb-0" style={{ fontSize: '0.83rem' }}>
-            Vous pouvez le faire maintenant ou y revenir plus tard depuis la liste de vos contrats.
-          </p>
-        </CModalBody>
+              {(contrat.course_element_professors?.length ?? 0) > 0 && (
+                <div
+                  className="rounded p-2 mb-2"
+                  style={{ background: '#f0f4ff', border: '1px solid #c7d4f0', fontSize: '0.85rem' }}
+                >
+                  <p className="mb-1 fw-semibold text-muted" style={{ fontSize: '0.8rem' }}>
+                    Programmes concernés :
+                  </p>
+                  <ul className="mb-0" style={{ paddingLeft: 18 }}>
+                    {contrat.course_element_professors!.map((p, i) => (
+                      <li key={i}>
+                        <span className="fw-medium">{p.course_element?.name ?? p.label}</span>
+                        {p.class_group?.name
+                          ? <span className="text-muted"> — {p.class_group.name}</span>
+                          : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-        <CModalFooter className="border-top-0 pt-1 d-flex justify-content-between">
-          {/* "Plus tard" à gauche */}
-          <CButton
-            color="secondary"
-            variant="outline"
-            onClick={handleCourseSupportLater}
-          >
-            Plus tard
-          </CButton>
+              <p className="text-muted mb-0" style={{ fontSize: '0.83rem' }}>
+                Vous pouvez le faire maintenant ou y revenir plus tard depuis la liste de vos contrats.
+              </p>
+            </CModalBody>
 
-          {/* "Continuer" à droite */}
-          <CButton
-            color="primary"
-            onClick={handleCourseSupportContinue}
-            style={{ minWidth: 220 }}
-          >
-            <CIcon icon={cilBook} className="me-2" />
-            Continuer — Ajouter les supports
-          </CButton>
-        </CModalFooter>
+            <CModalFooter className="border-top-0 pt-1 d-flex justify-content-between">
+              <CButton color="secondary" variant="outline" onClick={handleCourseSupportLater}>
+                Plus tard
+              </CButton>
+              <CButton color="primary" onClick={handleCourseSupportContinue} style={{ minWidth: 220 }}>
+                <CIcon icon={cilBook} className="me-2" />
+                Continuer — Ajouter les supports
+              </CButton>
+            </CModalFooter>
+          </>
+        )}
+
+        {/* ── Étape 2 : Formulaire (CourseSupportModal inliné) ─────────────── */}
+        {courseSupportStep === 'form' && (
+          <CourseSupportModal
+            visible={true}
+            onClose={() => {
+              setCourseSupportStep('closed');
+              // Supprimer ce contrat du sessionStorage : le professeur a eu
+              // accès au formulaire, l'alerte "supports manquants" ne doit
+              // plus apparaître dans la liste.
+              try {
+                const stored = sessionStorage.getItem('pendingSupportContrats');
+                if (stored && contrat?.id) {
+                  const parsed = JSON.parse(stored).filter((c: any) => c.id !== contrat.id);
+                  sessionStorage.setItem('pendingSupportContrats', JSON.stringify(parsed));
+                }
+              } catch { /* ignore */ }
+            }}
+            contrat={contrat}
+            inlineMode={true}
+          />
+        )}
       </CModal>
-
-      {/* ── Modal supports de cours (ouvert via "Continuer" ou bouton header) ── */}
-      {contrat && (
-        <CourseSupportModal
-          visible={showCourseSupportModal}
-          onClose={() => setShowCourseSupportModal(false)}
-          contrat={contrat}
-        />
-      )}
     </>
   );
 };

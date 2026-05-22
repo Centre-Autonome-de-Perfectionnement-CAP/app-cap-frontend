@@ -11,7 +11,7 @@ import {
   CSidebarFooter,
   CSidebarHeader,
   CSidebarToggler,
-  CNavItem
+  CNavItem,
 } from '@coreui/react'
 import { cilHome } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
@@ -32,31 +32,32 @@ import {
 } from '../_nav/index.tsx'
 
 const AppSidebar = () => {
-  const dispatch = useDispatch()
-  const location = useLocation()
-  const { role } = useAuth()
+  const dispatch   = useDispatch()
+  const location   = useLocation()
+  const { role }   = useAuth()
   const unfoldable = useSelector((state: any) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state: any) => state.sidebarShow)
 
   const getNavigationForPath = () => {
     const path = location.pathname
 
-    if (path.startsWith('/inscription')) return inscriptionNavigation
+    if (path.startsWith('/inscription'))  return inscriptionNavigation
     if (path.startsWith('/attestations')) return attestationNavigation
-    if (path.startsWith('/notes')) return getNoteNavigation(role)
-    if (path.startsWith('/rh')) return rhNavigation
-    if (path.startsWith('/soutenance')) return soutenanceNavigation
-    if (path.startsWith('/emploi')) return emploiNavigation
-    if (path.startsWith('/cahier')) return cahierNavigation
-    if (path.startsWith('/presence')) return presenceNavigation
-    if (path.startsWith('/finance')) return financeNavigation
+    if (path.startsWith('/notes'))        return getNoteNavigation(role)
+    if (path.startsWith('/rh'))           return rhNavigation
+    if (path.startsWith('/soutenance'))   return soutenanceNavigation
+    if (path.startsWith('/emploi'))       return emploiNavigation
+    if (path.startsWith('/cahier'))       return cahierNavigation
+    if (path.startsWith('/presence'))     return presenceNavigation
+    if (path.startsWith('/finance'))      return financeNavigation
     if (path.startsWith('/bibliotheque')) return bibliothequeNavigation
-    if (path.startsWith('/cours')) return coursNavigation
+    if (path.startsWith('/cours'))        return coursNavigation
 
     return mainNavigation
   }
 
   const currentNavigation = getNavigationForPath()
+
   const isModule =
     location.pathname !== '/' &&
     !location.pathname.startsWith('/dashboard') &&
@@ -85,14 +86,14 @@ const AppSidebar = () => {
       position="fixed"
       unfoldable={unfoldable}
       visible={sidebarShow}
-      onVisibleChange={(visible: any) => {
+      onVisibleChange={(visible: boolean) => {
         dispatch({ type: 'set', sidebarShow: visible })
       }}
     >
       <CSidebarHeader className="border-bottom">
         <CSidebarBrand as={Link} to="/">
-          <img className="sidebar-brand-full" src={getAssetUrl('images/cap.png')} alt='logo-cap' height={70}/>
-          <img className="sidebar-brand-narrow" src={getAssetUrl('images/cap.png')} alt='logo-cap' height={70}/>
+          <img className="sidebar-brand-full"   src={getAssetUrl('images/cap.png')} alt="logo-cap" height={70} />
+          <img className="sidebar-brand-narrow" src={getAssetUrl('images/cap.png')} alt="logo-cap" height={70} />
         </CSidebarBrand>
         <CCloseButton
           className="d-lg-none"

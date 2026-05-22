@@ -65,15 +65,9 @@ export interface RhStats {
 
 // ─── Support de cours ─────────────────────────────────────────────────────────
 
-/**
- * Une entrée dans le tableau JSON stocké dans contrat_programs.course_support_file
- */
 export interface CourseSupport {
-  /** Titre du support (ex: "Cours Chapitre 1 — Introduction") */
   title: string
-  /** Chemin relatif du fichier sur le serveur (ex: "supports/uuid.pdf") */
   file?: string
-  /** URL publique du fichier PDF (reconstruite côté serveur) */
   url?: string
 }
 
@@ -88,16 +82,17 @@ export type ContratStatus =
   | 'transfered'
   | 'resiliated'   // Lien expiré — 72 h dépassées sans signature du professeur
 
-/**
- * Un programme = assignation Professeur + Matière (ECUE) + Classe
- * Correspond à une ligne dans course_element_professor
- */
 export interface ProfessorProgram {
   id: number
   is_primary: boolean
   label: string
   hours?: number
+<<<<<<< HEAD
   /** Supports de cours associés à ce programme dans le contexte d'un contrat */
+=======
+  number_monographie?: number | null
+  amount_monographie?: number | null
+>>>>>>> b447590662c62cdbc38b70fba846e1d019bf5fb6
   course_support_file?: CourseSupport[]
   course_element: {
     id: number
@@ -131,17 +126,13 @@ export interface Contrat {
   status: ContratStatus
   notes?: string
 
-  /** Validé par le professeur via le lien email */
   is_validated?: boolean
   validation_date?: string
-
-  /** Motif de rejet saisi par le professeur */
   rejection_reason?: string
-
-  /** Autorisé par l'admin après validation du professeur */
   is_authorized?: boolean
   authorization_date?: string
 
+<<<<<<< HEAD
   /**
    * Date/heure d'envoi de l'e-mail de transfert.
    * Référence pour l'expiration du lien après 72 heures.
@@ -149,19 +140,24 @@ export interface Contrat {
   transferred_at?: string
 
   /** Signature électronique */
+=======
+>>>>>>> b447590662c62cdbc38b70fba846e1d019bf5fb6
   professor_signature_path?: string
   professor_signature_url?: string
   professor_signature_type?: 'drawn' | 'uploaded'
   professor_signed_at?: string
 
-  /** PDF final stocké (généré après validation ou uploadé par l'admin) */
   pdf_path?: string
   pdf_url?: string
   pdf_uploaded_at?: string
 
+<<<<<<< HEAD
   /**
    * Verrouillé = validé ou autorisé → plus de modification ni suppression
    */
+=======
+  amount_monographie?: number
+>>>>>>> b447590662c62cdbc38b70fba846e1d019bf5fb6
   is_locked?: boolean
 
   professor?: {
@@ -182,10 +178,6 @@ export interface Contrat {
   academicYear?: { id: number; academic_year: string }
   academic_year?: { id: number; academic_year: string }
   cycle?: { id: number; name: string }
-  /**
-   * Programmes (course_element_professor) rattachés au contrat.
-   * Chaque programme peut contenir ses supports de cours via `course_support_file`.
-   */
   course_element_professors?: ProfessorProgram[]
   created_at?: string
   updated_at?: string
@@ -230,3 +222,39 @@ export interface Cycle {
   abbreviation?: string
 }
 
+<<<<<<< HEAD
+=======
+// ─── Factures normalisées ─────────────────────────────────────────────────────
+
+/**
+ * Un fichier individuel dans la colonne factures_normalisees (JSON)
+ */
+export interface FactureFile {
+  /** Nom original du fichier uploadé */
+  name: string
+  /** Chemin relatif sur le disque public (ex: "factures_normalisees/...") */
+  path: string
+  /** Type du document */
+  type: 'facture' | 'rib' | 'autre'
+  /** URL publique directe pour ouvrir/télécharger le fichier */
+  url: string
+}
+
+/**
+ * Un contrat retourné par GET /professor/my-factures
+ * Contient les infos de base du contrat + la liste de ses factures
+ */
+export interface FactureEntry {
+  id: number
+  contrat_number: string
+  status: ContratStatus
+  amount: number
+  start_date: string
+  end_date?: string
+  academic_year?: string
+  cycle?: string
+  /** Liste des fichiers déposés pour ce contrat */
+  factures: FactureFile[]
+  uploaded_at: string
+}
+>>>>>>> b447590662c62cdbc38b70fba846e1d019bf5fb6

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import {
   CCard,
   CCardBody,
@@ -24,136 +24,22 @@ import {
   CModalFooter,
   CSpinner,
   CFormLabel,
+  CAlert,
 } from '@coreui/react'
 import { cilCheckCircle, cilTrash, cilCheckAlt, cilInfo, cilCloudDownload, cilCalendar } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import CahierService from '@/services/cahier.service'
 import { TextbookEntryStatus } from '@/types/cahier-texte.types'
 import type { TextbookEntry } from '@/types/cahier-texte.types'
+import HttpService from '@/services/http.service.ts'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface ProfessorPaymentSummary {
-  professor_id: number
-  full_name: string
-  phone: string
-  email: string
-  rib_number: string
-  total_hours_done: number
-  quota_hours: number
-  billable_hours: number
-  amount: number
-}
-
-// ─── PDF Generation (client-side, no external deps) ───────────────────────────
-
-const generatePaymentPDF = (
-  professors: ProfessorPaymentSummary[],
-  startDate: string,
-  endDate: string
-) => {
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-
-  const rows = professors
-    .map(
-      (p, i) => `
-      <tr style="background:${i % 2 === 0 ? '#f9fafb' : '#fff'}">
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb">${p.full_name}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb">${p.phone || '—'}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb">${p.email || '—'}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-family:monospace">${p.rib_number || '—'}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:center">${p.total_hours_done}h</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:center">${p.quota_hours}h</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:600;color:${p.total_hours_done > p.quota_hours ? '#dc2626' : '#16a34a'}">${p.billable_hours}h</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700">${p.amount.toLocaleString('fr-FR')} FCFA</td>
-      </tr>`
-    )
-    .join('')
-
-  const totalAmount = professors.reduce((s, p) => s + p.amount, 0)
-
-  const html = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8"/>
-<title>État de paiement des enseignants</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', sans-serif; color: #1f2937; background: #fff; }
-  .page { padding: 40px 48px; max-width: 1100px; margin: auto; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 3px solid #1e40af; padding-bottom: 24px; }
-  .header-left h1 { font-size: 22px; font-weight: 700; color: #1e40af; letter-spacing: -0.5px; }
-  .header-left p { font-size: 13px; color: #6b7280; margin-top: 4px; }
-  .header-right { text-align: right; font-size: 13px; color: #374151; }
-  .header-right strong { display: block; font-size: 15px; color: #1f2937; margin-bottom: 2px; }
-  .period-badge { display: inline-block; background: #dbeafe; color: #1e40af; border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead tr { background: #1e40af; color: #fff; }
-  thead th { padding: 12px; text-align: left; font-weight: 600; letter-spacing: 0.3px; }
-  thead th:nth-child(n+5) { text-align: center; }
-  thead th:last-child { text-align: right; }
-  tfoot tr { background: #1e3a8a; color: #fff; }
-  tfoot td { padding: 12px; font-weight: 700; font-size: 14px; }
-  .note { margin-top: 28px; font-size: 11px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 14px; }
-  .generated { margin-top: 8px; font-size: 11px; color: #9ca3af; }
-</style>
-</head>
-<body>
-<div class="page">
-  <div class="header">
-    <div class="header-left">
-      <h1>État de Paiement des Enseignants</h1>
-      <p>Cahier de Texte — Heures effectuées &amp; Rémunération</p>
-    </div>
-    <div class="header-right">
-      <strong>Édité le ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</strong>
-      Document confidentiel
-    </div>
-  </div>
-
-  <div class="period-badge">
-    📅 Période : ${formatDate(startDate)} — ${formatDate(endDate)}
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Nom complet</th>
-        <th>Téléphone</th>
-        <th>Email</th>
-        <th>N° RIB</th>
-        <th>Heures effectuées</th>
-        <th>Quota horaire</th>
-        <th>Heures facturables</th>
-        <th>Montant</th>
-      </tr>
-    </thead>
-    <tbody>${rows}</tbody>
-    <tfoot>
-      <tr>
-        <td colspan="7">TOTAL GÉNÉRAL</td>
-        <td style="text-align:right">${totalAmount.toLocaleString('fr-FR')} FCFA</td>
-      </tr>
-    </tfoot>
-  </table>
-
-  <p class="note">
-    ⚠️ Les heures facturables correspondent au minimum entre les heures effectuées et le quota horaire du programme.
-    Toute heure effectuée au-delà du quota n'est pas rémunérée selon les règles en vigueur.
-  </p>
-  <p class="generated">Document généré automatiquement par le système de gestion académique.</p>
-</div>
-</body>
-</html>`
-
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `etat-paiement-${startDate}-${endDate}.html`
-  a.click()
-  URL.revokeObjectURL(url)
+interface AcademicYear {
+  id: number
+  academic_year: string
+  name?: string
+  libelle: string
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -171,26 +57,22 @@ const TextbookList = () => {
   const [detailModal, setDetailModal] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<TextbookEntry | null>(null)
 
-  // Download modal
+  // ── Download modal ─────────────────────────────────────────────────────────
   const [downloadModal, setDownloadModal] = useState(false)
-  const [downloadStartDate, setDownloadStartDate] = useState('')
-  const [downloadEndDate, setDownloadEndDate] = useState('')
   const [downloadLoading, setDownloadLoading] = useState(false)
   const [downloadError, setDownloadError] = useState('')
 
+  // Sélections du modal
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([])
+  const [academicYearsLoading, setAcademicYearsLoading] = useState(false)
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<string>('')
+  const [selectedRegroupement, setSelectedRegroupement] = useState<string>('1')
+
+  // ── Chargement des entrées ─────────────────────────────────────────────────
   useEffect(() => {
     loadEntries()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, search, statusFilter])
-
-  // Pre-fill download dates to current month
-  useEffect(() => {
-    const now = new Date()
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    setDownloadStartDate(firstDay.toISOString().slice(0, 10))
-    setDownloadEndDate(lastDay.toISOString().slice(0, 10))
-  }, [])
 
   const loadEntries = async () => {
     try {
@@ -210,6 +92,106 @@ const TextbookList = () => {
     }
   }
 
+  // ── Chargement des années académiques quand le modal s'ouvre ───────────────
+  const openDownloadModal = async () => {
+    setDownloadModal(true)
+    setDownloadError('')
+    setSelectedRegroupement('1')
+
+    if (academicYears.length > 0) return
+
+    try {
+      setAcademicYearsLoading(true)
+      const response = await HttpService.get<{ success: boolean; data: AcademicYear[] }>(
+        'inscription/academic-years'
+      )
+      const years: AcademicYear[] = response.data ?? []
+      setAcademicYears(years)
+      if (years.length > 0) {
+        setSelectedAcademicYearId(String(years[0].id))
+      }
+    } catch (err) {
+      console.error('Erreur chargement années académiques:', err)
+      setDownloadError('Impossible de charger les années académiques.')
+    } finally {
+      setAcademicYearsLoading(false)
+    }
+  }
+
+  const closeDownloadModal = () => {
+    setDownloadModal(false)
+    setDownloadError('')
+  }
+
+  // ── Génération et téléchargement du fichier Excel ──────────────────────────
+  const handleDownloadExcel = async () => {
+    if (!selectedAcademicYearId) {
+      setDownloadError('Veuillez sélectionner une année académique.')
+      return
+    }
+
+    setDownloadError('')
+    setDownloadLoading(true)
+
+    try {
+      const params = new URLSearchParams({
+        academic_year_id: selectedAcademicYearId,
+        regroupement: selectedRegroupement,
+      })
+
+      // Utilisation de fetch directement pour un meilleur contrôle sur les blobs
+      const token = localStorage.getItem('token')
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001'
+      
+      const response = await fetch(
+        `${apiUrl}/api/cahier-texte/export/payment-excel?${params.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          },
+        }
+      )
+
+      if (!response.ok) {
+        let errorMessage = 'Erreur lors de la génération du fichier.'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorData.error || errorMessage
+        } catch {
+          // Si le corps n'est pas du JSON, garder le message par défaut
+        }
+        setDownloadError(errorMessage)
+        return
+      }
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+
+      const selectedYear = academicYears.find((y) => String(y.id) === selectedAcademicYearId)
+      const yearLabel = selectedYear?.academic_year ?? selectedYear?.libelle ?? selectedAcademicYearId
+      const reg = selectedRegroupement === '1' ? '1er' : '2eme'
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `etat_paiement_vacation_${reg}_regroupement_${yearLabel}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      closeDownloadModal()
+    } catch (err: any) {
+      console.error('Erreur génération Excel:', err)
+      setDownloadError(err.message || 'Une erreur est survenue lors de la génération. Veuillez réessayer.')
+    } finally {
+      setDownloadLoading(false)
+    }
+  }
+
+  // ─── Statuts ──────────────────────────────────────────────────────────────
+
   const getStatusBadge = (status: TextbookEntryStatus) => {
     const badges: Record<TextbookEntryStatus, { color: string; text: string }> = {
       [TextbookEntryStatus.DRAFT]:     { color: 'warning', text: 'Brouillon' },
@@ -219,6 +201,8 @@ const TextbookList = () => {
     const badge = badges[status] ?? badges[TextbookEntryStatus.DRAFT]
     return <CBadge color={badge.color}>{badge.text}</CBadge>
   }
+
+  // ─── Actions ──────────────────────────────────────────────────────────────
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
@@ -256,113 +240,6 @@ const TextbookList = () => {
     setDetailModal(true)
   }
 
-  // ── Payment PDF download ───────────────────────────────────────────────────
-
-  const handleDownloadPDF = async () => {
-    if (!downloadStartDate || !downloadEndDate) {
-      setDownloadError('Veuillez sélectionner une période valide.')
-      return
-    }
-    if (downloadStartDate > downloadEndDate) {
-      setDownloadError('La date de début doit être antérieure à la date de fin.')
-      return
-    }
-
-    setDownloadError('')
-    setDownloadLoading(true)
-
-    try {
-      // Fetch all validated entries in the period
-      const { data: allEntries } = await CahierService.getEntries({
-        start_date: downloadStartDate,
-        end_date: downloadEndDate,
-        status: 'validated',
-        per_page: 1000,
-      })
-
-      // Group by professor
-      const professorMap: Record<
-        number,
-        {
-          professor: any
-          entries: TextbookEntry[]
-          totalHoursDone: number
-          quotaHours: number
-        }
-      > = {}
-
-      for (const entry of allEntries) {
-        const prof = entry.professor
-        if (!prof) continue
-        const pid = prof.id
-
-        if (!professorMap[pid]) {
-          // Fetch professor's program quota for the period
-          // quota_hours comes from program.weighting or a dedicated endpoint
-          // We use what's already on the entry (program relation)
-          const quotaHours = entry.program?.quota_hours ?? entry.program?.total_hours ?? 0
-
-          professorMap[pid] = {
-            professor: prof,
-            entries: [],
-            totalHoursDone: 0,
-            quotaHours,
-          }
-        }
-
-        professorMap[pid].entries.push(entry)
-        professorMap[pid].totalHoursDone += Number(entry.hours_taught ?? 0)
-
-        // Update quota to maximum found across entries (programs may differ)
-        const entryQuota = entry.program?.quota_hours ?? entry.program?.total_hours ?? 0
-        if (entryQuota > professorMap[pid].quotaHours) {
-          professorMap[pid].quotaHours = entryQuota
-        }
-      }
-
-      const summaries: ProfessorPaymentSummary[] = Object.values(professorMap).map((item) => {
-        const billable = item.quotaHours > 0
-          ? Math.min(item.totalHoursDone, item.quotaHours)
-          : item.totalHoursDone
-
-        // Amount: based on contract — fallback to hours × hourly_rate if available
-        const hourlyRate = item.professor?.hourly_rate ?? item.entries[0]?.hourly_rate ?? 0
-        const amount = hourlyRate > 0
-          ? billable * hourlyRate
-          : item.entries.reduce((s: number, e: TextbookEntry) => s + Number(e.amount ?? 0), 0)
-
-        return {
-          professor_id:    item.professor.id,
-          full_name:       item.professor.full_name ?? `${item.professor.first_name} ${item.professor.last_name}`,
-          phone:           item.professor.phone ?? '',
-          email:           item.professor.email ?? '',
-          rib_number:      item.professor.rib_number ?? '',
-          total_hours_done: Math.round(item.totalHoursDone * 10) / 10,
-          quota_hours:     item.quotaHours,
-          billable_hours:  Math.round(billable * 10) / 10,
-          amount,
-        }
-      })
-
-      // Sort by name
-      summaries.sort((a, b) => a.full_name.localeCompare(b.full_name, 'fr'))
-
-      if (summaries.length === 0) {
-        setDownloadError('Aucune entrée validée trouvée pour cette période.')
-        setDownloadLoading(false)
-        return
-      }
-
-      generatePaymentPDF(summaries, downloadStartDate, downloadEndDate)
-      setDownloadModal(false)
-    } catch (err) {
-      console.error('Erreur génération PDF:', err)
-      setDownloadError('Une erreur est survenue lors de la génération. Veuillez réessayer.')
-    } finally {
-      setDownloadLoading(false)
-    }
-  }
-
   // ─────────────────────────────────────────────────────────────────────────
   // Render
   // ─────────────────────────────────────────────────────────────────────────
@@ -378,7 +255,7 @@ const TextbookList = () => {
               <CButton
                 color="primary"
                 size="sm"
-                onClick={() => setDownloadModal(true)}
+                onClick={openDownloadModal}
                 className="d-flex align-items-center gap-2"
               >
                 <CIcon icon={cilCloudDownload} />
@@ -402,7 +279,7 @@ const TextbookList = () => {
                     value={statusFilter}
                     onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1) }}
                   >
-                    <option value="">Signé &amp; Validé (défaut)</option>
+                    <option value="">Tous les statuts</option>
                     <option value="published">Signé</option>
                     <option value="validated">Validé</option>
                     <option value="draft">Brouillon</option>
@@ -439,7 +316,6 @@ const TextbookList = () => {
                           <CTableDataCell>{entry.hours_taught}h</CTableDataCell>
                           <CTableDataCell>{getStatusBadge(entry.status)}</CTableDataCell>
                           <CTableDataCell>
-                            {/* Détail */}
                             <CButton
                               color="secondary"
                               variant="outline"
@@ -451,10 +327,9 @@ const TextbookList = () => {
                               <CIcon icon={cilInfo} />
                             </CButton>
 
-                            {/* Valider */}
                             {entry.status === TextbookEntryStatus.PUBLISHED && (
                               <CButton
-                                color="info"
+                                color="success"
                                 size="sm"
                                 className="me-1"
                                 title="Valider"
@@ -464,10 +339,9 @@ const TextbookList = () => {
                               </CButton>
                             )}
 
-                            {/* Publier */}
                             {entry.status === TextbookEntryStatus.DRAFT && (
                               <CButton
-                                color="success"
+                                color="info"
                                 size="sm"
                                 className="me-1"
                                 title="Signer / Publier"
@@ -477,7 +351,6 @@ const TextbookList = () => {
                               </CButton>
                             )}
 
-                            {/* Supprimer */}
                             {entry.status === TextbookEntryStatus.DRAFT && (
                               <CButton
                                 color="danger"
@@ -547,7 +420,6 @@ const TextbookList = () => {
         <CModalBody>
           {selectedEntry && (
             <div className="row g-3">
-              {/* Bloc identité */}
               <div className="col-12">
                 <div
                   className="p-3 rounded"
@@ -570,7 +442,6 @@ const TextbookList = () => {
                 </div>
               </div>
 
-              {/* Cours & Classe */}
               <div className="col-md-6">
                 <DetailField label="Cours (ECUE)" value={selectedEntry.course_element?.name} />
               </div>
@@ -578,7 +449,6 @@ const TextbookList = () => {
                 <DetailField label="Classe / Groupe" value={selectedEntry.class_group?.group_name} />
               </div>
 
-              {/* Professeur */}
               {selectedEntry.professor && (
                 <>
                   <div className="col-md-6">
@@ -593,7 +463,6 @@ const TextbookList = () => {
                 </>
               )}
 
-              {/* Contenu pédagogique */}
               <div className="col-12">
                 <DetailField label="Contenu dispensé" value={selectedEntry.content_covered} multiline />
               </div>
@@ -610,7 +479,6 @@ const TextbookList = () => {
                 </div>
               )}
 
-              {/* Présence */}
               {(selectedEntry.students_present !== undefined || selectedEntry.students_absent !== undefined) && (
                 <>
                   <div className="col-md-3">
@@ -622,7 +490,6 @@ const TextbookList = () => {
                 </>
               )}
 
-              {/* Devoir */}
               {selectedEntry.homework && (
                 <div className="col-md-8">
                   <DetailField label="Devoir / Exercice" value={selectedEntry.homework} multiline />
@@ -634,14 +501,12 @@ const TextbookList = () => {
                 </div>
               )}
 
-              {/* Observations */}
               {selectedEntry.observations && (
                 <div className="col-12">
                   <DetailField label="Observations" value={selectedEntry.observations} multiline />
                 </div>
               )}
 
-              {/* Validation info */}
               {selectedEntry.status === TextbookEntryStatus.VALIDATED && selectedEntry.validated_at && (
                 <div className="col-12">
                   <div
@@ -667,11 +532,11 @@ const TextbookList = () => {
       </CModal>
 
       {/* ════════════════════════════════════════════════════════════════════
-          MODAL — Télécharger état de paiement
+          MODAL — Télécharger l'état de paiement (Excel)
       ════════════════════════════════════════════════════════════════════ */}
       <CModal
         visible={downloadModal}
-        onClose={() => { setDownloadModal(false); setDownloadError('') }}
+        onClose={closeDownloadModal}
         size="md"
         alignment="center"
       >
@@ -681,73 +546,83 @@ const TextbookList = () => {
             Télécharger l'état de paiement
           </CModalTitle>
         </CModalHeader>
+
         <CModalBody>
-          <p className="text-muted mb-4" style={{ fontSize: '0.875rem' }}>
-            Sélectionnez la période pour laquelle vous souhaitez générer l'état de paiement
-            des enseignants ayant effectué des cours validés. Les heures facturables sont
-            plafonnées au quota horaire de chaque programme.
-          </p>
-
-          <CRow className="g-3">
-            <CCol xs={12} sm={6}>
-              <CFormLabel htmlFor="dl-start" className="fw-semibold">
-                Date de début
-              </CFormLabel>
-              <CFormInput
-                id="dl-start"
-                type="date"
-                value={downloadStartDate}
-                onChange={(e) => setDownloadStartDate(e.target.value)}
-                max={downloadEndDate || undefined}
-              />
-            </CCol>
-            <CCol xs={12} sm={6}>
-              <CFormLabel htmlFor="dl-end" className="fw-semibold">
-                Date de fin
-              </CFormLabel>
-              <CFormInput
-                id="dl-end"
-                type="date"
-                value={downloadEndDate}
-                onChange={(e) => setDownloadEndDate(e.target.value)}
-                min={downloadStartDate || undefined}
-              />
-            </CCol>
-          </CRow>
-
+          {/* ── Erreur ── */}
           {downloadError && (
-            <div
-              className="mt-3 p-3 rounded"
-              style={{ background: '#fee2e2', color: '#991b1b', fontSize: '0.875rem' }}
-            >
-              ⚠️ {downloadError}
-            </div>
+            <CAlert color="danger" className="py-2">
+              {downloadError}
+            </CAlert>
           )}
 
-          <div
-            className="mt-4 p-3 rounded"
-            style={{ background: '#eff6ff', color: '#1e40af', fontSize: '0.8rem', lineHeight: '1.5' }}
-          >
-            <strong>Règle de calcul des heures facturables :</strong>
-            <br />
-            Si <em>heures effectuées &gt; quota horaire</em> → on retient le <strong>quota horaire</strong>.
-            <br />
-            Sinon → on retient les <strong>heures effectuées</strong>.
-          </div>
+          {/* ── Chargement des années ── */}
+          {academicYearsLoading ? (
+            <div className="text-center py-3">
+              <CSpinner size="sm" className="me-2" />
+              Chargement des années académiques…
+            </div>
+          ) : (
+            <div className="d-flex flex-column gap-3 py-1">
+              {/* Année académique */}
+              <div>
+                <CFormLabel className="fw-semibold mb-1">
+                  Année académique <span className="text-danger">*</span>
+                </CFormLabel>
+                <CFormSelect
+                  value={selectedAcademicYearId}
+                  onChange={(e) => setSelectedAcademicYearId(e.target.value)}
+                  disabled={downloadLoading}
+                >
+                  <option value="">— Sélectionner une année —</option>
+                  {academicYears.map((year) => (
+                    <option key={year.id} value={String(year.id)}>
+                      {year.academic_year ?? year.libelle}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </div>
+
+              {/* Regroupement */}
+              <div>
+                <CFormLabel className="fw-semibold mb-1">
+                  Regroupement <span className="text-danger">*</span>
+                </CFormLabel>
+                <CFormSelect
+                  value={selectedRegroupement}
+                  onChange={(e) => setSelectedRegroupement(e.target.value)}
+                  disabled={downloadLoading}
+                >
+                  <option value="1">1er Regroupement</option>
+                  <option value="2">2ème Regroupement</option>
+                </CFormSelect>
+              </div>
+
+              {/* Info */}
+              <div
+                className="p-2 rounded"
+                style={{ background: '#eff6ff', color: '#1e40af', fontSize: '0.82rem' }}
+              >
+                Le fichier Excel sera généré selon le template officiel du CAP (UAC / EPAC)
+                et contiendra toutes les heures effectuées et validées pour le regroupement
+                sélectionné.
+              </div>
+            </div>
+          )}
         </CModalBody>
+
         <CModalFooter>
           <CButton
             color="secondary"
             variant="outline"
-            onClick={() => { setDownloadModal(false); setDownloadError('') }}
+            onClick={closeDownloadModal}
             disabled={downloadLoading}
           >
             Annuler
           </CButton>
           <CButton
             color="primary"
-            onClick={handleDownloadPDF}
-            disabled={downloadLoading}
+            onClick={handleDownloadExcel}
+            disabled={downloadLoading || academicYearsLoading || !selectedAcademicYearId}
             className="d-flex align-items-center gap-2"
           >
             {downloadLoading ? (

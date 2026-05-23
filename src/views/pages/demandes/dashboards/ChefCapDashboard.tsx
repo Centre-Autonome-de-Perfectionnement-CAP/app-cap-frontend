@@ -184,13 +184,13 @@ const ChefCapDashboard = () => {
     <DashboardShell title="Documents à traiter" subtitle="Chef CAP"
       search={filters.search ?? ''} onSearchChange={v => setFilters({ ...filters, search: v })}
       stats={[
-        { key: 'chef_cap_review', label: 'Documents à traiter' },
+        { key: 'cap_manager_review', label: 'Documents à traiter' },
         ...(correctionCount > 0 ? [{
           key: 'correction', label: 'En correction ↺',
           color: '#ea580c', bg: '#fff7ed', urgent: true,
         }] : []),
       ]}
-      counts={{ chef_cap_review: demandes.length, correction: correctionCount }}>
+      counts={{ cap_manager_review: demandes.length, correction: correctionCount }}>
 
       {correctionCount > 0 && (
         <div style={{

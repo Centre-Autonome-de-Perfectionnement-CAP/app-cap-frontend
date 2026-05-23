@@ -64,8 +64,8 @@ export const ComptableDashboard = () => {
   return (
     <DashboardShell title="Vérification financière" subtitle="Comptabilité"
       search={filters.search ?? ''} onSearchChange={v => setFilters({ ...filters, search: v })}
-      stats={[{ key: 'comptable_review', label: 'Dossiers à vérifier' }]}
-      counts={{ comptable_review: demandes.length }}>
+      stats={[{ key: 'accounting_review', label: 'Dossiers à vérifier' }]}
+      counts={{ accounting_review: demandes.length }}>
       <DemandeTable demandes={demandes} loading={loading} columns={columns}
         emptyMessage="Aucun dossier en attente de vérification" onRowClick={openDetail} />
       {selected && <ComptableDetailModal demande={selected} logs={logs} visible={detailOpen}
@@ -149,7 +149,7 @@ export const ChefDivisionDashboard = () => (
   <SimpleTransmitDashboard
     title="Validation Division"
     subtitle="Responsable de Division"
-    statusKey="chef_division_review"
+    statusKey="division_manager_review"
     validateAction="chef_division_validate"
     rejectAction="chef_division_reject"
     validateLabel="Valider → Chef CAP"
@@ -163,7 +163,7 @@ export const SecretaireDaDashboard = () => (
   <SimpleTransmitDashboard
     title="Transmission — Direction Adjointe"
     subtitle="Secrétariat de la Direction Adjointe"
-    statusKey="secretaire_da_review"
+    statusKey="deputy_director_secretary_review"
     validateAction="secretaire_da_transmit"
     rejectAction="secretaire_da_reject"
     validateLabel="Transmettre à la Directrice Adjointe"
@@ -178,7 +178,7 @@ export const SecretaireDirecteurDashboard = () => (
   <SimpleTransmitDashboard
     title="Transmission — Directeur"
     subtitle="Secrétariat du Directeur"
-    statusKey="secretaire_directeur_review"
+    statusKey="director_secretary_review"
     validateAction="secretaire_directeur_transmit"
     rejectAction="secretaire_directeur_reject"
     validateLabel="Transmettre au Directeur"

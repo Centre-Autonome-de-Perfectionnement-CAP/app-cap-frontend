@@ -140,13 +140,13 @@ const ChefDivisionDashboard = () => {
     <DashboardShell title="Dossiers à valider" subtitle="Responsable Division"
       search={filters.search ?? ''} onSearchChange={v => setFilters({ ...filters, search: v })}
       stats={[
-        { key: 'chef_division_review', label: 'En attente de validation' },
+        { key: 'division_manager_review', label: 'En attente de validation' },
         ...(correctionCount > 0 ? [{
           key: 'correction', label: 'Corrections en cours ↺',
           color: '#ea580c', bg: '#fff7ed', urgent: true,
         }] : []),
       ]}
-      counts={{ chef_division_review: demandes.length, correction: correctionCount }}>
+      counts={{ division_manager_review: demandes.length, correction: correctionCount }}>
 
       {correctionCount > 0 && (
         <div style={{

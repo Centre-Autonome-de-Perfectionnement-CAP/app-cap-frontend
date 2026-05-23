@@ -69,7 +69,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
   const [confirmed, setConfirmed] = useState(false)
   const [rejectModal, setRejectModal] = useState(false)
   const [retourModal, setRetourModal] = useState(false)
-  const palette   = STATUS_COLORS['directrice_adjointe_review']
+  const palette   = STATUS_COLORS['deputy_director_review']
   const inCircuit = !!demande.is_in_correction_circuit
 
   const run = async (action: string, extra?: Record<string, unknown>) => {

@@ -159,13 +159,13 @@ const ComptableDashboard = () => {
     <DashboardShell title="Vérification financière" subtitle="Comptabilité"
       search={filters.search ?? ''} onSearchChange={v => setFilters({ ...filters, search: v })}
       stats={[
-        { key: 'comptable_review', label: 'Dossiers à vérifier' },
+        { key: 'accounting_review', label: 'Dossiers à vérifier' },
         ...(correctionCount > 0 ? [{
           key: 'correction', label: 'En correction ↺',
           color: '#ea580c', bg: '#fff7ed', urgent: true,
         }] : []),
       ]}
-      counts={{ comptable_review: demandes.length, correction: correctionCount }}>
+      counts={{ accounting_review: demandes.length, correction: correctionCount }}>
 
       {correctionCount > 0 && (
         <div style={{

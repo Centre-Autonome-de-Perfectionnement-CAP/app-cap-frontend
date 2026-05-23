@@ -1,18 +1,17 @@
 // src/types/document-request.types.ts
 
 export type DocumentRequestStatus =
-  | 'pending'
-  | 'secretaire_review'
-  | 'secretaire_correction'
-  | 'comptable_review'
-  | 'chef_division_review'
-  | 'chef_cap_review'
-  | 'sec_dir_adjointe_review'
-  | 'directrice_adjointe_review'
-  | 'sec_directeur_review'
-  | 'directeur_review'
-  | 'ready'
-  | 'delivered'
+  | 'submitted'
+  | 'secretary_correction'
+  | 'accounting_review'
+  | 'division_manager_review'
+  | 'cap_manager_review'
+  | 'deputy_director_secretary_review'
+  | 'deputy_director_review'
+  | 'director_secretary_review'
+  | 'director_review'
+  | 'ready_for_pickup'
+  | 'picked_up'
   | 'rejected'
 
 export type DocumentRequestType =
@@ -75,34 +74,32 @@ export interface WorkflowAction {
 }
 
 export const STATUS_LABELS: Record<DocumentRequestStatus, string> = {
-  pending:                      'Nouvelle demande',
-  secretaire_review:            'Secrétariat',
-  secretaire_correction:        'Correction secrétaire',
-  comptable_review:             'Comptabilité',
-  chef_division_review:         'Responsable Division',
-  chef_cap_review:              'Chef CAP',
-  sec_dir_adjointe_review:      'Sec. Dir. Adjointe',
-  directrice_adjointe_review:   'Directrice Adjointe',
-  sec_directeur_review:         'Sec. Directeur',
-  directeur_review:             'Directeur',
-  ready:                        'Prêt à retirer',
-  delivered:                    'Retiré',
+  submitted:                    'Nouvelle demande',
+  secretary_correction:         'Correction secrétaire',
+  accounting_review:            'Comptabilité',
+  division_manager_review:      'Responsable Division',
+  cap_manager_review:           'Chef CAP',
+  deputy_director_secretary_review: 'Sec. Dir. Adjointe',
+  deputy_director_review:       'Directrice Adjointe',
+  director_secretary_review:    'Sec. Directeur',
+  director_review:              'Directeur',
+  ready_for_pickup:             'Prêt à retirer',
+  picked_up:                    'Retiré',
   rejected:                     'Rejeté définitivement',
 }
 
 export const STATUS_COLORS: Record<DocumentRequestStatus, string> = {
-  pending:                      'warning',
-  secretaire_review:            'info',
-  secretaire_correction:        'danger',
-  comptable_review:             'primary',
-  chef_division_review:         'primary',
-  chef_cap_review:              'primary',
-  sec_dir_adjointe_review:      'primary',
-  directrice_adjointe_review:   'primary',
-  sec_directeur_review:         'primary',
-  directeur_review:             'primary',
-  ready:                        'success',
-  delivered:                    'secondary',
+  submitted:                    'warning',
+  secretary_correction:         'danger',
+  accounting_review:            'primary',
+  division_manager_review:      'primary',
+  cap_manager_review:           'primary',
+  deputy_director_secretary_review: 'primary',
+  deputy_director_review:       'primary',
+  director_secretary_review:    'primary',
+  director_review:              'primary',
+  ready_for_pickup:             'success',
+  picked_up:                    'secondary',
   rejected:                     'dark',
 }
 
@@ -120,20 +117,19 @@ export const CHEF_DIVISION_LABELS: Record<ChefDivisionType, string> = {
 }
 
 export const WORKFLOW_STEPS: { status: DocumentRequestStatus; label: string }[] = [
-  { status: 'pending',                    label: 'Soumis'         },
-  { status: 'secretaire_review',          label: 'Secrétariat'    },
-  { status: 'comptable_review',           label: 'Comptabilité'   },
-  { status: 'chef_division_review',       label: 'Resp. Division' },
-  { status: 'chef_cap_review',            label: 'Chef CAP'       },
-  { status: 'sec_dir_adjointe_review',    label: 'Sec. Dir. Adj.' },
-  { status: 'directrice_adjointe_review', label: 'Dir. Adjointe'  },
-  { status: 'sec_directeur_review',       label: 'Sec. Directeur' },
-  { status: 'directeur_review',           label: 'Directeur'      },
-  { status: 'ready',                      label: 'Prêt'           },
-  { status: 'delivered',                  label: 'Remis'          },
+  { status: 'submitted',                  label: 'Soumis'         },
+  { status: 'accounting_review',          label: 'Comptabilité'   },
+  { status: 'division_manager_review',    label: 'Resp. Division' },
+  { status: 'cap_manager_review',         label: 'Chef CAP'       },
+  { status: 'deputy_director_secretary_review', label: 'Sec. Dir. Adj.' },
+  { status: 'deputy_director_review',     label: 'Dir. Adjointe'  },
+  { status: 'director_secretary_review',  label: 'Sec. Directeur' },
+  { status: 'director_review',            label: 'Directeur'      },
+  { status: 'ready_for_pickup',           label: 'Prêt'           },
+  { status: 'picked_up',                  label: 'Remis'          },
 ]
 
-// ─── Options de renvoi depuis secretaire_correction ───────────────────────────
+// ─── Options de renvoi depuis secretary_correction ───────────────────────────
 // IMPORTANT : les valeurs utilisent des TIRETS (pas des underscores).
 // Le backend WorkflowConstants::ACTION_MATRIX attend exactement ces slugs :
 //   'comptable', 'chef-division', 'chef-cap', 'sec-da',

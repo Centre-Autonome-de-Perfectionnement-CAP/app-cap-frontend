@@ -44,17 +44,17 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending:                      'En attente',
-  comptable_review:             'Comptabilité',
-  chef_division_review:         'Resp. Division',
-  chef_cap_review:              'Chef CAP',
-  sec_dir_adjointe_review:      'Sec. Dir. Adj.',
-  directrice_adjointe_review:   'Dir. Adjointe',
-  sec_directeur_review:         'Sec. Directeur',
-  directeur_review:             'Directeur',
-  secretaire_correction:        'Correction',
-  ready:                        'Prêt',
-  delivered:                    'Remis',
+  submitted:                    'En attente',
+  accounting_review:            'Comptabilité',
+  division_manager_review:      'Resp. Division',
+  cap_manager_review:           'Chef CAP',
+  deputy_director_secretary_review: 'Sec. Dir. Adj.',
+  deputy_director_review:       'Dir. Adjointe',
+  director_secretary_review:    'Sec. Directeur',
+  director_review:              'Directeur',
+  secretary_correction:         'Correction',
+  ready_for_pickup:             'Prêt',
+  picked_up:                    'Remis',
   rejected:                     'Rejeté',
 }
 

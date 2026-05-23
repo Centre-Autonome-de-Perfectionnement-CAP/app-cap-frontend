@@ -35,7 +35,7 @@ const DemandeDetailBase = ({ demande, children, showTimeline = true }: Props) =>
     {showTimeline && (
       <WorkflowTimeline
         currentStatus={demande.status}
-        isRejected={demande.status === 'rejected' || demande.status === 'secretaire_correction'}
+        isRejected={demande.status === 'rejected' || demande.status === 'secretary_correction'}
       />
     )}
 
@@ -138,7 +138,7 @@ const DemandeDetailBase = ({ demande, children, showTimeline = true }: Props) =>
         <strong>Responsable Division :</strong> {demande.chef_division_comment}
       </CAlert>
     )}
-    {demande.status === 'secretaire_correction' && (demande.rejected_by || demande.rejected_reason) && (
+    {demande.status === 'secretary_correction' && (demande.rejected_by || demande.rejected_reason) && (
       <CAlert color="danger" className="mt-2 py-2 small mb-0">
         <CIcon icon={cilWarning} className="me-1" />
         {demande.rejected_by && <><strong>Rejeté par {demande.rejected_by} :</strong>{' '}</>}

@@ -74,7 +74,7 @@ const CorrectionCircuitBanner = ({ demande }: { demande: DocumentRequest }) => {
 }
 
 // ─── Bannière navette chez acteur ─────────────────────────────────────────────
-// Affichée quand le dossier est EN CIRCUIT mais chez un acteur (statut ≠ secretaire_correction)
+// Affichée quand le dossier est EN CIRCUIT mais chez un acteur (statut ≠ secretary_correction)
 
 const NavetteEnCoursBanner = ({ demande }: { demande: DocumentRequest }) => {
   const { status, correction_origin_role } = demande
@@ -83,13 +83,13 @@ const NavetteEnCoursBanner = ({ demande }: { demande: DocumentRequest }) => {
     : null
 
   const statusLabels: Record<string, string> = {
-    comptable_review:           'Comptable',
-    chef_division_review:       'Responsable Division',
-    chef_cap_review:            'Chef CAP',
-    sec_dir_adjointe_review:    'Sec. Dir. Adjointe',
-    directrice_adjointe_review: 'Directrice Adjointe',
-    sec_directeur_review:       'Sec. Directeur',
-    directeur_review:           'Directeur',
+    accounting_review:          'Comptable',
+    division_manager_review:    'Responsable Division',
+    cap_manager_review:         'Chef CAP',
+    deputy_director_secretary_review: 'Sec. Dir. Adjointe',
+    deputy_director_review:     'Directrice Adjointe',
+    director_secretary_review:  'Sec. Directeur',
+    director_review:            'Directeur',
   }
 
   return (
@@ -143,7 +143,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
   const s          = demande.status
   const inCircuit  = !!demande.is_in_correction_circuit
   // Navette active = circuit actif ET dossier PAS chez la secrétaire
-  const navetteActive = inCircuit && s !== 'secretaire_correction'
+  const navetteActive = inCircuit && s !== 'secretary_correction'
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
     setLoading(true)
@@ -155,8 +155,8 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       {/* Fermer — toujours à gauche */}
       <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={loading} />
 
-      {/* ── Statut PENDING ───────────────────────────────────────────────────── */}
-      {s === 'pending' && (<>
+      {/* ── Statut SUBMITTED ───────────────────────────────────────────────────── */}
+      {s === 'submitted' && (<>
         <ActionButton
           label="Rejeter la demande"
           icon={cilBan}
@@ -175,7 +175,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       </>)}
 
       {/* ── Statut CORRECTION (dossier chez secrétaire) ──────────────────────── */}
-      {s === 'secretaire_correction' && (<>
+      {s === 'secretary_correction' && (<>
         <ActionButton
           label="Rejeter définitivement"
           icon={cilBan}
@@ -194,7 +194,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       </>)}
 
       {/* ── Statut READY ─────────────────────────────────────────────────────── */}
-      {s === 'ready' && (
+      {s === 'ready_for_pickup' && (
         <ActionButton
           label="Marquer comme retiré"
           icon={cilCheckAlt}
@@ -218,7 +218,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       )}
 
       {/* Bannière circuit de correction (dossier chez secrétaire) */}
-      {inCircuit && s === 'secretaire_correction' && (
+      {inCircuit && s === 'secretary_correction' && (
         <CorrectionCircuitBanner demande={demande} />
       )}
 
@@ -261,17 +261,17 @@ const BASE_COLUMNS = [
 ]
 
 const STAT_DEFS = [
-  { key: 'pending',               label: 'Nouvelles demandes', urgent: true,  icon: cilInbox    },
-  { key: 'secretaire_correction', label: 'À corriger',         urgent: true,  icon: cilWarning  },
+  { key: 'submitted',             label: 'Nouvelles demandes', urgent: true,  icon: cilInbox    },
+  { key: 'secretary_correction',  label: 'À corriger',         urgent: true,  icon: cilWarning  },
   { key: 'circuit_correction',    label: 'Navette active',     urgent: true,  icon: cilSync     },
   { key: 'flagged',               label: 'Réserves actives',   urgent: true,  icon: cilFlagAlt  },
-  { key: 'ready',                 label: 'Prêts à retirer',    urgent: false, icon: cilCheckAlt },
-  { key: 'delivered',             label: 'Archivés',           urgent: false, icon: cilFolder   },
+  { key: 'ready_for_pickup',      label: 'Prêts à retirer',    urgent: false, icon: cilCheckAlt },
+  { key: 'picked_up',             label: 'Archivés',           urgent: false, icon: cilFolder   },
 ]
 
 const SecretaireDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const activeTab = searchParams.get('tab') || 'pending'
+  const activeTab = searchParams.get('tab') || 'submitted'
 
   const { demandes, loading, filters, setFilters, selected, detailOpen, openDetail, closeDetail, handleAction, reload } =
     useDemandesDashboard()
@@ -281,9 +281,9 @@ const SecretaireDashboard = () => {
     return acc
   }, {} as Record<string, number>)
   counts['flagged']            = demandes.filter(d => !!d.has_flag).length
-  // Navette active = is_in_correction_circuit ET dossier PAS en secretaire_correction
+  // Navette active = is_in_correction_circuit ET dossier PAS en secretary_correction
   counts['circuit_correction'] = demandes.filter(
-    d => !!d.is_in_correction_circuit && d.status !== 'secretaire_correction'
+    d => !!d.is_in_correction_circuit && d.status !== 'secretary_correction'
   ).length
 
   const columns = useActionColumns(BASE_COLUMNS, openDetail)
@@ -292,14 +292,14 @@ const SecretaireDashboard = () => {
     activeTab === 'flagged'
       ? demandes.filter(d => !!d.has_flag)
       : activeTab === 'circuit_correction'
-        ? demandes.filter(d => !!d.is_in_correction_circuit && d.status !== 'secretaire_correction')
+        ? demandes.filter(d => !!d.is_in_correction_circuit && d.status !== 'secretary_correction')
         : demandes.filter(d => d.status === activeTab)
 
   return (
     <div>
       <CRow className="mb-4 g-3">
         {STAT_DEFS.map(s => {
-          const palette = STATUS_COLORS[s.key] ?? STATUS_COLORS['pending']
+          const palette = STATUS_COLORS[s.key] ?? STATUS_COLORS['submitted']
           return (
             <CCol key={s.key} md={2} sm={4}>
               <StatCard

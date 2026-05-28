@@ -972,19 +972,13 @@ const ProfessorContratDetail = () => {
                 Supports de cours
               </CModalTitle>
             </CModalHeader>
-
-<<<<<<< HEAD
+            
         <CModalBody className="pt-2">
           {/* Illustration */}
           <div className="text-center mb-3">
             <div style={{ fontSize: 52 }}></div>
           </div>
-=======
-            <CModalBody className="pt-2">
-              <div className="text-center mb-3">
-                <div style={{ fontSize: 52 }}>📚</div>
-              </div>
->>>>>>> 8d598d09dc3f4eba53455e1052403d21209e7df8
+
 
               <p className="mb-2" style={{ fontSize: '0.97rem' }}>
                 Souhaitez-vous ajouter les supports de cours des programmes issus du contrat{' '}

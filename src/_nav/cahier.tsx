@@ -2,7 +2,7 @@ import CIcon from '@coreui/icons-react'
 import {
   cilSpeedometer,
   cilList,
-  cilBook,
+  cilDescription,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -22,6 +22,16 @@ const cahierNavigation = [
     name: 'Liste des entrées',
     to: '/cahier-texte/list',
     icon: <CIcon icon={cilList} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavTitle,
+    name: 'Gestion RH',
+  },
+  {
+    component: CNavItem,
+    name: 'Factures normalisées',
+    to: '/cahier-texte/factures',
+    icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
   },
 ]
 

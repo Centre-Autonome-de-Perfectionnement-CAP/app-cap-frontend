@@ -36,6 +36,7 @@ const CourseElementProfessors: React.FC = () => {
     assignments,
     courseElements,
     professors,
+    classGroups, // ← ajouté
     loading,
     error,
     createAssignment,
@@ -49,6 +50,7 @@ const CourseElementProfessors: React.FC = () => {
     course_element_id: '',
     principal_professor_id: '',
     secondary_professor_ids: [] as number[],
+    class_group_id: '', // ← ajouté
   })
   const [alert, setAlert] = useState<{ type: 'success' | 'danger'; message: string } | null>(null)
 
@@ -59,10 +61,16 @@ const CourseElementProfessors: React.FC = () => {
         course_element_id: assignment.course_element_id.toString(),
         principal_professor_id: assignment.principal_professor_id.toString(),
         secondary_professor_ids: [],
+        class_group_id: (assignment as any).class_group_id?.toString() ?? '', // ← ajouté
       })
     } else {
       setEditingAssignment(null)
-      setFormData({ course_element_id: '', principal_professor_id: '', secondary_professor_ids: [] })
+      setFormData({
+        course_element_id: '',
+        principal_professor_id: '',
+        secondary_professor_ids: [],
+        class_group_id: '', // ← ajouté
+      })
     }
     setShowModal(true)
   }
@@ -70,18 +78,24 @@ const CourseElementProfessors: React.FC = () => {
   const handleCloseModal = () => {
     setShowModal(false)
     setEditingAssignment(null)
-    setFormData({ course_element_id: '', principal_professor_id: '', secondary_professor_ids: [] })
+    setFormData({
+      course_element_id: '',
+      principal_professor_id: '',
+      secondary_professor_ids: [],
+      class_group_id: '', // ← ajouté
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       console.log('FormData avant soumission:', formData)
-      
+
       const principalData = {
         course_element_id: parseInt(formData.course_element_id),
         professor_id: parseInt(formData.principal_professor_id),
         is_primary: true,
+        class_group_id: formData.class_group_id ? parseInt(formData.class_group_id) : null, // ← ajouté
       }
 
       console.log('Création professeur principal:', principalData)
@@ -93,6 +107,7 @@ const CourseElementProfessors: React.FC = () => {
           course_element_id: parseInt(formData.course_element_id),
           professor_id: secId,
           is_primary: false,
+          class_group_id: formData.class_group_id ? parseInt(formData.class_group_id) : null, // ← ajouté
         }
         console.log('Création professeur secondaire:', secondaryData)
         await createAssignment(secondaryData)
@@ -102,9 +117,9 @@ const CourseElementProfessors: React.FC = () => {
       handleCloseModal()
       setTimeout(() => setAlert(null), 5000)
     } catch (error: any) {
-      setAlert({ 
-        type: 'danger', 
-        message: error.response?.data?.message || 'Une erreur est survenue' 
+      setAlert({
+        type: 'danger',
+        message: error.response?.data?.message || 'Une erreur est survenue',
       })
       setTimeout(() => setAlert(null), 5000)
     }
@@ -144,7 +159,7 @@ const CourseElementProfessors: React.FC = () => {
                   {alert.message}
                 </CAlert>
               )}
-              
+
               {error && (
                 <CAlert color="danger" dismissible onClose={() => setError(null)}>
                   {error}
@@ -157,6 +172,7 @@ const CourseElementProfessors: React.FC = () => {
                     <CTableHeaderCell>Matière (ECUE)</CTableHeaderCell>
                     <CTableHeaderCell>Code</CTableHeaderCell>
                     <CTableHeaderCell>UE</CTableHeaderCell>
+                    <CTableHeaderCell>Classe</CTableHeaderCell> {/* ← ajouté */}
                     <CTableHeaderCell>Professeur</CTableHeaderCell>
                     <CTableHeaderCell>Type</CTableHeaderCell>
                     <CTableHeaderCell>Actions</CTableHeaderCell>
@@ -165,13 +181,13 @@ const CourseElementProfessors: React.FC = () => {
                 <CTableBody>
                   {loading ? (
                     <CTableRow>
-                      <CTableDataCell colSpan={6} className="text-center">
+                      <CTableDataCell colSpan={7} className="text-center">
                         Chargement...
                       </CTableDataCell>
                     </CTableRow>
                   ) : assignments.length === 0 ? (
                     <CTableRow>
-                      <CTableDataCell colSpan={6} className="text-center text-muted">
+                      <CTableDataCell colSpan={7} className="text-center text-muted">
                         Aucune association trouvée
                       </CTableDataCell>
                     </CTableRow>
@@ -186,6 +202,9 @@ const CourseElementProfessors: React.FC = () => {
                           <CBadge color="info">
                             {assignment.course_element?.teaching_unit?.code}
                           </CBadge>
+                        </CTableDataCell>
+                        <CTableDataCell> {/* ← ajouté */}
+                          {(assignment as any).class_group?.name ?? '—'}
                         </CTableDataCell>
                         <CTableDataCell>{assignment.professor?.full_name}</CTableDataCell>
                         <CTableDataCell>
@@ -226,7 +245,7 @@ const CourseElementProfessors: React.FC = () => {
       <CModal visible={showModal} onClose={handleCloseModal}>
         <CModalHeader>
           <CModalTitle>
-            {editingAssignment ? 'Modifier l\'association' : 'Nouvelle Association Matière-Professeur'}
+            {editingAssignment ? "Modifier l'association" : 'Nouvelle Association Matière-Professeur'}
           </CModalTitle>
         </CModalHeader>
         <CForm onSubmit={handleSubmit}>
@@ -236,16 +255,27 @@ const CourseElementProfessors: React.FC = () => {
               label="Matière (ECUE)"
               value={formData.course_element_id}
               onChange={(value) => setFormData({ ...formData, course_element_id: value.toString() })}
-              options={courseElements.map(el => ({ value: el.id, label: `${el.code} - ${el.name}` }))}
+              options={courseElements.map((el) => ({ value: el.id, label: `${el.code} - ${el.name}` }))}
               placeholder="Sélectionner une matière"
               required
+            />
+            {/* ── Classe ── ajouté */}
+            <SearchableSelect
+              id="class_group_id"
+              label="Classe"
+              value={formData.class_group_id}
+              onChange={(value) => setFormData({ ...formData, class_group_id: value.toString() })}
+              options={classGroups.map((g) => ({ value: g.id, label: g.group_name }))}
+              placeholder="Sélectionner une classe"
             />
             <SearchableSelect
               id="principal_professor_id"
               label="Professeur Principal"
               value={formData.principal_professor_id}
-              onChange={(value) => setFormData({ ...formData, principal_professor_id: value.toString() })}
-              options={professors.map(p => ({ value: p.id, label: p.full_name }))}
+              onChange={(value) =>
+                setFormData({ ...formData, principal_professor_id: value.toString() })
+              }
+              options={professors.map((p) => ({ value: p.id, label: p.full_name }))}
               placeholder="Sélectionner le professeur principal"
               required
             />
@@ -254,11 +284,13 @@ const CourseElementProfessors: React.FC = () => {
               label="Professeurs Secondaires (optionnel)"
               value={formData.secondary_professor_ids}
               onChange={(values) => {
-                const ids = Array.isArray(values) ? values.map(v => Number(v)) : []
+                const ids = Array.isArray(values) ? values.map((v) => Number(v)) : []
                 console.log('Professeurs secondaires sélectionnés:', ids)
                 setFormData({ ...formData, secondary_professor_ids: ids })
               }}
-              options={professors.filter(p => p.id.toString() !== formData.principal_professor_id).map(p => ({ value: p.id, label: p.full_name }))}
+              options={professors
+                .filter((p) => p.id.toString() !== formData.principal_professor_id)
+                .map((p) => ({ value: p.id, label: p.full_name }))}
               placeholder="Sélectionner les professeurs secondaires"
               multiple
             />

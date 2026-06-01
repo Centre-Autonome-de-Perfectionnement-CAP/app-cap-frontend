@@ -1,17 +1,23 @@
 // src/views/pages/demandes/components/modal/DemandeModalShell.tsx
-// Modal agrandi et aéré. Onglet Historique actif par défaut.
-// Bannière réserve visible dans l'onglet Détails si has_flag.
+// - Barre de progression workflow dans le header
+// - Onglet "Fichiers du dossier" séparé
+// - Onglets : Détails → Fichiers → Sous réserve → Historique
+// - Texte ≥ 14px partout
 
 import { useState } from 'react'
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilDescription, cilHistory, cilWarning } from '@coreui/icons'
+import { cilDescription, cilHistory, cilWarning, cilFile } from '@coreui/icons'
 import { WorkflowBadge } from '@/components/document-request'
+import DossierFilesSplit from '@/components/document-request/DossierFilesSplit'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { CHEF_DIVISION_LABELS } from '@/types/document-request.types'
 import HistoriquePanel from './HistoriquePanel'
+import SousReservePanel from './SousReservePanel'
 
-type Tab = 'historique' | 'details'
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+type Tab = 'details' | 'fichiers' | 'reserve' | 'historique'
 
 interface Props {
   demande: DocumentRequest
@@ -23,31 +29,120 @@ interface Props {
   showStatusBadge?: boolean
   canClearFlag?: boolean
   onFlagCleared?: () => void
+  onRefresh?: () => Promise<void>
 }
 
-// ─── Onglet ───────────────────────────────────────────────────────────────────
+// ─── Workflow progress bar ──────────────────────────────────────────────────────
+
+const WORKFLOW_STEPS = [
+  { key: 'submitted',                        label: 'Soumis'        },
+  { key: 'accounting_review',                label: 'Comptabilité'  },
+  { key: 'division_manager_review',          label: 'Resp. Division' },
+  { key: 'cap_manager_review',               label: 'Chef CAP'      },
+  { key: 'deputy_director_secretary_review', label: 'Sec. Dir. Adj.' },
+  { key: 'deputy_director_review',           label: 'Dir. Adjointe' },
+  { key: 'director_secretary_review',        label: 'Sec. Directeur' },
+  { key: 'director_review',                  label: 'Directeur'     },
+  { key: 'ready_for_pickup',                 label: 'Prêt'          },
+  { key: 'picked_up',                        label: 'Remis'         },
+]
+
+const WorkflowProgress = ({ status }: { status: string }) => {
+  const currentIdx = WORKFLOW_STEPS.findIndex(s => s.key === status)
+  const isRejected = status === 'rejected' || status === 'secretary_correction'
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 0,
+      overflowX: 'auto', paddingBottom: 4,
+      scrollbarWidth: 'none',
+    }}>
+      {WORKFLOW_STEPS.map((step, idx) => {
+        const done    = currentIdx > idx
+        const current = currentIdx === idx
+        const future  = currentIdx < idx
+
+        const color = isRejected && current
+          ? '#dc2626'
+          : current ? '#2563eb'
+          : done    ? '#059669'
+          : '#d1d5db'
+
+        const bg = isRejected && current
+          ? '#fef2f2'
+          : current ? '#eff6ff'
+          : done    ? '#ecfdf5'
+          : '#f9fafb'
+
+        return (
+          <div key={step.key} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            {/* Étape */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+              <div style={{
+                width: 26, height: 26, borderRadius: '50%',
+                background: bg,
+                border: `2px solid ${color}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.7rem', fontWeight: 800,
+                color,
+                boxShadow: current ? `0 0 0 3px ${color}22` : 'none',
+                transition: 'all 0.2s',
+              }}>
+                {done ? '✓' : isRejected && current ? '✕' : idx + 1}
+              </div>
+              <span style={{
+                fontSize: '0.62rem', fontWeight: current ? 700 : 500,
+                color: current ? color : future ? '#9ca3af' : '#6b7280',
+                whiteSpace: 'nowrap', maxWidth: 56, textAlign: 'center', lineHeight: 1.2,
+              }}>
+                {step.label}
+              </span>
+            </div>
+            {/* Connecteur */}
+            {idx < WORKFLOW_STEPS.length - 1 && (
+              <div style={{
+                width: 18, height: 2, flexShrink: 0,
+                background: done ? '#059669' : '#e5e7eb',
+                margin: '0 1px', marginBottom: 16,
+                transition: 'background 0.2s',
+              }} />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Bouton onglet ──────────────────────────────────────────────────────────────
 
 const TabBtn = ({
-  label, active, onClick, icon, dot,
+  label, active, onClick, icon, dot, highlight,
 }: {
   label: string; active: boolean; onClick: () => void
-  icon: any; dot?: boolean
+  icon: any; dot?: boolean; highlight?: boolean
 }) => (
   <button
     onClick={onClick}
     style={{
-      display: 'inline-flex', alignItems: 'center', gap: 7,
-      padding: '9px 18px',
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      padding: '10px 16px',
       borderRadius: '8px 8px 0 0',
       border: 'none',
-      borderBottom: active ? '2px solid #2563eb' : '2px solid transparent',
+      borderBottom: active
+        ? `2px solid ${highlight ? '#d97706' : '#2563eb'}`
+        : '2px solid transparent',
       cursor: 'pointer',
       fontWeight: active ? 700 : 500,
-      fontSize: '0.84rem',
-      color: active ? '#2563eb' : '#6b7280',
-      background: active ? '#f8faff' : 'transparent',
+      fontSize: '0.875rem',
+      color: active
+        ? (highlight ? '#d97706' : '#2563eb')
+        : '#6b7280',
+      background: active
+        ? (highlight ? '#fffbeb' : '#f8faff')
+        : 'transparent',
       transition: 'all 0.15s',
-      position: 'relative',
+      whiteSpace: 'nowrap',
     }}
   >
     <CIcon icon={icon} style={{ width: 14, flexShrink: 0 }} />
@@ -62,38 +157,7 @@ const TabBtn = ({
   </button>
 )
 
-// ─── Bannière réserve ─────────────────────────────────────────────────────────
-
-const FlagBanner = ({ onView }: { onView: () => void }) => (
-  <div style={{
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-    background: '#fffbeb', border: '1px solid #fcd34d',
-    borderRadius: 8, padding: '10px 16px', marginBottom: 20,
-  }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <CIcon icon={cilWarning} style={{ width: 16, color: '#d97706', flexShrink: 0 }} />
-      <span style={{ fontSize: '0.83rem', color: '#92400e', fontWeight: 500 }}>
-        Ce dossier porte une réserve active
-      </span>
-    </div>
-    <button
-      onClick={onView}
-      style={{
-        background: 'none', border: '1.5px solid #d97706',
-        color: '#d97706', borderRadius: 6,
-        padding: '4px 12px', fontSize: '0.76rem',
-        fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
-        transition: 'all 0.15s',
-      }}
-      onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#d97706'; b.style.color = '#fff' }}
-      onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'none'; b.style.color = '#d97706' }}
-    >
-      Voir la réserve
-    </button>
-  </div>
-)
-
-// ─── Shell ────────────────────────────────────────────────────────────────────
+// ─── Shell ─────────────────────────────────────────────────────────────────────
 
 const DemandeModalShell = ({
   demande, visible, onClose,
@@ -101,36 +165,35 @@ const DemandeModalShell = ({
   showStatusBadge = true,
   canClearFlag = false,
   onFlagCleared,
+  onRefresh,
 }: Props) => {
-  // Historique par défaut
-  const [activeTab, setActiveTab] = useState<Tab>('historique')
+  const hasFlag = !!(demande as any).has_flag
+  const [activeTab, setActiveTab] = useState<Tab>('details')
 
   const handleClose = () => {
-    setActiveTab('historique')
+    setActiveTab('details')
     onClose()
   }
-
-  const hasFlag = !!(demande as any).has_flag
 
   return (
     <CModal visible={visible} onClose={handleClose} size="xl" alignment="center" scrollable>
       {/* ── Header ── */}
       <CModalHeader style={{
         borderBottom: '1px solid #e2e8f0',
-        padding: '20px 28px 0',
+        padding: '16px 24px 0',
         background: '#fff',
       }}>
         <div style={{ width: '100%' }}>
-          {/* Titre */}
+          {/* Titre + badges */}
           <CModalTitle style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            flexWrap: 'wrap', marginBottom: 16,
+            display: 'flex', alignItems: 'center', gap: 8,
+            flexWrap: 'wrap', marginBottom: 10,
           }}>
-            <span style={{ fontWeight: 800, fontSize: '1.08rem', color: '#0f172a', letterSpacing: '-0.01em' }}>
+            <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', letterSpacing: '-0.01em' }}>
               {title ?? 'Dossier'}
             </span>
             <code style={{
-              fontSize: '0.84rem', color: '#64748b', fontWeight: 600,
+              fontSize: '0.82rem', color: '#64748b', fontWeight: 600,
               background: '#f1f5f9', padding: '2px 8px', borderRadius: 5,
             }}>
               #{demande.reference}
@@ -138,7 +201,7 @@ const DemandeModalShell = ({
             {showStatusBadge && <WorkflowBadge status={demande.status} size="sm" />}
             {demande.chef_division_type && (
               <span style={{
-                fontSize: '0.7rem', padding: '2px 9px', borderRadius: 5,
+                fontSize: '0.75rem', padding: '2px 8px', borderRadius: 5,
                 background: '#e0f2fe', color: '#0369a1', fontWeight: 600,
               }}>
                 {CHEF_DIVISION_LABELS[demande.chef_division_type]}
@@ -147,53 +210,86 @@ const DemandeModalShell = ({
             {hasFlag && (
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 5,
-                fontSize: '0.7rem', padding: '2px 9px', borderRadius: 5,
+                fontSize: '0.75rem', padding: '3px 8px', borderRadius: 5,
                 background: '#fffbeb', color: '#d97706', fontWeight: 700,
                 border: '1px solid #fcd34d',
               }}>
-                <CIcon icon={cilWarning} style={{ width: 11 }} />
+                <CIcon icon={cilWarning} style={{ width: 12 }} />
                 Réserve active
               </span>
             )}
           </CModalTitle>
 
+          {/* Barre de progression workflow */}
+          <div style={{ marginBottom: 10 }}>
+            <WorkflowProgress status={demande.status} />
+          </div>
+
           {/* Onglets */}
           <div style={{ display: 'flex', gap: 2, borderBottom: '1px solid #e2e8f0', marginBottom: -1 }}>
-            <TabBtn
-              label="Historique"
-              icon={cilHistory}
-              active={activeTab === 'historique'}
-              onClick={() => setActiveTab('historique')}
-              dot={hasFlag}
-            />
             <TabBtn
               label="Détails"
               icon={cilDescription}
               active={activeTab === 'details'}
               onClick={() => setActiveTab('details')}
             />
+            <TabBtn
+              label="Fichiers"
+              icon={cilFile}
+              active={activeTab === 'fichiers'}
+              onClick={() => setActiveTab('fichiers')}
+            />
+            {hasFlag && (
+              <TabBtn
+                label="Sous réserve"
+                icon={cilWarning}
+                active={activeTab === 'reserve'}
+                onClick={() => setActiveTab('reserve')}
+                dot
+                highlight
+              />
+            )}
+            <TabBtn
+              label="Historique"
+              icon={cilHistory}
+              active={activeTab === 'historique'}
+              onClick={() => setActiveTab('historique')}
+            />
           </div>
         </div>
       </CModalHeader>
 
       {/* ── Body ── */}
-      <CModalBody style={{ padding: '28px 32px', minHeight: 320 }}>
-        {activeTab === 'details' && (
-          <>
-            {hasFlag && <FlagBanner onView={() => setActiveTab('historique')} />}
-            {children}
-          </>
+      <CModalBody style={{ padding: '24px 28px', minHeight: 320 }}>
+        {activeTab === 'details' && children}
+
+        {activeTab === 'fichiers' && (
+          <DossierFilesSplit
+            demandeId={demande.id}
+            status={demande.status}
+            files={demande.files}
+            complementFiles={demande.complement_files}
+            secretaryFiles={demande.secretary_files}
+            onRefresh={onRefresh}
+          />
+        )}
+
+        {activeTab === 'reserve' && hasFlag && (
+          <SousReservePanel
+            demande={demande}
+            canClearFlag={canClearFlag}
+            onFlagCleared={() => {
+              onFlagCleared?.()
+              setActiveTab('details')
+            }}
+          />
         )}
 
         {activeTab === 'historique' && (
           <HistoriquePanel
             demandeId={demande.id}
-            hasFlag={hasFlag}
-            canClearFlag={canClearFlag}
-            onFlagCleared={() => {
-              onFlagCleared?.()
-              setActiveTab('historique')
-            }}
+            hasFlag={false}
+            canClearFlag={false}
           />
         )}
       </CModalBody>

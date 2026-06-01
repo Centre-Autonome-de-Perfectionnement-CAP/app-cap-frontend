@@ -32,6 +32,7 @@ export interface DocumentRequest {
   email: string | null
   files: Record<string, string> | null | string
   complement_files: Record<string, string> | null | string
+  secretary_files?: { id: string, path: string, original_name: string, comment?: string, uploaded_at: string }[] | null | string
   submitted_at: string
   created_at?: string
   updated_at: string

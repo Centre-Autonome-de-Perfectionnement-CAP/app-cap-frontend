@@ -156,9 +156,20 @@ export class HttpService {
 private request<T = any>(options: RequestOptions): Promise<T> {
   return new Promise((resolve, reject) => {
     if (options.data instanceof FormData) {
-      // Supprime tout Content-Type pour laisser Axios gérer multipart
+      // Supprime tout Content-Type pour laisser Axios gérer multipart/form-data
       delete options.headers?.['Content-Type'];
       delete options.headers?.['content-type'];
+
+      // Injection explicite du token — garantit que le header Authorization
+      // est présent même quand l'intercepteur async ne s'applique pas
+      // correctement sur les requêtes multipart.
+      const token = localStorage.getItem('token');
+      if (token) {
+        options.headers = {
+          ...(options.headers ?? {}),
+          Authorization: `Bearer ${token}`,
+        };
+      }
 
       this._axios
         .post(options.url, options.data, {

@@ -1,10 +1,12 @@
 // src/views/pages/demandes/components/modal/DemandeDetailBase.tsx
+// - Les fichiers sont retirés de cet onglet (déplacés dans l'onglet "Fichiers")
+// - Suppression des doublons de commentaires/statuts
+// - Date ET heure de soumission correctes
+// - Texte ≥ 14px
 
 import { CRow, CCol, CAlert } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilWarning, cilCheckCircle, cilInfo } from '@coreui/icons'
-import { WorkflowTimeline } from '@/components/document-request'
-import DossierFilesSplit from '@/components/document-request/DossierFilesSplit'
+import { cilWarning, cilInfo } from '@coreui/icons'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { TYPE_LABELS, CHEF_DIVISION_LABELS } from '@/types/document-request.types'
 
@@ -12,140 +14,152 @@ interface Props {
   demande: DocumentRequest
   children?: React.ReactNode
   showTimeline?: boolean
+  onRefresh?: () => Promise<void>
 }
 
 const InfoBlock = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: '14px 16px', height: '100%', background: '#f8fafc' }}>
-    <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#94a3b8', marginBottom: 10 }}>
+  <div style={{
+    border: '1px solid #e2e8f0', borderRadius: 10,
+    padding: '16px 18px', height: '100%', background: '#f8fafc',
+  }}>
+    <p style={{
+      fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase',
+      letterSpacing: '0.07em', color: '#94a3b8', marginBottom: 12,
+    }}>
       {title}
     </p>
     {children}
   </div>
 )
 
-const InfoLine = ({ label, value }: { label: string; value?: string | null }) => (
-  <p style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: 5 }}>
-    <span style={{ color: '#9ca3af' }}>{label} : </span>
-    <span style={{ fontWeight: 500, color: '#374151' }}>{value || '—'}</span>
-  </p>
-)
+const InfoLine = ({ label, value }: { label: string; value?: string | null }) => {
+  if (!value) return null
+  return (
+    <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: 6 }}>
+      <span style={{ color: '#9ca3af' }}>{label} : </span>
+      <span style={{ fontWeight: 500, color: '#374151' }}>{value}</span>
+    </p>
+  )
+}
 
-const DemandeDetailBase = ({ demande, children, showTimeline = true }: Props) => (
-  <>
-    {showTimeline && (
-      <WorkflowTimeline
-        currentStatus={demande.status}
-        isRejected={demande.status === 'rejected' || demande.status === 'secretary_correction'}
-      />
-    )}
-
-    <CRow className="mt-3 g-2">
-      <CCol md={6}>
-        <InfoBlock title="Étudiant">
-          <p style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111827', marginBottom: 8 }}>
-            {demande.last_name} {demande.first_names}
-          </p>
-          <InfoLine label="Matricule" value={demande.matricule} />
-          <InfoLine label="Filière"   value={demande.department} />
-          <InfoLine label="Année"     value={demande.academic_year} />
-        </InfoBlock>
-      </CCol>
-
-      <CCol md={6}>
-        <InfoBlock title="Document demandé">
-          <p style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111827', marginBottom: 8 }}>
-            {TYPE_LABELS[demande.type] ?? demande.type}
-          </p>
-          <InfoLine
-            label="Soumis le"
-            value={demande.submitted_at ? new Date(demande.submitted_at).toLocaleDateString('fr-FR') : undefined}
-          />
-          {demande.comptable_reviewed_at && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              fontSize: '0.72rem', padding: '2px 8px', borderRadius: 5,
-              background: '#ecfeff', color: '#164e63', fontWeight: 600, marginTop: 4,
-            }}>
-              <CIcon icon={cilCheckCircle} style={{ width: 11 }} />
-              Validé — Comptabilité
-            </span>
-          )}
-          {demande.chef_division_reviewed_at && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              fontSize: '0.72rem', padding: '2px 8px', borderRadius: 5,
-              background: '#dcfce7', color: '#166534', fontWeight: 600, marginTop: 4,
-            }}>
-              <CIcon icon={cilCheckCircle} style={{ width: 11 }} />
-              Validé — Responsable Division
-            </span>
-          )}
-          {demande.chef_division_type && (
-            <div style={{ marginTop: 6 }}>
-              <span style={{
-                fontSize: '0.72rem', padding: '2px 8px', borderRadius: 5,
-                background: '#e0f2fe', color: '#0369a1', fontWeight: 600,
-              }}>
-                {CHEF_DIVISION_LABELS[demande.chef_division_type]}
-              </span>
-            </div>
-          )}
-          {demande.signature_type && (
-            <div style={{ marginTop: 6 }}>
-              <span style={{
-                fontSize: '0.72rem', padding: '2px 8px', borderRadius: 5,
-                background: demande.signature_type === 'paraphe' ? '#ede9fe' : '#dcfce7',
-                color: demande.signature_type === 'paraphe' ? '#5b21b6' : '#166534',
-                fontWeight: 600,
-              }}>
-                {demande.signature_type === 'paraphe' ? 'Paraphe Chef CAP' : 'Signature Chef CAP'}
-              </span>
-            </div>
-          )}
-          {demande.directrice_adjointe_reviewed_at && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              fontSize: '0.72rem', padding: '2px 8px', borderRadius: 5,
-              background: '#f5f3ff', color: '#3b0764', fontWeight: 600, marginTop: 4,
-            }}>
-              <CIcon icon={cilCheckCircle} style={{ width: 11 }} />
-              Signé — Directrice Adjointe
-            </span>
-          )}
-        </InfoBlock>
-      </CCol>
-    </CRow>
-
+const ValidationBadge = ({
+  children, color, bg,
+}: { children: React.ReactNode; color: string; bg: string }) => (
+  <span style={{
+    display: 'inline-flex', alignItems: 'center', gap: 5,
+    fontSize: '0.8rem', padding: '3px 10px', borderRadius: 5,
+    background: bg, color, fontWeight: 600,
+  }}>
     {children}
-
-    <div style={{ marginTop: 16 }}>
-      <DossierFilesSplit
-        files={demande.files}
-        complementFiles={demande.complement_files}
-      />
-    </div>
-
-    {/* Commentaires des acteurs du circuit */}
-    {demande.comptable_comment && (
-      <CAlert color="info" className="mt-3 py-2 small mb-0">
-        <CIcon icon={cilInfo} className="me-1" />
-        <strong>Comptable :</strong> {demande.comptable_comment}
-      </CAlert>
-    )}
-    {demande.chef_division_comment && (
-      <CAlert color="warning" className="mt-2 py-2 small mb-0">
-        <CIcon icon={cilInfo} className="me-1" />
-        <strong>Responsable Division :</strong> {demande.chef_division_comment}
-      </CAlert>
-    )}
-    {demande.status === 'secretary_correction' && (demande.rejected_by || demande.rejected_reason) && (
-      <CAlert color="danger" className="mt-2 py-2 small mb-0">
-        <CIcon icon={cilWarning} className="me-1" />
-        {demande.rejected_by && <><strong>Rejeté par {demande.rejected_by} :</strong>{' '}</>}
-        {demande.rejected_reason}
-      </CAlert>
-    )}
-  </>
+  </span>
 )
+
+const formatDateTime = (iso?: string | null) => {
+  if (!iso) return null
+  const d = new Date(iso)
+  return d.toLocaleDateString('fr-FR', {
+    day: '2-digit', month: 'long', year: 'numeric',
+  }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+}
+
+const DemandeDetailBase = ({ demande, children }: Props) => {
+  const submittedAt = formatDateTime(demande.submitted_at)
+
+  // Le rejet ne s'affiche que si c'est une correction secrétaire et qu'il y a une raison
+  const showRejection = demande.status === 'secretary_correction'
+    && (demande.rejected_by || demande.rejected_reason)
+
+  return (
+    <>
+      <CRow className="g-3">
+        {/* Bloc Étudiant */}
+        <CCol md={6}>
+          <InfoBlock title="Étudiant">
+            <p style={{ fontWeight: 700, fontSize: '1rem', color: '#111827', marginBottom: 10 }}>
+              {demande.last_name} {demande.first_names}
+            </p>
+            <InfoLine label="Matricule" value={demande.matricule} />
+            <InfoLine label="Filière"   value={demande.department} />
+            <InfoLine label="Année"     value={demande.academic_year} />
+          </InfoBlock>
+        </CCol>
+
+        {/* Bloc Document */}
+        <CCol md={6}>
+          <InfoBlock title="Document demandé">
+            <p style={{ fontWeight: 700, fontSize: '1rem', color: '#111827', marginBottom: 10 }}>
+              {TYPE_LABELS[demande.type] ?? demande.type}
+            </p>
+            {submittedAt && (
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: 10 }}>
+                <span style={{ color: '#9ca3af' }}>Soumis le : </span>
+                <span style={{ fontWeight: 500, color: '#374151' }}>{submittedAt}</span>
+              </p>
+            )}
+
+            {/* Badges de validation intermédiaires */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+              {demande.comptable_reviewed_at && (
+                <ValidationBadge color="#164e63" bg="#ecfeff">✓ Comptabilité</ValidationBadge>
+              )}
+              {demande.chef_division_reviewed_at && (
+                <ValidationBadge color="#166534" bg="#dcfce7">✓ Resp. Division</ValidationBadge>
+              )}
+              {demande.directrice_adjointe_reviewed_at && (
+                <ValidationBadge color="#3b0764" bg="#f5f3ff">✓ Dir. Adjointe</ValidationBadge>
+              )}
+              {demande.chef_division_type && (
+                <span style={{
+                  fontSize: '0.8rem', padding: '3px 10px', borderRadius: 5,
+                  background: '#e0f2fe', color: '#0369a1', fontWeight: 600,
+                }}>
+                  {CHEF_DIVISION_LABELS[demande.chef_division_type]}
+                </span>
+              )}
+              {demande.signature_type && (
+                <span style={{
+                  fontSize: '0.8rem', padding: '3px 10px', borderRadius: 5,
+                  background: demande.signature_type === 'paraphe' ? '#ede9fe' : '#dcfce7',
+                  color: demande.signature_type === 'paraphe' ? '#5b21b6' : '#166534',
+                  fontWeight: 600,
+                }}>
+                  {demande.signature_type === 'paraphe' ? 'Paraphe Chef CAP' : 'Signature Chef CAP'}
+                </span>
+              )}
+            </div>
+          </InfoBlock>
+        </CCol>
+      </CRow>
+
+      {/* Contenu additionnel (ex. SecretaryFileUploader) */}
+      {children && <div style={{ marginTop: 16 }}>{children}</div>}
+
+      {/* Commentaires des acteurs — affichés une seule fois chacun */}
+      {demande.comptable_comment && (
+        <CAlert color="info" className="mt-3 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
+          <CIcon icon={cilInfo} className="me-1" />
+          <strong>Comptable :</strong> {demande.comptable_comment}
+        </CAlert>
+      )}
+      {demande.chef_division_comment && (
+        <CAlert color="warning" className="mt-2 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
+          <CIcon icon={cilInfo} className="me-1" />
+          <strong>Responsable Division :</strong> {demande.chef_division_comment}
+        </CAlert>
+      )}
+
+      {/* Rejet — affiché une seule fois, proprement */}
+      {showRejection && (
+        <CAlert color="danger" className="mt-2 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
+          <CIcon icon={cilWarning} className="me-1" />
+          {demande.rejected_by && (
+            <strong>Rejeté par {demande.rejected_by}{demande.rejected_reason ? ' : ' : ''}</strong>
+          )}
+          {demande.rejected_reason}
+        </CAlert>
+      )}
+    </>
+  )
+}
 
 export default DemandeDetailBase

@@ -26,19 +26,60 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
   const [selected,   setSelected]   = useState<DocumentRequest | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true)
     try {
       const res = await documentRequestService.getAll(filters)
-      setDemandes(res.data || [])
+      const list = res.data || []
+      setDemandes(list)
+      setSelected(prev => {
+        if (!prev) return null
+        const fresh = list.find((d: DocumentRequest) => d.id === prev.id)
+        return fresh || prev
+      })
     } catch (e) {
       console.error('Erreur chargement demandes:', e)
     } finally {
-      setLoading(false)
+      if (!isSilent) setLoading(false)
     }
   }, [filters])
 
-  useEffect(() => { load() }, [load])
+  // Initial load on mount or when filters change
+  useEffect(() => {
+    load(false)
+  }, [load])
+
+  // Intelligent polling every 2 seconds (silent background refresh)
+  useEffect(() => {
+    let isMounted = true
+    let isFetching = false
+
+    const interval = setInterval(async () => {
+      if (isFetching) return
+      isFetching = true
+      try {
+        const res = await documentRequestService.getAll(filters)
+        if (isMounted) {
+          const list = res.data || []
+          setDemandes(list)
+          setSelected(prev => {
+            if (!prev) return null
+            const fresh = list.find((d: DocumentRequest) => d.id === prev.id)
+            return fresh || prev
+          })
+        }
+      } catch (e) {
+        console.error('Erreur auto-refresh demandes:', e)
+      } finally {
+        isFetching = false
+      }
+    }, 2000)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, [filters])
 
   const openDetail  = (d: DocumentRequest) => { setSelected(d); setDetailOpen(true) }
   const closeDetail = useCallback(() => { setSelected(null); setDetailOpen(false) }, [])

@@ -1,4 +1,6 @@
 // src/views/pages/demandes/dashboards/SecretaireDashboard.tsx
+// Modal mis à jour : utilise DemandeModalShell avec canClearFlag
+// → l'onglet "Sous réserve" apparaît automatiquement via DemandeModalShell.
 
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -16,6 +18,7 @@ import {
   ReferenceCell, EtudiantCell, TypeCell, DateCell, StatutCell,
   SECRETAIRE_TABS, DemandeSearchBar,
 } from '../components'
+import { SecretaryFileUploader } from '@/components/document-request'
 import { STATUS_COLORS } from '../constants/workflow'
 import { CCard, CCardBody, CCardHeader } from '@coreui/react'
 import type { DocumentRequest } from '@/types/document-request.types'
@@ -30,42 +33,41 @@ const CorrectionCircuitBanner = ({ demande }: { demande: DocumentRequest }) => {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%)',
-      border: '2px solid #fca5a5',
+      background: '#fef2f2',
+      border: '1.5px solid #fca5a5',
       borderLeft: '5px solid #dc2626',
       borderRadius: 12,
-      padding: '18px 20px',
+      padding: '16px 18px',
       marginBottom: 20,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         <span style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 30, height: 30, borderRadius: '50%',
+          width: 28, height: 28, borderRadius: '50%',
           background: '#dc2626', color: '#fff',
-          fontSize: '1rem', fontWeight: 900, flexShrink: 0,
+          fontSize: '0.95rem', fontWeight: 900, flexShrink: 0,
         }}>⟳</span>
-        <span style={{ fontWeight: 800, fontSize: '1rem', color: '#7f1d1d' }}>
+        <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#7f1d1d' }}>
           Circuit de correction actif
         </span>
-        <CBadge color="danger" style={{ fontSize: '0.875rem', marginLeft: 'auto', padding: '5px 10px' }}>
+        <CBadge color="danger" style={{ fontSize: '0.8rem', marginLeft: 'auto', padding: '4px 10px' }}>
           Mode navette
         </CBadge>
       </div>
 
-      <div style={{ fontSize: '0.88rem', color: '#991b1b', lineHeight: 1.7 }}>
-        Tous les acteurs ne peuvent que renvoyer ce dossier ici.
-        Utilisez <strong>"Gérer la navette"</strong> pour l'envoyer à quelqu'un,
-        ou <strong>"Sortir du circuit"</strong> pour reprendre le workflow normal.
+      <div style={{ fontSize: '0.875rem', color: '#991b1b', lineHeight: 1.65 }}>
+        Utilisez <strong>«&nbsp;Gérer la navette&nbsp;»</strong> pour envoyer le dossier à un acteur,
+        ou <strong>«&nbsp;Sortir du circuit&nbsp;»</strong> pour reprendre le workflow normal.
       </div>
 
       {originLabel && (
         <div style={{
-          marginTop: 12, padding: '10px 14px', borderRadius: 8,
+          marginTop: 10, padding: '9px 14px', borderRadius: 8,
           background: 'rgba(255,255,255,0.75)', border: '1px solid #fecaca',
           fontSize: '0.875rem', color: '#7f1d1d',
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          <CIcon icon={cilArrowCircleRight} style={{ width: 15, color: '#dc2626', flexShrink: 0 }} />
+          <CIcon icon={cilArrowCircleRight} style={{ width: 14, color: '#dc2626', flexShrink: 0 }} />
           En sortant du circuit, le dossier retourne chez <strong style={{ marginLeft: 4 }}>{originLabel}</strong>.
         </div>
       )}
@@ -73,8 +75,7 @@ const CorrectionCircuitBanner = ({ demande }: { demande: DocumentRequest }) => {
   )
 }
 
-// ─── Bannière navette chez acteur ─────────────────────────────────────────────
-// Affichée quand le dossier est EN CIRCUIT mais chez un acteur (statut ≠ secretary_correction)
+// ─── Bannière navette en cours ────────────────────────────────────────────────
 
 const NavetteEnCoursBanner = ({ demande }: { demande: DocumentRequest }) => {
   const { status, correction_origin_role } = demande
@@ -83,40 +84,40 @@ const NavetteEnCoursBanner = ({ demande }: { demande: DocumentRequest }) => {
     : null
 
   const statusLabels: Record<string, string> = {
-    accounting_review:          'Comptable',
-    division_manager_review:    'Responsable Division',
-    cap_manager_review:         'Chef CAP',
-    deputy_director_secretary_review: 'Sec. Dir. Adjointe',
-    deputy_director_review:     'Directrice Adjointe',
-    director_secretary_review:  'Sec. Directeur',
-    director_review:            'Directeur',
+    accounting_review:                 'Comptable',
+    division_manager_review:           'Responsable Division',
+    cap_manager_review:                'Chef CAP',
+    deputy_director_secretary_review:  'Sec. Dir. Adjointe',
+    deputy_director_review:            'Directrice Adjointe',
+    director_secretary_review:         'Sec. Directeur',
+    director_review:                   'Directeur',
   }
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%)',
-      border: '2px solid #fed7aa',
+      background: '#fff7ed',
+      border: '1.5px solid #fed7aa',
       borderLeft: '5px solid #f97316',
       borderRadius: 12,
-      padding: '18px 20px',
+      padding: '16px 18px',
       marginBottom: 20,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         <span style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 30, height: 30, borderRadius: '50%',
+          width: 28, height: 28, borderRadius: '50%',
           background: '#f97316', color: '#fff',
-          fontSize: '1rem', fontWeight: 900, flexShrink: 0,
+          fontSize: '0.95rem', fontWeight: 900, flexShrink: 0,
         }}>↺</span>
-        <span style={{ fontWeight: 800, fontSize: '1rem', color: '#7c2d12' }}>
+        <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#7c2d12' }}>
           Navette active — dossier chez {statusLabels[status] ?? status}
         </span>
-        <CBadge color="warning" style={{ fontSize: '0.875rem', marginLeft: 'auto', padding: '5px 10px', color: '#fff' }}>
-          En attente de correction
+        <CBadge color="warning" style={{ fontSize: '0.8rem', marginLeft: 'auto', padding: '4px 10px', color: '#fff' }}>
+          En attente
         </CBadge>
       </div>
 
-      <div style={{ fontSize: '0.88rem', color: '#92400e', lineHeight: 1.7 }}>
+      <div style={{ fontSize: '0.875rem', color: '#92400e', lineHeight: 1.65 }}>
         Ce dossier a été envoyé à <strong>{statusLabels[status] ?? status}</strong> pour correction.
         Il vous reviendra dès que l'acteur aura terminé.
         {originLabel && (
@@ -136,70 +137,73 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
   onReload: () => Promise<void>
 }) => {
-  const [loading,          setLoading]          = useState(false)
+  const [loadingAction,    setLoadingAction]    = useState<string | null>(null)
   const [resendModal,      setResendModal]      = useState(false)
   const [rejectModal,      setRejectModal]      = useState(false)
   const [rejectFinalModal, setRejectFinalModal] = useState(false)
-  const s          = demande.status
-  const inCircuit  = !!demande.is_in_correction_circuit
+
+  const s         = demande.status
+  const inCircuit = !!demande.is_in_correction_circuit
   // Navette active = circuit actif ET dossier PAS chez la secrétaire
   const navetteActive = inCircuit && s !== 'secretary_correction'
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
-    setLoading(true)
-    try { await onAction(action, extra) } catch (e) { console.error(e) } finally { setLoading(false) }
+    setLoadingAction(action)
+    try { await onAction(action, extra) } catch (e) { console.error(e) }
+    finally { setLoadingAction(null) }
   }
 
   const footer = (
     <>
-      {/* Fermer — toujours à gauche */}
-      <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={loading} />
+      <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={!!loadingAction} />
 
-      {/* ── Statut SUBMITTED ───────────────────────────────────────────────────── */}
+      {/* SUBMITTED */}
       {s === 'submitted' && (<>
         <ActionButton
           label="Rejeter la demande"
           icon={cilBan}
           color="danger"
           variant="outline"
-          disabled={loading}
+          disabled={!!loadingAction}
           onClick={() => setRejectModal(true)}
         />
         <ActionButton
           label="Valider → Comptable"
           icon={cilCheckAlt}
           color="primary"
-          loading={loading}
+          loading={loadingAction === 'secretaire_validate'}
+          disabled={!!loadingAction && loadingAction !== 'secretaire_validate'}
           onClick={() => run('secretaire_validate')}
         />
       </>)}
 
-      {/* ── Statut CORRECTION (dossier chez secrétaire) ──────────────────────── */}
+      {/* CORRECTION */}
       {s === 'secretary_correction' && (<>
         <ActionButton
           label="Rejeter définitivement"
           icon={cilBan}
           color="danger"
           variant="outline"
-          disabled={loading}
+          disabled={!!loadingAction}
           onClick={() => setRejectFinalModal(true)}
         />
         <ActionButton
           label={inCircuit ? 'Gérer la navette' : 'Renvoyer'}
           icon={cilSend}
           color={inCircuit ? 'warning' : 'info'}
-          disabled={loading}
+          disabled={!!loadingAction}
           onClick={() => setResendModal(true)}
         />
       </>)}
 
-      {/* ── Statut READY ─────────────────────────────────────────────────────── */}
+      {/* READY */}
       {s === 'ready_for_pickup' && (
         <ActionButton
           label="Marquer comme retiré"
           icon={cilCheckAlt}
           color="success"
-          loading={loading}
+          loading={loadingAction === 'secretaire_deliver'}
+          disabled={!!loadingAction && loadingAction !== 'secretaire_deliver'}
           onClick={() => run('secretaire_deliver')}
         />
       )}
@@ -207,22 +211,24 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
   )
 
   return (<>
+    {/* DemandeModalShell gère automatiquement l'onglet "Sous réserve" via has_flag */}
     <DemandeModalShell
-      demande={demande} visible={visible} onClose={onClose} footer={footer}
+      demande={demande}
+      visible={visible}
+      onClose={onClose}
+      footer={footer}
       canClearFlag
       onFlagCleared={async () => { await onReload() }}
+      onRefresh={onReload}
     >
-      {/* Bannière navette active (dossier en transit chez un acteur) */}
-      {navetteActive && (
-        <NavetteEnCoursBanner demande={demande} />
-      )}
+      {navetteActive && <NavetteEnCoursBanner demande={demande} />}
+      {inCircuit && s === 'secretary_correction' && <CorrectionCircuitBanner demande={demande} />}
 
-      {/* Bannière circuit de correction (dossier chez secrétaire) */}
-      {inCircuit && s === 'secretary_correction' && (
-        <CorrectionCircuitBanner demande={demande} />
-      )}
-
-      <DemandeDetailBase demande={demande} />
+      <DemandeDetailBase demande={demande} onRefresh={onReload}>
+        {(s === 'submitted' || s === 'secretary_correction') && (
+          <SecretaryFileUploader demandeId={demande.id} onSuccess={onReload} />
+        )}
+      </DemandeDetailBase>
     </DemandeModalShell>
 
     <ResendModal
@@ -236,14 +242,18 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
     />
 
     <MotifModal
-      visible={rejectModal} title="Rejeter la demande"
-      confirmLabel="Rejeter" confirmColor="danger"
+      visible={rejectModal}
+      title="Rejeter la demande"
+      confirmLabel="Rejeter"
+      confirmColor="danger"
       onClose={() => setRejectModal(false)}
       onConfirm={async motif => { setRejectModal(false); await run('secretaire_reject', { motif }) }}
     />
     <MotifModal
-      visible={rejectFinalModal} title="Rejeter définitivement"
-      confirmLabel="Rejeter définitivement" confirmColor="danger"
+      visible={rejectFinalModal}
+      title="Rejeter définitivement"
+      confirmLabel="Rejeter définitivement"
+      confirmColor="danger"
       onClose={() => setRejectFinalModal(false)}
       onConfirm={async motif => { setRejectFinalModal(false); await run('secretaire_reject_final', { motif }) }}
     />
@@ -261,12 +271,12 @@ const BASE_COLUMNS = [
 ]
 
 const STAT_DEFS = [
-  { key: 'submitted',             label: 'Nouvelles demandes', urgent: true,  icon: cilInbox    },
-  { key: 'secretary_correction',  label: 'À corriger',         urgent: true,  icon: cilWarning  },
-  { key: 'circuit_correction',    label: 'Navette active',     urgent: true,  icon: cilSync     },
-  { key: 'flagged',               label: 'Réserves actives',   urgent: true,  icon: cilFlagAlt  },
-  { key: 'ready_for_pickup',      label: 'Prêts à retirer',    urgent: false, icon: cilCheckAlt },
-  { key: 'picked_up',             label: 'Archivés',           urgent: false, icon: cilFolder   },
+  { key: 'submitted',            label: 'Nouvelles demandes', urgent: true,  icon: cilInbox    },
+  { key: 'secretary_correction', label: 'À corriger',         urgent: true,  icon: cilWarning  },
+  { key: 'circuit_correction',   label: 'Navette active',     urgent: true,  icon: cilSync     },
+  { key: 'flagged',              label: 'Réserves actives',   urgent: true,  icon: cilFlagAlt  },
+  { key: 'ready_for_pickup',     label: 'Prêts à retirer',    urgent: false, icon: cilCheckAlt },
+  { key: 'picked_up',            label: 'Archivés',           urgent: false, icon: cilFolder   },
 ]
 
 const SecretaireDashboard = () => {
@@ -280,8 +290,7 @@ const SecretaireDashboard = () => {
     acc[tab.key] = demandes.filter(d => d.status === tab.key).length
     return acc
   }, {} as Record<string, number>)
-  counts['flagged']            = demandes.filter(d => !!d.has_flag).length
-  // Navette active = is_in_correction_circuit ET dossier PAS en secretary_correction
+  counts['flagged']            = demandes.filter(d => !!(d as any).has_flag).length
   counts['circuit_correction'] = demandes.filter(
     d => !!d.is_in_correction_circuit && d.status !== 'secretary_correction'
   ).length
@@ -290,7 +299,7 @@ const SecretaireDashboard = () => {
 
   const visibleDemandes =
     activeTab === 'flagged'
-      ? demandes.filter(d => !!d.has_flag)
+      ? demandes.filter(d => !!(d as any).has_flag)
       : activeTab === 'circuit_correction'
         ? demandes.filter(d => !!d.is_in_correction_circuit && d.status !== 'secretary_correction')
         : demandes.filter(d => d.status === activeTab)

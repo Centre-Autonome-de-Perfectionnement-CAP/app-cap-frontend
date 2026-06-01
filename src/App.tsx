@@ -7,7 +7,7 @@ import './scss/style.scss'
 
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout.tsx'))
 import ProtectedRoute from './protected/ProtectedRoutes.tsx'
-import { AuthContextProvider } from '@/contexts'
+import { AuthContextProvider, ToastProvider } from '@/contexts'
 import { FRONTEND_ROUTES, MODULES } from '@/constants'
 import { LoadingSpinner } from '@/components'
 
@@ -44,8 +44,9 @@ const App = () => {
 
   return (
     <BrowserRouter basename="/services">
-      <AuthContextProvider>
-        <Suspense fallback={<LoadingSpinner fullPage message="Chargement de l'application..." />}>
+      <ToastProvider>
+        <AuthContextProvider>
+          <Suspense fallback={<LoadingSpinner fullPage message="Chargement de l'application..." />}>
           <Routes>
             <Route path={FRONTEND_ROUTES.LOGIN}    element={<Login />} />
             <Route path={FRONTEND_ROUTES.REGISTER} element={<Register />} />
@@ -121,8 +122,9 @@ const App = () => {
 
             <Route path="*" element={<Navigate to={FRONTEND_ROUTES.PORTAIL} replace />} />
           </Routes>
-        </Suspense>
-      </AuthContextProvider>
+          </Suspense>
+        </AuthContextProvider>
+      </ToastProvider>
     </BrowserRouter>
   )
 }

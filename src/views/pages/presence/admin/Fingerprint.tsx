@@ -15,7 +15,7 @@ import AttendanceFilter from '@/components/Attendance/AttendanceFilter'
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 const BASE_URL       = 'http://localhost:8000/api/attendance'
-const ARDUINO_URL    = 'http://192.168.137.166'   // ← IP ESP32 (Serial Monitor)
+const ARDUINO_URL    = 'http://192.168.137.53'   // ← IP ESP32 (Serial Monitor)
 const ITEMS_PER_PAGE = 15
 const TIMEOUT_SEC    = 30  // secondes avant redirection automatique
 
@@ -35,8 +35,8 @@ type EnrollPhase =
 //  PAGE D'ENRÔLEMENT — UX simplifiée
 //
 //  Flux :
-//  1. Clic "Lancer" → GET /api/reenroll?student_id=X (ESP32 démarre)
-//  2. Polling GET /api/enroll-status toutes les 600ms
+//  1. Clic "Lancer" → GET /enroll?student_id=X (ESP32 démarre)
+//  2. Polling GET /enroll-status toutes les 600ms
 //     • step1/wait_up/step2 → afficher countdown 30s
 //     • done → sauvegarder Laravel → afficher succès → retour liste après 3s
 //  3. Timeout 30s → annuler ESP32 → afficher message → retour liste après 2s
@@ -74,7 +74,7 @@ const EnrollPage = ({
 
   // ── Annuler proprement côté ESP32 ─────────────────────────────────────
   const cancelArduino = useCallback(() => {
-    fetch(`${ARDUINO_URL}/api/enroll-cancel`).catch(() => {})
+    fetch(`${ARDUINO_URL}/enroll-cancel`).catch(() => {})
   }, [])
 
   // ── Démarrer le countdown 30s ─────────────────────────────────────────
@@ -102,7 +102,7 @@ const EnrollPage = ({
   useEffect(() => {
     const launch = async () => {
       try {
-        const r = await fetch(`${ARDUINO_URL}/api/reenroll?student_id=${student.id}`)
+        const r = await fetch(`${ARDUINO_URL}/enroll?student_id=${student.id}`)
         const d = await r.json()
 
         if (!mountedRef.current) return
@@ -120,7 +120,7 @@ const EnrollPage = ({
         pollRef.current = setInterval(async () => {
           if (!mountedRef.current) return
           try {
-            const rs = await fetch(`${ARDUINO_URL}/api/enroll-status`)
+            const rs = await fetch(`${ARDUINO_URL}/enroll-status`)
             const ds = await rs.json()
             const state: string = ds.state || 'idle'
 
@@ -586,6 +586,9 @@ const Fingerprint = () => {
   const [loading, setLoading]             = useState(false)
   const [activeView, setActiveView]       = useState<ActiveView>('list')
   const [activeStudent, setActiveStudent] = useState<any>(null)
+  const [clearAllModal, setClearAllModal]   = useState(false)
+  const [clearingAll,   setClearingAll]     = useState(false)
+  const [clearAllMsg,   setClearAllMsg]     = useState('')
 
   useEffect(() => {
     fetch(`${BASE_URL}/filters`).then(r => r.json()).then(d => {
@@ -618,6 +621,28 @@ const Fingerprint = () => {
   const goTo   = (view: ActiveView, s: any) => { setActiveStudent(s); setActiveView(view) }
   const goBack = () => { setActiveView('list'); setActiveStudent(null) }
 
+  // ── Effacer TOUTES les empreintes du capteur (ESP32) ──────────────────
+  const handleClearAll = async () => {
+    setClearingAll(true)
+    setClearAllMsg('')
+    try {
+      // 1. Effacer toutes les empreintes dans la flash du capteur
+      const r = await fetch(`${ARDUINO_URL}/clear-all`)
+      const d = await r.json()
+      if (!d.success) throw new Error(d.message || 'Erreur capteur')
+
+      // 2. Réinitialiser tous les étudiants en base (fingerprint_status=false, index=null)
+      await fetch(`${BASE_URL}/fingerprint/clear-all`, { method: 'DELETE' })
+
+      setClearAllMsg('✅ Toutes les empreintes ont été effacées du capteur et de la base.')
+      fetchStudents()
+    } catch (e: any) {
+      setClearAllMsg('❌ Erreur : ' + (e.message || 'Vérifiez que l\'ESP32 est connecté.'))
+    } finally {
+      setClearingAll(false)
+    }
+  }
+
   const handleExport = (format: string) => {
     window.open(`${BASE_URL}/fingerprint/export?${new URLSearchParams({ format, ...filters })}`, '_blank')
   }
@@ -647,7 +672,7 @@ const Fingerprint = () => {
           </h5>
 
           {students.length > 0 && (
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
               <div style={{ background: '#dcfce7', color: '#15803d', borderRadius: '8px', padding: '8px 16px', fontSize: '13px', fontWeight: 600 }}>
                 {nbEnrolled} enregistrée(s)
               </div>
@@ -656,6 +681,78 @@ const Fingerprint = () => {
               </div>
               <div style={{ background: '#f1f5f9', color: '#475569', borderRadius: '8px', padding: '8px 16px', fontSize: '13px', fontWeight: 600 }}>
                 {students.length} total
+              </div>
+              {/* ── Bouton effacer toutes les empreintes du capteur ── */}
+              <CButton size="sm" color="danger" variant="outline"
+                onClick={() => { setClearAllModal(true); setClearAllMsg('') }}
+                style={{ borderRadius: '8px', fontSize: '13px', fontWeight: 600, marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+                Effacer tout le capteur
+              </CButton>
+            </div>
+          )}
+
+          {/* ── Modal confirmation Effacer tout ──────────────────────────── */}
+          {clearAllModal && (
+            <div style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+              zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <div style={{
+                background: '#fff', borderRadius: '12px', padding: '28px 32px',
+                maxWidth: '440px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '16px', color: '#1e293b' }}>Effacer toutes les empreintes</div>
+                    <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Action irréversible</div>
+                  </div>
+                </div>
+
+                <p style={{ fontSize: '14px', color: '#475569', marginBottom: '16px', lineHeight: 1.6 }}>
+                  Cette action va <strong>supprimer toutes les empreintes</strong> enregistrées dans la mémoire du capteur AS608
+                  ET réinitialiser le statut de tous les étudiants en base de données.<br/><br/>
+                  <strong>Tous les étudiants devront être ré-enrôlés.</strong>
+                </p>
+
+                {clearAllMsg && (
+                  <div style={{
+                    padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px',
+                    background: clearAllMsg.startsWith('✅') ? '#f0fdf4' : '#fef2f2',
+                    color:      clearAllMsg.startsWith('✅') ? '#15803d' : '#991b1b',
+                    border: `1px solid ${clearAllMsg.startsWith('✅') ? '#bbf7d0' : '#fecaca'}`,
+                  }}>
+                    {clearAllMsg}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <CButton color="light" onClick={() => setClearAllModal(false)}
+                    disabled={clearingAll}
+                    style={{ border: '1px solid #dee2e6', borderRadius: '8px', fontWeight: 600 }}>
+                    Annuler
+                  </CButton>
+                  <CButton color="danger" onClick={handleClearAll}
+                    disabled={clearingAll || clearAllMsg.startsWith('✅')}
+                    style={{ borderRadius: '8px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    {clearingAll && <CSpinner size="sm" style={{ width: '14px', height: '14px' }} />}
+                    {clearingAll ? 'Effacement...' : 'Confirmer — Tout effacer'}
+                  </CButton>
+                </div>
+
+                {clearAllMsg.startsWith('✅') && (
+                  <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                    <CButton size="sm" color="primary" onClick={() => { setClearAllModal(false); setClearAllMsg('') }}
+                      style={{ borderRadius: '8px', fontWeight: 600 }}>Fermer</CButton>
+                  </div>
+                )}
               </div>
             </div>
           )}

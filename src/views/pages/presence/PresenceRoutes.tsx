@@ -7,6 +7,7 @@ const Dashboard = React.lazy(() => import('./admin/Dashboard'))
 const Management = React.lazy(() => import('./admin/Management'))
 const Fingerprint = React.lazy(() => import('./admin/Fingerprint'))
 const CourseAttendance = React.lazy(() => import('./admin/CourseAttendance'))
+const LiveCourse       = React.lazy(() => import('./admin/LiveCourse'))
 
 
 const PresenceRoutes = () => {
@@ -18,7 +19,8 @@ const PresenceRoutes = () => {
         <Route path="admin/dashboard" element={<Dashboard />} />
         <Route path="admin/management" element={<Management />} />
         <Route path="admin/fingerprint" element={<Fingerprint />} />
-        <Route path="admin/course-attendance" element={<CourseAttendance />} />
+        <Route path="admin/course-attendance"        element={<CourseAttendance />} />
+        <Route path="admin/live-course"               element={<LiveCourse />} />
 
         {/*  REDIRECTION  */}
         <Route index element={<Navigate to="admin/dashboard" replace />} />

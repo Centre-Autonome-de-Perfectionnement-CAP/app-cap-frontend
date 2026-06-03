@@ -87,12 +87,12 @@ export interface ProfessorProgram {
   is_primary: boolean
   label: string
   hours?: number
-<<<<<<< HEAD
-  /** Supports de cours associés à ce programme dans le contexte d'un contrat */
-=======
+
   number_monographie?: number | null
   amount_monographie?: number | null
->>>>>>> b447590662c62cdbc38b70fba846e1d019bf5fb6
+ 
+  /** Montant par heure défini dans le contrat (colonne pivot) */
+  amount_per_hour?: number | null
   course_support_file?: CourseSupport[]
   course_element: {
     id: number
@@ -132,7 +132,7 @@ export interface Contrat {
   is_authorized?: boolean
   authorization_date?: string
 
-<<<<<<< HEAD
+
   /**
    * Date/heure d'envoi de l'e-mail de transfert.
    * Référence pour l'expiration du lien après 72 heures.
@@ -140,8 +140,7 @@ export interface Contrat {
   transferred_at?: string
 
   /** Signature électronique */
-=======
->>>>>>> b447590662c62cdbc38b70fba846e1d019bf5fb6
+
   professor_signature_path?: string
   professor_signature_url?: string
   professor_signature_type?: 'drawn' | 'uploaded'
@@ -151,13 +150,8 @@ export interface Contrat {
   pdf_url?: string
   pdf_uploaded_at?: string
 
-<<<<<<< HEAD
-  /**
-   * Verrouillé = validé ou autorisé → plus de modification ni suppression
-   */
-=======
   amount_monographie?: number
->>>>>>> b447590662c62cdbc38b70fba846e1d019bf5fb6
+
   is_locked?: boolean
 
   professor?: {
@@ -194,6 +188,8 @@ export interface CreateContratPayload {
   amount: number
   notes?: string | null
   course_element_professor_ids?: number[]
+  /** Montant par heure par programme : clé = course_element_professor id, valeur = montant */
+  program_amounts?: Record<number | string, number>
 }
 
 export interface UpdateContratPayload extends CreateContratPayload {
@@ -222,9 +218,6 @@ export interface Cycle {
   abbreviation?: string
 }
 
-<<<<<<< HEAD
-=======
-// ─── Factures normalisées ─────────────────────────────────────────────────────
 
 /**
  * Un fichier individuel dans la colonne factures_normalisees (JSON)
@@ -257,4 +250,4 @@ export interface FactureEntry {
   factures: FactureFile[]
   uploaded_at: string
 }
->>>>>>> b447590662c62cdbc38b70fba846e1d019bf5fb6
+

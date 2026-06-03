@@ -88,7 +88,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
         <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline"
           disabled={loading} onClick={() => setRejectModal(true)} />
         <ActionButton
-          label="Signer — Document prêt" icon={cilCheck}
+          label="Signer — Renvoyer au Secrétariat" icon={cilCheck}
           customBg={confirmed && !loading ? palette.color : undefined}
           loading={loading} disabled={!confirmed}
           onClick={() => run('directeur_sign')}
@@ -110,12 +110,13 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
             <CAlert color="warning" className="mt-3 py-3" style={{ borderRadius: 12, border: 'none', background: '#fffbeb', color: '#92400e' }}>
               <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Attention :</div>
               <div style={{ fontSize: '0.88rem', opacity: 0.9 }}>
-                En signant, le document est marqué prêt à retirer pour l'étudiant. Action définitive.
+                En signant, le dossier est renvoyé au Secrétariat pour finalisation.
+                La secrétaire sera notifiée (email + WhatsApp) et marquera le document prêt à retirer.
               </div>
             </CAlert>
             <div style={{ padding: '0 4px' }}>
               <ConfirmCheckbox id="confirm-directeur" checked={confirmed} onChange={setConfirmed}
-                label={<>J'ai examiné ce dossier et j'appose ma signature en tant que <strong>Directeur</strong>.</>} />
+                label={<>J'ai examiné ce dossier et j'appose ma signature en tant que <strong>Directeur</strong>. Le dossier sera renvoyé au Secrétariat pour finalisation.</>} />
             </div>
           </>
         )}
@@ -154,6 +155,15 @@ const DirecteurDashboard = () => {
   const columns = useActionColumns(BASE_COLUMNS, openDetail)
   const correctionCount = stats.inCircuit
 
+  const [activeFilter, setActiveFilter] = useState<keyof typeof stats | null>(null)
+
+  const filteredDemandes = (() => {
+    if (!activeFilter) return demandes
+    if (activeFilter === 'inCircuit') return demandes.filter(d => !!d.is_in_correction_circuit)
+    if (activeFilter === 'hasFlag')   return demandes.filter(d => !!d.has_flag)
+    return demandes
+  })()
+
   return (
     <DirectionDashboardShell
       roleLabel="Directeur"
@@ -162,6 +172,8 @@ const DirecteurDashboard = () => {
       stats={stats}
       statsLoading={statsLoading}
       statDefs={DIRECTEUR_STAT_DEFS}
+      activeFilter={activeFilter}
+      onFilterChange={key => setActiveFilter(key as keyof typeof stats | null)}
     >
       {correctionCount > 0 && (
         <div style={{
@@ -184,14 +196,14 @@ const DirecteurDashboard = () => {
             <div>
               <div style={{ fontWeight: 800, fontSize: '1.45rem', color: '#0f172a', letterSpacing: '-0.025em' }}>Documents à signer</div>
               <div style={{ fontSize: '1rem', color: '#64748b', marginTop: 2, fontWeight: 500 }}>
-                {demandes.length} dossier{demandes.length !== 1 ? 's' : ''} en attente
+                {filteredDemandes.length} dossier{filteredDemandes.length !== 1 ? 's' : ''} {activeFilter ? 'filtrés' : 'en attente'}
               </div>
             </div>
             <DemandeSearchBar search={filters.search ?? ''} onSearchChange={v => setFilters({ ...filters, search: v })} />
           </div>
         </CCardHeader>
         <CCardBody style={{ padding: 0 }}>
-          <DemandeTable demandes={demandes} loading={loading} columns={columns}
+          <DemandeTable demandes={filteredDemandes} loading={loading} columns={columns}
             emptyMessage="Aucun document en attente de signature" onRowClick={openDetail} />
         </CCardBody>
       </CCard>

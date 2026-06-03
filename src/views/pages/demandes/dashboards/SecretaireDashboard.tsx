@@ -75,6 +75,35 @@ const CorrectionCircuitBanner = ({ demande }: { demande: DocumentRequest }) => {
   )
 }
 
+// ─── Bannière finalisation après signature Directeur ─────────────────────────
+
+const DirecteurSigneBanner = () => (
+  <div style={{
+    background: 'linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)',
+    border: '2px solid #5eead4',
+    borderLeft: '5px solid #0d9488',
+    borderRadius: 12,
+    padding: '16px 18px',
+    marginBottom: 20,
+  }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 28, height: 28, borderRadius: '50%',
+        background: '#0d9488', color: '#fff',
+        fontSize: '1rem', fontWeight: 900, flexShrink: 0,
+      }}>✓</span>
+      <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#134e4a' }}>
+        Signé par le Directeur — Finalisation requise
+      </span>
+    </div>
+    <div style={{ fontSize: '0.875rem', color: '#0f766e', lineHeight: 1.65 }}>
+      Le Directeur a apposé sa signature. Veuillez préparer le document physique
+      puis cliquer sur <strong>«&nbsp;Marquer document prêt&nbsp;»</strong> pour notifier l'étudiant.
+    </div>
+  </div>
+)
+
 // ─── Bannière navette en cours ────────────────────────────────────────────────
 
 const NavetteEnCoursBanner = ({ demande }: { demande: DocumentRequest }) => {
@@ -207,6 +236,18 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
           onClick={() => run('secretaire_deliver')}
         />
       )}
+
+      {/* FINALISATION APRÈS SIGNATURE DIRECTEUR */}
+      {s === 'secretary_final_review' && (
+        <ActionButton
+          label="Marquer document prêt"
+          icon={cilCheckAlt}
+          color="success"
+          loading={loadingAction === 'secretaire_mark_ready'}
+          disabled={!!loadingAction && loadingAction !== 'secretaire_mark_ready'}
+          onClick={() => run('secretaire_mark_ready')}
+        />
+      )}
     </>
   )
 
@@ -223,6 +264,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
     >
       {navetteActive && <NavetteEnCoursBanner demande={demande} />}
       {inCircuit && s === 'secretary_correction' && <CorrectionCircuitBanner demande={demande} />}
+      {s === 'secretary_final_review' && <DirecteurSigneBanner />}
 
       <DemandeDetailBase demande={demande} onRefresh={onReload}>
         {(s === 'submitted' || s === 'secretary_correction') && (
@@ -271,12 +313,13 @@ const BASE_COLUMNS = [
 ]
 
 const STAT_DEFS = [
-  { key: 'submitted',            label: 'Nouvelles demandes', urgent: true,  icon: cilInbox    },
-  { key: 'secretary_correction', label: 'À corriger',         urgent: true,  icon: cilWarning  },
-  { key: 'circuit_correction',   label: 'Navette active',     urgent: true,  icon: cilSync     },
-  { key: 'flagged',              label: 'Réserves actives',   urgent: true,  icon: cilFlagAlt  },
-  { key: 'ready_for_pickup',     label: 'Prêts à retirer',    urgent: false, icon: cilCheckAlt },
-  { key: 'picked_up',            label: 'Archivés',           urgent: false, icon: cilFolder   },
+  { key: 'submitted',              label: 'Nouvelles demandes',  urgent: false, icon: cilInbox    },
+  { key: 'secretary_final_review', label: 'À finaliser',         urgent: true,  icon: cilCheckAlt },
+  { key: 'secretary_correction',   label: 'À corriger',          urgent: true,  icon: cilWarning  },
+  { key: 'circuit_correction',     label: 'Navette active',      urgent: true,  icon: cilSync     },
+  { key: 'flagged',                label: 'Réserves actives',    urgent: true,  icon: cilFlagAlt  },
+  { key: 'ready_for_pickup',       label: 'Prêts à retirer',     urgent: false, icon: cilCheckAlt },
+  { key: 'picked_up',              label: 'Archivés',            urgent: false, icon: cilFolder   },
 ]
 
 const SecretaireDashboard = () => {
@@ -290,8 +333,8 @@ const SecretaireDashboard = () => {
     acc[tab.key] = demandes.filter(d => d.status === tab.key).length
     return acc
   }, {} as Record<string, number>)
-  counts['flagged']            = demandes.filter(d => !!(d as any).has_flag).length
-  counts['circuit_correction'] = demandes.filter(
+  counts['flagged']              = demandes.filter(d => !!(d as any).has_flag).length
+  counts['circuit_correction']   = demandes.filter(
     d => !!d.is_in_correction_circuit && d.status !== 'secretary_correction'
   ).length
 
@@ -310,7 +353,7 @@ const SecretaireDashboard = () => {
         {STAT_DEFS.map(s => {
           const palette = STATUS_COLORS[s.key] ?? STATUS_COLORS['submitted']
           return (
-            <CCol key={s.key} md={2} sm={4}>
+            <CCol key={s.key} md={Math.floor(12 / STAT_DEFS.length) || 1} sm={4} xs={6}>
               <StatCard
                 label={s.label}
                 count={counts[s.key] ?? 0}
@@ -365,7 +408,9 @@ const SecretaireDashboard = () => {
                 ? 'Aucun dossier avec réserve active'
                 : activeTab === 'circuit_correction'
                   ? 'Aucune navette active en ce moment'
-                  : 'Aucune demande dans cette catégorie'
+                  : activeTab === 'secretary_final_review'
+                    ? 'Aucun dossier en attente de finalisation'
+                    : 'Aucune demande dans cette catégorie'
             }
             onRowClick={openDetail}
           />

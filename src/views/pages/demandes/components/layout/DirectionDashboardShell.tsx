@@ -3,11 +3,11 @@
 // Enveloppe commune aux 4 rôles direction.
 // Fournit :
 //   - Header institutionnel avec profil acteur bien visible (nom, rôle, avatar)
-//   - Rangée de StatCards adaptées selon le rôle
+//   - Rangée de StatCards adaptées selon le rôle (cliquables → filtre actif)
 //   - Zone principale (children)
 //   - Pas de bouton portail — ces acteurs n'ont pas accès au portail
 
-import React from 'react'
+import React, { useState } from 'react'
 import { CRow, CCol } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
@@ -43,6 +43,10 @@ interface Props {
   /** Définitions des StatCards à afficher pour ce rôle */
   statDefs: StatDef[]
   children: React.ReactNode
+  /** Filtre actif (clé de stat) — contrôlé depuis le parent */
+  activeFilter?: keyof DirectionStatsData | null
+  /** Callback quand une StatCard est cliquée */
+  onFilterChange?: (key: keyof DirectionStatsData | null) => void
 }
 
 // ─── Utilitaire ───────────────────────────────────────────────────────────────
@@ -57,15 +61,21 @@ const getInitials = (nom: string, prenoms: string) => {
 interface StatCardProps extends StatDef {
   value: number
   loading: boolean
+  active?: boolean
+  onClick?: () => void
 }
 
-const StatCard = ({ label, icon, color, bg, border, urgent, value, loading }: StatCardProps) => {
+const StatCard = ({ label, icon, color, bg, border, urgent, value, loading, active, onClick }: StatCardProps) => {
   const isAlerting = urgent && value > 0
   return (
     <div
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? e => e.key === 'Enter' && onClick() : undefined}
       style={{
-        background: bg,
-        border: `1px solid ${border}`,
+        background: active ? color : bg,
+        border: active ? `2px solid ${color}` : `1px solid ${border}`,
         borderLeft: `4px solid ${color}`,
         borderRadius: 8,
         padding: '8px 12px',
@@ -73,23 +83,33 @@ const StatCard = ({ label, icon, color, bg, border, urgent, value, loading }: St
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
+        cursor: onClick ? 'pointer' : 'default',
+        outline: 'none',
+        transition: 'all 0.15s',
         boxShadow: isAlerting
           ? `0 2px 12px ${color}44`
-          : '0 1px 4px rgba(0,0,0,0.05)',
+          : active
+            ? `0 4px 16px ${color}55`
+            : '0 1px 4px rgba(0,0,0,0.05)',
         animation: isAlerting ? 'dirStatPulse 1.8s ease-in-out infinite' : 'none',
         ['--pulse-color' as any]: color,
+        transform: active ? 'translateY(-2px)' : 'none',
       }}
     >
       <div style={{
         display: 'flex', alignItems: 'center', gap: 6,
-        fontSize: '0.9rem', color, fontWeight: 750, opacity: 0.9,
+        fontSize: '0.9rem',
+        color: active ? '#fff' : color,
+        fontWeight: 750, opacity: 0.9,
       }}>
         <CIcon icon={icon as any} style={{ width: 14, flexShrink: 0 }} />
         {label}
       </div>
       <div style={{
         fontSize: isAlerting ? '2.3rem' : '2.0rem',
-        fontWeight: 800, color, lineHeight: 1,
+        fontWeight: 800,
+        color: active ? '#fff' : color,
+        lineHeight: 1,
         transition: 'font-size 0.2s',
         letterSpacing: '-0.025em',
       }}>
@@ -253,6 +273,7 @@ const DirHeader = ({
 const DirectionDashboardShell = ({
   roleLabel, accentColor, actionLabel,
   stats, statsLoading, statDefs, children,
+  activeFilter = null, onFilterChange,
 }: Props) => (
   <div style={{ minHeight: '100vh', background: '#f1f5f9', display: 'flex', flexDirection: 'column' }}>
     <DirHeader roleLabel={roleLabel} accentColor={accentColor} actionLabel={actionLabel} />
@@ -262,11 +283,40 @@ const DirectionDashboardShell = ({
       {/* Rangée de StatCards */}
       <CRow className="mb-4 g-3">
         {statDefs.map(def => (
-          <CCol key={def.key} md={Math.floor(12 / statDefs.length)} sm={6} xs={12}>
-            <StatCard {...def} value={stats[def.key]} loading={statsLoading} />
+          <CCol key={def.key} md={Math.floor(12 / statDefs.length) || 2} sm={6} xs={12}>
+            <StatCard
+              {...def}
+              value={stats[def.key]}
+              loading={statsLoading}
+              active={activeFilter === def.key}
+              onClick={onFilterChange ? () => onFilterChange(activeFilter === def.key ? null : def.key) : undefined}
+            />
           </CCol>
         ))}
       </CRow>
+
+      {/* Bandeau filtre actif */}
+      {activeFilter && onFilterChange && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          background: '#eff6ff', border: '1px solid #bfdbfe',
+          borderRadius: 8, padding: '8px 16px', marginBottom: 16,
+        }}>
+          <span style={{ fontSize: '0.875rem', color: '#1d4ed8', fontWeight: 600 }}>
+            Filtre actif : {statDefs.find(d => d.key === activeFilter)?.label ?? activeFilter}
+          </span>
+          <button
+            onClick={() => onFilterChange(null)}
+            style={{
+              marginLeft: 'auto', background: 'none', border: 'none',
+              color: '#1d4ed8', cursor: 'pointer', fontSize: '0.875rem',
+              fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+            }}
+          >
+            ✕ Effacer
+          </button>
+        </div>
+      )}
 
       {children}
     </main>

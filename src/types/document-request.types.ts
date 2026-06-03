@@ -10,6 +10,7 @@ export type DocumentRequestStatus =
   | 'deputy_director_review'
   | 'director_secretary_review'
   | 'director_review'
+  | 'secretary_final_review'
   | 'ready_for_pickup'
   | 'picked_up'
   | 'rejected'
@@ -84,6 +85,7 @@ export const STATUS_LABELS: Record<DocumentRequestStatus, string> = {
   deputy_director_review:       'Directrice Adjointe',
   director_secretary_review:    'Sec. Directeur',
   director_review:              'Directeur',
+  secretary_final_review:       'Finalisation Secrétaire',
   ready_for_pickup:             'Prêt à retirer',
   picked_up:                    'Retiré',
   rejected:                     'Rejeté définitivement',
@@ -99,6 +101,7 @@ export const STATUS_COLORS: Record<DocumentRequestStatus, string> = {
   deputy_director_review:       'primary',
   director_secretary_review:    'primary',
   director_review:              'primary',
+  secretary_final_review:       'success',
   ready_for_pickup:             'success',
   picked_up:                    'secondary',
   rejected:                     'dark',
@@ -126,6 +129,7 @@ export const WORKFLOW_STEPS: { status: DocumentRequestStatus; label: string }[] 
   { status: 'deputy_director_review',     label: 'Dir. Adjointe'  },
   { status: 'director_secretary_review',  label: 'Sec. Directeur' },
   { status: 'director_review',            label: 'Directeur'      },
+  { status: 'secretary_final_review',     label: 'Finalisation'   },
   { status: 'ready_for_pickup',           label: 'Prêt'           },
   { status: 'picked_up',                  label: 'Remis'          },
 ]

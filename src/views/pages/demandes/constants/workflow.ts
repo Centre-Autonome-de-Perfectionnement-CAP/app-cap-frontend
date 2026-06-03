@@ -15,6 +15,7 @@ export const STATUS_COLORS: Record<string, { color: string; bg: string; text: st
   deputy_director_review:       { color: '#6d28d9', bg: '#f5f3ff', text: '#3b0764' },
   director_secretary_review:    { color: '#c2410c', bg: '#fff7ed', text: '#7c2d12' },
   director_review:              { color: '#15803d', bg: '#f0fdf4', text: '#14532d' },
+  secretary_final_review:       { color: '#0d9488', bg: '#f0fdfa', text: '#134e4a' },
   ready_for_pickup:             { color: '#059669', bg: '#ecfdf5', text: '#064e3b' },
   picked_up:                    { color: '#4b5563', bg: '#f9fafb', text: '#1f2937' },
   rejected:                     { color: '#be123c', bg: '#fff1f2', text: '#881337' },
@@ -35,6 +36,7 @@ export const SECRETAIRE_TABS: TabConfig[] = [
   { key: 'deputy_director_review',     label: 'Dir. Adjointe',    icon: cilTask     },
   { key: 'director_secretary_review',  label: 'Sec. Directeur',   icon: cilTask     },
   { key: 'director_review',            label: 'Directeur',        icon: cilTask     },
+  { key: 'secretary_final_review',     label: 'À finaliser',      icon: cilCheckAlt },
   { key: 'ready_for_pickup',           label: 'Prêts',            icon: cilCheckAlt },
   { key: 'secretary_correction',       label: 'À corriger',       icon: cilWarning  },
   { key: 'circuit_correction',         label: 'Navette active',   icon: cilSync     },
@@ -44,12 +46,13 @@ export const SECRETAIRE_TABS: TabConfig[] = [
 ]
 
 // Stat cards secrétaire :
-// - secretary_correction, circuit_correction et flagged sont urgent=true : pulse quand count > 0
+// - secretary_correction, circuit_correction, flagged et secretary_final_review sont urgent=true
 export const SECRETAIRE_STAT_TABS: Omit<StatConfig, 'onClick'>[] = [
-  { key: 'submitted',             label: 'Nouvelles demandes' },
-  { key: 'secretary_correction',  label: 'À corriger',      urgent: true },
-  { key: 'circuit_correction',    label: 'Navette active',  urgent: true },
-  { key: 'flagged',               label: 'Réserves actives', urgent: true },
-  { key: 'ready_for_pickup',      label: 'Prêts à retirer' },
-  { key: 'picked_up',             label: 'Archivés' },
+  { key: 'submitted',              label: 'Nouvelles demandes' },
+  { key: 'secretary_final_review', label: 'À finaliser',       urgent: true },
+  { key: 'secretary_correction',   label: 'À corriger',        urgent: true },
+  { key: 'circuit_correction',     label: 'Navette active',    urgent: true },
+  { key: 'flagged',                label: 'Réserves actives',  urgent: true },
+  { key: 'ready_for_pickup',       label: 'Prêts à retirer' },
+  { key: 'picked_up',              label: 'Archivés' },
 ]

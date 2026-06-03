@@ -140,6 +140,15 @@ const SecDirecteurDashboard = () => {
   const columns = useActionColumns(BASE_COLUMNS, openDetail)
   const correctionCount = stats.inCircuit
 
+  const [activeFilter, setActiveFilter] = useState<keyof typeof stats | null>(null)
+
+  const filteredDemandes = (() => {
+    if (!activeFilter) return demandes
+    if (activeFilter === 'inCircuit') return demandes.filter(d => !!d.is_in_correction_circuit)
+    if (activeFilter === 'hasFlag')   return demandes.filter(d => !!d.has_flag)
+    return demandes
+  })()
+
   return (
     <DirectionDashboardShell
       roleLabel="Secrétaire du Directeur"
@@ -148,6 +157,8 @@ const SecDirecteurDashboard = () => {
       stats={stats}
       statsLoading={statsLoading}
       statDefs={SEC_DIR_STAT_DEFS}
+      activeFilter={activeFilter}
+      onFilterChange={key => setActiveFilter(key as keyof typeof stats | null)}
     >
       {correctionCount > 0 && (
         <div style={{
@@ -170,14 +181,14 @@ const SecDirecteurDashboard = () => {
             <div>
               <div style={{ fontWeight: 800, fontSize: '1.45rem', color: '#0f172a', letterSpacing: '-0.025em' }}>Documents à transmettre</div>
               <div style={{ fontSize: '1rem', color: '#64748b', marginTop: 2, fontWeight: 500 }}>
-                {demandes.length} dossier{demandes.length !== 1 ? 's' : ''} en attente
+                {filteredDemandes.length} dossier{filteredDemandes.length !== 1 ? 's' : ''} {activeFilter ? 'filtrés' : 'en attente'}
               </div>
             </div>
             <DemandeSearchBar search={filters.search ?? ''} onSearchChange={v => setFilters({ ...filters, search: v })} />
           </div>
         </CCardHeader>
         <CCardBody style={{ padding: 0 }}>
-          <DemandeTable demandes={demandes} loading={loading} columns={columns}
+          <DemandeTable demandes={filteredDemandes} loading={loading} columns={columns}
             emptyMessage="Aucun document en attente de transmission" onRowClick={openDetail} />
         </CCardBody>
       </CCard>

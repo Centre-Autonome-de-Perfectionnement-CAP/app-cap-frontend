@@ -23,7 +23,7 @@ export type DocumentRequestType =
   | 'bulletin_annuel'
 
 export type SignatureType    = 'paraphe' | 'signature'
-export type ChefDivisionType = 'formation_distance' | 'formation_continue'
+export type ResponsableDivisionType = 'formation_distance' | 'formation_continue'
 
 export interface DocumentRequest {
   id: number
@@ -39,13 +39,13 @@ export interface DocumentRequest {
   updated_at: string
   rejected_reason: string | null
   rejected_by: string | null
-  chef_division_comment: string | null
+  responsable_division_comment: string | null
   secretaire_comment: string | null
   comptable_comment: string | null
   signature_type: SignatureType | null
   department_name: string | null
-  chef_division_type: ChefDivisionType | null
-  chef_division_reviewed_at: string | null
+  responsable_division_type: ResponsableDivisionType | null
+  responsable_division_reviewed_at: string | null
   comptable_reviewed_at: string | null
   chef_cap_reviewed_at: string | null
   sec_dir_adjointe_reviewed_at: string | null
@@ -70,7 +70,7 @@ export interface WorkflowAction {
   action: string
   motif?: string
   signature_type?: SignatureType
-  chef_division_type?: ChefDivisionType
+  responsable_division_type?: ResponsableDivisionType
   resend_to?: string
   comment?: string
 }
@@ -115,7 +115,7 @@ export const TYPE_LABELS: Record<DocumentRequestType, string> = {
   bulletin_annuel:         'Bulletin annuel',
 }
 
-export const CHEF_DIVISION_LABELS: Record<ChefDivisionType, string> = {
+export const RESPONSABLE_DIVISION_LABELS: Record<ResponsableDivisionType, string> = {
   formation_distance: 'Formation à Distance',
   formation_continue: 'Formation Continue',
 }
@@ -143,7 +143,7 @@ export const WORKFLOW_STEPS: { status: DocumentRequestStatus; label: string }[] 
 
 export const RESEND_OPTIONS: { value: string; label: string }[] = [
   { value: 'comptable',           label: 'Comptable'            },
-  { value: 'chef-division',       label: 'Responsable Division' },
+  { value: 'responsable-division',label: 'Responsable Division' },
   { value: 'chef-cap',            label: 'Chef CAP'             },
   { value: 'sec-da',              label: 'Sec. Dir. Adjointe'   },
   { value: 'directrice-adjointe', label: 'Directrice Adjointe'  },
@@ -154,7 +154,7 @@ export const RESEND_OPTIONS: { value: string; label: string }[] = [
 // Label lisible pour un correction_origin_role
 export const ROLE_LABELS: Record<string, string> = {
   'comptable':           'Comptable',
-  'chef-division':       'Responsable Division',
+  'responsable-division': 'Responsable Division',
   'chef-cap':            'Chef CAP',
   'sec-da':              'Sec. Dir. Adjointe',
   'directrice-adjointe': 'Directrice Adjointe',

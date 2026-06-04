@@ -6,7 +6,7 @@ import CIcon from '@coreui/icons-react'
 import { cilExternalLink, cilWarning } from '@coreui/icons'
 import { WorkflowBadge } from '@/components/document-request'
 import type { DocumentRequest } from '@/types/document-request.types'
-import { TYPE_LABELS, CHEF_DIVISION_LABELS } from '@/types/document-request.types'
+import { TYPE_LABELS, RESPONSABLE_DIVISION_LABELS } from '@/types/document-request.types'
 
 export const ReferenceCell = ({ d }: { d: DocumentRequest }) => (
   <CTableDataCell style={{ verticalAlign: 'middle' }}>
@@ -94,24 +94,26 @@ export const StatutCell = ({ d }: { d: DocumentRequest }) => (
         </span>
       )}
     </div>
-    {d.chef_division_type && (
-      <div style={{ marginTop: 5 }}>
+    {d.responsable_division_type && (
+      <div style={{ marginTop: 6 }}>
         <span style={{
-          fontSize: '0.74rem', padding: '2px 7px', borderRadius: 5,
+          fontSize: '0.75rem', padding: '3px 8px', borderRadius: 4,
           background: '#e0f2fe', color: '#0369a1', fontWeight: 600,
         }}>
-          {CHEF_DIVISION_LABELS[d.chef_division_type]}
+          {RESPONSABLE_DIVISION_LABELS[d.responsable_division_type]}
         </span>
       </div>
     )}
   </CTableDataCell>
 )
 
-export const ChefDivisionTypeCell = ({ d }: { d: DocumentRequest }) => (
+export const ResponsableDivisionTypeCell = ({ d }: { d: DocumentRequest }) => (
   <CTableDataCell style={{ verticalAlign: 'middle' }}>
-    {d.chef_division_type
-      ? <CBadge color="info" style={{ fontSize: '0.82rem', padding: '5px 8px' }}>{CHEF_DIVISION_LABELS[d.chef_division_type]}</CBadge>
-      : <span style={{ color: '#cbd5e1' }}>—</span>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+      {d.responsable_division_type
+        ? <CBadge color="info" style={{ fontSize: '0.82rem', padding: '5px 8px' }}>{RESPONSABLE_DIVISION_LABELS[d.responsable_division_type]}</CBadge>
+        : <span style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '0.85rem' }}>Non défini</span>}
+    </div>
   </CTableDataCell>
 )
 

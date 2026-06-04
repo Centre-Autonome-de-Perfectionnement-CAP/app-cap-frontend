@@ -36,7 +36,7 @@ interface HistoriquePanelProps {
 const ROLE_LABELS: Record<string, string> = {
   secretaire:           'Secrétaire',
   comptable:            'Comptable',
-  chef_division:        'Resp. Division',
+  'responsable-division': 'Resp. Division',
   chef_cap:             'Chef CAP',
   sec_dir_adjointe:     'Sec. Dir. Adj.',
   directrice_adjointe:  'Dir. Adjointe',

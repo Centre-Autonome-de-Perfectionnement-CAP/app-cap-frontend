@@ -28,7 +28,7 @@ const rolePermissions = {
     presence: false,
     finance: false,
   },
-  'chef-division': {
+  'responsable-division': {
   },
   'comptable': {
     bibliotheque: false,

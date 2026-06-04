@@ -274,12 +274,12 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
     </DemandeModalShell>
 
     <ResendModal
-      demande={demande}
       visible={resendModal}
+      demande={demande}
       onClose={() => setResendModal(false)}
-      onConfirm={(resendTo, chefDivType) => {
+      onConfirm={(resendTo) => {
         setResendModal(false)
-        run('secretaire_resend', { resend_to: resendTo, chef_division_type: chefDivType })
+        run('secretaire_resend', { resend_to: resendTo })
       }}
     />
 

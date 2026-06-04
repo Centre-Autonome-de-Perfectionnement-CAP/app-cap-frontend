@@ -11,7 +11,7 @@ import { cilDescription, cilHistory, cilWarning, cilFile } from '@coreui/icons'
 import { WorkflowBadge } from '@/components/document-request'
 import DossierFilesSplit from '@/components/document-request/DossierFilesSplit'
 import type { DocumentRequest } from '@/types/document-request.types'
-import { CHEF_DIVISION_LABELS } from '@/types/document-request.types'
+import { RESPONSABLE_DIVISION_LABELS } from '@/types/document-request.types'
 import HistoriquePanel from './HistoriquePanel'
 import SousReservePanel from './SousReservePanel'
 
@@ -199,12 +199,12 @@ const DemandeModalShell = ({
               #{demande.reference}
             </code>
             {showStatusBadge && <WorkflowBadge status={demande.status} size="sm" />}
-            {demande.chef_division_type && (
+            {demande.responsable_division_type && (
               <span style={{
                 fontSize: '0.75rem', padding: '2px 8px', borderRadius: 5,
                 background: '#e0f2fe', color: '#0369a1', fontWeight: 600,
               }}>
-                {CHEF_DIVISION_LABELS[demande.chef_division_type]}
+                {RESPONSABLE_DIVISION_LABELS[demande.responsable_division_type]}
               </span>
             )}
             {hasFlag && (

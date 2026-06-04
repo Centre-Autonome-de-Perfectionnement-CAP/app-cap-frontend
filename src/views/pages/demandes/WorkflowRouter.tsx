@@ -9,7 +9,7 @@ import { AuthContext } from '@/contexts'
 import { CAlert } from '@coreui/react'
 import SecretaireDashboard        from './dashboards/SecretaireDashboard'
 import ComptableDashboard         from './dashboards/ComptableDashboard'
-import ChefDivisionDashboard      from './dashboards/ChefDivisionDashboard'
+import ResponsableDivisionDashboard      from './dashboards/ResponsableDivisionDashboard'
 import ChefCapDashboard           from './dashboards/ChefCapDashboard'
 import SecDirAdjointeDashboard    from './dashboards/SecDirAdjointeDashboard'
 import DirectriceAdjointeDashboard from './dashboards/DirectriceAdjointeDashboard'
@@ -26,8 +26,8 @@ const WorkflowRouter = () => {
       return <SecretaireDashboard />
     case 'comptable':
       return <ComptableDashboard />
-    case 'chef-division':
-      return <ChefDivisionDashboard />
+    case 'responsable-division':
+      return <ResponsableDivisionDashboard />
     case 'chef-cap':
       return <ChefCapDashboard />
     case 'sec-da':

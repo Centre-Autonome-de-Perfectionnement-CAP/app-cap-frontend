@@ -8,11 +8,11 @@ import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
 import {
   DashboardShell, DemandeTable, DemandeModalShell, DemandeDetailBase,
-  FinancialPanel, ActionButton, useActionColumns, ChefDivisionModal,
+  FinancialPanel, ActionButton, useActionColumns,
   ReferenceCell, EtudiantCell, TypeCell, DateCell,
   RetourSecretaireModal,
 } from '../components'
-import type { DocumentRequest, ChefDivisionType } from '@/types/document-request.types'
+import type { DocumentRequest } from '@/types/document-request.types'
 
 // ─── Bannière correction pour l'acteur ────────────────────────────────────────
 
@@ -60,9 +60,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
   const [loading,          setLoading]          = useState(false)
   const [rejectModal,      setRejectModal]      = useState(false)
   const [retourModal,      setRetourModal]      = useState(false)
-  const [chefDivModal,     setChefDivModal]     = useState(false)
-  const [chefDivFlagModal, setChefDivFlagModal] = useState(false)
-  const [pendingFlagType,  setPendingFlagType]  = useState<ChefDivisionType | null>(null)
+  // Chef division type selection removed as it's now automated
   const [flagMotifModal,   setFlagMotifModal]   = useState(false)
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
@@ -88,9 +86,9 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
         <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline"
           disabled={loading} onClick={() => setRejectModal(true)} />
         <ActionButton label="Valider → Resp. Division" icon={cilCheckAlt} color="success"
-          loading={loading} onClick={() => setChefDivModal(true)} />
+          loading={loading} onClick={() => run('comptable_validate')} />
         <ActionButton label="Valider sous réserve" icon={cilWarning} color="warning" variant="outline"
-          loading={loading} onClick={() => setChefDivFlagModal(true)} />
+          loading={loading} onClick={() => setFlagMotifModal(true)} />
       </>
     )}
   </>)
@@ -119,18 +117,14 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
       onConfirm={async comment => { setRetourModal(false); await run('return_to_secretaire', { comment }) }}
     />
 
-    <ChefDivisionModal visible={chefDivModal} onClose={() => setChefDivModal(false)}
-      onConfirm={(type: ChefDivisionType) => { setChefDivModal(false); run('comptable_validate', { chef_division_type: type }) }} />
-
-    <ChefDivisionModal visible={chefDivFlagModal} onClose={() => setChefDivFlagModal(false)}
-      onConfirm={(type: ChefDivisionType) => { setChefDivFlagModal(false); setPendingFlagType(type); setFlagMotifModal(true) }} />
+    {/* ChefDivisionModal removed, automated by backend */}
 
     <MotifModal visible={flagMotifModal} title="Validation sous réserve"
       confirmLabel="Valider" confirmColor="warning" placeholder="Commentaire de réserve…"
       onClose={() => { setFlagMotifModal(false); setPendingFlagType(null) }}
       onConfirm={async motif => {
         setFlagMotifModal(false)
-        await run('comptable_validate_flagged', { chef_division_type: pendingFlagType, motif })
+        await run('comptable_validate_flagged', { motif })
         setPendingFlagType(null)
       }} />
 

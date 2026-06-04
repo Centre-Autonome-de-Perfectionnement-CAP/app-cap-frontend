@@ -1,4 +1,4 @@
-// src/views/pages/demandes/dashboards/ChefDivisionDashboard.tsx
+// src/views/pages/demandes/dashboards/ResponsableDivisionDashboard.tsx
 
 import { useState } from 'react'
 import { CAlert, CBadge } from '@coreui/react'
@@ -9,7 +9,7 @@ import useDemandesDashboard from '../hooks/useDemandesDashboard'
 import {
   DashboardShell, DemandeTable, DemandeModalShell, DemandeDetailBase,
   ActionButton, useActionColumns,
-  ReferenceCell, EtudiantCell, TypeCell, DateCell, ChefDivisionTypeCell,
+  ReferenceCell, EtudiantCell, TypeCell, DateCell, ResponsableDivisionTypeCell,
   RetourSecretaireModal,
 } from '../components'
 import FlaggedValidationAction from '../components/workflow/FlaggedValidationAction'
@@ -85,8 +85,8 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
         <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline"
           disabled={loading} onClick={() => setRejectModal(true)} />
         <ActionButton label="Valider → Chef CAP" icon={cilCheckAlt} color="success"
-          loading={loading} onClick={() => run('chef_division_validate')} />
-        <FlaggedValidationAction action="chef_division_validate_flagged" loading={loading} run={run} />
+          loading={loading} onClick={() => run('responsable_division_validate')} />
+        <FlaggedValidationAction action="responsable_division_validate_flagged" loading={loading} run={run} />
       </>
     )}
   </>)
@@ -117,7 +117,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
     <MotifModal visible={rejectModal} title="Rejeter — retour à la secrétaire"
       confirmLabel="Rejeter" confirmColor="danger" placeholder="Motif du rejet…"
       onClose={() => setRejectModal(false)}
-      onConfirm={async motif => { setRejectModal(false); await run('chef_division_reject', { motif }) }} />
+      onConfirm={async motif => { setRejectModal(false); await run('responsable_division_reject', { motif }) }} />
   </>)
 }
 
@@ -125,11 +125,11 @@ const BASE_COLUMNS = [
   { header: 'Référence',  render: (d: DocumentRequest) => <ReferenceCell d={d} /> },
   { header: 'Étudiant',   render: (d: DocumentRequest) => <EtudiantCell d={d} /> },
   { header: 'Type',       render: (d: DocumentRequest) => <TypeCell d={d} /> },
-  { header: 'Formation',  render: (d: DocumentRequest) => <ChefDivisionTypeCell d={d} /> },
+  { header: 'Formation',  render: (d: DocumentRequest) => <ResponsableDivisionTypeCell d={d} /> },
   { header: 'Date',       render: (d: DocumentRequest) => <DateCell d={d} /> },
 ]
 
-const ChefDivisionDashboard = () => {
+const ResponsableDivisionDashboard = () => {
   const { demandes, loading, filters, setFilters, selected, detailOpen, openDetail, closeDetail, handleAction } =
     useDemandesDashboard()
   const columns = useActionColumns(BASE_COLUMNS, openDetail)
@@ -171,4 +171,4 @@ const ChefDivisionDashboard = () => {
   )
 }
 
-export default ChefDivisionDashboard
+export default ResponsableDivisionDashboard

@@ -8,7 +8,7 @@ import { CRow, CCol, CAlert } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilWarning, cilInfo } from '@coreui/icons'
 import type { DocumentRequest } from '@/types/document-request.types'
-import { TYPE_LABELS, CHEF_DIVISION_LABELS } from '@/types/document-request.types'
+import { TYPE_LABELS, RESPONSABLE_DIVISION_LABELS } from '@/types/document-request.types'
 
 interface Props {
   demande: DocumentRequest
@@ -102,18 +102,18 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
               {demande.comptable_reviewed_at && (
                 <ValidationBadge color="#164e63" bg="#ecfeff">✓ Comptabilité</ValidationBadge>
               )}
-              {demande.chef_division_reviewed_at && (
+              {demande.responsable_division_reviewed_at && (
                 <ValidationBadge color="#166534" bg="#dcfce7">✓ Resp. Division</ValidationBadge>
               )}
               {demande.directrice_adjointe_reviewed_at && (
                 <ValidationBadge color="#3b0764" bg="#f5f3ff">✓ Dir. Adjointe</ValidationBadge>
               )}
-              {demande.chef_division_type && (
+              {demande.responsable_division_type && (
                 <span style={{
                   fontSize: '0.8rem', padding: '3px 10px', borderRadius: 5,
                   background: '#e0f2fe', color: '#0369a1', fontWeight: 600,
                 }}>
-                  {CHEF_DIVISION_LABELS[demande.chef_division_type]}
+                  {RESPONSABLE_DIVISION_LABELS[demande.responsable_division_type]}
                 </span>
               )}
               {demande.signature_type && (
@@ -141,10 +141,10 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
           <strong>Comptable :</strong> {demande.comptable_comment}
         </CAlert>
       )}
-      {demande.chef_division_comment && (
+      {demande.responsable_division_comment && (
         <CAlert color="warning" className="mt-2 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
           <CIcon icon={cilInfo} className="me-1" />
-          <strong>Responsable Division :</strong> {demande.chef_division_comment}
+          <strong>Responsable Division :</strong> {demande.responsable_division_comment}
         </CAlert>
       )}
 

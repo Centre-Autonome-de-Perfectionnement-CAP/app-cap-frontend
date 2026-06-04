@@ -77,7 +77,7 @@ export const ComptableDashboard = () => {
 export default ComptableDashboard
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TEMPLATE générique pour : ChefDivision, SecretaireDA, SecretaireDirecteur
+// TEMPLATE générique pour : ResponsableDivision, SecretaireDA, SecretaireDirecteur
 // ─────────────────────────────────────────────────────────────────────────────
 // Ces 3 rôles ont le même pattern : valider → maillon suivant, rejeter → secrétaire
 
@@ -143,15 +143,15 @@ export const SimpleTransmitDashboard = ({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ChefDivisionDashboard.tsx — utilise SimpleTransmitDashboard
+// ResponsableDivisionDashboard.tsx — utilise SimpleTransmitDashboard
 // ─────────────────────────────────────────────────────────────────────────────
-export const ChefDivisionDashboard = () => (
+export const ResponsableDivisionDashboard = () => (
   <SimpleTransmitDashboard
     title="Validation Division"
     subtitle="Responsable de Division"
     statusKey="division_manager_review"
-    validateAction="chef_division_validate"
-    rejectAction="chef_division_reject"
+    validateAction="responsable_division_validate"
+    rejectAction="responsable_division_reject"
     validateLabel="Valider → Chef CAP"
   />
 )

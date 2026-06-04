@@ -9,79 +9,11 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilInfo, cilArrowCircleRight, cilCheckCircle } from '@coreui/icons'
-import type { DocumentRequest, ChefDivisionType } from '@/types/document-request.types'
-import { RESEND_OPTIONS, CHEF_DIVISION_LABELS, ROLE_LABELS } from '@/types/document-request.types'
+import type { DocumentRequest } from '@/types/document-request.types'
+import { RESEND_OPTIONS, ROLE_LABELS } from '@/types/document-request.types'
 import RadioCard from '../ui/RadioCard'
 
-// ─── ChefDivisionPicker ───────────────────────────────────────────────────────
-
-interface ChefDivisionPickerProps {
-  value: ChefDivisionType
-  onChange: (v: ChefDivisionType) => void
-}
-
-export const ChefDivisionPicker = ({ value, onChange }: ChefDivisionPickerProps) => (
-  <div style={{ marginTop: 14 }}>
-    <p style={{
-      fontWeight: 700, fontSize: '0.875rem', marginBottom: 10,
-      display: 'flex', alignItems: 'center', gap: 6, color: '#374151',
-    }}>
-      <CIcon icon={cilInfo} style={{ width: 15 }} />
-      Quel Responsable Division ?
-    </p>
-    <div style={{ display: 'flex', gap: 10 }}>
-      {(['formation_distance', 'formation_continue'] as ChefDivisionType[]).map(t => (
-        <button
-          key={t}
-          onClick={() => onChange(t)}
-          style={{
-            flex: 1, padding: '10px', borderRadius: 8, cursor: 'pointer',
-            border: `2px solid ${value === t ? '#7c3aed' : '#e5e7eb'}`,
-            background: value === t ? '#7c3aed' : 'white',
-            color: value === t ? '#ffffff' : '#374151',
-            fontWeight: 700, fontSize: '0.875rem', transition: 'all 0.15s',
-          }}
-        >
-          {CHEF_DIVISION_LABELS[t]}
-        </button>
-      ))}
-    </div>
-  </div>
-)
-
-// ─── ChefDivisionModal ────────────────────────────────────────────────────────
-
-interface ChefDivisionModalProps {
-  visible: boolean
-  onClose: () => void
-  onConfirm: (type: ChefDivisionType) => void
-}
-
-export const ChefDivisionModal = ({ visible, onClose, onConfirm }: ChefDivisionModalProps) => {
-  const [type, setType] = useState<ChefDivisionType>('formation_distance')
-
-  return (
-    <CModal visible={visible} onClose={onClose} alignment="center">
-      <CModalHeader style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }}>
-        <CModalTitle style={{ fontWeight: 800, fontSize: '1rem' }}>
-          Choisir le Responsable Division
-        </CModalTitle>
-      </CModalHeader>
-      <CModalBody style={{ padding: '24px' }}>
-        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: 16 }}>
-          Sélectionnez le responsable de division concerné par ce dossier.
-        </p>
-        <ChefDivisionPicker value={type} onChange={setType} />
-      </CModalBody>
-      <CModalFooter style={{ padding: '14px 24px', gap: 10 }}>
-        <CButton color="secondary" variant="ghost" onClick={onClose}
-          style={{ fontWeight: 600, fontSize: '0.875rem' }}>Annuler</CButton>
-        <CButton color="primary" onClick={() => onConfirm(type)}
-          style={{ fontWeight: 700, fontSize: '0.875rem', padding: '8px 22px' }}>Confirmer</CButton>
-      </CModalFooter>
-    </CModal>
-  )
-}
+// ChefDivisionPicker and ChefDivisionModal removed due to backend auto-detection
 
 // ─── ResendModal ──────────────────────────────────────────────────────────────
 //
@@ -99,13 +31,12 @@ interface ResendModalProps {
   demande: DocumentRequest | null
   visible: boolean
   onClose: () => void
-  onConfirm: (resendTo: string, chefDivType?: ChefDivisionType) => void
+  onConfirm: (resendTo: string) => void
 }
 
 export const ResendModal = ({ demande, visible, onClose, onConfirm }: ResendModalProps) => {
   const [mainChoice,  setMainChoice]  = useState<MainChoice>('')
   const [actorChoice, setActorChoice] = useState('')
-  const [chefDivType, setChefDivType] = useState<ChefDivisionType>('formation_distance')
 
   if (!demande) return null
 
@@ -124,7 +55,7 @@ export const ResendModal = ({ demande, visible, onClose, onConfirm }: ResendModa
     if (mainChoice === 'origin') {
       onConfirm('origin')
     } else if (mainChoice === 'actor' && actorChoice) {
-      onConfirm(actorChoice, actorChoice === 'chef-division' ? chefDivType : undefined)
+      onConfirm(actorChoice)
     }
   }
 
@@ -281,9 +212,6 @@ export const ResendModal = ({ demande, visible, onClose, onConfirm }: ResendModa
                 />
               ))}
             </div>
-            {actorChoice === 'chef-division' && (
-              <ChefDivisionPicker value={chefDivType} onChange={setChefDivType} />
-            )}
           </div>
         )}
       </CModalBody>

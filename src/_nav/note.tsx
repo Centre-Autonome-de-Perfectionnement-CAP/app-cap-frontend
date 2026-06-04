@@ -23,8 +23,8 @@ const getNoteNavigation = (role: string | null) => {
     } as any)
   }
 
-  // Section Administration - visible uniquement pour chef-division
-  if (role === 'chef-division') {
+  // Section Administration - visible uniquement pour responsable-division
+  if (role === 'responsable-division') {
     navigation.push(
       {
         component: CNavItem,

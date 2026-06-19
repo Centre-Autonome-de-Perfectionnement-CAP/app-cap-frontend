@@ -353,7 +353,7 @@ const SecretaireDashboard = () => {
         {STAT_DEFS.map(s => {
           const palette = STATUS_COLORS[s.key] ?? STATUS_COLORS['submitted']
           return (
-            <CCol key={s.key} md={Math.floor(12 / STAT_DEFS.length) || 1} sm={4} xs={6}>
+            <CCol key={s.key} xl={Math.floor(12 / STAT_DEFS.length) || 2} lg={3} md={4} sm={6} xs={12}>
               <StatCard
                 label={s.label}
                 count={counts[s.key] ?? 0}

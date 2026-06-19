@@ -8,6 +8,8 @@ import CIcon from '@coreui/icons-react'
 import { cilCloudDownload, cilFile, cilPlus, cilTrash, cilPencil, cilCheck } from '@coreui/icons'
 import HttpService from '@/services/http.service'
 import { useAuth, useToast } from '@/contexts'
+import AttachmentViewerModal, { type AttachmentViewerFile, type AttachmentSource } from './AttachmentViewerModal'
+import type { DocumentRequest } from '@/types/document-request.types'
 
 // ─── Libellés ─────────────────────────────────────────────────────────────────
 
@@ -30,17 +32,14 @@ function parseFiles(raw: Record<string, string> | null | string): Record<string,
   return raw
 }
 
-const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:8001').replace('/api', '')
-
 // ─── FileChip ─────────────────────────────────────────────────────────────────
+// Ouvre désormais le visualiseur intégré (modal) au lieu d'un nouvel onglet.
 
-const FileChip = ({ label, path }: { label: string; path: string }) => (
+const FileChip = ({ label, onClick }: { label: string; onClick: () => void }) => (
   <CButton
     color="light"
     size="sm"
-    href={`${apiBase}/storage/${path}`}
-    target="_blank"
-    rel="noopener noreferrer"
+    onClick={onClick}
     className="d-flex align-items-center gap-1"
     style={{ fontSize: '0.78rem' }}
   >
@@ -52,7 +51,13 @@ const FileChip = ({ label, path }: { label: string; path: string }) => (
 
 // ─── FileGrid — liste de fichiers ─────────────────────────────────────────────
 
-const FileGrid = ({ files }: { files: Record<string, string> }) => {
+const FileGrid = ({
+  files, source, onOpen,
+}: {
+  files: Record<string, string>
+  source: AttachmentSource
+  onOpen: (source: AttachmentSource, key: string, path: string, label: string) => void
+}) => {
   const entries = Object.entries(files)
   if (entries.length === 0) {
     return <p className="text-muted small mb-0">Aucun fichier joint.</p>
@@ -60,7 +65,11 @@ const FileGrid = ({ files }: { files: Record<string, string> }) => {
   return (
     <div className="d-flex flex-wrap gap-2">
       {entries.map(([key, path]) => (
-        <FileChip key={key} label={FILE_LABELS[key] ?? key} path={path} />
+        <FileChip
+          key={key}
+          label={FILE_LABELS[key] ?? key}
+          onClick={() => onOpen(source, key, path, FILE_LABELS[key] ?? key)}
+        />
       ))}
     </div>
   )
@@ -119,6 +128,7 @@ const Pill = ({
 
 interface Props {
   demandeId?: number
+  demande?: DocumentRequest
   status?: string
   files: Record<string, string> | null | string
   complementFiles: Record<string, string> | null | string
@@ -128,7 +138,7 @@ interface Props {
 
 // ─── DossierFilesSplit ────────────────────────────────────────────────────────
 
-const DossierFilesSplit = ({ demandeId, status, files, complementFiles, secretaryFiles, onRefresh }: Props) => {
+const DossierFilesSplit = ({ demandeId, demande, status, files, complementFiles, secretaryFiles, onRefresh }: Props) => {
   const { role } = useAuth()
   const initial    = parseFiles(files)
   const complement = parseFiles(complementFiles)
@@ -149,6 +159,30 @@ const DossierFilesSplit = ({ demandeId, status, files, complementFiles, secretar
 
   const [tab, setTab] = useState<'initial' | 'complement'>('initial')
 
+  // ── Visualiseur intégré ──────────────────────────────────────────────────
+  const [viewerFile, setViewerFile] = useState<AttachmentViewerFile | null>(null)
+
+  const openStudentFile = (source: AttachmentSource, key: string, path: string, label: string) => {
+    setViewerFile({
+      source,
+      key,
+      path,
+      label,
+      uploadedAt: source === 'initial' ? demande?.submitted_at : null,
+    })
+  }
+
+  const openSecretaryFile = (f: any) => {
+    setViewerFile({
+      source: 'secretary',
+      key: f.id,
+      path: f.path,
+      label: f.original_name,
+      uploadedAt: f.uploaded_at,
+      comment: f.comment,
+    })
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* ── Pièces étudiantes ── */}
@@ -166,7 +200,7 @@ const DossierFilesSplit = ({ demandeId, status, files, complementFiles, secretar
           >
             Pièces jointes étudiantes
           </p>
-          <FileGrid files={initial} />
+          <FileGrid files={initial} source="initial" onOpen={openStudentFile} />
         </div>
       ) : (
         <div>
@@ -258,7 +292,11 @@ const DossierFilesSplit = ({ demandeId, status, files, complementFiles, secretar
               )}
             </div>
 
-            <FileGrid files={tab === 'initial' ? initial : complement} />
+            <FileGrid
+              files={tab === 'initial' ? initial : complement}
+              source={tab}
+              onOpen={openStudentFile}
+            />
           </div>
         </div>
       )}
@@ -292,12 +330,20 @@ const DossierFilesSplit = ({ demandeId, status, files, complementFiles, secretar
                   file={f}
                   onRefresh={onRefresh}
                   isEditable={!!isEditable}
+                  onOpen={openSecretaryFile}
                 />
               ))}
             </div>
           </div>
         </div>
       )}
+
+      <AttachmentViewerModal
+        demandeId={demandeId ?? 0}
+        demande={demande}
+        file={viewerFile}
+        onClose={() => setViewerFile(null)}
+      />
     </div>
   )
 }
@@ -307,11 +353,13 @@ const SecretaryFileRow = ({
   file,
   onRefresh,
   isEditable,
+  onOpen,
 }: {
   demandeId?: number
   file: any
   onRefresh?: () => Promise<void>
   isEditable: boolean
+  onOpen: (file: any) => void
 }) => {
   const [editing, setEditing] = useState(false)
   const [comment, setComment] = useState(file.comment || '')
@@ -359,7 +407,7 @@ const SecretaryFileRow = ({
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FileChip label={file.original_name} path={file.path} />
+          <FileChip label={file.original_name} onClick={() => onOpen(file)} />
           <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
             ({new Date(file.uploaded_at).toLocaleDateString('fr-FR')} à {new Date(file.uploaded_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })})
           </span>

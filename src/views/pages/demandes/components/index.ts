@@ -5,7 +5,7 @@ export { default as DemandeTable }      from './table/DemandeTable'
 export { default as useActionColumns }  from './table/useActionColumns'
 export {
   ReferenceCell, EtudiantCell, TypeCell, DateCell,
-  StatutCell, ChefDivisionTypeCell, SignatureTypeCell, ActionCell,
+  StatutCell, ResponsableDivisionTypeCell, SignatureTypeCell, ActionCell,
 } from './table/TableCells'
 export type { ColumnDef } from './table/DemandeTable'
 
@@ -23,7 +23,7 @@ export { default as DemandeSearchBar }  from './modal/DemandeSearchBar'
 export { default as FinancialPanel }    from './modal/FinancialPanel'
 export { default as ConfirmCheckbox }   from './modal/ConfirmCheckbox'
 export { default as HistoriquePanel }   from './modal/HistoriquePanel'
-export { ResendModal, ChefDivisionModal, ChefDivisionPicker } from './modal/SecretaireModals'
+export { ResendModal } from './modal/SecretaireModals'
 export { default as RetourSecretaireModal } from './modal/RetourSecretaireModal'
 
 // Layout direction

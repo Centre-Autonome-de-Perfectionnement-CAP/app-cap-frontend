@@ -266,6 +266,7 @@ const DemandeModalShell = ({
         {activeTab === 'fichiers' && (
           <DossierFilesSplit
             demandeId={demande.id}
+            demande={demande}
             status={demande.status}
             files={demande.files}
             complementFiles={demande.complement_files}

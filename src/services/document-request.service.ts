@@ -33,6 +33,21 @@ class DocumentRequestService {
   }
 
   /**
+   * Aperçu / téléchargement d'une pièce jointe (visualiseur intégré).
+   * Remplace l'ancien accès direct via /storage/{path} (non authentifié,
+   * et source des 403 / aperçus PDF vides constatés).
+   * Retourne une URL blob locale (cf. HttpService.downloadFile) prête à être
+   * injectée dans un <iframe>/<img> ou un lien de téléchargement.
+   */
+  previewFile = async (
+    id: number,
+    source: 'initial' | 'complement' | 'secretary',
+    key: string,
+  ) => {
+    return HttpService.downloadFile(`${BASE}/${id}/files/${source}/${encodeURIComponent(key)}`)
+  }
+
+  /**
    * Historique d'une demande
    * (✔️ AJOUTÉ — manquait dans ton service)
    */

@@ -190,12 +190,16 @@ const CahierTexteModal: React.FC<CahierTexteModalProps> = ({ visible, onClose, p
       if (editingEntry) {
         await inscriptionService.updateTextbookEntry(editingEntry.id, payload);
         Swal.fire({ icon: 'success', title: 'Mis à jour', text: 'Entrée modifiée avec succès.', timer: 1800, showConfirmButton: false });
+        cancelForm();
+        await loadEntries();
       } else {
         await inscriptionService.createTextbookEntry(program.id, payload);
         Swal.fire({ icon: 'success', title: 'Créée', text: 'Entrée ajoutée (brouillon).', timer: 1800, showConfirmButton: false });
+        cancelForm();
+        // Recharger les entrées ET re-vérifier si on peut encore ajouter pour ce créneau.
+        // Le backend retournera can_add: false si une entrée existe déjà pour ce cours programmé.
+        await Promise.all([loadEntries(), checkCanAdd()]);
       }
-      cancelForm();
-      await loadEntries();
     } catch (err: any) {
       const serverErrors = err?.response?.data?.errors;
       if (serverErrors) {
@@ -406,30 +410,7 @@ const CahierTexteModal: React.FC<CahierTexteModalProps> = ({ visible, onClose, p
         </CRow>
 
         <CRow className="mb-3">
-          <CCol xs={6} md={3}>
-            <CFormLabel htmlFor="students_present">Présents</CFormLabel>
-            <CFormInput
-              type="number"
-              id="students_present"
-              name="students_present"
-              min={0}
-              value={form.students_present ?? ''}
-              onChange={handleChange}
-              placeholder="0"
-            />
-          </CCol>
-          <CCol xs={6} md={3}>
-            <CFormLabel htmlFor="students_absent">Absents</CFormLabel>
-            <CFormInput
-              type="number"
-              id="students_absent"
-              name="students_absent"
-              min={0}
-              value={form.students_absent ?? ''}
-              onChange={handleChange}
-              placeholder="0"
-            />
-          </CCol>
+         
           <CCol xs={12} md={6}>
             <CFormLabel htmlFor="observations">Observations</CFormLabel>
             <CFormInput
@@ -573,6 +554,8 @@ const CahierTexteModal: React.FC<CahierTexteModalProps> = ({ visible, onClose, p
   };
 
   // ── Main render ───────────────────────────────────────────────────────────
+  // Après création d'une entrée, checkCanAdd() est rappelé : le backend renvoie
+  // can_add: false tant que le cours n'est pas reprogrammé → le bouton disparaît.
   const addButtonEnabled = !loadingCanAdd && canAddInfo?.can_add === true && !showForm;
   const contractInfo = program.contract_status ? CONTRACT_LABELS[program.contract_status] : null;
 

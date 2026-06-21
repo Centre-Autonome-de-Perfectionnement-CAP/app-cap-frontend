@@ -527,7 +527,7 @@ interface FormState {
 }
 const emptyForm: FormState = {
   division: '', professor_id: '', academic_year_id: '', cycle_id: '',
-  regroupement: '', start_date: '', end_date: '', amount: '', notes: '',
+  regroupement: '', start_date: '', end_date: '', amount: '0', notes: '',
   status: 'pending', program_ids: [],
   program_amounts: {},
 };
@@ -724,12 +724,12 @@ const ContratFormFields: React.FC<{
             })}
           </div>
           <p className="ctr-hint" style={{ marginTop: 6 }}>
-            Le montant global du contrat ci-dessous peut être saisi indépendamment ou représenter la somme des programmes.
+            Le montant total du contrat sera automatiquement calculé comme la somme des montants par programme.
           </p>
         </div>
       )}
 
-      <p className="ctr-section-title">Dates et montant</p>
+      <p className="ctr-section-title">Dates</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
         <div>
           <label className="ctr-label">Date de début *</label>
@@ -757,13 +757,7 @@ const ContratFormFields: React.FC<{
             max={selectedYear?.year_end ? selectedYear.year_end.substring(0, 10) : undefined}
           />
         </div>
-        <div style={{ gridColumn: '1/-1' }}>
-          <label className="ctr-label">Montant (FCFA) *</label>
-          <input className="ctr-input" type="number" name="amount" value={form.amount} onChange={handleChange} required min="100" step="any" placeholder="Minimum 100 FCFA" />
-          {form.amount !== '' && Number(form.amount) < 100 && (
-            <p className="ctr-err">Le montant minimum est de 100 FCFA</p>
-          )}
-        </div>
+
       </div>
 
       {dateError && (
@@ -1898,8 +1892,9 @@ const Contrats: React.FC = () => {
     // Pré-remplir les montants/heure existants depuis les programmes du contrat
     const existingAmounts: Record<number, string> = {};
     (c.course_element_professors ?? []).forEach(p => {
-      if (p.amount_per_hour !== undefined && p.amount_per_hour !== null) {
-        existingAmounts[p.id] = String(p.amount_per_hour);
+      const amt = (p as any).amount_program;
+      if (amt !== undefined && amt !== null) {
+        existingAmounts[p.id] = String(amt);
       }
     });
     setEditForm({
@@ -1910,7 +1905,7 @@ const Contrats: React.FC = () => {
       regroupement:     c.regroupement ?? '',
       start_date:       c.start_date?.substring(0, 10) ?? '',
       end_date:         c.end_date?.substring(0, 10) ?? '',
-      amount:           String(c.amount),
+      amount:           '0',
       notes:            c.notes ?? '',
       status:           c.status,
       program_ids:      (c.course_element_professors ?? []).map(p => p.id),
@@ -1926,25 +1921,30 @@ const Contrats: React.FC = () => {
   const onFieldChange = (setter: React.Dispatch<React.SetStateAction<FormState>>) =>
     (name: string, value: string | number[] | Record<number, string>) => setter(f => ({ ...f, [name]: value }));
 
-  const buildCreate = (f: FormState): CreateContratPayload => ({
-    division:                     f.division || null,
-    professor_id:                 Number(f.professor_id),
-    academic_year_id:             Number(f.academic_year_id),
-    cycle_id:                     f.cycle_id ? Number(f.cycle_id) : null,
-    regroupement:                 f.regroupement || null,
-    start_date:                   f.start_date,
-    end_date:                     f.end_date || null,
-    amount:                       parseFloat(f.amount),
-    notes:                        f.notes || null,
-    course_element_professor_ids: f.program_ids.length ? f.program_ids : undefined,
-    program_amounts:              Object.keys(f.program_amounts).length
-                                    ? Object.fromEntries(
-                                        Object.entries(f.program_amounts)
-                                          .filter(([, v]) => v !== '' && !isNaN(parseFloat(v)))
-                                          .map(([k, v]) => [k, parseFloat(v)])
-                                      )
-                                    : undefined,
-  });
+  const buildCreate = (f: FormState): CreateContratPayload => {
+    // Calcul automatique du montant total = somme des (montant/heure × heures) par programme
+    // Si aucun montant renseigné, on envoie 0
+    const filteredAmounts = Object.fromEntries(
+      Object.entries(f.program_amounts)
+        .filter(([, v]) => v !== '' && !isNaN(parseFloat(v)))
+        .map(([k, v]) => [k, parseFloat(v)])
+    );
+    const totalAmount = Object.values(filteredAmounts).reduce((sum, v) => sum + v, 0);
+
+    return {
+      division:                     f.division || null,
+      professor_id:                 Number(f.professor_id),
+      academic_year_id:             Number(f.academic_year_id),
+      cycle_id:                     f.cycle_id ? Number(f.cycle_id) : null,
+      regroupement:                 f.regroupement || null,
+      start_date:                   f.start_date,
+      end_date:                     f.end_date || null,
+      amount:                       totalAmount,
+      notes:                        f.notes || null,
+      course_element_professor_ids: f.program_ids.length ? f.program_ids : undefined,
+      program_amounts:              Object.keys(filteredAmounts).length ? filteredAmounts : undefined,
+    };
+  };
   const buildUpdate = (f: FormState): UpdateContratPayload => ({
     ...buildCreate(f), status: f.status as ContratStatus,
     course_element_professor_ids: f.program_ids,
@@ -1959,7 +1959,6 @@ const Contrats: React.FC = () => {
     if (!f.program_ids || f.program_ids.length === 0) return 'Veuillez sélectionner au moins un programme (ECUE).';
 
     if (!f.start_date)       return 'La date de début est obligatoire.';
-    if (!f.amount || Number(f.amount) < 100) return "Le montant doit être d'au moins 100 FCFA.";
 
     // Validation des dates par rapport à l'année académique
     const dateValidationError = validateContractDates(f);

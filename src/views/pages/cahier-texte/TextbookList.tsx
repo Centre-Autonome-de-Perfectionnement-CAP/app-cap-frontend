@@ -57,6 +57,15 @@ const TextbookList = () => {
   const [detailModal, setDetailModal] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<TextbookEntry | null>(null)
 
+  // ── Confirm modal ──────────────────────────────────────────────────────────
+  const [confirmModal, setConfirmModal] = useState(false)
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string
+    message: string
+    color: string
+    onConfirm: () => void
+  } | null>(null)
+
   // ── Download modal ─────────────────────────────────────────────────────────
   const [downloadModal, setDownloadModal] = useState(false)
   const [downloadLoading, setDownloadLoading] = useState(false)
@@ -204,15 +213,32 @@ const TextbookList = () => {
 
   // ─── Actions ──────────────────────────────────────────────────────────────
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
-      try {
-        await CahierService.deleteEntry(id)
-        loadEntries()
-      } catch (error) {
-        console.error('Erreur suppression:', error)
-      }
-    }
+  const openConfirm = (config: typeof confirmConfig) => {
+    setConfirmConfig(config)
+    setConfirmModal(true)
+  }
+
+  const closeConfirm = () => {
+    setConfirmModal(false)
+    setConfirmConfig(null)
+  }
+
+  const handleDelete = (id: number) => {
+    openConfirm({
+      title: 'Supprimer l\'entrée',
+      message: 'Êtes-vous sûr de vouloir supprimer cette entrée ? Cette action est irréversible.',
+      color: 'danger',
+      onConfirm: async () => {
+        try {
+          await CahierService.deleteEntry(id)
+          loadEntries()
+        } catch (error) {
+          console.error('Erreur suppression:', error)
+        } finally {
+          closeConfirm()
+        }
+      },
+    })
   }
 
   const handlePublish = async (id: number) => {
@@ -224,15 +250,22 @@ const TextbookList = () => {
     }
   }
 
-  const handleValidate = async (id: number) => {
-    if (window.confirm('Confirmer la validation de cette entrée ?')) {
-      try {
-        await CahierService.validateEntry(id)
-        loadEntries()
-      } catch (error) {
-        console.error('Erreur validation:', error)
-      }
-    }
+  const handleValidate = (id: number) => {
+    openConfirm({
+      title: 'Valider les heures effectuées',
+      message: 'Confirmer la validation de cette entrée ? Les heures effectuées seront officiellement enregistrées.',
+      color: 'success',
+      onConfirm: async () => {
+        try {
+          await CahierService.validateEntry(id)
+          loadEntries()
+        } catch (error) {
+          console.error('Erreur validation:', error)
+        } finally {
+          closeConfirm()
+        }
+      },
+    })
   }
 
   const openDetail = (entry: TextbookEntry) => {
@@ -530,6 +563,42 @@ const TextbookList = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          MODAL — Confirmation (suppression / validation)
+      ════════════════════════════════════════════════════════════════════ */}
+      {confirmConfig && (
+        <CModal
+          visible={confirmModal}
+          onClose={closeConfirm}
+          size="sm"
+          alignment="center"
+        >
+          <CModalHeader style={{ borderBottom: `2px solid var(--cui-${confirmConfig.color})` }}>
+            <CModalTitle className="d-flex align-items-center gap-2">
+              {confirmConfig.color === 'danger' ? (
+                <CIcon icon={cilTrash} style={{ color: `var(--cui-${confirmConfig.color})` }} />
+              ) : (
+                <CIcon icon={cilCheckCircle} style={{ color: `var(--cui-${confirmConfig.color})` }} />
+              )}
+              {confirmConfig.title}
+            </CModalTitle>
+          </CModalHeader>
+          <CModalBody>
+            <p className="mb-0" style={{ fontSize: '0.92rem' }}>
+              {confirmConfig.message}
+            </p>
+          </CModalBody>
+          <CModalFooter>
+            <CButton color="secondary" variant="outline" onClick={closeConfirm}>
+              Annuler
+            </CButton>
+            <CButton color={confirmConfig.color} onClick={confirmConfig.onConfirm}>
+              Confirmer
+            </CButton>
+          </CModalFooter>
+        </CModal>
+      )}
 
       {/* ════════════════════════════════════════════════════════════════════
           MODAL — Télécharger l'état de paiement (Excel)

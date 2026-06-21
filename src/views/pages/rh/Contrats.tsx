@@ -59,6 +59,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   completed:  { label: 'Terminé',    color: '#374151', bg: '#f9fafb', dot: '#9ca3af' },
   cancelled:  { label: 'Rejeté',     color: '#7f1d1d', bg: '#fef2f2', dot: '#ef4444' },
   transfered: { label: 'Transféré',  color: '#3b0764', bg: '#faf5ff', dot: '#a855f7' },
+  resiliated: { label: 'Résilié',     color: 'red'    },
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -521,17 +522,20 @@ interface FormState {
   division: string; professor_id: string; academic_year_id: string; cycle_id: string;
   regroupement: string; start_date: string; end_date: string; amount: string; notes: string;
   status: string; program_ids: number[];
+  /** Montant par heure pour chaque programme sélectionné (clé = program id) */
+  program_amounts: Record<number, string>;
 }
 const emptyForm: FormState = {
   division: '', professor_id: '', academic_year_id: '', cycle_id: '',
-  regroupement: '', start_date: '', end_date: '', amount: '', notes: '',
+  regroupement: '', start_date: '', end_date: '', amount: '0', notes: '',
   status: 'pending', program_ids: [],
+  program_amounts: {},
 };
 
 // ─── ContratFormFields ─────────────────────────────────────────────────────────
 const ContratFormFields: React.FC<{
   form: FormState; professors: Professor[]; isEdit: boolean;
-  onFieldChange: (name: string, value: string | number[]) => void;
+  onFieldChange: (name: string, value: string | number[] | Record<number, string>) => void;
   onSubmit: (e: React.FormEvent) => void; onCancel: () => void;
   loading: boolean; error: string; submitLabel: string;
   selectedAcademicYear?: AcademicYear;
@@ -547,12 +551,15 @@ const ContratFormFields: React.FC<{
   }, []);
 
   useEffect(() => {
-    if (form.professor_id) {
-      rhService.getProfessorPrograms(form.professor_id)
-        .then(setPrograms).catch(() => setPrograms([]));
-    } else { setPrograms([]); }
-  }, [form.professor_id]);
-
+  if (form.professor_id) {
+    rhService.getProfessorPrograms(form.professor_id)
+      .then(data => {
+        console.log('programs détail:', JSON.stringify(data, null, 2));
+        setPrograms(data);
+      })
+      .catch(() => setPrograms([]));
+  } else { setPrograms([]); }
+}, [form.professor_id]);
   // Validation des dates par rapport à l'année académique sélectionnée
   useEffect(() => {
     if (form.academic_year_id && form.start_date) {
@@ -644,11 +651,85 @@ const ContratFormFields: React.FC<{
         <label className="ctr-label">Programmes (ECUE) *</label>
         <MultiSelect options={progOptions} value={form.program_ids}
           placeholder={form.professor_id ? "Sélectionner les programmes…" : "Sélectionnez d'abord un professeur"}
-          onChange={ids => onFieldChange('program_ids', ids)} />
+          onChange={ids => {
+            // Keep existing amounts, remove deselected programs
+            const newAmounts = { ...form.program_amounts };
+            Object.keys(newAmounts).forEach(k => {
+              if (!(ids as number[]).includes(Number(k))) delete newAmounts[Number(k)];
+            });
+            onFieldChange('program_ids', ids);
+            onFieldChange('program_amounts', newAmounts);
+          }} />
         <p className="ctr-hint">Obligatoire — les programmes listés correspondent aux cours assignés au professeur sélectionné.</p>
       </div>
 
-      <p className="ctr-section-title">Dates et montant</p>
+      {/* ── Montant par heure pour chaque programme sélectionné ── */}
+      {form.program_ids.length > 0 && (
+        <div style={{ marginTop: 14 }}>
+          <label className="ctr-label" style={{ marginBottom: 8 }}>
+            Montant / heure par programme
+            <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: 6 }}>(optionnel)</span>
+          </label>
+          <div style={{ border: '1.5px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
+            {/* header */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 140px 120px', gap: 0, background: '#f9fafb', borderBottom: '1px solid #f3f4f6' }}>
+              {['Programme (ECUE)', 'Heures', 'Montant / heure (FCFA)', 'Total estimé'].map(h => (
+                <div key={h} style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em' }}>{h}</div>
+              ))}
+            </div>
+            {/* rows */}
+            {form.program_ids.map((pid, idx) => {
+              const prog   = programs.find(p => p.id === pid);
+              if (!prog) return null;
+              const name   = `(${prog.course_element?.code ?? '?'}) ${prog.course_element?.name ?? prog.label}`;
+              const classe = prog.class_group?.name ?? '';
+              const hours  = prog.course_element?.hours ?? prog.hours ?? null;
+              const amt    = form.program_amounts[pid] ?? '';
+              const total  = amt !== '' && hours !== null && hours !== undefined && !isNaN(parseFloat(amt))
+                 ? parseFloat(amt) * Number(hours)
+                 : null;        return (
+                <div key={pid} style={{
+                  display: 'grid', gridTemplateColumns: '1fr 80px 140px 120px',
+                  background: idx % 2 === 0 ? '#fff' : '#fafafa',
+                  borderBottom: idx < form.program_ids.length - 1 ? '1px solid #f3f4f6' : 'none',
+                  alignItems: 'center',
+                }}>
+                  <div style={{ padding: '10px 12px' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{name}</div>
+                    {classe && <div style={{ fontSize: 11.5, color: '#6b7280', marginTop: 2 }}>{classe}</div>}
+                  </div>
+                  <div style={{ padding: '10px 12px', fontSize: 13, color: '#374151', textAlign: 'center' }}>
+                   {hours !== null && hours !== undefined ? `${hours} h` : <span style={{ color: '#d1d5db' }}>—</span>}
+                  </div>
+                  <div style={{ padding: '6px 12px' }}>
+                    <input
+                      className="ctr-input"
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="ex: 25000"
+                      value={amt}
+                      onChange={e => {
+                        const newAmounts = { ...form.program_amounts, [pid]: e.target.value };
+                        onFieldChange('program_amounts', newAmounts);
+                      }}
+                      style={{ height: 34, fontSize: 13 }}
+                    />
+                  </div>
+                  <div style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, color: total ? '#059669' : '#d1d5db', textAlign: 'right', paddingRight: 16 }}>
+                    {total !== null ? `${Number(total).toLocaleString('fr-FR')} FCFA` : '—'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="ctr-hint" style={{ marginTop: 6 }}>
+            Le montant total du contrat sera automatiquement calculé comme la somme des montants par programme.
+          </p>
+        </div>
+      )}
+
+      <p className="ctr-section-title">Dates</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
         <div>
           <label className="ctr-label">Date de début *</label>
@@ -676,13 +757,7 @@ const ContratFormFields: React.FC<{
             max={selectedYear?.year_end ? selectedYear.year_end.substring(0, 10) : undefined}
           />
         </div>
-        <div style={{ gridColumn: '1/-1' }}>
-          <label className="ctr-label">Montant (FCFA) *</label>
-          <input className="ctr-input" type="number" name="amount" value={form.amount} onChange={handleChange} required min="100" step="any" placeholder="Minimum 100 FCFA" />
-          {form.amount !== '' && Number(form.amount) < 100 && (
-            <p className="ctr-err">Le montant minimum est de 100 FCFA</p>
-          )}
-        </div>
+
       </div>
 
       {dateError && (
@@ -780,7 +855,7 @@ const AdminCourseSupportModal: React.FC<{
     // Initialiser l'état du programme avec les valeurs du contrat (si disponibles)
     const existingNumber = program.number_monographie ?? null;
     const existingAmount = program.amount_monographie ?? null;
-    
+
     setProgStates(prev => ({
       ...prev,
       [program.id]: {
@@ -793,7 +868,7 @@ const AdminCourseSupportModal: React.FC<{
 
     try {
       const http = (await import('@/services/http.service')).default;
-      
+
       // Appel API qui retourne : { success, data, number_monographie, amount_monographie }
       const res = await (http as any).get(
         `rh/contrats/${contrat.id}/programs/${program.id}/supports`
@@ -801,11 +876,11 @@ const AdminCourseSupportModal: React.FC<{
 
       const body = res ?? {};
       const supports: SupportEntry[] = Array.isArray(body.data) ? body.data : [];
-      
+
       // Récupérer les valeurs de monographie depuis la réponse API
       const nbRaw = body.number_monographie ?? existingNumber ?? null;
       const amtRaw = body.amount_monographie ?? existingAmount ?? null;
-      
+
       const hasNumber = nbRaw !== null && nbRaw !== undefined && nbRaw !== 0;
       const hasAmount = amtRaw !== null && amtRaw !== undefined && amtRaw !== 0;
       const hasExisting = hasNumber || hasAmount;
@@ -848,7 +923,7 @@ const AdminCourseSupportModal: React.FC<{
     setNewFile(null);
     setAddError(null);
     setAddSuccess(false);
-    
+
     programs.forEach(program => loadProgramData(program));
   }, [contrat.id, programs, loadProgramData]);
 
@@ -902,7 +977,7 @@ const AdminCourseSupportModal: React.FC<{
     const existingAmount = currentProg.amount_monographie ?? null;
     const hasNumber = existingNumber !== null && existingNumber !== undefined && existingNumber !== 0;
     const hasAmount = existingAmount !== null && existingAmount !== undefined && existingAmount !== 0;
-    
+
     setProgStates(prev => ({
       ...prev,
       [currentProg.id]: {
@@ -922,10 +997,10 @@ const AdminCourseSupportModal: React.FC<{
   // Sauvegarder la monographie
   const handleSaveMono = async () => {
     if (!currentProg) return;
-    
+
     const nb = parseInt(mono.number_monographie, 10);
     const amt = parseFloat(mono.amount_monographie);
-    
+
     if (isNaN(nb) || nb < 0) {
       setMono('number_monographie', mono.number_monographie);
       setProgStates(prev => ({
@@ -947,7 +1022,7 @@ const AdminCourseSupportModal: React.FC<{
       }));
       return;
     }
-    
+
     setProgStates(prev => ({
       ...prev,
       [currentProg.id]: {
@@ -955,17 +1030,17 @@ const AdminCourseSupportModal: React.FC<{
         mono: { ...prev[currentProg.id]!.mono, saving: true, error: null, saved: false },
       },
     }));
-    
+
     try {
       const http = (await import('@/services/http.service')).default;
       await (http as any).put(
         `rh/contrats/${contrat.id}/programs/${currentProg.id}/monographie`,
         { number_monographie: nb, amount_monographie: amt }
       );
-      
+
       // Mettre à jour le programme courant avec les nouvelles valeurs
       const updatedProgram = { ...currentProg, number_monographie: nb, amount_monographie: amt };
-      
+
       setProgStates(prev => ({
         ...prev,
         [currentProg.id]: {
@@ -980,10 +1055,10 @@ const AdminCourseSupportModal: React.FC<{
           },
         },
       }));
-      
+
       // Mettre à jour le contrat parent
       onSaved();
-      
+
       setTimeout(() => {
         setProgStates(prev => ({
           ...prev,
@@ -1013,25 +1088,25 @@ const AdminCourseSupportModal: React.FC<{
     if (!currentProg) return;
     if (!newTitle.trim()) { setAddError('Veuillez saisir un titre.'); return; }
     if (!newFile) { setAddError('Veuillez sélectionner un fichier PDF.'); return; }
-    
+
     setAddError(null);
     setAdding(true);
     setAddSuccess(false);
-    
+
     try {
       const fd = new FormData();
       fd.append('title', newTitle.trim());
       fd.append('pdf_file', newFile);
-      
+
       const http = (await import('@/services/http.service')).default;
       await http.post(`rh/contrats/${contrat.id}/programs/${currentProg.id}/supports`, fd);
-      
+
       setNewTitle('');
       setNewFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       setAddSuccess(true);
       setTimeout(() => setAddSuccess(false), 3500);
-      
+
       await reloadProgram(currentProg);
     } catch (err: any) {
       setAddError(err?.message ?? "Erreur lors de l'ajout.");
@@ -1814,6 +1889,14 @@ const Contrats: React.FC = () => {
       addToast('warning', 'Contrat verrouillé', 'Ce contrat a été validé ou autorisé. Aucune modification n\'est possible.');
       return;
     }
+    // Pré-remplir les montants/heure existants depuis les programmes du contrat
+    const existingAmounts: Record<number, string> = {};
+    (c.course_element_professors ?? []).forEach(p => {
+      const amt = (p as any).amount_program;
+      if (amt !== undefined && amt !== null) {
+        existingAmounts[p.id] = String(amt);
+      }
+    });
     setEditForm({
       division:         c.division ?? '',
       professor_id:     String(c.professor_id),
@@ -1822,10 +1905,11 @@ const Contrats: React.FC = () => {
       regroupement:     c.regroupement ?? '',
       start_date:       c.start_date?.substring(0, 10) ?? '',
       end_date:         c.end_date?.substring(0, 10) ?? '',
-      amount:           String(c.amount),
+      amount:           '0',
       notes:            c.notes ?? '',
       status:           c.status,
       program_ids:      (c.course_element_professors ?? []).map(p => p.id),
+      program_amounts:  existingAmounts,
     });
     setEditingContrat(c);
     setEditError('');
@@ -1835,20 +1919,32 @@ const Contrats: React.FC = () => {
   const closeCreate = () => { setShowCreate(false); setCreateError(''); setCreateForm({ ...emptyForm }); };
 
   const onFieldChange = (setter: React.Dispatch<React.SetStateAction<FormState>>) =>
-    (name: string, value: string | number[]) => setter(f => ({ ...f, [name]: value }));
+    (name: string, value: string | number[] | Record<number, string>) => setter(f => ({ ...f, [name]: value }));
 
-  const buildCreate = (f: FormState): CreateContratPayload => ({
-    division:                     f.division || null,
-    professor_id:                 Number(f.professor_id),
-    academic_year_id:             Number(f.academic_year_id),
-    cycle_id:                     f.cycle_id ? Number(f.cycle_id) : null,
-    regroupement:                 f.regroupement || null,
-    start_date:                   f.start_date,
-    end_date:                     f.end_date || null,
-    amount:                       parseFloat(f.amount),
-    notes:                        f.notes || null,
-    course_element_professor_ids: f.program_ids.length ? f.program_ids : undefined,
-  });
+  const buildCreate = (f: FormState): CreateContratPayload => {
+    // Calcul automatique du montant total = somme des (montant/heure × heures) par programme
+    // Si aucun montant renseigné, on envoie 0
+    const filteredAmounts = Object.fromEntries(
+      Object.entries(f.program_amounts)
+        .filter(([, v]) => v !== '' && !isNaN(parseFloat(v)))
+        .map(([k, v]) => [k, parseFloat(v)])
+    );
+    const totalAmount = Object.values(filteredAmounts).reduce((sum, v) => sum + v, 0);
+
+    return {
+      division:                     f.division || null,
+      professor_id:                 Number(f.professor_id),
+      academic_year_id:             Number(f.academic_year_id),
+      cycle_id:                     f.cycle_id ? Number(f.cycle_id) : null,
+      regroupement:                 f.regroupement || null,
+      start_date:                   f.start_date,
+      end_date:                     f.end_date || null,
+      amount:                       totalAmount,
+      notes:                        f.notes || null,
+      course_element_professor_ids: f.program_ids.length ? f.program_ids : undefined,
+      program_amounts:              Object.keys(filteredAmounts).length ? filteredAmounts : undefined,
+    };
+  };
   const buildUpdate = (f: FormState): UpdateContratPayload => ({
     ...buildCreate(f), status: f.status as ContratStatus,
     course_element_professor_ids: f.program_ids,
@@ -1863,7 +1959,6 @@ const Contrats: React.FC = () => {
     if (!f.program_ids || f.program_ids.length === 0) return 'Veuillez sélectionner au moins un programme (ECUE).';
 
     if (!f.start_date)       return 'La date de début est obligatoire.';
-    if (!f.amount || Number(f.amount) < 100) return "Le montant doit être d'au moins 100 FCFA.";
 
     // Validation des dates par rapport à l'année académique
     const dateValidationError = validateContractDates(f);

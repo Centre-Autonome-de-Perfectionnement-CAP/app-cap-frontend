@@ -80,14 +80,19 @@ export type ContratStatus =
   | 'completed'
   | 'cancelled'
   | 'transfered'
+  | 'resiliated'   // Lien expiré — 72 h dépassées sans signature du professeur
 
 export interface ProfessorProgram {
   id: number
   is_primary: boolean
   label: string
   hours?: number
+
   number_monographie?: number | null
   amount_monographie?: number | null
+ 
+  /** Montant par heure défini dans le contrat (colonne pivot) */
+  amount_per_hour?: number | null
   course_support_file?: CourseSupport[]
   course_element: {
     id: number
@@ -127,6 +132,15 @@ export interface Contrat {
   is_authorized?: boolean
   authorization_date?: string
 
+
+  /**
+   * Date/heure d'envoi de l'e-mail de transfert.
+   * Référence pour l'expiration du lien après 72 heures.
+   */
+  transferred_at?: string
+
+  /** Signature électronique */
+
   professor_signature_path?: string
   professor_signature_url?: string
   professor_signature_type?: 'drawn' | 'uploaded'
@@ -137,6 +151,7 @@ export interface Contrat {
   pdf_uploaded_at?: string
 
   amount_monographie?: number
+
   is_locked?: boolean
 
   professor?: {
@@ -173,7 +188,8 @@ export interface CreateContratPayload {
   amount: number
   notes?: string | null
   course_element_professor_ids?: number[]
-  amount_monographie?: number | null
+  /** Montant par heure par programme : clé = course_element_professor id, valeur = montant */
+  program_amounts?: Record<number | string, number>
 }
 
 export interface UpdateContratPayload extends CreateContratPayload {
@@ -202,7 +218,6 @@ export interface Cycle {
   abbreviation?: string
 }
 
-// ─── Factures normalisées ─────────────────────────────────────────────────────
 
 /**
  * Un fichier individuel dans la colonne factures_normalisees (JSON)
@@ -235,3 +250,4 @@ export interface FactureEntry {
   factures: FactureFile[]
   uploaded_at: string
 }
+

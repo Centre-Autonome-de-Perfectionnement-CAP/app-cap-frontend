@@ -60,13 +60,30 @@ export const useCourseElementProfessors = () => {
     }
   }
 
-  const createAssignment = async (data: { course_element_id: number; professor_id: number }) => {
+  // ← types étendus avec class_group_id et academic_year_id
+  const createAssignment = async (data: {
+    course_element_id: number
+    professor_id: number
+    is_primary?: boolean
+    class_group_id?: number | null
+    academic_year_id?: number | null
+  }) => {
     const assignment = await CoursService.createCourseElementProfessorAssignment(data)
     await loadAssignments()
     return assignment
   }
 
-  const updateAssignment = async (id: number, data: { course_element_id?: number; professor_id?: number }) => {
+  // ← types étendus avec class_group_id et academic_year_id
+  const updateAssignment = async (
+    id: number,
+    data: {
+      course_element_id?: number
+      professor_id?: number
+      is_primary?: boolean
+      class_group_id?: number | null
+      academic_year_id?: number | null
+    },
+  ) => {
     const assignment = await CoursService.updateCourseElementProfessorAssignment(id, data)
     await loadAssignments()
     return assignment
@@ -100,3 +117,4 @@ export const useCourseElementProfessors = () => {
     setError,
   }
 }
+

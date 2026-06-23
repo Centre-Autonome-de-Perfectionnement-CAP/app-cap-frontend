@@ -28,7 +28,6 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
 
   const navigate = useNavigate();
 
-  // ── Restauration de session ──────────────────────────────────────────────
   useEffect(() => {
     const storedToken   = localStorage.getItem(STORAGE_KEYS.TOKEN);
     const storedRole    = localStorage.getItem(STORAGE_KEYS.ROLE) as UserRole | null;
@@ -44,7 +43,6 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     setIsLoading(false);
   }, []);
 
-  // ── Login avec redirection selon le rôle ────────────────────────────────
   const login = (
     token: string,
     userNom: string,
@@ -61,21 +59,17 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     setRole(userRole);
     setIsAuthenticated(true);
 
-    // ✅ Redirection selon le rôle dès la connexion
+    // Redirection selon le rôle dès la connexion
     const r = userRole as string;
     if (r === 'responsable') {
-      // Responsable de classe → son espace dédié
       navigate(FRONTEND_ROUTES.RESPONSABLE_DASHBOARD);
     } else if (r === 'professeur') {
-      // Professeur → dashboard notes
       navigate(FRONTEND_ROUTES.NOTES.PROFESSOR_DASHBOARD);
     } else {
-      // Tous les autres (admin, secrétaire, comptable...) → portail des modules
       navigate(FRONTEND_ROUTES.PORTAIL);
     }
   };
 
-  // ── Logout ───────────────────────────────────────────────────────────────
   const logout = async (): Promise<void> => {
     try {
       await authService.logout();

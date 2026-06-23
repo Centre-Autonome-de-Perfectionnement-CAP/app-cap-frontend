@@ -4,13 +4,13 @@ import type { Conflict } from '@/types/emploi-du-temps.types'
 
 interface ConflictBadgeProps {
   conflicts: Conflict[]
-  onClick?: () => void
+  onClick?: React.MouseEventHandler<HTMLElement>
 }
 
 export const ConflictBadge: React.FC<ConflictBadgeProps> = ({ conflicts, onClick }) => {
   if (!conflicts || conflicts.length === 0) return null
 
-  const getConflictColor = (type: string) => {
+  const getConflictColor = (type: Conflict['type']) => {
     switch (type) {
       case 'room':
         return 'danger'

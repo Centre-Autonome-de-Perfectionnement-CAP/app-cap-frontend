@@ -3,24 +3,18 @@ import {
   cilBook,
   cilClipboard,
   cilFile,
-  cilUser,
   cilList,
   cilDescription,
   cilCheckCircle,
   cilClock,
   cilPeople,
-  cilNotes,    // icône cahier
+  cilNotes,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle, CNavGroup } from '@coreui/react'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CORRECTION : ajout de l'item "Cahier de texte" dans la section professeur
-// ─────────────────────────────────────────────────────────────────────────────
 
 const getNoteNavigation = (role: string | null) => {
   const navigation: any[] = []
 
-  // ── Navigation pour les professeurs ────────────────────────────────────────
   if (role === 'professeur') {
     navigation.push(
       {
@@ -33,7 +27,6 @@ const getNoteNavigation = (role: string | null) => {
         to: '/notes/professor/dashboard',
         icon: <CIcon icon={cilBook} />,
       },
-      // ✅ AJOUT : bouton Cahier de texte
       {
         component: CNavItem,
         name: 'Cahier de texte',
@@ -53,11 +46,10 @@ const getNoteNavigation = (role: string | null) => {
     )
   }
 
-  // ── Navigation pour les administrateurs ────────────────────────────────────
   if (
     role === 'chef-division' ||
-    role === 'admin'         ||
-    role === 'scolarite'     ||
+    role === 'admin' ||
+    role === 'scolarite' ||
     role === 'direction'
   ) {
     navigation.push(

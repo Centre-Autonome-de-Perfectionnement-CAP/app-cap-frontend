@@ -6,8 +6,7 @@ import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } 
 import { FRONTEND_ROUTES } from '@/constants';
 import { LoadingSpinner } from '@/components';
 
-// ── Modules autorisés par rôle ───────────────────────────────────────────────
-// false = accès interdit pour ce module
+// Modules autorisés par rôle (false = accès interdit pour ce module)
 const rolePermissions: Record<string, Record<string, boolean>> = {
   'chef-cap': {
     inscription: false,
@@ -33,8 +32,6 @@ const rolePermissions: Record<string, Record<string, boolean>> = {
     presence:     false,
     soutenance:   false,
   },
-  // ✅ Professeur : accès UNIQUEMENT à notes + emploi-du-temps
-  // Tout le reste est bloqué via la redirection dans ce composant
   'professeur': {
     portail:      false,
     attestation:  false,
@@ -46,9 +43,7 @@ const rolePermissions: Record<string, Record<string, boolean>> = {
     soutenance:   false,
     finance:      false,
     rh:           false,
-    // notes et emploi-du-temps ne sont PAS listés ici → donc autorisés
   },
-  // ✅ Responsable : accès UNIQUEMENT à /responsable/*
   'responsable': {
     portail:      false,
     inscription:  false,
@@ -65,8 +60,7 @@ const rolePermissions: Record<string, Record<string, boolean>> = {
   },
 };
 
-// Modules autorisés au professeur (pour la redirection)
-const PROFESSEUR_ALLOWED_MODULES = ['notes', 'emploi']
+const PROFESSEUR_ALLOWED_MODULES = ['notes', 'emploi'];
 
 const isAllowed = (role: string | null, module: string): boolean => {
   if (!role) return false;
@@ -92,19 +86,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, module }) => 
     return <Navigate to={FRONTEND_ROUTES.LOGIN} replace />;
   }
 
-  // ✅ Responsable → son dashboard uniquement
+  // Responsable → son dashboard uniquement
   if (r === 'responsable') {
     return <Navigate to={FRONTEND_ROUTES.RESPONSABLE_DASHBOARD} replace />;
   }
 
-  // ✅ Professeur → autorisé sur notes + emploi-du-temps uniquement
-  // Si le module demandé n'est pas dans sa liste → redirigé vers son dashboard
+  // Professeur → autorisé sur notes + emploi-du-temps uniquement
   if (r === 'professeur') {
-    // Si on ne précise pas de module (ex: portail) → redirection
     if (!module || !PROFESSEUR_ALLOWED_MODULES.includes(module)) {
       return <Navigate to={FRONTEND_ROUTES.NOTES.PROFESSOR_DASHBOARD} replace />;
     }
-    // Module autorisé → on laisse passer
     return children ? <>{children}</> : <Outlet />;
   }
 

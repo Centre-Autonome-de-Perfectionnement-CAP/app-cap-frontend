@@ -15,7 +15,7 @@ import AttendanceFilter from '@/components/Attendance/AttendanceFilter'
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 const BASE_URL       = 'http://localhost:8000/api/attendance'
-const ARDUINO_URL    = 'http://192.168.137.53'   // ← IP ESP32 (Serial Monitor)
+const ARDUINO_URL    = 'http://192.168.137.49ss'   // ← IP ESP32 (Serial Monitor)
 const ITEMS_PER_PAGE = 15
 const TIMEOUT_SEC    = 30  // secondes avant redirection automatique
 
@@ -35,8 +35,8 @@ type EnrollPhase =
 //  PAGE D'ENRÔLEMENT — UX simplifiée
 //
 //  Flux :
-//  1. Clic "Lancer" → GET /enroll?student_id=X (ESP32 démarre)
-//  2. Polling GET /enroll-status toutes les 600ms
+//  1. Clic "Lancer" → GET /api/reenroll?student_id=X (ESP32 démarre)
+//  2. Polling GET /api/enroll-status toutes les 600ms
 //     • step1/wait_up/step2 → afficher countdown 30s
 //     • done → sauvegarder Laravel → afficher succès → retour liste après 3s
 //  3. Timeout 30s → annuler ESP32 → afficher message → retour liste après 2s
@@ -56,12 +56,14 @@ const EnrollPage = ({
 
   const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null)
   const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null)
+  const retryRef     = useRef<ReturnType<typeof setInterval> | null>(null)
   const mountedRef   = useRef(true)
 
   // ── Nettoyer les intervalles ───────────────────────────────────────────
   const stopAll = useCallback(() => {
     if (pollRef.current)  { clearInterval(pollRef.current);  pollRef.current  = null }
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+    if (retryRef.current) { clearInterval(retryRef.current); retryRef.current = null }
   }, [])
 
   useEffect(() => {
@@ -74,7 +76,7 @@ const EnrollPage = ({
 
   // ── Annuler proprement côté ESP32 ─────────────────────────────────────
   const cancelArduino = useCallback(() => {
-    fetch(`${ARDUINO_URL}/enroll-cancel`).catch(() => {})
+    fetch(`${ARDUINO_URL}/api/enroll-cancel`).catch(() => {})
   }, [])
 
   // ── Démarrer le countdown 30s ─────────────────────────────────────────
@@ -102,7 +104,7 @@ const EnrollPage = ({
   useEffect(() => {
     const launch = async () => {
       try {
-        const r = await fetch(`${ARDUINO_URL}/enroll?student_id=${student.id}`)
+        const r = await fetch(`${ARDUINO_URL}/api/reenroll?student_id=${student.id}`)
         const d = await r.json()
 
         if (!mountedRef.current) return
@@ -120,7 +122,7 @@ const EnrollPage = ({
         pollRef.current = setInterval(async () => {
           if (!mountedRef.current) return
           try {
-            const rs = await fetch(`${ARDUINO_URL}/enroll-status`)
+            const rs = await fetch(`${ARDUINO_URL}/api/enroll-status`)
             const ds = await rs.json()
             const state: string = ds.state || 'idle'
 
@@ -178,9 +180,76 @@ const EnrollPage = ({
         if (!mountedRef.current) return
         setPhase('error')
         setErrorMsg(
-          `Impossible de joindre l'ESP32 à ${ARDUINO_URL}. ` +
-          `Vérifiez que l'IP est correcte et que l'ESP32 est sur le même réseau Wi-Fi.`
+          `Impossible de joindre l'ESP32 à ${ARDUINO_URL}. Vérification en cours...`
         )
+
+        // Retry automatique : tenter de relancer l'enrôlement dès que l'ESP32 redevient joignable
+        if (!retryRef.current) {
+          retryRef.current = setInterval(async () => {
+            try {
+              const rr = await fetch(`${ARDUINO_URL}/api/reenroll?student_id=${student.id}`)
+              const dd = await rr.json()
+              if (!mountedRef.current) return
+              if (dd && dd.success) {
+                // Annuler retry et démarrer le flow normalement
+                if (retryRef.current) { clearInterval(retryRef.current); retryRef.current = null }
+                setErrorMsg('')
+                // ESP32 prêt — démarrer le countdown et le polling
+                setPhase('waiting')
+                startCountdown()
+
+                pollRef.current = setInterval(async () => {
+                  if (!mountedRef.current) return
+                  try {
+                    const rs = await fetch(`${ARDUINO_URL}/api/enroll-status`)
+                    const ds = await rs.json()
+                    const state: string = ds.state || 'idle'
+
+                    if (!mountedRef.current) return
+
+                    if (state === 'step2' || state === 'wait_up') {
+                      setPhase('capturing')
+                      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+                    }
+
+                    if (state === 'done') {
+                      stopAll()
+                      setPhase('saving')
+
+                      const fingerprintIndex: number = ds.fingerprint_index ?? 0
+
+                      await fetch(`${BASE_URL}/fingerprint/${student.id}`, {
+                        method:  'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body:    JSON.stringify({ fingerprint: true, fingerprint_index: fingerprintIndex }),
+                      })
+
+                      if (!mountedRef.current) return
+
+                      setSuccessInfo({ slot: fingerprintIndex })
+                      setPhase('done')
+                      onSuccess()
+                      setTimeout(() => { if (mountedRef.current) onBack() }, 3000)
+                    }
+
+                    if (state === 'error') {
+                      stopAll()
+                      if (mountedRef.current) {
+                        setPhase('error')
+                        setErrorMsg(ds.message || 'Échec de la capture. Veuillez réessayer.')
+                      }
+                    }
+
+                  } catch {
+                    // ignore temporary poll errors
+                  }
+                }, 600)
+              }
+            } catch {
+              // encore inaccessible, on réessaie au prochain tick
+            }
+          }, 2000)
+        }
       }
     }
 
@@ -627,7 +696,7 @@ const Fingerprint = () => {
     setClearAllMsg('')
     try {
       // 1. Effacer toutes les empreintes dans la flash du capteur
-      const r = await fetch(`${ARDUINO_URL}/clear-all`)
+      const r = await fetch(`${ARDUINO_URL}/api/clear-all`)
       const d = await r.json()
       if (!d.success) throw new Error(d.message || 'Erreur capteur')
 

@@ -1,10 +1,10 @@
 import CIcon from '@coreui/icons-react'
-import { cilNotes } from '@coreui/icons'
 import {
   cilSpeedometer,
   cilUser,
   cilPeople,
   cilFile,
+  cilNotes,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -26,10 +26,10 @@ const rhNavigation = [
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
   },
   {
-  component: CNavItem,
-  name: 'Contrats',
-  to: '/rh/contrats',
-  icon: <CIcon icon={cilNotes} className="nav-icon" />,
+    component: CNavItem,
+    name: 'Contrats',
+    to: '/rh/contrats',
+    icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,

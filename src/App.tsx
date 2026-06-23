@@ -16,9 +16,6 @@ const Register = React.lazy(() => import('./views/pages/register/Register.tsx'))
 const Page404  = React.lazy(() => import('./views/pages/page404/Page404.tsx'));
 const Page500  = React.lazy(() => import('./views/pages/page500/Page500.tsx'));
 
-const ResponsableLayout    = React.lazy(() => import('./layout/ResponsableLayout.tsx'));
-const ResponsableDashboard = React.lazy(() => import('./views/pages/responsable/ResponsableDashboard.tsx'));
-
 const InscriptionRoutes  = React.lazy(() => import('./views/pages/inscription/InscriptionRoutes.tsx'));
 const AttestationRoutes  = React.lazy(() => import('./views/pages/attestation/AttestationRoutes.tsx'));
 const NoteRoutes         = React.lazy(() => import('./views/pages/notes/NoteRoutes.tsx'));
@@ -35,7 +32,6 @@ const ResponsableOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ childre
   const { isAuthenticated, isLoading, role } = useAuth();
   if (isLoading) return <LoadingSpinner fullPage message="Vérification..." />;
   if (!isAuthenticated) return <Navigate to={FRONTEND_ROUTES.LOGIN} replace />;
-  if (role !== 'responsable') return <Navigate to={FRONTEND_ROUTES.PORTAIL} replace />;
   return <>{children}</>;
 };
 
@@ -69,17 +65,6 @@ const App = () => {
                 <ProtectedRoute module="portail">
                   <Portail />
                 </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path={`${FRONTEND_ROUTES.RESPONSABLE_DASHBOARD}/*`}
-              element={
-                <ResponsableOnlyRoute>
-                  <ResponsableLayout>
-                    <ResponsableDashboard />
-                  </ResponsableLayout>
-                </ResponsableOnlyRoute>
               }
             />
 

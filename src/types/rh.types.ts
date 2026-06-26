@@ -90,7 +90,7 @@ export interface ProfessorProgram {
 
   number_monographie?: number | null
   amount_monographie?: number | null
- 
+
   /** Montant par heure défini dans le contrat (colonne pivot) */
   amount_per_hour?: number | null
   course_support_file?: CourseSupport[]
@@ -108,6 +108,7 @@ export interface ProfessorProgram {
   class_group: {
     id: number
     name: string
+    group_name: string
   } | null
 }
 

@@ -845,7 +845,7 @@ const ProfessorContratDetail = () => {
                   <table className="table table-sm table-hover">
                     <thead className="table-light">
                       <tr>
-                        <th>Code</th><th>Matière</th><th>Unité d'enseignement</th><th>Classe</th><th>Type</th>
+                        <th>Code</th><th>Matière</th><th>Unité d'enseignement</th><th>Type</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -854,7 +854,6 @@ const ProfessorContratDetail = () => {
                           <td><code>{prog.course_element.code}</code></td>
                           <td>{prog.course_element.name}</td>
                           <td>{prog.course_element.teaching_unit?.name}</td>
-                          <td>{prog.class_group?.name ?? '—'}</td>
                           <td>
                             <CBadge color={prog.is_primary ? 'primary' : 'secondary'}>
                               {prog.is_primary ? 'Titulaire' : 'Remplaçant'}
@@ -972,7 +971,7 @@ const ProfessorContratDetail = () => {
                 Supports de cours
               </CModalTitle>
             </CModalHeader>
-            
+
         <CModalBody className="pt-2">
           {/* Illustration */}
           <div className="text-center mb-3">
@@ -997,8 +996,8 @@ const ProfessorContratDetail = () => {
                     {contrat.course_element_professors!.map((p, i) => (
                       <li key={i}>
                         <span className="fw-medium">{p.course_element?.name ?? p.label}</span>
-                        {p.class_group?.name
-                          ? <span className="text-muted"> — {p.class_group.name}</span>
+                        {p.class_group?.group_name
+                          ? <span className="text-muted"> — {p.class_group.group_name}</span>
                           : null}
                       </li>
                     ))}

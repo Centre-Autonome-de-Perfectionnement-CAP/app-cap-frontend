@@ -81,7 +81,6 @@ const extractError = (data: any, status: number): string => {
 const validateDatesInAcademicYear = (startDate: string, endDate: string | null, academicYearStart: string, academicYearEnd: string): string | null => {
   const start = new Date(startDate);
   const acStart = new Date(academicYearStart);
-  const acEnd = new Date(academicYearEnd);
 
   if (start < acStart) {
     return `La date de début (${formatDate(startDate)}) ne peut pas être antérieure au début de l'année académique (${formatDate(academicYearStart)})`;
@@ -89,9 +88,6 @@ const validateDatesInAcademicYear = (startDate: string, endDate: string | null, 
 
   if (endDate) {
     const end = new Date(endDate);
-    if (end > acEnd) {
-      return `La date de fin (${formatDate(endDate)}) ne peut pas être postérieure à la fin de l'année académique (${formatDate(academicYearEnd)})`;
-    }
     if (end < start) {
       return "La date de fin doit être postérieure à la date de début";
     }
@@ -544,11 +540,14 @@ const ContratFormFields: React.FC<{
   const [cycles, setCycles]               = useState<Cycle[]>([]);
   const [programs, setPrograms]           = useState<ProfessorProgram[]>([]);
   const [dateError, setDateError]         = useState<string>('');
-
+  const [localAmounts, setLocalAmounts] = useState<Record<number, string>>(form.program_amounts ?? {});
   useEffect(() => {
     rhService.getAcademicYears().then(setAcademicYears).catch(() => {});
     rhService.getCycles().then(setCycles).catch(() => {});
   }, []);
+  useEffect(() => {
+  setLocalAmounts(form.program_amounts ?? {});
+}, [form.program_ids]);
 
   useEffect(() => {
   if (form.professor_id) {
@@ -684,10 +683,13 @@ const ContratFormFields: React.FC<{
               const name   = `(${prog.course_element?.code ?? '?'}) ${prog.course_element?.name ?? prog.label}`;
               const classe = prog.class_group?.name ?? '';
               const hours  = prog.course_element?.hours ?? prog.hours ?? null;
-              const amt    = form.program_amounts[pid] ?? '';
+              const amt = localAmounts[pid] ?? '';
               const total  = amt !== '' && hours !== null && hours !== undefined && !isNaN(parseFloat(amt))
-                 ? parseFloat(amt) * Number(hours)
-                 : null;        return (
+                ? parseFloat(amt) * Number(hours)
+                : null;
+
+return (
+
                 <div key={pid} style={{
                   display: 'grid', gridTemplateColumns: '1fr 80px 140px 120px',
                   background: idx % 2 === 0 ? '#fff' : '#fafafa',
@@ -710,9 +712,10 @@ const ContratFormFields: React.FC<{
                       placeholder="ex: 25000"
                       value={amt}
                       onChange={e => {
-                        const newAmounts = { ...form.program_amounts, [pid]: e.target.value };
-                        onFieldChange('program_amounts', newAmounts);
-                      }}
+  const newAmounts = { ...localAmounts, [pid]: e.target.value };
+  setLocalAmounts(newAmounts);
+  onFieldChange('program_amounts', newAmounts);
+}}
                       style={{ height: 34, fontSize: 13 }}
                     />
                   </div>
@@ -742,7 +745,7 @@ const ContratFormFields: React.FC<{
             required
             // Utilisation de year_start et year_end
             min={selectedYear?.year_start ? selectedYear.year_start.substring(0, 10) : undefined}
-            max={selectedYear?.year_end ? selectedYear.year_end.substring(0, 10) : undefined}
+
           />
         </div>
         <div>
@@ -754,7 +757,7 @@ const ContratFormFields: React.FC<{
             value={form.end_date}
             onChange={handleChange}
             min={form.start_date || (selectedYear?.year_start ? selectedYear.year_start.substring(0, 10) : undefined)}
-            max={selectedYear?.year_end ? selectedYear.year_end.substring(0, 10) : undefined}
+
           />
         </div>
 
@@ -1922,6 +1925,7 @@ const Contrats: React.FC = () => {
     (name: string, value: string | number[] | Record<number, string>) => setter(f => ({ ...f, [name]: value }));
 
   const buildCreate = (f: FormState): CreateContratPayload => {
+    console.log('program_amounts envoyé:', f.program_amounts);
     // Calcul automatique du montant total = somme des (montant/heure × heures) par programme
     // Si aucun montant renseigné, on envoie 0
     const filteredAmounts = Object.fromEntries(
@@ -2281,7 +2285,19 @@ Service des Ressources Humaines — CAP-EPAC`;
                       </td>
                       <td style={{ color: '#64748b', fontSize: 12.5, whiteSpace: 'nowrap' }}>{formatDate(c.start_date)}</td>
                       <td style={{ color: '#64748b', fontSize: 12.5, whiteSpace: 'nowrap' }}>{formatDate(c.end_date)}</td>
-                      <td><span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, color: '#0f172a', fontSize: 12.5 }}>{formatAmount(c.amount)}</span></td>
+                      <td>
+  <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, color: '#0f172a', fontSize: 12.5 }}>
+    {(() => {
+  const progs = c.course_element_professors ?? [];
+  const total = progs.reduce((sum, p) => {
+    const hours = (p as any).hours ?? p.course_element?.hours ?? 0;
+    const amt   = (p as any).amount_program ?? 0;
+    return sum + (parseFloat(amt) * Number(hours));
+  }, 0);
+  return total > 0 ? formatAmount(total) : formatAmount(c.amount);
+})()}
+  </span>
+</td>
                       <td>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           <span className="ctr-badge" style={{ background: st.bg, color: st.color }}>

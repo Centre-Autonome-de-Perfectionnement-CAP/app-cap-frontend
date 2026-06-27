@@ -1,4 +1,5 @@
 // src/views/pages/demandes/components/ui/StatCard.tsx
+// REFONTE : cartes plus larges, mieux espacées, libellés non tronqués, rendu aéré et moderne.
 
 interface Props {
   label: string
@@ -21,8 +22,8 @@ const StatCard = ({
   urgent = false,
   onClick,
 }: Props) => {
-  const labelColor = text ?? color
-  const isAlerting = urgent && count > 0
+  const labelColor  = text ?? color
+  const isAlerting  = urgent && count > 0
 
   return (
     <div
@@ -33,9 +34,10 @@ const StatCard = ({
       style={{
         background: bg,
         border: `1px solid ${color}30`,
-        borderLeft: `4px solid ${color}`,
-        borderRadius: 8,
-        padding: '8px 12px',
+        borderLeft: `5px solid ${color}`,
+        borderRadius: 12,
+        /* Padding plus généreux — libellés respirent */
+        padding: '14px 18px',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'transform 0.15s, box-shadow 0.15s',
         outline: 'none',
@@ -43,9 +45,9 @@ const StatCard = ({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        minHeight: 60,
-
-        // 👉 variable CSS pour animation
+        /* Hauteur min augmentée pour éviter la compression verticale */
+        minHeight: 80,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
         ['--pulse-color' as any]: color,
       }}
       className={isAlerting ? 'stat-card-pulse' : ''}
@@ -53,70 +55,66 @@ const StatCard = ({
         if (!onClick) return
         const el = e.currentTarget as HTMLDivElement
         el.style.transform = 'translateY(-2px)'
-        if (!isAlerting) el.style.boxShadow = `0 6px 20px ${color}33`
+        if (!isAlerting) el.style.boxShadow = `0 8px 24px ${color}33`
       }}
       onMouseLeave={e => {
         if (!onClick) return
         const el = e.currentTarget as HTMLDivElement
         el.style.transform = 'none'
-        if (!isAlerting) el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.05)'
+        if (!isAlerting) el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
       }}
     >
-      {/* CSS GLOBAL UNE SEULE FOIS */}
       <style>{`
         .stat-card-pulse {
           animation: statPulse 1.6s ease-in-out infinite;
         }
-
         @keyframes statPulse {
           0%, 100% {
-            box-shadow:
-              0 2px 8px rgba(0,0,0,0.08),
-              0 0 0 0 var(--pulse-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 0 var(--pulse-color);
             transform: scale(1);
           }
-
           50% {
-            box-shadow:
-              0 4px 14px rgba(0,0,0,0.12),
-              0 0 0 12px transparent;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12), 0 0 0 12px transparent;
             transform: scale(1.03);
           }
         }
       `}</style>
 
-      {/* HEADER */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          fontSize: '0.9rem',
-          color: labelColor,
-          marginBottom: 3,
-          fontWeight: 750,
-          opacity: 0.9,
-        }}
-      >
+      {/* HEADER — label + icône */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 8,
+        /* wrap autorisé pour libellés longs */
+        flexWrap: 'wrap',
+        color: labelColor,
+        marginBottom: 8,
+        fontWeight: 700,
+        opacity: 0.92,
+      }}>
         {icon && (
-          <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0, marginTop: 1 }}>
             {icon}
           </span>
         )}
-        {label}
+        <span style={{
+          fontSize: '0.875rem',
+          lineHeight: 1.3,
+          /* Pas de white-space: nowrap — on laisse le texte passer à la ligne */
+        }}>
+          {label}
+        </span>
       </div>
 
       {/* COUNT */}
-      <div
-        style={{
-          fontSize: isAlerting ? '2.3rem' : '2.0rem',
-          fontWeight: 800,
-          color,
-          lineHeight: 1,
-          transition: 'font-size 0.2s',
-          letterSpacing: '-0.025em',
-        }}
-      >
+      <div style={{
+        fontSize: isAlerting ? '2.6rem' : '2.2rem',
+        fontWeight: 900,
+        color,
+        lineHeight: 1,
+        transition: 'font-size 0.2s',
+        letterSpacing: '-0.03em',
+      }}>
         {count}
       </div>
     </div>

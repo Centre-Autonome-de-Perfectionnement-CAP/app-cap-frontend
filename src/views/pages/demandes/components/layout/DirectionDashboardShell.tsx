@@ -76,10 +76,13 @@ const StatCard = ({ label, icon, color, bg, border, urgent, value, loading, acti
       style={{
         background: active ? color : bg,
         border: active ? `2px solid ${color}` : `1px solid ${border}`,
-        borderLeft: `4px solid ${color}`,
-        borderRadius: 8,
-        padding: '8px 12px',
-        minHeight: 60,
+        /* Bordure gauche épaissie pour plus de présence */
+        borderLeft: `5px solid ${color}`,
+        borderRadius: 12,
+        /* Padding généreux — libellés non compressés */
+        padding: '14px 18px',
+        /* Hauteur min augmentée */
+        minHeight: 86,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -89,29 +92,34 @@ const StatCard = ({ label, icon, color, bg, border, urgent, value, loading, acti
         boxShadow: isAlerting
           ? `0 2px 12px ${color}44`
           : active
-            ? `0 4px 16px ${color}55`
-            : '0 1px 4px rgba(0,0,0,0.05)',
+            ? `0 6px 20px ${color}55`
+            : '0 2px 8px rgba(0,0,0,0.06)',
         animation: isAlerting ? 'dirStatPulse 1.8s ease-in-out infinite' : 'none',
         ['--pulse-color' as any]: color,
-        transform: active ? 'translateY(-2px)' : 'none',
+        transform: active ? 'translateY(-3px)' : 'none',
       }}
     >
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        fontSize: '0.9rem',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 8,
+        /* wrap autorisé — libellés longs passent à la ligne */
+        flexWrap: 'wrap',
         color: active ? '#fff' : color,
-        fontWeight: 750, opacity: 0.9,
+        fontWeight: 700,
+        opacity: 0.92,
+        marginBottom: 8,
       }}>
-        <CIcon icon={icon as any} style={{ width: 14, flexShrink: 0 }} />
-        {label}
+        <CIcon icon={icon as any} style={{ width: 15, flexShrink: 0, marginTop: 1 }} />
+        <span style={{ fontSize: '0.875rem', lineHeight: 1.3 }}>{label}</span>
       </div>
       <div style={{
-        fontSize: isAlerting ? '2.3rem' : '2.0rem',
-        fontWeight: 800,
+        fontSize: isAlerting ? '2.6rem' : '2.2rem',
+        fontWeight: 900,
         color: active ? '#fff' : color,
         lineHeight: 1,
         transition: 'font-size 0.2s',
-        letterSpacing: '-0.025em',
+        letterSpacing: '-0.03em',
       }}>
         {loading ? '—' : value}
       </div>
@@ -278,12 +286,18 @@ const DirectionDashboardShell = ({
   <div style={{ minHeight: '100vh', background: '#f1f5f9', display: 'flex', flexDirection: 'column' }}>
     <DirHeader roleLabel={roleLabel} accentColor={accentColor} actionLabel={actionLabel} />
 
-    <main style={{ flex: 1, padding: '28px 36px' }}>
+    <main style={{ flex: 1, padding: '32px 40px' }}>
 
-      {/* Rangée de StatCards */}
-      <CRow className="mb-4 g-3">
-        {statDefs.map(def => (
-          <CCol key={def.key} md={Math.floor(12 / statDefs.length) || 2} sm={6} xs={12}>
+      {/* Rangée de StatCards — colonnes adaptatives, gouttières généreuses */}
+      <CRow className="mb-5 g-4">
+        {statDefs.map(def => {
+          const n  = statDefs.length
+          const xs = 12
+          const sm = n >= 6 ? 4 : 6
+          const md = n >= 5 ? 4 : n >= 4 ? 6 : Math.floor(12 / n) || 4
+          const lg = n >= 6 ? 2 : Math.floor(12 / n) || 3
+          return (
+          <CCol key={def.key} xs={xs} sm={sm} md={md} lg={lg}>
             <StatCard
               {...def}
               value={stats[def.key]}
@@ -292,7 +306,8 @@ const DirectionDashboardShell = ({
               onClick={onFilterChange ? () => onFilterChange(activeFilter === def.key ? null : def.key) : undefined}
             />
           </CCol>
-        ))}
+          )
+        })}
       </CRow>
 
       {/* Bandeau filtre actif */}

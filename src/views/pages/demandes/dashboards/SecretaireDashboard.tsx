@@ -349,11 +349,16 @@ const SecretaireDashboard = () => {
 
   return (
     <div>
-      <CRow className="mb-4 g-3">
+      <CRow className="mb-5 g-4">
         {STAT_DEFS.map(s => {
           const palette = STATUS_COLORS[s.key] ?? STATUS_COLORS['submitted']
+          const n  = STAT_DEFS.length
+          const xs = 12
+          const sm = n >= 6 ? 4 : 6
+          const md = n >= 5 ? 4 : n >= 4 ? 6 : Math.floor(12 / n) || 4
+          const lg = n >= 6 ? 2 : Math.floor(12 / n) || 3
           return (
-            <CCol key={s.key} xl={Math.floor(12 / STAT_DEFS.length) || 2} lg={3} md={4} sm={6} xs={12}>
+            <CCol key={s.key} xs={xs} sm={sm} md={md} lg={lg}>
               <StatCard
                 label={s.label}
                 count={counts[s.key] ?? 0}
@@ -361,7 +366,7 @@ const SecretaireDashboard = () => {
                 bg={palette.bg}
                 text={palette.text}
                 urgent={s.urgent}
-                icon={<CIcon icon={s.icon} style={{ width: 14 }} />}
+                icon={<CIcon icon={s.icon} style={{ width: 15 }} />}
                 onClick={() => setSearchParams({ tab: s.key })}
               />
             </CCol>

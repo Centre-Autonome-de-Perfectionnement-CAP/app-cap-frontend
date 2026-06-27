@@ -1,5 +1,6 @@
 // src/views/pages/demandes/components/modal/DashboardShell.tsx
 // Squelette commun : stat cards + CCard + header + recherche + slot contenu.
+// REFONTE StatCards : colonnes adaptatives larges, espacement aéré, libellés non tronqués.
 
 import { CCard, CCardBody, CCardHeader, CRow, CCol } from '@coreui/react'
 import StatCard from '../ui/StatCard'
@@ -28,6 +29,30 @@ interface Props {
   children: React.ReactNode
 }
 
+/**
+ * Calcule la largeur Bootstrap (1-12) de chaque colonne StatCard.
+ *
+ * Règles :
+ *  - 1 stat  → col-12           (pleine largeur, rare)
+ *  - 2 stats → col-6            (deux moitiés)
+ *  - 3 stats → col-4            (tiers)
+ *  - 4 stats → col-6 md col-3   (géré via xs/md séparément)
+ *  - 5 stats → col-12 sm-6 xl-  on laisse le grid auto
+ *  - ≥6      → col-6 sm-4 lg-2
+ *
+ * Pour garder le code simple on rend une string de classe Tailwind/Bootstrap
+ * directement via les props xs/sm/md/lg/xl de CCol.
+ */
+const colBreakpoints = (n: number): { xs: number; sm: number; md: number; lg: number } => {
+  if (n === 1) return { xs: 12, sm: 12, md: 12,  lg: 12  }
+  if (n === 2) return { xs: 12, sm: 6,  md: 6,   lg: 6   }
+  if (n === 3) return { xs: 12, sm: 6,  md: 4,   lg: 4   }
+  if (n === 4) return { xs: 12, sm: 6,  md: 6,   lg: 3   }
+  if (n === 5) return { xs: 12, sm: 6,  md: 4,   lg: 3   }
+  // ≥ 6 : 2 colonnes mobile, 3 tablette, 2 par rangée desktop (max 6 par ligne)
+  return { xs: 6, sm: 4, md: 3, lg: 2 }
+}
+
 const DashboardShell = ({
   title, subtitle,
   search, onSearchChange,
@@ -35,16 +60,17 @@ const DashboardShell = ({
   stats = [], counts = {},
   headerExtra, children,
 }: Props) => {
-  const colSize = stats.length > 0 ? Math.max(3, Math.floor(12 / stats.length)) : 3
+  const bp = colBreakpoints(stats.length)
 
   return (
     <div>
       {stats.length > 0 && (
-        <CRow className="mb-4 g-3">
+        /* g-4 au lieu de g-3 : gouttières plus larges entre cartes */
+        <CRow className="mb-5 g-4">
           {stats.map(s => {
             const palette = STATUS_COLORS[s.key]
             return (
-              <CCol key={s.key} md={colSize} sm={6}>
+              <CCol key={s.key} xs={bp.xs} sm={bp.sm} md={bp.md} lg={bp.lg}>
                 <StatCard
                   label={s.label}
                   count={counts[s.key] ?? 0}

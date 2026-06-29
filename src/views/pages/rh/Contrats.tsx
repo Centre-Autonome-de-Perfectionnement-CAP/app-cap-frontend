@@ -1134,7 +1134,7 @@ const AdminCourseSupportModal: React.FC<{
   };
 
   const progLabel = (p: ProfessorProgram) =>
-    `${p.course_element?.name ?? p.label ?? '—'} — ${p.class_group?.name ?? '—'}`;
+    `${p.course_element?.name ?? p.label ?? '—'} `;
 
   // Icônes
   const IcoPdf = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><path d="M9 11h1.5a1.5 1.5 0 0 1 0 3H9v-3z"/></svg>;

@@ -69,8 +69,8 @@ interface Props {
 
 const programLabel = (p: ProfessorProgram): string => {
   const ecue      = p.course_element?.name ?? p.label ?? '—'
-  const classe    = p.class_group?.name ?? '—'
-  return `${ecue} — ${classe}`
+   
+  return `${ecue} `
 }
 
 // ─── Composant principal ─────────────────────────────────────────────────────

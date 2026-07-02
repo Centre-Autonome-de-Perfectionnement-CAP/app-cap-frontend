@@ -18,7 +18,7 @@ import CIcon from '@coreui/icons-react'
 import { AppSidebarNav } from './AppSidebarNav.tsx'
 import {
   mainNavigation,
-  emploiNavigation,
+  getEmploiNavigation,
   inscriptionNavigation,
   attestationNavigation,
   getNoteNavigation,
@@ -28,7 +28,8 @@ import {
   bibliothequeNavigation,
   financeNavigation,
   presenceNavigation,
-  cahierNavigation,
+  getCahierNavigation,
+  alumniNavigation,
 } from '../_nav/index.tsx'
 
 const AppSidebar = () => {
@@ -46,12 +47,13 @@ const AppSidebar = () => {
     if (path.startsWith('/notes')) return getNoteNavigation(role)
     if (path.startsWith('/rh')) return rhNavigation
     if (path.startsWith('/soutenance')) return soutenanceNavigation
-    if (path.startsWith('/emploi')) return emploiNavigation
-    if (path.startsWith('/cahier')) return cahierNavigation
+    if (path.startsWith('/emploi')) return getEmploiNavigation(role)
+    if (path.startsWith('/cahier')) return getCahierNavigation(role)
     if (path.startsWith('/presence')) return presenceNavigation
     if (path.startsWith('/finance')) return financeNavigation
     if (path.startsWith('/bibliotheque')) return bibliothequeNavigation
     if (path.startsWith('/cours')) return coursNavigation
+    if (path.startsWith('/alumni')) return alumniNavigation
 
     return mainNavigation
   }

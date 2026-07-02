@@ -14,6 +14,7 @@ export const MODULES = {
   CAHIER_TEXTE: 'cahier-texte',
   RH: 'rh',
   SOUTENANCES: 'soutenances',
+  ALUMNI: 'alumni',
 } as const;
 
 export type ModuleName = typeof MODULES[keyof typeof MODULES];
@@ -30,6 +31,7 @@ export const MODULE_NAMES: Record<ModuleName, string> = {
   [MODULES.CAHIER_TEXTE]: 'Cahier de Textes',
   [MODULES.RH]: 'Ressources Humaines',
   [MODULES.SOUTENANCES]: 'Soutenances',
+  [MODULES.ALUMNI]: 'Alumni',
 };
 
 export const MODULE_ICONS: Record<ModuleName, string> = {
@@ -44,4 +46,5 @@ export const MODULE_ICONS: Record<ModuleName, string> = {
   [MODULES.CAHIER_TEXTE]: 'cilNotes',
   [MODULES.RH]: 'cilPeople',
   [MODULES.SOUTENANCES]: 'cilSpeech',
+  [MODULES.ALUMNI]: 'cilGroup',
 };

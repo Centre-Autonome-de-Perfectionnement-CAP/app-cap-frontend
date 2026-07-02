@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useAuth } from '@/contexts'
 import {
   CCard,
   CCardBody,
@@ -30,6 +31,9 @@ import Swal from 'sweetalert2'
 const EntryDetail: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
+  const { role } = useAuth()
+  const isProfesseur = (role as any) === 'professeur'
+  const backUrl = isProfesseur ? '/cahier-texte/mes-entrees' : '/cahier-texte/list'
   const [entry, setEntry] = useState<TextbookEntry | null>(null)
   const [comments, setComments] = useState<TextbookComment[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,7 +59,7 @@ const EntryDetail: React.FC = () => {
         title: 'Erreur',
         text: 'Impossible de charger l\'entrée',
       })
-      navigate('/cahier-texte/list')
+      navigate(backUrl)
     } finally {
       setLoading(false)
     }
@@ -154,7 +158,7 @@ const EntryDetail: React.FC = () => {
           text: 'L\'entrée a été supprimée',
           timer: 2000,
         })
-        navigate('/cahier-texte/list')
+        navigate(backUrl)
       } catch (error: any) {
         Swal.fire({
           icon: 'error',
@@ -234,7 +238,7 @@ const EntryDetail: React.FC = () => {
                   color="secondary"
                   size="sm"
                   className="me-2"
-                  onClick={() => navigate('/cahier-texte/list')}
+                  onClick={() => navigate(backUrl)}
                 >
                   <CIcon icon={cilArrowLeft} className="me-2" />
                   Retour

@@ -79,6 +79,12 @@ const applications = [
     image: getAssetUrl('images/presence.png'),
     url: '/presence',
   },
+  {
+    title: 'CAP Alumni',
+    description: 'Suivi et indicateurs de la communauté Alumni CAP-EPAC.',
+    image: getAssetUrl('images/alumni.png'),
+    url: '/alumni',
+  },
 ];
 
 const Portail = () => {

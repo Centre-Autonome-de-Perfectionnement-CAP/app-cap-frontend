@@ -196,6 +196,17 @@ export const CAHIER_ROUTES = {
   BY_MATIERE: (matiereId: number | string) => `cahier-texte/matiere/${matiereId}`,
 } as const;
 
+// Alumni
+export const ALUMNI_ROUTES = {
+  BASE: 'admin/alumni',
+  DASHBOARD: 'admin/alumni/dashboard',
+  LIST: 'admin/alumni',
+  DETAIL: (id: number | string) => `admin/alumni/${id}`,
+  UPDATE: (id: number | string) => `admin/alumni/${id}`,
+  DELETE: (id: number | string) => `admin/alumni/${id}`,
+  SUBMIT: 'alumni',
+} as const;
+
 // RH
 export const RH_ROUTES = {
   BASE: 'rh',
@@ -284,6 +295,7 @@ export const FRONTEND_ROUTES = {
   CAHIER_TEXTE: '/cahier-texte',
   RH: '/rh',
   SOUTENANCES: '/soutenances',
+  ALUMNI: '/alumni',
   
   // Errors
   PAGE_404: '/404',

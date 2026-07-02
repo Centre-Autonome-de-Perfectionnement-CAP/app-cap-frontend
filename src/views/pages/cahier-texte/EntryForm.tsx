@@ -20,6 +20,7 @@ import { cilSave, cilArrowLeft } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import CahierService from '@/services/cahier.service'
 import CoursService from '@/services/cours.service'
+import { useAuth } from '@/contexts'
 import type { CreateTextbookEntryRequest, TextbookEntry } from '@/types/cahier-texte.types'
 import { TextbookEntryStatus } from '@/types/cahier-texte.types'
 import Swal from 'sweetalert2'
@@ -28,6 +29,8 @@ const EntryForm: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const isEdit = !!id
+  const { role, userId } = useAuth()
+  const isProfesseur = (role as any) === 'professeur'
 
   const [loading, setLoading] = useState(false)
   const [programs, setPrograms] = useState<any[]>([])
@@ -58,8 +61,14 @@ const EntryForm: React.FC = () => {
 
   const loadPrograms = async () => {
     try {
-      const response = await CoursService.getPrograms({ per_page: 1000 })
-      setPrograms(response.data || [])
+      if (isProfesseur && userId) {
+        // Pour un professeur, charger uniquement ses programmes assignés
+        const data = await CoursService.getProfessorPrograms(userId)
+        setPrograms(data || [])
+      } else {
+        const response = await CoursService.getPrograms({ per_page: 1000 })
+        setPrograms(response.data || [])
+      }
     } catch (error) {
       console.error('Erreur chargement programmes:', error)
     }
@@ -93,7 +102,7 @@ const EntryForm: React.FC = () => {
         title: 'Erreur',
         text: 'Impossible de charger l\'entrée',
       })
-      navigate('/cahier-texte/list')
+      navigate(isProfesseur ? '/cahier-texte/mes-entrees' : '/cahier-texte/list')
     } finally {
       setLoading(false)
     }
@@ -144,7 +153,7 @@ const EntryForm: React.FC = () => {
           timer: 2000,
         })
       }
-      navigate('/cahier-texte/list')
+      navigate(isProfesseur ? '/cahier-texte/mes-entrees' : '/cahier-texte/list')
     } catch (error: any) {
       Swal.fire({
         icon: 'error',
@@ -165,7 +174,7 @@ const EntryForm: React.FC = () => {
             <CButton
               color="secondary"
               size="sm"
-              onClick={() => navigate('/cahier-texte/list')}
+              onClick={() => navigate(isProfesseur ? '/cahier-texte/mes-entrees' : '/cahier-texte/list')}
             >
               <CIcon icon={cilArrowLeft} className="me-2" />
               Retour
@@ -362,7 +371,7 @@ const EntryForm: React.FC = () => {
                 <div className="d-grid gap-2 d-md-flex justify-content-md-end">
                   <CButton
                     color="secondary"
-                    onClick={() => navigate('/cahier-texte/list')}
+                    onClick={() => navigate(isProfesseur ? '/cahier-texte/mes-entrees' : '/cahier-texte/list')}
                     disabled={loading}
                   >
                     Annuler

@@ -9,7 +9,8 @@ interface AuthContextType {
   role: UserRole | null;
   nom: string | null;
   prenoms: string | null;
-  login: (token: string, userNom: string, userPrenoms: string, userRole: UserRole) => void;
+  userId: number | null;
+  login: (token: string, userNom: string, userPrenoms: string, userRole: UserRole, userId?: number) => void;
   logout: () => Promise<void>;
 }
 
@@ -25,6 +26,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
   const [role, setRole] = useState<UserRole | null>(null);
   const [nom, setNom] = useState<string | null>(null);
   const [prenoms, setPrenoms] = useState<string | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
 
   const navigate = useNavigate();
 
@@ -33,27 +35,33 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     const storedRole = localStorage.getItem(STORAGE_KEYS.ROLE) as UserRole | null;
     const storedNom = localStorage.getItem(STORAGE_KEYS.NOM);
     const storedPrenoms = localStorage.getItem(STORAGE_KEYS.PRENOMS);
+    const storedUserId = localStorage.getItem(STORAGE_KEYS.USER_ID);
 
     if (storedToken && storedRole) {
       setIsAuthenticated(true);
       setRole(storedRole);
       setNom(storedNom);
       setPrenoms(storedPrenoms);
+      setUserId(storedUserId ? parseInt(storedUserId) : null);
     }
     setIsLoading(false);
   }, []);
 
-  const login = (token: string, userNom: string, userPrenoms: string, userRole: UserRole): void => {
+  const login = (token: string, userNom: string, userPrenoms: string, userRole: UserRole, uid?: number): void => {
     localStorage.setItem(STORAGE_KEYS.TOKEN, token);
     localStorage.setItem(STORAGE_KEYS.NOM, userNom);
     localStorage.setItem(STORAGE_KEYS.PRENOMS, userPrenoms);
     localStorage.setItem(STORAGE_KEYS.ROLE, userRole);
-    
+    if (uid !== undefined) {
+      localStorage.setItem(STORAGE_KEYS.USER_ID, uid.toString());
+      setUserId(uid);
+    }
+
     setNom(userNom);
     setPrenoms(userPrenoms);
     setRole(userRole);
     setIsAuthenticated(true);
-    
+
     navigate(FRONTEND_ROUTES.PORTAIL);
   };
 
@@ -67,11 +75,13 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
       localStorage.removeItem(STORAGE_KEYS.ROLE);
       localStorage.removeItem(STORAGE_KEYS.NOM);
       localStorage.removeItem(STORAGE_KEYS.PRENOMS);
-      
+      localStorage.removeItem(STORAGE_KEYS.USER_ID);
+
       setIsAuthenticated(false);
       setRole(null);
       setNom(null);
       setPrenoms(null);
+      setUserId(null);
       
       navigate(FRONTEND_ROUTES.PORTAIL);
     }
@@ -83,6 +93,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     role,
     nom,
     prenoms,
+    userId,
     login,
     logout,
   };

@@ -12,9 +12,9 @@ const rolePermissions = {
   },
   'secretaire': {
     bibliotheque: false,
-    cahier: false,
+    'cahier-texte': false,
     cours: false,
-    emploi: false,
+    'emploi-du-temps': false,
     notes: false,
     presence: false,
     finance: false
@@ -22,26 +22,25 @@ const rolePermissions = {
   'chef-division': {
   },
   'comptable': {
-    attestation: false,
+    attestations: false,
     bibliotheque: false,
-    cahier: false,
+    'cahier-texte': false,
     cours: false,
-    emploi: false,
+    'emploi-du-temps': false,
     inscription: false,
     notes: false,
     presence: false,
-    soutenance: false
+    soutenances: false
   },
   'professeur': {
-    attestation: false,
+    attestations: false,
     bibliotheque: false,
-    cahier: false,
     cours: false,
-    emploi: false,
     inscription: false,
     presence: false,
-    soutenance: false,
-    finance: false
+    soutenances: false,
+    finance: false,
+    rh: false,
   }
 };
 
@@ -70,9 +69,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, module }) => 
     return <Navigate to={FRONTEND_ROUTES.LOGIN} replace />;
   }
 
-  // Redirection automatique des professeurs vers les notes
+  // Redirection automatique des professeurs vers leur portail dédié
   if (role === 'professeur' as any && window.location.pathname === FRONTEND_ROUTES.PORTAIL) {
-    return <Navigate to="/notes/professor/dashboard" replace />;
+    return <Navigate to="/portail/professor" replace />;
   }
 
   if (module && !isAllowed(role, module)) {

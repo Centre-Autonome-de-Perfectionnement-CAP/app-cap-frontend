@@ -16,6 +16,7 @@ import { LoadingSpinner } from '@/components'
 // Pages
 const Login = React.lazy(() => import('./views/pages/login/Login.tsx'))
 const Portail = React.lazy(() => import('./views/pages/portail/Portail.tsx'))
+const ProfessorPortail = React.lazy(() => import('./views/pages/portail/ProfessorPortail.tsx'))
 const InscriptionRoutes = React.lazy(() => import('./views/pages/inscription/InscriptionRoutes.tsx'))
 const AttestationRoutes = React.lazy(() => import('./views/pages/attestation/AttestationRoutes.tsx'))
 const NoteRoutes = React.lazy(() => import('./views/pages/notes/NoteRoutes.tsx'))
@@ -27,6 +28,7 @@ const CahierRoutes = React.lazy(() => import('./views/pages/cahier-texte/CahierR
 const PresenceRoutes = React.lazy(() => import('./views/pages/presence/PresenceRoutes.tsx'))
 const FinanceRoutes = React.lazy(() => import('./views/pages/finance/FinanceRoutes.tsx'))
 const BibliothequeRoutes = React.lazy(() => import('./views/pages/bibliotheque/BibliothequeRoutes.tsx'))
+const AlumniRoutes = React.lazy(() => import('./views/pages/alumni/AlumniRoutes.tsx'))
 const Register = React.lazy(() => import('./views/pages/register/Register.tsx'))
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404.tsx'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500.tsx'))
@@ -62,6 +64,14 @@ const App = () => {
               element={
                 <ProtectedRoute module="portail">
                   <Portail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/portail/professor"
+              element={
+                <ProtectedRoute module="portail">
+                  <ProfessorPortail />
                 </ProtectedRoute>
               }
             />
@@ -175,6 +185,16 @@ const App = () => {
                 <ProtectedRoute module={MODULES.BIBLIOTHEQUE}>
                   <DefaultLayout>
                     <BibliothequeRoutes />
+                  </DefaultLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={`${FRONTEND_ROUTES.ALUMNI}/*`}
+              element={
+                <ProtectedRoute module={MODULES.ALUMNI}>
+                  <DefaultLayout>
+                    <AlumniRoutes />
                   </DefaultLayout>
                 </ProtectedRoute>
               }

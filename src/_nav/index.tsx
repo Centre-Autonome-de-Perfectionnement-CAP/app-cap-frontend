@@ -15,7 +15,8 @@ import {
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
 import inscriptionNavigation from "./inscription.tsx";
-import emploiNavigation from "./emploi-du-temps.tsx";
+import alumniNavigation from "./alumni.tsx";
+import getEmploiNavigation from "./emploi-du-temps.tsx";
 import rhNavigation from "./rh.tsx";
 import soutenanceNavigation from "./soutenance.tsx";
 import coursNavigation from "./cours.tsx";
@@ -24,7 +25,7 @@ import bibliothequeNavigation from "./bibliotheque.tsx";
 import attestationNavigation from "./attestation.tsx";
 import presenceNavigation from "./presence.tsx";
 import getNoteNavigation from "./note.tsx";
-import cahierNavigation from "./cahier.tsx"
+import getCahierNavigation from "./cahier.tsx"
 
 const mainNavigation = [
   {
@@ -499,4 +500,4 @@ const mainNavigation = [
   },
 ]
 
-export { mainNavigation, inscriptionNavigation, emploiNavigation, attestationNavigation, bibliothequeNavigation, financeNavigation, coursNavigation, cahierNavigation, soutenanceNavigation, rhNavigation, presenceNavigation, getNoteNavigation }
+export { mainNavigation, inscriptionNavigation, alumniNavigation, getEmploiNavigation, attestationNavigation, bibliothequeNavigation, financeNavigation, coursNavigation, getCahierNavigation, soutenanceNavigation, rhNavigation, presenceNavigation, getNoteNavigation }

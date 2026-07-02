@@ -73,7 +73,8 @@ const Login = () => {
         access_token,
         user.last_name || user.name || '',
         user.first_name || '',
-        user.role as any
+        user.role as any,
+        user.id
       )
       
     } catch (err: any) {

@@ -1,20 +1,18 @@
 // src/views/pages/demandes/dashboards/SecDirecteurDashboard.tsx
-// VERSION REFACTORISÉE — avec stats, profil acteur visible, sans accès portail
+// CORRECTION : suppression du header bande bleue (DirectionDashboardShell)
+// Utilise désormais DashboardShell, identique aux autres acteurs.
 
 import { useState } from 'react'
-import { CAlert, CCard, CCardBody, CCardHeader, CBadge } from '@coreui/react'
+import { CAlert, CBadge } from '@coreui/react'
 import { cilCheckAlt, cilX, cilWarning } from '@coreui/icons'
-import CIcon from '@coreui/icons-react'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
-import { useDirectionStats } from '../hooks/useDirectionStats'
 import {
-  DemandeTable, DemandeModalShell, DemandeDetailBase,
+  DashboardShell, DemandeTable, DemandeModalShell, DemandeDetailBase,
   ActionButton, useActionColumns,
   ReferenceCell, EtudiantCell, TypeCell, DateCell, SignatureTypeCell,
   DemandeSearchBar, RetourSecretaireModal,
 } from '../components'
-import DirectionDashboardShell, { SEC_DIR_STAT_DEFS } from '../components/layout/DirectionDashboardShell'
 import FlaggedValidationAction from '../components/workflow/FlaggedValidationAction'
 import type { DocumentRequest } from '@/types/document-request.types'
 
@@ -136,67 +134,23 @@ const BASE_COLUMNS = [
 const SecDirecteurDashboard = () => {
   const { demandes, loading, filters, setFilters, selected, detailOpen, openDetail, closeDetail, handleAction } =
     useDemandesDashboard()
-  const { stats, statsLoading } = useDirectionStats(demandes)
   const columns = useActionColumns(BASE_COLUMNS, openDetail)
-  const correctionCount = stats.inCircuit
-
-  const [activeFilter, setActiveFilter] = useState<keyof typeof stats | null>(null)
-
-  const filteredDemandes = (() => {
-    if (!activeFilter) return demandes
-    if (activeFilter === 'inCircuit') return demandes.filter(d => !!d.is_in_correction_circuit)
-    if (activeFilter === 'hasFlag')   return demandes.filter(d => !!d.has_flag)
-    return demandes
-  })()
 
   return (
-    <DirectionDashboardShell
-      roleLabel="Secrétaire du Directeur"
-      accentColor="#c2410c"
-      actionLabel="Documents à transmettre"
-      stats={stats}
-      statsLoading={statsLoading}
-      statDefs={SEC_DIR_STAT_DEFS}
-      activeFilter={activeFilter}
-      onFilterChange={key => setActiveFilter(key as keyof typeof stats | null)}
+    <DashboardShell
+      title="Documents à transmettre"
+      subtitle="Secrétaire du Directeur"
+      search={filters.search ?? ''}
+      onSearchChange={v => setFilters({ ...filters, search: v })}
+      stats={[{ key: 'director_secretary_review', label: 'Dossiers à transmettre' }]}
+      counts={{ director_secretary_review: demandes.length }}
     >
-      {correctionCount > 0 && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          background: 'linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%)',
-          border: '1.5px solid #fed7aa', borderRadius: '12px 12px 0 0',
-          padding: '14px 24px', borderBottom: '1px solid #fde68a',
-          marginBottom: -1, position: 'relative', zIndex: 1,
-        }}>
-          <CIcon icon={cilWarning} style={{ width: 20, color: '#f97316' }} />
-          <span style={{ fontWeight: 800, fontSize: '1rem', color: '#78350f' }}>
-            {correctionCount} dossier{correctionCount > 1 ? 's' : ''} en circuit de correction — Action requise
-          </span>
-        </div>
-      )}
-
-      <CCard className="border-0" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.07)', borderRadius: correctionCount > 0 ? '0 0 14px 14px' : 14 }}>
-        <CCardHeader className="bg-white" style={{ borderBottom: '1px solid #f1f5f9', padding: '20px 24px 16px' }}>
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '1.45rem', color: '#0f172a', letterSpacing: '-0.025em' }}>Documents à transmettre</div>
-              <div style={{ fontSize: '1rem', color: '#64748b', marginTop: 2, fontWeight: 500 }}>
-                {filteredDemandes.length} dossier{filteredDemandes.length !== 1 ? 's' : ''} {activeFilter ? 'filtrés' : 'en attente'}
-              </div>
-            </div>
-            <DemandeSearchBar search={filters.search ?? ''} onSearchChange={v => setFilters({ ...filters, search: v })} />
-          </div>
-        </CCardHeader>
-        <CCardBody style={{ padding: 0 }}>
-          <DemandeTable demandes={filteredDemandes} loading={loading} columns={columns}
-            emptyMessage="Aucun document en attente de transmission" onRowClick={openDetail} />
-        </CCardBody>
-      </CCard>
-
+      <DemandeTable demandes={demandes} loading={loading} columns={columns}
+        emptyMessage="Aucun document en attente de transmission" onRowClick={openDetail} />
       {selected && (
         <DetailModal demande={selected} visible={detailOpen} onClose={closeDetail} onAction={handleAction} />
       )}
-    </DirectionDashboardShell>
+    </DashboardShell>
   )
 }
 

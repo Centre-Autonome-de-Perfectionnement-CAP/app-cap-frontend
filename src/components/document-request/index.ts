@@ -4,6 +4,7 @@ export { default as MotifModal }            from './MotifModal'
 export { default as DossierFiles }          from './DossierFiles'
 export { default as DossierFilesSplit }     from './DossierFilesSplit'
 export { default as AttachmentViewerModal }  from './AttachmentViewerModal'
+export { default as DocumentExplorerModal }  from './DocumentExplorerModal'
 export { SecretaryFileUploader }            from './SecretaryFileUploader'
 
 // src/hooks/attestation/index.ts — ajouter à l'export existant :

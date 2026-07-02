@@ -1,5 +1,6 @@
 // src/views/pages/demandes/components/ui/StatCard.tsx
-// REFONTE : cartes plus larges, mieux espacées, libellés non tronqués, rendu aéré et moderne.
+// CORRECTION : animation de clignotement utilise var(--pulse-color) pour la box-shadow
+// afin que chaque carte clignote selon sa propre couleur.
 
 interface Props {
   label: string
@@ -36,7 +37,6 @@ const StatCard = ({
         border: `1px solid ${color}30`,
         borderLeft: `5px solid ${color}`,
         borderRadius: 12,
-        /* Padding plus généreux — libellés respirent */
         padding: '14px 18px',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'transform 0.15s, box-shadow 0.15s',
@@ -45,7 +45,6 @@ const StatCard = ({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        /* Hauteur min augmentée pour éviter la compression verticale */
         minHeight: 80,
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
         ['--pulse-color' as any]: color,
@@ -64,6 +63,11 @@ const StatCard = ({
         if (!isAlerting) el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
       }}
     >
+      {/*
+        CORRECTION : box-shadow dans @keyframes utilise var(--pulse-color)
+        pour que chaque carte clignote avec sa propre couleur.
+        Le spread "0 0 0 12px transparent" crée l'effet de halo.
+      */}
       <style>{`
         .stat-card-pulse {
           animation: statPulse 1.6s ease-in-out infinite;
@@ -74,7 +78,7 @@ const StatCard = ({
             transform: scale(1);
           }
           50% {
-            box-shadow: 0 4px 14px rgba(0,0,0,0.12), 0 0 0 12px transparent;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12), 0 0 12px 4px var(--pulse-color);
             transform: scale(1.03);
           }
         }
@@ -85,7 +89,6 @@ const StatCard = ({
         display: 'flex',
         alignItems: 'flex-start',
         gap: 8,
-        /* wrap autorisé pour libellés longs */
         flexWrap: 'wrap',
         color: labelColor,
         marginBottom: 8,
@@ -100,7 +103,6 @@ const StatCard = ({
         <span style={{
           fontSize: '0.875rem',
           lineHeight: 1.3,
-          /* Pas de white-space: nowrap — on laisse le texte passer à la ligne */
         }}>
           {label}
         </span>

@@ -40,6 +40,16 @@ const mainNavigation = [
   },
   {
     component: CNavTitle,
+    name: 'Alumni',
+  },
+  {
+    component: CNavItem,
+    name: 'Fiches Alumni',
+    to: '/alumni/list',
+    icon: <CIcon icon={cilStar} className="nav-icon" />,
+  },
+  {
+    component: CNavTitle,
     name: 'Theme',
   },
   {

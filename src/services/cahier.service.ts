@@ -1,5 +1,5 @@
 import HttpService from './http.service.ts'
-import { CAHIER_ROUTES } from '@/constants/routes.constants'
+import { CAHIER_TEXTE_ROUTES as CAHIER_ROUTES } from '@/constants/routes.constants'
 import type {
   TextbookEntry,
   CreateTextbookEntryRequest,

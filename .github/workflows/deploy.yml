@@ -1,4 +1,4 @@
-name: 🚀 Deploy app-cap-frontend (mirco-dev)
+name: 🚀 Deploy app-cap-frontend (Progiciel)
 
 on:
   push:
@@ -37,8 +37,8 @@ jobs:
           script_stop: true
           script: |
             set -e
-            echo "📦 Préparation du répertoire de déploiement..."
-            mkdir -p /var/www/cap.the-haute-societyy.com
+            echo "📦 Préparation du répertoire de déploiement (progi-cap.the-haute-societyy.com)..."
+            mkdir -p /var/www/progi-cap.the-haute-societyy.com
             echo "✅ Prêt pour la réception du build"
 
       - name: 📤 Upload build files
@@ -49,7 +49,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           source: "build/*"
-          target: "/var/www/cap.the-haute-societyy.com"
+          target: "/var/www/progi-cap.the-haute-societyy.com"
           strip_components: 1
           rm: true
 
@@ -61,5 +61,5 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script: |
-            echo "✅ app-cap-frontend déployé !"
-            ls -la /var/www/cap.the-haute-societyy.com/ | head -10
+            echo "✅ app-cap-frontend (Progiciel) déployé !"
+            ls -la /var/www/progi-cap.the-haute-societyy.com/ | head -10

@@ -44,7 +44,7 @@ const App = () => {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <BrowserRouter basename="/services">
+    <BrowserRouter>
       <ToastProvider>
         <AuthContextProvider>
           <Suspense fallback={<LoadingSpinner fullPage message="Chargement de l'application..." />}>

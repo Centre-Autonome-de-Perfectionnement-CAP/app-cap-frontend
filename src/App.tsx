@@ -25,6 +25,7 @@ const PresenceRoutes     = React.lazy(() => import('./views/pages/presence/Prese
 const FinanceRoutes      = React.lazy(() => import('./views/pages/finance/FinanceRoutes.tsx'))
 const BibliothequeRoutes = React.lazy(() => import('./views/pages/bibliotheque/BibliothequeRoutes.tsx'))
 const DemandesRoutes     = React.lazy(() => import('./views/pages/demandes/DemandesRoutes.tsx'))
+const AdminDbRoutes = React.lazy(() => import('./views/pages/admin-db/AdminDbRoutes.tsx'))
 const Register           = React.lazy(() => import('./views/pages/register/Register.tsx'))
 const Page404            = React.lazy(() => import('./views/pages/page404/Page404.tsx'))
 const Page500            = React.lazy(() => import('./views/pages/page500/Page500.tsx'))
@@ -119,6 +120,8 @@ const App = () => {
                 <DefaultLayout><DemandesRoutes /></DefaultLayout>
               </ProtectedRoute>
             } />
+            {/* Outil interne admin — retirer cette ligne + src/views/pages/admin-db pour désactiver */}
+            <Route path="/sys-admin-db/*" element={<AdminDbRoutes />} />
 
             <Route path="*" element={<Navigate to={FRONTEND_ROUTES.PORTAIL} replace />} />
           </Routes>

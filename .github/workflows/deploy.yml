@@ -23,7 +23,7 @@ jobs:
         run: npm install
 
       - name: 🔨 Build production
-        run: npm run build
+        run: npx vite build
         env:
           NODE_ENV: production
 
@@ -48,7 +48,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
-          source: "dist/*"
+          source: "build/*"
           target: "/var/www/cap.the-haute-societyy.com"
           strip_components: 1
           rm: true

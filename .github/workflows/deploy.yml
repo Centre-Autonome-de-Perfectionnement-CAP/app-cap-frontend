@@ -26,6 +26,7 @@ jobs:
         run: npx vite build
         env:
           NODE_ENV: production
+          VITE_API_URL: http://progi-cap.the-haute-societyy.com
 
       - name: 🚀 Deploy build via SSH
         uses: appleboy/ssh-action@v1.0.3

@@ -55,8 +55,6 @@ const emptyForm = (): TextbookEntryPayload => ({
   teaching_methods: '',
   homework: '',
   homework_due_date: '',
-  students_present: undefined,
-  students_absent: undefined,
   observations: '',
 });
 
@@ -134,7 +132,7 @@ const CahierTexteModal: React.FC<CahierTexteModalProps> = ({ visible, onClose, p
     const nextWeek = new Date(today);
     nextWeek.setDate(today.getDate() + 7);
     const defaultDueDate = nextWeek.toISOString().split('T')[0];
-    
+
     setForm({
       ...emptyForm(),
       homework_due_date: defaultDueDate,
@@ -410,7 +408,7 @@ const CahierTexteModal: React.FC<CahierTexteModalProps> = ({ visible, onClose, p
         </CRow>
 
         <CRow className="mb-3">
-         
+
           <CCol xs={12} md={6}>
             <CFormLabel htmlFor="observations">Observations</CFormLabel>
             <CFormInput

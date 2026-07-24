@@ -80,7 +80,7 @@ export class HttpService {
       const config: AxiosRequestConfig = {
         responseType: 'blob',
         headers: {
-          'Accept': 'application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Accept': '*/*',
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
@@ -96,18 +96,19 @@ export class HttpService {
       const blobUrl = URL.createObjectURL(blob);
       
       const contentDisposition = response.headers['content-disposition'];
-      let filename = undefined;
-      console.log('All headers:', response.headers);
-      console.log('Content-Disposition:', contentDisposition);
+      let filename: string | undefined = undefined;
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename[*]?=['"]?([^'"\s;]+)['"]?/i);
-        console.log('Filename match result:', filenameMatch);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = decodeURIComponent(filenameMatch[1]);
-          console.log('Extracted filename:', filename);
+        // RFC 5987 : filename*=UTF-8''nom%20avec%20espaces.pdf
+        const rfc5987 = contentDisposition.match(/filename\*=(?:UTF-8'')?([^\s;]+)/i);
+        if (rfc5987?.[1]) {
+          filename = decodeURIComponent(rfc5987[1]);
+        } else {
+          // Guillemets doubles : filename="nom avec espaces.pdf"
+          const quoted = contentDisposition.match(/filename="([^"]+)"/i);
+          // Sans guillemets : filename=simple.pdf
+          const unquoted = contentDisposition.match(/filename=([^\s;]+)/i);
+          filename = quoted?.[1] ?? unquoted?.[1];
         }
-      } else {
-        console.log('No Content-Disposition header found');
       }
       
       return { success: true, url: blobUrl, filename };
@@ -156,9 +157,20 @@ export class HttpService {
 private request<T = any>(options: RequestOptions): Promise<T> {
   return new Promise((resolve, reject) => {
     if (options.data instanceof FormData) {
-      // Supprime tout Content-Type pour laisser Axios gérer multipart
+      // Supprime tout Content-Type pour laisser Axios gérer multipart/form-data
       delete options.headers?.['Content-Type'];
       delete options.headers?.['content-type'];
+
+      // Injection explicite du token — garantit que le header Authorization
+      // est présent même quand l'intercepteur async ne s'applique pas
+      // correctement sur les requêtes multipart.
+      const token = localStorage.getItem('token');
+      if (token) {
+        options.headers = {
+          ...(options.headers ?? {}),
+          Authorization: `Bearer ${token}`,
+        };
+      }
 
       this._axios
         .post(options.url, options.data, {

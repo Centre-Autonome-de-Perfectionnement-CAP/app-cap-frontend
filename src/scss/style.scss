@@ -1,8 +1,42 @@
 @use "@coreui/coreui/scss/coreui" as * with ( 
   $enable-deprecation-messages: false,
+  $font-size-sm: 0.875rem, // 14px minimum pour tout texte de classe 'small'
 );
 @use "@coreui/chartjs/scss/coreui-chartjs";
 @use "vendors/simplebar";
+
+// ─── Harmonisation & Confort Visuel ─────────────────────────────────────────
+
+// Garantir que les badges, alertes et éléments de tableau du module demandes font au moins 14px
+.badge {
+  font-size: 0.875rem !important; // 14px min pour tous les badges
+  padding: 0.45em 0.75em !important; // padding légèrement aéré pour équilibrer la taille
+  font-weight: 700 !important;
+}
+
+.table {
+  td, th {
+    font-size: 0.875rem !important; // 14px min pour toutes les cellules
+    padding-top: 10px !important; // Espacement de confort sans gonfler l'UI
+    padding-bottom: 10px !important;
+  }
+}
+
+.form-label, .col-form-label {
+  font-size: 0.875rem !important; // 14px min pour les labels de formulaires
+  font-weight: 600 !important;
+}
+
+.form-control, .form-select {
+  font-size: 0.875rem !important; // 14px min pour les champs de saisie
+  padding: 0.4rem 0.8rem !important; // Proportionnel et lisible
+}
+
+.dropdown-item {
+  font-size: 0.875rem !important; // 14px min pour les options des menus
+  padding: 0.45rem 1rem !important;
+}
+
 
 body {
   background-color: var(--cui-tertiary-bg);
@@ -65,3 +99,24 @@ body {
     --cui-footer-bg: var(--cui-body-bg);
   }
 }
+
+// ─── Animations Custom ───────────────────────────────────────────────────────
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s infinite;
+}
+
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+

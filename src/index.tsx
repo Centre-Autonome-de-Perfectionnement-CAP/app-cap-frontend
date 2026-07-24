@@ -6,9 +6,13 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
 import App from './App.tsx'
 import store from './store.ts'
 import { setupAxiosInterceptors } from './services/interceptor.ts'
+
+// window.location.href = '/login' contourne le basename="/services" du BrowserRouter
+// et provoque une page blanche. On utilise un CustomEvent à la place :
+// AuthContext l'écoute et appelle navigate() qui respecte le basename.
 setupAxiosInterceptors(() => {
   localStorage.clear()
-  window.location.href = '/login'
+  window.dispatchEvent(new CustomEvent('session-expired'))
 })
 
 createRoot(document.getElementById('root')!).render(

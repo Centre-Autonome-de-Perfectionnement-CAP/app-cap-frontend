@@ -1,0 +1,45 @@
+// src/views/pages/demandes/components/modal/DemandeSearchBar.tsx
+
+import { CFormInput, CFormSelect, CInputGroup, CInputGroupText } from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilSearch } from '@coreui/icons'
+import { TYPE_LABELS } from '@/types/document-request.types'
+
+interface Props {
+  search: string
+  onSearchChange: (v: string) => void
+  typeFilter?: string
+  onTypeChange?: (v: string) => void
+  showTypeFilter?: boolean
+}
+
+const DemandeSearchBar = ({
+  search, onSearchChange,
+  typeFilter = '', onTypeChange,
+  showTypeFilter = false,
+}: Props) => (
+  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+    <CInputGroup style={{ width: 250, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+      <CInputGroupText><CIcon icon={cilSearch} /></CInputGroupText>
+      <CFormInput
+        placeholder="Référence, nom…"
+        value={search}
+        onChange={e => onSearchChange(e.target.value)}
+      />
+    </CInputGroup>
+    {showTypeFilter && onTypeChange && (
+      <CFormSelect
+        style={{ width: 190, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
+        value={typeFilter}
+        onChange={e => onTypeChange(e.target.value)}
+      >
+        <option value="">Tous les types</option>
+        {Object.entries(TYPE_LABELS).map(([v, l]) => (
+          <option key={v} value={v}>{l}</option>
+        ))}
+      </CFormSelect>
+    )}
+  </div>
+)
+
+export default DemandeSearchBar

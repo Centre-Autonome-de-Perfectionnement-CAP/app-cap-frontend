@@ -121,11 +121,10 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
 
     <MotifModal visible={flagMotifModal} title="Validation sous réserve"
       confirmLabel="Valider" confirmColor="warning" placeholder="Commentaire de réserve…"
-      onClose={() => { setFlagMotifModal(false); setPendingFlagType(null) }}
+      onClose={() => setFlagMotifModal(false)}
       onConfirm={async motif => {
         setFlagMotifModal(false)
         await run('comptable_validate_flagged', { motif })
-        setPendingFlagType(null)
       }} />
 
     <MotifModal visible={rejectModal} title="Rejeter — retour à la secrétaire"

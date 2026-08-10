@@ -29,7 +29,7 @@ import useModal from '@/hooks/common/useModal'
 import attestationService from '@/services/attestation.service'
 
 const AttestationLicence = () => {
-  const { students, loading, loadStudents, generateAttestation } = useAttestationData('success')
+  const { students, loading, loadStudents, generateAttestation } = useAttestationData('licence')
   const { academicYears } = useAnneeAcademiqueData()
   const [generating, setGenerating] = useState<number | null>(null)
   const [selectedStudents, setSelectedStudents] = useState<number[]>([])

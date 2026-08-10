@@ -79,6 +79,7 @@ export const COURS_ROUTES = {
   PROGRAMS_BULK: 'cours/programs/bulk', PROGRAMS_COPY: 'cours/programs/copy', PROGRAMS_RENEW: 'cours/programs/renew',
   CLASS_GROUP_PROGRAMS: (classGroupId: number | string) => `cours/class-groups/${classGroupId}/programs`,
   PROFESSOR_PROGRAMS: (professorId: number | string) => `cours/professors/${professorId}/programs`,
+  COURSE_ELEMENT_PROGRAMS: (courseElementId: number | string) => `cours/course-elements/${courseElementId}/programs`,
 } as const
 
 export const NOTES_ROUTES = {
@@ -106,10 +107,20 @@ export const EMPLOI_DU_TEMPS_ROUTES = {
   BUILDING: (id: number | string) => `emploi-du-temps/buildings/${id}`,
   ROOMS: 'emploi-du-temps/rooms',
   ROOM: (id: number | string) => `emploi-du-temps/rooms/${id}`,
+  ROOMS_AVAILABLE: 'emploi-du-temps/rooms/available',
   TIME_SLOTS: 'emploi-du-temps/time-slots',
   TIME_SLOT: (id: number | string) => `emploi-du-temps/time-slots/${id}`,
+  TIME_SLOTS_BY_DAY: (day: string) => `emploi-du-temps/time-slots/day/${day}`,
   SCHEDULED_COURSES: 'emploi-du-temps/scheduled-courses',
   SCHEDULED_COURSE: (id: number | string) => `emploi-du-temps/scheduled-courses/${id}`,
+  CHECK_CONFLICTS: 'emploi-du-temps/scheduled-courses/check-conflicts',
+  CANCEL_COURSE: (id: number | string) => `emploi-du-temps/scheduled-courses/${id}/cancel`,
+  UPDATE_HOURS: (id: number | string) => `emploi-du-temps/scheduled-courses/${id}/update-hours`,
+  EXCLUDE_DATE: (id: number | string) => `emploi-du-temps/scheduled-courses/${id}/exclude-date`,
+  OCCURRENCES: (id: number | string) => `emploi-du-temps/scheduled-courses/${id}/occurrences`,
+  SCHEDULE_BY_CLASS_GROUP: (classGroupId: number | string) => `emploi-du-temps/schedule-view/class-group/${classGroupId}`,
+  SCHEDULE_BY_PROFESSOR: (professorId: number | string) => `emploi-du-temps/schedule-view/professor/${professorId}`,
+  SCHEDULE_BY_ROOM: (roomId: number | string) => `emploi-du-temps/schedule-view/room/${roomId}`,
   SCHEDULE_VIEW: 'emploi-du-temps/schedule-view',
   DASHBOARD: 'emploi-du-temps/dashboard',
   CONFLICTS: 'emploi-du-temps/conflicts',

@@ -12,6 +12,7 @@ export interface StatConfig {
   label: string
   color?: string
   bg?: string
+  urgent?: boolean
   onClick?: () => void
 }
 
@@ -77,6 +78,7 @@ const DashboardShell = ({
                   color={s.color ?? palette?.color ?? '#6b7280'}
                   bg={s.bg ?? palette?.bg ?? '#f9fafb'}
                   text={palette?.text}
+                  urgent={s.urgent}
                   onClick={s.onClick}
                 />
               </CCol>

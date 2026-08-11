@@ -34,6 +34,13 @@ const Register           = React.lazy(() => import('./views/pages/register/Regis
 const Page404            = React.lazy(() => import('./views/pages/page404/Page404.tsx'))
 const Page500            = React.lazy(() => import('./views/pages/page500/Page500.tsx'))
 
+// Préfixe de routage réel sous lequel l'app est exposée côté backend
+// (ex: https://www.cap-epac.bj/services/...). Indépendant du chemin des
+// assets buildés (import.meta.env.BASE_URL = "/app-cap-frontend/"), qui
+// lui reste géré par `base` dans vite.config.ts.
+// Peut être surchargé via VITE_ROUTER_BASENAME dans .env.production.
+const ROUTER_BASENAME = import.meta.env.VITE_ROUTER_BASENAME || import.meta.env.BASE_URL
+
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   const storedTheme = useSelector((state: any) => state.theme)
@@ -48,7 +55,7 @@ const App = () => {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={ROUTER_BASENAME}>
       <ToastProvider>
         <AuthContextProvider>
           <Suspense fallback={<LoadingSpinner fullPage message="Chargement de l'application..." />}>

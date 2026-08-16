@@ -16,7 +16,7 @@ import { cilHome } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { AppSidebarNav } from './AppSidebarNav.tsx'
 import {
-  mainNavigation,
+  getMainNavigation,
   getEmploiNavigation,
   inscriptionNavigation,
   attestationNavigation,
@@ -30,6 +30,7 @@ import {
   getCahierNavigation,
   alumniNavigation,
   getDemandesNavigation,
+  whatsappNavigation,
 } from '../_nav/index.tsx'
 
 // Rôles qui n'ont pas accès au portail — pas de bouton "Retour au Portail"
@@ -44,6 +45,7 @@ const AppSidebar = () => {
 
   const getNavigationForPath = () => {
     const path = location.pathname
+    if (path.startsWith('/whatsapp'))    return whatsappNavigation
     if (path.startsWith('/inscription'))  return inscriptionNavigation
     if (path.startsWith('/demandes'))     return getDemandesNavigation(role)
     if (path.startsWith('/attestations')) return attestationNavigation
@@ -57,7 +59,7 @@ const AppSidebar = () => {
     if (path.startsWith('/bibliotheque')) return bibliothequeNavigation
     if (path.startsWith('/cours'))        return coursNavigation
     if (path.startsWith('/alumni'))       return alumniNavigation
-    return mainNavigation
+    return getMainNavigation(role)
   }
 
   const currentNavigation = getNavigationForPath()
@@ -74,7 +76,7 @@ const AppSidebar = () => {
   // Pas de bouton "Retour au Portail" pour les rôles direction
   const isDirectionRole = DIRECTION_ROLES_NO_PORTAL.includes(role as string)
 
-  const navigationWithHomeLink = isModule && !isDirectionRole
+  const navigationWithHomeLink = isModule && !isDirectionRole && !location.pathname.startsWith('/whatsapp')
     ? [...currentNavigation, {
         component: CNavItem,
         name: 'Retour au Portail',

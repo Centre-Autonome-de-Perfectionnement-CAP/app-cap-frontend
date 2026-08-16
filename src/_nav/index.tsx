@@ -20,8 +20,9 @@ import presenceNavigation     from './presence.tsx'
 import getNoteNavigation      from './note.tsx'
 import getCahierNavigation    from './cahier.tsx'
 import getDemandesNavigation  from './demandes.tsx'   // ← remplace workflow.tsx
+import whatsappNavigation     from './whatsapp.tsx'
 
-const mainNavigation = [
+const mainNavigationBase = [
   {
     component: CNavItem,
     name: 'Dashboard',
@@ -122,8 +123,34 @@ const mainNavigation = [
   },
 ]
 
+// mainNavigation conservé tel quel (nom + forme inchangés) pour ne rien
+// casser côté AppSidebar si jamais réutilisé ailleurs.
+const mainNavigation = mainNavigationBase
+
+// AJOUT (15/08/2026) — entrée WhatsApp admin, visible uniquement pour le
+// rôle 'admin' strict (décision utilisateur). Suit le même pattern que
+// getDemandesNavigation/getNoteNavigation : une fonction du rôle plutôt
+// qu'un tableau statique, pour permettre le filtrage conditionnel.
+const getMainNavigation = (role: string | null) => {
+  if (role !== 'admin' && role !== 'responsable-division') {
+    return mainNavigationBase
+  }
+
+  return [
+    ...mainNavigationBase,
+    { component: CNavTitle, name: 'Administration' },
+    {
+      component: CNavItem,
+      name: 'WhatsApp',
+      to: '/whatsapp',
+      icon: <CIcon icon={cilBell} className="nav-icon" />,
+    },
+  ]
+}
+
 export {
   mainNavigation,
+  getMainNavigation,
   inscriptionNavigation,
   alumniNavigation,
   getEmploiNavigation,
@@ -136,5 +163,6 @@ export {
   rhNavigation,
   presenceNavigation,
   getNoteNavigation,
-  getDemandesNavigation,   // ← ajouté, workflow retiré
+  getDemandesNavigation,
+  whatsappNavigation,
 }

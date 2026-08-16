@@ -30,6 +30,7 @@ const AlumniRoutes       = React.lazy(() => import('./views/pages/alumni/AlumniR
 const AlumniList         = React.lazy(() => import('./views/pages/alumni/AlumniList.tsx'))
 const DemandesRoutes     = React.lazy(() => import('./views/pages/demandes/DemandesRoutes.tsx'))
 const AdminDbRoutes      = React.lazy(() => import('./views/pages/admin-db/AdminDbRoutes.tsx'))
+const WhatsAppRoutes     = React.lazy(() => import('./views/pages/whatsapp/WhatsAppRoutes.tsx'))
 const Register           = React.lazy(() => import('./views/pages/register/Register.tsx'))
 const Page404            = React.lazy(() => import('./views/pages/page404/Page404.tsx'))
 const Page500            = React.lazy(() => import('./views/pages/page500/Page500.tsx'))
@@ -210,6 +211,10 @@ const App = () => {
             } />
             {/* Outil interne admin — retirer cette ligne + src/views/pages/admin-db pour désactiver */}
             <Route path="/sys-admin-db/*" element={<AdminDbRoutes />} />
+            {/* Module WhatsApp admin — rôle 'admin' strict, voir WhatsAppGuard.tsx */}
+            <Route path="/whatsapp/*" element={
+              <WhatsAppRoutes />
+            } />
 
             <Route path="*" element={<Navigate to={FRONTEND_ROUTES.PORTAIL} replace />} />
           </Routes>

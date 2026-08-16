@@ -21,11 +21,22 @@ import { getAssetUrl } from '@/utils/assets'
 import { useDemandesBadge } from '@/hooks/demandes/useDemandesBadge'
 import { DemandesBadge }   from '@/components/demandes/DemandesBadge'
 
+import { useAuth } from '@/contexts'
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Liste des modules — ordre alphabétique maintenu, "CAP Demandes" marqué
 // ─────────────────────────────────────────────────────────────────────────────
 
-const applications = [
+interface Application {
+  title: string
+  description: string
+  image: string
+  url: string
+  hasBadge: boolean
+  rolesAllowed?: string[]
+}
+
+const applications: Application[] = [
   {
     title: 'CAP Attestations',
     description: '',
@@ -117,20 +128,33 @@ const applications = [
     url: '/demandes',
     hasBadge: true,  // ← seul module avec badge pour l'instant
   },
+  {
+    title: 'CAP WhatsApp',
+    description: 'Administration et journalisation des envois WhatsApp.',
+    image: getAssetUrl('images/cap.png'),
+    url: '/whatsapp',
+    hasBadge: false,
+    rolesAllowed: ['admin', 'responsable-division'],
+  },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 const Portail = () => {
+  const { role } = useAuth()
   // Tâche 11.1 / 11.3 : badge en temps réel (polling 60 s)
   const { count } = useDemandesBadge()
+
+  const userApplications = applications.filter(
+    (app) => !app.rolesAllowed || (role && app.rolesAllowed.includes(role))
+  )
 
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
         <h2 className="text-left my-5">Modules du Progiciel</h2> <hr />
         <CRow>
-          {applications.map((app, index) => (
+          {userApplications.map((app, index) => (
             <CCol md={3} sm={6} className="mb-4" key={index}>
               <Link to={app.url} style={{ textDecoration: 'none' }}>
                 {/*

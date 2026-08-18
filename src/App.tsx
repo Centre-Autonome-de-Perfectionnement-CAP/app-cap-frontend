@@ -28,6 +28,7 @@ const FinanceRoutes      = React.lazy(() => import('./views/pages/finance/Financ
 const BibliothequeRoutes = React.lazy(() => import('./views/pages/bibliotheque/BibliothequeRoutes.tsx'))
 const AlumniRoutes       = React.lazy(() => import('./views/pages/alumni/AlumniRoutes.tsx'))
 const AlumniList         = React.lazy(() => import('./views/pages/alumni/AlumniList.tsx'))
+const LegacyStudentsIndex = React.lazy(() => import('./views/legacy-students/LegacyStudentsIndex.tsx'))
 const DemandesRoutes     = React.lazy(() => import('./views/pages/demandes/DemandesRoutes.tsx'))
 const AdminDbRoutes      = React.lazy(() => import('./views/pages/admin-db/AdminDbRoutes.tsx'))
 const Register           = React.lazy(() => import('./views/pages/register/Register.tsx'))
@@ -199,6 +200,16 @@ const App = () => {
                     <AlumniRoutes />
                   </DefaultLayout>
                 </ProtectedRoute>
+              }
+            />
+
+            {/* ── Module Archives & Anciens Étudiants (< 2023) ── */}
+            <Route
+              path="/legacy-students/*"
+              element={
+                <DefaultLayout>
+                  <LegacyStudentsIndex />
+                </DefaultLayout>
               }
             />
 

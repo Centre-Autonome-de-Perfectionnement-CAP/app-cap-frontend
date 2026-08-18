@@ -9,6 +9,7 @@ import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
 import inscriptionNavigation  from './inscription.tsx'
 import alumniNavigation       from './alumni.tsx'
+import legacyStudentsNavigation from './legacy-students.tsx'
 import getEmploiNavigation    from './emploi-du-temps.tsx'
 import rhNavigation           from './rh.tsx'
 import soutenanceNavigation   from './soutenance.tsx'
@@ -29,6 +30,8 @@ const mainNavigation = [
     icon: <CIcon icon={cilSpeedometer} className="nav-icon" />,
     badge: { color: 'info', text: 'NEW' },
   },
+  { component: CNavTitle, name: 'Archives & Scolarité' },
+  { component: CNavItem, name: 'Anciens Étudiants (< 2023)', to: '/legacy-students', icon: <CIcon icon={cilStar} className="nav-icon" />, badge: { color: 'warning', text: 'Archives' } },
   { component: CNavTitle, name: 'Alumni' },
   { component: CNavItem, name: 'Fiches Alumni', to: '/alumni/list', icon: <CIcon icon={cilStar} className="nav-icon" /> },
   { component: CNavTitle, name: 'Theme' },
@@ -126,6 +129,7 @@ export {
   mainNavigation,
   inscriptionNavigation,
   alumniNavigation,
+  legacyStudentsNavigation,
   getEmploiNavigation,
   attestationNavigation,
   bibliothequeNavigation,

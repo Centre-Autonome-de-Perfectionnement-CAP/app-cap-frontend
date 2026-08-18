@@ -29,6 +29,7 @@ import {
   presenceNavigation,
   getCahierNavigation,
   alumniNavigation,
+  legacyStudentsNavigation,
   getDemandesNavigation,
 } from '../_nav/index.tsx'
 
@@ -44,6 +45,7 @@ const AppSidebar = () => {
 
   const getNavigationForPath = () => {
     const path = location.pathname
+    if (path.startsWith('/legacy-students')) return legacyStudentsNavigation
     if (path.startsWith('/inscription'))  return inscriptionNavigation
     if (path.startsWith('/demandes'))     return getDemandesNavigation(role)
     if (path.startsWith('/attestations')) return attestationNavigation

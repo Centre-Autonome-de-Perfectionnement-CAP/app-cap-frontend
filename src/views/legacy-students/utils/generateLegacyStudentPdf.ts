@@ -102,53 +102,52 @@ export function generateLegacyStudentPdf(student: LegacyStudent): void {
     doc.text('EN ATTENTE DE CONTRÔLE', 75, startY + lineSpacing * 5);
   }
 
-  // 4. Cadre des Filières Suivies (Multi-filières)
+  // 4. Cadre de la Filière Suivie
   doc.setDrawColor(200, 200, 200);
   doc.setFillColor(248, 250, 252);
-  doc.roundedRect(20, 155, pageWidth - 40, 45, 3, 3, 'FD');
+  doc.roundedRect(20, 155, pageWidth - 40, 30, 3, 3, 'FD');
 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(20, 50, 90);
-  doc.text('II. CURSUS & FILIÈRES SUIVIES AU CAP-EPAC', 25, 164);
+  doc.text('II. FILIÈRE SUIVIE AU CAP-EPAC', 25, 164);
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(40, 40, 40);
 
-  if (student.filieres && student.filieres.length > 0) {
-    student.filieres.forEach((f, idx) => {
-      doc.text(
-        `• ${f.name} ${f.cycle ? `(${f.cycle})` : ''} ${f.abbreviation ? `[${f.abbreviation}]` : ''}`,
-        30,
-        174 + idx * 7
-      );
-    });
+  if (student.department) {
+    const f = student.department;
+    doc.text(
+      `• ${f.name} ${f.cycle ? `(${f.cycle})` : ''} ${f.abbreviation ? `[${f.abbreviation}]` : ''}`,
+      30,
+      174
+    );
   } else {
     doc.text('• Aucune filière enregistrée', 30, 174);
   }
 
   // 5. Cadre de Validation & Signature
   doc.setDrawColor(180, 180, 180);
-  doc.rect(20, 205, pageWidth - 40, 55);
+  doc.rect(20, 195, pageWidth - 40, 55);
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(40, 40, 40);
-  doc.text('III. VISA DU SECRÉTARIAT / SERVICE DE LA SCOLARITÉ', 25, 213);
+  doc.text('III. VISA DU SECRÉTARIAT / SERVICE DE LA SCOLARITÉ', 25, 203);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Établi à Abomey-Calavi, le ${new Date().toLocaleDateString('fr-FR')}`, 25, 222);
+  doc.text(`Établi à Abomey-Calavi, le ${new Date().toLocaleDateString('fr-FR')}`, 25, 212);
   if (student.validated_by) {
-    doc.text(`Validé par : ${student.validated_by}`, 25, 228);
+    doc.text(`Validé par : ${student.validated_by}`, 25, 218);
   }
   if (student.notes_admin) {
-    doc.text(`Observations : ${student.notes_admin}`, 25, 234);
+    doc.text(`Observations : ${student.notes_admin}`, 25, 224);
   }
 
   doc.setFont('helvetica', 'italic');
-  doc.text('Cachet et Signature de l’autorité compétente :', pageWidth - 90, 222);
+  doc.text('Cachet et Signature de l’autorité compétente :', pageWidth - 90, 212);
 
   // 6. Pied de page
   doc.setFontSize(8);

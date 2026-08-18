@@ -24,7 +24,7 @@ export function exportLegacyStudentsToCSV(
     'Email',
     'Téléphone',
     "Année d'inscription",
-    'Filières suivies',
+    'Filière',
     'Statut',
     'Services demandés',
     'Motif de rejet',
@@ -35,7 +35,7 @@ export function exportLegacyStudentsToCSV(
 
   // Construction des lignes
   const rows = students.map((s) => {
-    const filieresStr = s.filieres.map((f) => f.name).join(' | ');
+    const filiereStr = s.department?.name || '';
     const statusLabel =
       s.status === 'validated'
         ? 'Validé'
@@ -50,7 +50,7 @@ export function exportLegacyStudentsToCSV(
       s.email,
       s.phone,
       s.enrollment_year,
-      filieresStr,
+      filiereStr,
       statusLabel,
       s.services_count || (s.services_requested ? s.services_requested.length : 0),
       s.rejection_reason || '',

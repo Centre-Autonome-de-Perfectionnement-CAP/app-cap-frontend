@@ -23,10 +23,7 @@ let mockLegacyStudents: LegacyStudent[] = [
     email: 'jean.dossa@gmail.com',
     phone: '+229 97 22 33 44',
     enrollment_year: 2018,
-    filieres: [
-      { id: 1, name: 'Génie Civil', abbreviation: 'GC', cycle: 'Licence' },
-      { id: 4, name: 'Management des Projets', abbreviation: 'MP', cycle: 'Master' },
-    ],
+    department: { id: 1, name: 'Génie Civil', abbreviation: 'GC', cycle: 'Licence' },
     status: 'pending',
     services_count: 2,
     services_requested: [
@@ -43,9 +40,7 @@ let mockLegacyStudents: LegacyStudent[] = [
     email: 'astride.hounnou@yahoo.fr',
     phone: '+229 96 11 88 77',
     enrollment_year: 2015,
-    filieres: [
-      { id: 2, name: 'Génie Électrique et Informatique', abbreviation: 'GEI', cycle: 'Licence' },
-    ],
+    department: { id: 2, name: 'Génie Électrique et Informatique', abbreviation: 'GEI', cycle: 'Licence' },
     status: 'validated',
     validated_by: 'Secrétariat Scolarité (Mme SOSSOU)',
     validated_at: '2026-08-11T14:20:00Z',
@@ -63,9 +58,7 @@ let mockLegacyStudents: LegacyStudent[] = [
     email: 'gilles.adanho@gmail.com',
     phone: '+229 95 44 33 22',
     enrollment_year: 2020,
-    filieres: [
-      { id: 3, name: 'Génie Mécanique et Énergétique', abbreviation: 'GME', cycle: 'Licence' },
-    ],
+    department: { id: 3, name: 'Génie Mécanique et Énergétique', abbreviation: 'GME', cycle: 'Licence' },
     status: 'rejected',
     rejection_reason: 'Matricule non conforme aux registres de la promotion 2020.',
     validated_by: 'Administration CAP',
@@ -81,9 +74,7 @@ let mockLegacyStudents: LegacyStudent[] = [
     email: 'koffi.mensah@gmail.com',
     phone: '+229 97 55 66 77',
     enrollment_year: 2019,
-    filieres: [
-      { id: 1, name: 'Génie Civil', abbreviation: 'GC', cycle: 'Licence' },
-    ],
+    department: { id: 1, name: 'Génie Civil', abbreviation: 'GC', cycle: 'Licence' },
     status: 'pending',
     services_count: 1,
     created_at: '2026-08-15T08:20:00Z',
@@ -96,10 +87,7 @@ let mockLegacyStudents: LegacyStudent[] = [
     email: 'sandrine.agbossa@gmail.com',
     phone: '+229 94 88 99 00',
     enrollment_year: 2016,
-    filieres: [
-      { id: 5, name: 'Génie Chimique des Procédés', abbreviation: 'GCP', cycle: 'Licence' },
-      { id: 4, name: 'Management des Projets', abbreviation: 'MP', cycle: 'Master' },
-    ],
+    department: { id: 5, name: 'Génie Chimique des Procédés', abbreviation: 'GCP', cycle: 'Licence' },
     status: 'validated',
     validated_by: 'Secrétariat Scolarité (Mme SOSSOU)',
     validated_at: '2026-08-16T10:00:00Z',
@@ -175,7 +163,7 @@ export const legacyStudentAdminService = {
 
       if (filters.department_id) {
         filtered = filtered.filter((s) =>
-          s.filieres.some((f) => String(f.id) === String(filters.department_id))
+          String(s.department?.id) === String(filters.department_id)
         );
       }
 
@@ -261,9 +249,7 @@ export const legacyStudentAdminService = {
       if (response && response.data) return response.data;
       throw new Error('Fallback to mock');
     } catch {
-      const filieres = mockAvailableFilieres.filter((f) =>
-        data.department_ids.includes(f.id)
-      );
+      const department = mockAvailableFilieres.find(f => String(f.id) === String(data.department_id)) || null;
 
       const newStudent: LegacyStudent = {
         id: Date.now(),
@@ -273,7 +259,7 @@ export const legacyStudentAdminService = {
         email: data.email,
         phone: data.phone,
         enrollment_year: Number(data.enrollment_year),
-        filieres,
+        department,
         status: 'validated', // Créé au guichet = validé d'office par la secrétaire
         notes_admin: data.notes_admin || 'Enregistré directement au guichet',
         validated_by: 'Secrétariat Scolarité (Direct)',
@@ -299,9 +285,9 @@ export const legacyStudentAdminService = {
       if (index === -1) throw new Error('Étudiant introuvable');
 
       const existing = mockLegacyStudents[index];
-      const filieres = data.department_ids
-        ? mockAvailableFilieres.filter((f) => data.department_ids!.includes(f.id))
-        : existing.filieres;
+      const department = data.department_id
+        ? mockAvailableFilieres.find(f => String(f.id) === String(data.department_id)) || null
+        : existing.department;
 
       const updated: LegacyStudent = {
         ...existing,
@@ -312,7 +298,7 @@ export const legacyStudentAdminService = {
         phone: data.phone ?? existing.phone,
         enrollment_year: data.enrollment_year ? Number(data.enrollment_year) : existing.enrollment_year,
         notes_admin: data.notes_admin ?? existing.notes_admin,
-        filieres,
+        department,
         updated_at: new Date().toISOString(),
       };
 

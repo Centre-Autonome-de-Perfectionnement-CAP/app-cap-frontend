@@ -27,7 +27,7 @@ export interface LegacyStudent {
   email: string;
   phone: string;
   enrollment_year: number;
-  filieres: LegacyFiliere[];
+  department: LegacyFiliere | null;
   status: LegacyStudentStatus;
   rejection_reason?: string | null;
   notes_admin?: string | null;
@@ -46,7 +46,7 @@ export interface LegacyStudentFormData {
   email: string;
   phone: string;
   enrollment_year: number;
-  department_ids: (number | string)[];
+  department_id: number | string | '';
   notes_admin?: string;
 }
 

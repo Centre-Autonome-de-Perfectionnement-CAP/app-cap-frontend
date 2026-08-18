@@ -1,18 +1,17 @@
 import CIcon from '@coreui/icons-react'
-import { cilFolderOpen, cilList, cilUserPlus } from '@coreui/icons'
+import { cilHistory } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
 const legacyStudentsNavigation = [
   {
     component: CNavTitle,
-    name: 'Archives & Anciens Étudiants',
+    name: 'Anciens Étudiants (< 2023)',
   },
   {
     component: CNavItem,
-    name: 'Anciens Étudiants (< 2023)',
+    name: 'Tableau de bord',
     to: '/legacy-students',
-    icon: <CIcon icon={cilFolderOpen} customClassName="nav-icon" />,
-    badge: { color: 'warning', text: 'Archives' },
+    icon: <CIcon icon={cilHistory} customClassName="nav-icon" />,
   },
 ]
 

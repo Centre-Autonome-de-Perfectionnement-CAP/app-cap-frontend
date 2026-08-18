@@ -112,27 +112,31 @@ export function useLegacyStudents() {
   };
 
   // 4. Rejet d'un dossier avec saisie de motif obligatoire
-  const handleReject = async (id: number | string) => {
-    const { value: reason } = await Swal.fire({
-      title: 'Rejeter cette déclaration',
-      input: 'textarea',
-      inputLabel: 'Motif du rejet (obligatoire) :',
-      inputPlaceholder: 'Ex: Matricule non trouvé dans les archives physiques de la promotion...',
-      inputAttributes: {
-        'aria-label': 'Saisissez la raison du rejet',
-      },
-      showCancelButton: true,
-      confirmButtonColor: '#e55353',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Confirmer le rejet',
-      cancelButtonText: 'Annuler',
-      inputValidator: (value) => {
-        if (!value || value.trim() === '') {
-          return 'Vous devez impérativement spécifier un motif de rejet !';
-        }
-        return null;
-      },
-    });
+  const handleReject = async (id: number | string, prefilledReason?: string) => {
+    let reason = prefilledReason;
+    if (!reason) {
+      const result = await Swal.fire({
+        title: 'Rejeter cette déclaration',
+        input: 'textarea',
+        inputLabel: 'Motif du rejet (obligatoire) :',
+        inputPlaceholder: 'Ex: Matricule non trouvé dans les archives physiques de la promotion...',
+        inputAttributes: {
+          'aria-label': 'Saisissez la raison du rejet',
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#e55353',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Confirmer le rejet',
+        cancelButtonText: 'Annuler',
+        inputValidator: (value) => {
+          if (!value || value.trim() === '') {
+            return 'Vous devez impérativement spécifier un motif de rejet !';
+          }
+          return null;
+        },
+      });
+      reason = result.value;
+    }
 
     if (reason) {
       setLoading(true);
@@ -185,25 +189,29 @@ export function useLegacyStudents() {
   };
 
   // 6. Actions par lot : Rejeter la sélection
-  const handleBulkReject = async () => {
+  const handleBulkReject = async (prefilledReason?: string) => {
     if (selectedIds.length === 0) return;
 
-    const { value: reason } = await Swal.fire({
-      title: `Rejeter les ${selectedIds.length} dossiers sélectionnés`,
-      input: 'textarea',
-      inputLabel: 'Motif global de rejet :',
-      inputPlaceholder: 'Ex: Vérification négative des archives papier...',
-      showCancelButton: true,
-      confirmButtonColor: '#e55353',
-      confirmButtonText: 'Rejeter la sélection',
-      cancelButtonText: 'Annuler',
-      inputValidator: (value) => {
-        if (!value || value.trim() === '') {
-          return 'Un motif est requis pour le rejet groupé.';
-        }
-        return null;
-      },
-    });
+    let reason = prefilledReason;
+    if (!reason) {
+      const result = await Swal.fire({
+        title: `Rejeter les ${selectedIds.length} dossiers sélectionnés`,
+        input: 'textarea',
+        inputLabel: 'Motif global de rejet :',
+        inputPlaceholder: 'Ex: Vérification négative des archives papier...',
+        showCancelButton: true,
+        confirmButtonColor: '#e55353',
+        confirmButtonText: 'Rejeter la sélection',
+        cancelButtonText: 'Annuler',
+        inputValidator: (value) => {
+          if (!value || value.trim() === '') {
+            return 'Un motif est requis pour le rejet groupé.';
+          }
+          return null;
+        },
+      });
+      reason = result.value;
+    }
 
     if (reason) {
       setLoading(true);

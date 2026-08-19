@@ -50,7 +50,7 @@ describe('legacyStudentAdminService (Tests Développeur 6)', () => {
   })
 
   describe('3. Enregistrement direct au Guichet (create)', () => {
-    it('crée un étudiant avec plusieurs filières et statut validé', async () => {
+    it('crée un étudiant avec filière et statut validé', async () => {
       const newStudentPayload: LegacyStudentFormData = {
         matricule: '17-0999-EPAC',
         last_name: 'KODJO',
@@ -58,7 +58,7 @@ describe('legacyStudentAdminService (Tests Développeur 6)', () => {
         email: 'marc.kodjo@gmail.com',
         phone: '+229 97 12 34 56',
         enrollment_year: 2017,
-        department_ids: [1, 2], // 2 filières sélectionnées
+        department_id: 1, // filière sélectionnée
         notes_admin: 'Inscription directe physique',
       }
 
@@ -69,7 +69,7 @@ describe('legacyStudentAdminService (Tests Développeur 6)', () => {
       expect(created.matricule).toBe('17-0999-EPAC')
       expect(created.last_name).toBe('KODJO')
       expect(created.status).toBe('validated')
-      expect(created.filieres.length).toBe(2)
+      expect(created.department?.id).toBe(1)
     })
   })
 

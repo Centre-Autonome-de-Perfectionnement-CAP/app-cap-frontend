@@ -34,6 +34,9 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
     matricule: '',
     first_name: '',
     last_name: '',
+    date_of_birth: '',
+    place_of_birth: '',
+    cycle: '',
     email: '',
     phone: '',
     enrollment_year: '' as unknown as number,
@@ -49,6 +52,9 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
           matricule: student.matricule || '',
           first_name: student.first_name || '',
           last_name: student.last_name || '',
+          date_of_birth: student.date_of_birth || '',
+          place_of_birth: student.place_of_birth || '',
+          cycle: student.cycle || '',
           email: student.email || '',
           phone: student.phone || '',
           enrollment_year: student.enrollment_year || '' as unknown as number,
@@ -60,6 +66,9 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
           matricule: '',
           first_name: '',
           last_name: '',
+          date_of_birth: '',
+          place_of_birth: '',
+          cycle: '',
           email: '',
           phone: '',
           enrollment_year: '' as unknown as number,
@@ -160,7 +169,7 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
                 type="text"
                 label="Matricule"
                 value={form.matricule}
-                onChange={e => setForm({ ...form, matricule: e.target.value })}
+                onChange={e => setForm({ ...form, matricule: e.target.value.toUpperCase() })}
                 invalid={!!errors.matricule}
               />
               {errors.matricule && <div className="invalid-feedback d-block">{errors.matricule}</div>}
@@ -171,7 +180,7 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
                 type="text"
                 label="Nom de famille"
                 value={form.last_name}
-                onChange={e => setForm({ ...form, last_name: e.target.value })}
+                onChange={e => setForm({ ...form, last_name: e.target.value.toUpperCase() })}
                 invalid={!!errors.last_name}
               />
               {errors.last_name && <div className="invalid-feedback d-block">{errors.last_name}</div>}
@@ -187,16 +196,28 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
               />
               {errors.first_name && <div className="invalid-feedback d-block">{errors.first_name}</div>}
             </CCol>
-            
+
             <CCol md={6}>
               <CFormInput
-                type="email"
-                label="Email"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-                invalid={!!errors.email}
+                type="date"
+                label="Date de naissance"
+                value={form.date_of_birth || ''}
+                onChange={e => setForm({ ...form, date_of_birth: e.target.value })}
+                invalid={!!errors.date_of_birth}
               />
-              {errors.email && <div className="invalid-feedback d-block">{errors.email}</div>}
+              {errors.date_of_birth && <div className="invalid-feedback d-block">{errors.date_of_birth}</div>}
+            </CCol>
+
+            <CCol md={6}>
+              <CFormInput
+                type="text"
+                label="Lieu de naissance"
+                placeholder="Ex: Cotonou, Porto-Novo..."
+                value={form.place_of_birth || ''}
+                onChange={e => setForm({ ...form, place_of_birth: e.target.value })}
+                invalid={!!errors.place_of_birth}
+              />
+              {errors.place_of_birth && <div className="invalid-feedback d-block">{errors.place_of_birth}</div>}
             </CCol>
             
             <CCol md={6}>
@@ -208,6 +229,33 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
                 invalid={!!errors.phone}
               />
               {errors.phone && <div className="invalid-feedback d-block">{errors.phone}</div>}
+            </CCol>
+            
+            <CCol md={6}>
+              <CFormInput
+                type="email"
+                label="Email"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                invalid={!!errors.email}
+              />
+              {errors.email && <div className="invalid-feedback d-block">{errors.email}</div>}
+            </CCol>
+
+            <CCol md={6}>
+              <label className="form-label">Cycle d'études</label>
+              <CFormSelect
+                value={form.cycle || ''}
+                onChange={(e) => setForm({ ...form, cycle: e.target.value || undefined })}
+                invalid={!!errors.cycle}
+              >
+                <option value="">-- Choisir un cycle --</option>
+                <option value="Licence Professionnelle">Licence Professionnelle</option>
+                <option value="Master Professionnel">Master Professionnel</option>
+                <option value="Cycle Ingénieur - Prépa">Cycle Ingénieur - Prépa</option>
+                <option value="Cycle Ingénieur - Spécialité">Cycle Ingénieur - Spécialité</option>
+              </CFormSelect>
+              {errors.cycle && <div className="invalid-feedback d-block">{errors.cycle}</div>}
             </CCol>
 
             <CCol xs={12}>

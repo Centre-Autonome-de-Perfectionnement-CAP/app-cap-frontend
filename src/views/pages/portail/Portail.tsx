@@ -111,6 +111,13 @@ const applications = [
     hasBadge: false,
   },
   {
+    title: 'CAP Ancien Etudiant(< 2023)',
+    description: '',
+    image: getAssetUrl('images/anciens-etudiants.jpg'),
+    url: '/legacy-students',
+    hasBadge: false,
+  },
+  {
     title: 'CAP Demandes',
     description: '',
     image: getAssetUrl('images/attestations.jpeg'),

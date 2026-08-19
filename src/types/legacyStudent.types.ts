@@ -1,9 +1,25 @@
 /**
  * Types TypeScript pour le module Gestion des Anciens Étudiants (< 2023)
- * Rôle: Développeur 6
+ * Couvre l'identification, la régularisation et la gestion complète des services étudiants rétroactifs.
  */
 
 export type LegacyStudentStatus = 'pending' | 'validated' | 'rejected';
+
+export type LegacyServiceType =
+  | 'quitus_memoire'
+  | 'attestation_diplome'
+  | 'attestation_frequentation'
+  | 'demande_bulletin'
+  | 'correction_memoire'
+  | 'reclamation_notes'
+  | 'verification_infos';
+
+export type LegacyServiceStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'approved'
+  | 'delivered'
+  | 'rejected';
 
 export interface LegacyFiliere {
   id: number | string;
@@ -14,9 +30,22 @@ export interface LegacyFiliere {
 
 export interface LegacyStudentServiceRequest {
   id: number | string;
+  legacy_student_id?: number | string;
+  matricule?: string;
+  student_name?: string;
+  email?: string;
+  phone?: string;
+  service_type?: LegacyServiceType;
   service_name: string;
+  filiere_name?: string;
+  enrollment_year?: number;
   requested_at: string;
-  status: 'pending' | 'completed' | 'in_progress';
+  processed_at?: string | null;
+  processed_by?: string | null;
+  status: LegacyServiceStatus;
+  notes?: string | null;
+  rejection_reason?: string | null;
+  document_url?: string | null;
 }
 
 export interface LegacyStudent {
@@ -24,10 +53,14 @@ export interface LegacyStudent {
   matricule: string;
   last_name: string;
   first_name: string;
+  date_of_birth?: string | null;
+  place_of_birth?: string | null;
+  cycle?: string | null;
   email: string;
   phone: string;
   enrollment_year: number;
   department: LegacyFiliere | null;
+  filieres?: LegacyFiliere[];
   status: LegacyStudentStatus;
   rejection_reason?: string | null;
   notes_admin?: string | null;
@@ -43,6 +76,9 @@ export interface LegacyStudentFormData {
   matricule: string;
   last_name: string;
   first_name: string;
+  date_of_birth?: string;
+  place_of_birth?: string;
+  cycle?: string;
   email: string;
   phone: string;
   enrollment_year: number;
@@ -59,11 +95,24 @@ export interface LegacyStudentFilters {
   per_page?: number;
 }
 
+export interface LegacyServiceFilters {
+  search?: string;
+  service_type?: LegacyServiceType | 'all';
+  status?: LegacyServiceStatus | 'all';
+  enrollment_year?: number | string;
+  department_id?: number | string;
+  page?: number;
+  per_page?: number;
+}
+
 export interface LegacyStudentStats {
   total: number;
   pending: number;
   validated: number;
   rejected: number;
+  services_total?: number;
+  services_pending?: number;
+  services_delivered?: number;
 }
 
 export interface LegacyStudentPaginationMeta {
@@ -81,3 +130,44 @@ export interface LegacyStudentListResponse {
   meta: LegacyStudentPaginationMeta;
   stats?: LegacyStudentStats;
 }
+
+export interface LegacyServicesListResponse {
+  success: boolean;
+  data: LegacyStudentServiceRequest[];
+  meta: LegacyStudentPaginationMeta;
+}
+
+// ── Dossier académique rétroactif ─────────────────────────────────────────
+
+export interface AcademicCourse {
+  name: string;
+  code?: string;
+  professor?: string;
+  credits: number;
+  coefficient: number;
+  grade: number;        // note /20
+  retake_grade?: number | null;
+  semester?: string;
+}
+
+export interface AcademicRecord {
+  id?: number | string;
+  legacy_student_id?: number | string;
+  academic_year: string;          // ex: "2018-2019"
+  level?: string | null;          // ex: "Licence 3"
+  semester?: string | null;       // ex: "S1", "S2", "S1+S2"
+  general_average?: number | null;
+  total_credits?: number | null;
+  obtained_credits?: number | null;
+  decision?: string | null;       // "pass" | "fail" | "repeat" | "Admis(e)" | ...
+  mention?: string | null;        // "Passable" | "Assez Bien" | "Bien" | ...
+  thesis_title?: string | null;
+  thesis_grade?: number | null;
+  thesis_date?: string | null;
+  quitus_accorded?: boolean;
+  courses: AcademicCourse[];
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+

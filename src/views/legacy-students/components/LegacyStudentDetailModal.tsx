@@ -10,11 +10,14 @@ import {
   CBadge,
   CAlert,
 } from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilNotes } from '@coreui/icons'
 import type { LegacyStudent } from '@/types/legacyStudent.types'
 
 interface LegacyStudentDetailModalProps {
   student: LegacyStudent | null
   onClose: () => void
+  onOpenAcademic?: (student: LegacyStudent) => void
 }
 
 const getStatusBadgeColor = (status: string) => {
@@ -35,7 +38,7 @@ const getStatusLabel = (status: string) => {
   }
 }
 
-const LegacyStudentDetailModal = ({ student, onClose }: LegacyStudentDetailModalProps) => {
+const LegacyStudentDetailModal = ({ student, onClose, onOpenAcademic }: LegacyStudentDetailModalProps) => {
   if (!student) return null
 
   return (
@@ -66,17 +69,29 @@ const LegacyStudentDetailModal = ({ student, onClose }: LegacyStudentDetailModal
           </CCol>
           
           <CCol md={6}>
-            <strong>Email</strong>
-            <p>{student.email}</p>
+            <strong>Date de naissance</strong>
+            <p>{student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Non renseignée'}</p>
           </CCol>
           <CCol md={6}>
+            <strong>Lieu de naissance</strong>
+            <p>{student.place_of_birth || 'Non renseigné'}</p>
+          </CCol>
+
+          <CCol md={6}>
             <strong>Téléphone</strong>
-            <p>{student.phone}</p>
+            <p>{student.phone || 'Non renseigné'}</p>
+          </CCol>
+          <CCol md={6}>
+            <strong>Email</strong>
+            <p>{student.email || 'Non renseigné'}</p>
           </CCol>
 
           <CCol xs={12}>
-            <strong>Filière</strong>
-            <p className="d-flex flex-wrap gap-1 mt-1">
+            <strong>Cycle / Filière</strong>
+            <p className="d-flex flex-wrap gap-1 mt-1 align-items-center">
+              {student.cycle && (
+                <CBadge color="secondary" className="me-1">{student.cycle}</CBadge>
+              )}
               {student.department ? (
                 <CBadge color="info">{student.department.name}</CBadge>
               ) : (
@@ -118,7 +133,20 @@ const LegacyStudentDetailModal = ({ student, onClose }: LegacyStudentDetailModal
           </CCol>
         </CRow>
       </CModalBody>
-      <CModalFooter>
+      <CModalFooter className="d-flex justify-content-between">
+        {onOpenAcademic ? (
+          <CButton
+            color="info"
+            className="text-white d-flex align-items-center gap-1"
+            onClick={() => {
+              onClose()
+              onOpenAcademic(student)
+            }}
+          >
+            <CIcon icon={cilNotes} />
+            Dossier académique (Notes / Résultats)
+          </CButton>
+        ) : <div />}
         <CButton color="secondary" onClick={onClose}>Fermer</CButton>
       </CModalFooter>
     </CModal>

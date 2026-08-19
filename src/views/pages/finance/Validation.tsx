@@ -57,6 +57,24 @@ const Validation = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [receiptUrl, setReceiptUrl] = useState('')
 
+  const getStudentName = (payment: any) => {
+    if (!payment) return 'N/A'
+    if (payment.student_full_name) return payment.student_full_name
+    if (payment.legacy_student) return `${payment.legacy_student.first_name} ${payment.legacy_student.last_name}`
+    if (payment.student_pending_student?.pending_student?.personal_information) {
+      const pi = payment.student_pending_student.pending_student.personal_information
+      return `${pi.first_names} ${pi.last_name}`
+    }
+    if (payment.studentPendingStudent?.first_name || payment.studentPendingStudent?.last_name) {
+      return `${payment.studentPendingStudent.first_name || ''} ${payment.studentPendingStudent.last_name || ''}`.trim()
+    }
+    if (payment.student?.personal_information) {
+      const pi = payment.student.personal_information
+      return `${pi.first_names} ${pi.last_name}`
+    }
+    return 'N/A'
+  }
+
   const handleValidate = (payment: any) => {
     setSelectedPayment(payment)
     setShowValidateModal(true)
@@ -267,13 +285,8 @@ const Validation = () => {
                     {(pagination?.current_page - 1) * (pagination?.per_page || 10) + index + 1}
                   </CTableDataCell>
                   <CTableDataCell>{payment.student_id_number}</CTableDataCell>
-                  <CTableDataCell>
-                    {payment.student 
-                      ? `${payment.student_pending_student.pending_student.personal_information.first_names} ${payment.student_pending_student.pending_student.personal_information.last_name}`
-                      : payment.studentPendingStudent
-                      ? `${payment.studentPendingStudent.first_name} ${payment.studentPendingStudent.last_name}`
-                      : 'N/A'
-                    }
+                  <CTableDataCell className="fw-semibold">
+                    {getStudentName(payment)}
                   </CTableDataCell>
                   <CTableDataCell>{payment.amount?.toLocaleString()} FCFA</CTableDataCell>
                   <CTableDataCell>
@@ -474,13 +487,8 @@ const Validation = () => {
               <div className="col-md-6">
                 <div className="mb-3">
                   <label className="form-label fw-bold text-muted small">Nom et Prénoms</label>
-                  <p className="mb-0">
-                    {selectedPayment.student 
-                      ? `${selectedPayment.student_pending_student.pending_student.personal_information.first_names} ${selectedPayment.student_pending_student.pending_student.personal_information.last_name}`
-                      : selectedPayment.studentPendingStudent
-                      ? `${selectedPayment.studentPendingStudent.first_name} ${selectedPayment.studentPendingStudent.last_name}`
-                      : 'N/A'
-                    }
+                  <p className="mb-0 fw-semibold">
+                    {getStudentName(selectedPayment)}
                   </p>
                 </div>
               </div>

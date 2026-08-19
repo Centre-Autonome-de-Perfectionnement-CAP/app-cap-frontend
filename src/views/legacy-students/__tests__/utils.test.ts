@@ -13,10 +13,7 @@ describe('Utilitaires Développeur 6 (Export & PDF)', () => {
       email: 'jean.dossa@gmail.com',
       phone: '+229 97 00 00 00',
       enrollment_year: 2018,
-      filieres: [
-        { id: 1, name: 'Génie Civil', cycle: 'Licence' },
-        { id: 4, name: 'Management des Projets', cycle: 'Master' },
-      ],
+      department: { id: 1, name: 'Génie Civil', cycle: 'Licence' },
       status: 'validated',
       created_at: '2026-08-10T10:00:00Z',
     },

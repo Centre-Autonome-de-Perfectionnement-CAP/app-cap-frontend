@@ -4,6 +4,7 @@ import CIcon from '@coreui/icons-react'
 import {
   cilBell, cilCalculator, cilChartPie, cilCursor, cilExternalLink,
   cilNotes, cilPencil, cilDrop, cilPuzzle, cilSpeedometer, cilStar,
+  cilFolderOpen,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -30,8 +31,18 @@ const mainNavigation = [
     icon: <CIcon icon={cilSpeedometer} className="nav-icon" />,
     badge: { color: 'info', text: 'NEW' },
   },
-  { component: CNavTitle, name: 'Archives & Scolarité' },
-  { component: CNavItem, name: 'Anciens Étudiants (< 2023)', to: '/legacy-students', icon: <CIcon icon={cilStar} className="nav-icon" />, badge: { color: 'warning', text: 'Archives' } },
+  { component: CNavTitle, name: 'Archives & Scolarité (< 2023)' },
+  {
+    component: CNavGroup,
+    name: 'Anciens Étudiants',
+    to: '/legacy-students',
+    icon: <CIcon icon={cilFolderOpen} className="nav-icon" />,
+    items: [
+      { component: CNavItem, name: 'Registres & Fiches', to: '/legacy-students/registres' },
+      { component: CNavItem, name: 'Demandes de Services', to: '/legacy-students/services' },
+      { component: CNavItem, name: 'Délivrance Documents', to: '/legacy-students/documents' },
+    ],
+  },
   { component: CNavTitle, name: 'Alumni' },
   { component: CNavItem, name: 'Fiches Alumni', to: '/alumni/list', icon: <CIcon icon={cilStar} className="nav-icon" /> },
   { component: CNavTitle, name: 'Theme' },

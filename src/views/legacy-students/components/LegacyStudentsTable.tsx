@@ -25,6 +25,7 @@ import {
   cilMagnifyingGlass,
   cilFolderOpen,
   cilPrint,
+  cilNotes,
 } from '@coreui/icons'
 import type { LegacyStudent, LegacyStudentFilters, LegacyStudentPaginationMeta, LegacyFiliere } from '@/types/legacyStudent.types'
 
@@ -45,6 +46,7 @@ interface LegacyStudentsTableProps {
   onBulkValidate: () => void
   onBulkReject: () => void
   onPrintPdf: (student: LegacyStudent) => void
+  onOpenAcademic: (student: LegacyStudent) => void
 }
 
 const LegacyStudentsTable = ({
@@ -63,7 +65,8 @@ const LegacyStudentsTable = ({
   onValidateOne,
   onBulkValidate,
   onBulkReject,
-  onPrintPdf
+  onPrintPdf,
+  onOpenAcademic
 }: LegacyStudentsTableProps) => {
 
   const getStatusBadgeColor = (status: string) => {
@@ -169,6 +172,7 @@ const LegacyStudentsTable = ({
                   </CTableHeaderCell>
                   <CTableHeaderCell>Matricule</CTableHeaderCell>
                   <CTableHeaderCell>Nom & Prénoms</CTableHeaderCell>
+                  <CTableHeaderCell>Date de Naiss.</CTableHeaderCell>
                   <CTableHeaderCell>Année</CTableHeaderCell>
                   <CTableHeaderCell>Filière</CTableHeaderCell>
                   <CTableHeaderCell>Téléphone</CTableHeaderCell>
@@ -194,15 +198,29 @@ const LegacyStudentsTable = ({
                       <div className="fw-semibold text-nowrap">{student.last_name} {student.first_name}</div>
                       <div className="text-muted small">{student.email}</div>
                     </CTableDataCell>
+                    <CTableDataCell className="align-middle text-nowrap">
+                      {student.date_of_birth ? (
+                        <span className="badge bg-light text-dark border">
+                          {new Date(student.date_of_birth).toLocaleDateString('fr-FR')}
+                        </span>
+                      ) : (
+                        <span className="text-muted small">—</span>
+                      )}
+                    </CTableDataCell>
                     <CTableDataCell className="align-middle">
                       {student.enrollment_year}
                     </CTableDataCell>
                     <CTableDataCell className="align-middle">
-                      {student.department ? (
-                        <CBadge color="info">{student.department.name}</CBadge>
-                      ) : (
-                        '—'
-                      )}
+                      <div className="d-flex flex-column gap-1">
+                        {student.cycle && (
+                          <span className="text-muted small">{student.cycle}</span>
+                        )}
+                        {student.department ? (
+                          <CBadge color="info">{student.department.name}</CBadge>
+                        ) : (
+                          '—'
+                        )}
+                      </div>
                     </CTableDataCell>
                     <CTableDataCell className="align-middle text-nowrap">
                       {student.phone}
@@ -234,6 +252,15 @@ const LegacyStudentsTable = ({
                           onClick={() => onEdit(student)}
                         >
                           <CIcon icon={cilPencil} />
+                        </CButton>
+                        <CButton
+                          color="info"
+                          size="sm"
+                          variant="outline"
+                          title="Compléter le dossier académique (Notes, résultats, mémoire)"
+                          onClick={() => onOpenAcademic(student)}
+                        >
+                          <CIcon icon={cilNotes} />
                         </CButton>
                         <CButton
                           color="dark"

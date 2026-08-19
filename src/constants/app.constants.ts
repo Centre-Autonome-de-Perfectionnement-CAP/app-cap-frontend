@@ -1,31 +1,41 @@
 // src/constants/app.constants.ts
 
 export const ROLES = {
-  ADMIN:               'admin',
-  SECRETAIRE:          'secretaire',
-  COMPTABLE:           'comptable',
-  CHEF_DIVISION:       'chef-division',
-  CHEF_CAP:            'chef-cap',
-  SEC_DA:              'sec-da',              // Secrétaire Directrice Adjointe
-  DIRECTRICE_ADJOINTE: 'directrice-adjointe', // ex directeur-adjoint
-  SEC_DIR:             'sec-dir',             // Secrétaire Directeur
-  DIRECTEUR:           'directeur',
-  ETUDIANT:            'etudiant',
+  ADMIN:                'admin',
+  SECRETAIRE:           'secretaire',
+  COMPTABLE:            'comptable',
+  CHEF_DIVISION:        'chef-division',
+  CHEF_CAP:             'chef-cap',
+  SEC_DA:               'sec-da',              // Secrétaire Directrice Adjointe
+  DIRECTRICE_ADJOINTE:  'directrice-adjointe', // ex directeur-adjoint
+  SEC_DIR:              'sec-dir',             // Secrétaire Directeur
+  DIRECTEUR:            'directeur',
+  ETUDIANT:             'etudiant',
+  PROFESSEUR:           'professeur',
+  RESPONSABLE:          'responsable',
+  RESPONSABLE_DIVISION: 'responsable-division',
+  SCOLARITE:            'scolarite',
+  DIRECTION:            'direction',
 } as const
 
 export type UserRole = typeof ROLES[keyof typeof ROLES]
 
 export const ROLE_NAMES: Record<UserRole, string> = {
-  [ROLES.ADMIN]:               'Administrateur',
-  [ROLES.SECRETAIRE]:          'Secrétaire',
-  [ROLES.COMPTABLE]:           'Comptable',
-  [ROLES.CHEF_DIVISION]:       'Responsable Division',
-  [ROLES.CHEF_CAP]:            'Chef CAP',
-  [ROLES.SEC_DA]:              'Sec. Directrice Adjointe',
-  [ROLES.DIRECTRICE_ADJOINTE]: 'Directrice Adjointe',
-  [ROLES.SEC_DIR]:             'Sec. Directeur',
-  [ROLES.DIRECTEUR]:           'Directeur',
-  [ROLES.ETUDIANT]:            'Étudiant',
+  [ROLES.ADMIN]:                'Administrateur',
+  [ROLES.SECRETAIRE]:           'Secrétaire',
+  [ROLES.COMPTABLE]:            'Comptable',
+  [ROLES.CHEF_DIVISION]:        'Responsable Division',
+  [ROLES.CHEF_CAP]:             'Chef CAP',
+  [ROLES.SEC_DA]:               'Sec. Directrice Adjointe',
+  [ROLES.DIRECTRICE_ADJOINTE]:  'Directrice Adjointe',
+  [ROLES.SEC_DIR]:              'Sec. Directeur',
+  [ROLES.DIRECTEUR]:            'Directeur',
+  [ROLES.ETUDIANT]:             'Étudiant',
+  [ROLES.PROFESSEUR]:           'Professeur',
+  [ROLES.RESPONSABLE]:          'Responsable de classe',
+  [ROLES.RESPONSABLE_DIVISION]: 'Responsable Division',
+  [ROLES.SCOLARITE]:            'Scolarité',
+  [ROLES.DIRECTION]:            'Direction',
 }
 
 export const STATUTS = {

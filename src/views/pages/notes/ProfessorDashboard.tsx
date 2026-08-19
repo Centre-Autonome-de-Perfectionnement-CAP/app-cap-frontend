@@ -34,11 +34,9 @@ import HttpService from '@/services/http.service'
 
 const ProfessorDashboard = () => {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { nom, prenoms } = useAuth()
   const fullName =
-    user?.full_name || (user?.prenoms && user?.nom)
-      ? `${user.prenoms} ${user.nom}`
-      : 'Professeur'
+    prenoms && nom ? `${prenoms} ${nom}` : 'Professeur'
 
   const {
     classes,

@@ -97,7 +97,7 @@ const Login = () => {
           direction:   '/dashboard',
           responsable: '/responsable/dashboard',
         }
-        navigate(defaultRoutes[user.role] ?? '/dashboard', { replace: true })
+        navigate((user.role ? defaultRoutes[user.role] : undefined) ?? '/dashboard', { replace: true })
       }
     } catch (err: any) {
       const status  = err?.status

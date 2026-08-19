@@ -154,7 +154,7 @@ const TableDetail = () => {
                 padding: '8px 14px',
               }}
             >
-              <CIcon icon={cilReload} spin={loading} style={{ marginRight: 6 }} />
+              <CIcon icon={cilReload} style={{ marginRight: 6 }} />
               Actualiser
             </CButton>
 

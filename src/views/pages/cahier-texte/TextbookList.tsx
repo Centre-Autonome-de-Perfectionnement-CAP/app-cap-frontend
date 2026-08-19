@@ -499,7 +499,7 @@ const TextbookList = () => {
                   <div className="col-md-6">
                     <DetailField
                       label="Enseignant"
-                      value={selectedEntry.professor.full_name ?? `${selectedEntry.professor.first_name} ${selectedEntry.professor.last_name}`}
+                      value={(selectedEntry.professor as any).full_name ?? `${selectedEntry.professor.first_name} ${selectedEntry.professor.last_name}`}
                     />
                   </div>
                   <div className="col-md-6">
@@ -561,7 +561,7 @@ const TextbookList = () => {
                     <CIcon icon={cilCheckCircle} />
                     <span>
                       Validé le <strong>{selectedEntry.validated_at}</strong>
-                      {selectedEntry.validated_by && ` par ${selectedEntry.validated_by}`}
+                      {(selectedEntry as any).validated_by && ` par ${(selectedEntry as any).validated_by}`}
                     </span>
                   </div>
                 </div>
@@ -618,7 +618,6 @@ const TextbookList = () => {
       <CModal
         visible={downloadModal}
         onClose={closeDownloadModal}
-        size="md"
         alignment="center"
       >
         <CModalHeader style={{ borderBottom: '2px solid var(--cui-primary)' }}>
@@ -733,7 +732,7 @@ interface DetailFieldProps {
 }
 
 const DetailField = ({ label, value, multiline }: DetailFieldProps) => {
-  if (!value && value !== 0) return null
+  if (!value && (value as any) !== 0) return null
   return (
     <div>
       <div

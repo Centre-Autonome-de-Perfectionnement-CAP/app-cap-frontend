@@ -608,7 +608,7 @@ const ProfessorContratDetail = () => {
   if (loading) {
     return (
       <div className="text-center py-5">
-        <CSpinner size="lg" style={{ color: '#1a3a8f' }} />
+        <CSpinner style={{ color: '#1a3a8f' }} />
         <p className="mt-3 text-muted">Chargement du contrat…</p>
       </div>
     );
@@ -959,7 +959,7 @@ const ProfessorContratDetail = () => {
         onClose={handleCourseSupportLater}
         alignment="center"
         backdrop="static"
-        size={courseSupportStep === 'form' ? 'lg' : 'md'}
+        size={courseSupportStep === 'form' ? 'lg' : undefined}
         scrollable={courseSupportStep === 'form'}
       >
         {/* ── Étape 1 : Prompt ─────────────────────────────────────────────── */}

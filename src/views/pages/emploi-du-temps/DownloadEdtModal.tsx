@@ -203,7 +203,7 @@ const DownloadEdtModal: React.FC<Props> = ({ visible, onClose }) => {
   // ─────────────────────────────────────────────────────────────────────
 
   return (
-    <CModal visible={visible} onClose={handleClose} size="md" backdrop="static">
+    <CModal visible={visible} onClose={handleClose} backdrop="static">
       <CModalHeader>
         <CModalTitle>
           <CIcon icon={cilCloudDownload} className="me-2 text-primary" />

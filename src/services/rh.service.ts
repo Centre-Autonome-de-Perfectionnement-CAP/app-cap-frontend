@@ -159,6 +159,11 @@ class RhService {
     await HttpService.delete(`rh/documents/${id}`)
   }
 
+  downloadDocument = async (id: number | string): Promise<string> => {
+    const result = await HttpService.downloadFile(`rh/documents/${id}/download`)
+    return result.url
+  }
+
   // ─── Important Informations ─────────────────────────────────────────────────
 
   getImportantInformations = async (): Promise<any[]> => {
@@ -222,6 +227,16 @@ class RhService {
     fileId: number,
   ): Promise<{ success: true; url: string; filename?: string }> => {
     return HttpService.downloadFile(`rh/files/${fileId}`)
+  }
+
+  broadcastImportantInformation = async (id: number | string, data: any): Promise<any> => {
+    const response = await HttpService.post<ApiResponse<any>>(`rh/important-informations/${id}/broadcast`, data)
+    return response.data || response
+  }
+
+  getBroadcastStatus = async (broadcastId: string): Promise<any> => {
+    const response = await HttpService.get<ApiResponse<any>>(`rh/important-informations/broadcast/${broadcastId}/status`)
+    return response.data || response
   }
 
   // ─── Contrats ────────────────────────────────────────────────────────────────

@@ -426,14 +426,14 @@ class InscriptionService {
     const response = await HttpService.get<DashboardResponse>(
       `${INSCRIPTION_ROUTES.BASE}/responsable/dashboard`
     );
-    return response.data || response;
+    return (response as any).data || response;
   };
 
   getResponsableClasses = async (): Promise<ClassesResponse> => {
     const response = await HttpService.get<ClassesResponse>(
       `${INSCRIPTION_ROUTES.BASE}/responsable/classes`
     );
-    return response.data || response;
+    return (response as any).data || response;
   };
 
   /**
@@ -443,7 +443,7 @@ class InscriptionService {
     const response = await HttpService.get<{ students: StudentRow[] }>(
       `${INSCRIPTION_ROUTES.BASE}/responsable/classes/${classId}/students`
     );
-    return response.data || response;
+    return (response as any).data || response;
   };
 
   getClassStats = async (classId: number): Promise<{
@@ -456,7 +456,7 @@ class InscriptionService {
     const response = await HttpService.get(
       `${INSCRIPTION_ROUTES.BASE}/classes/${classId}/stats`
     );
-    return response.data || response;
+    return (response as any).data || response;
   };
 
   // ==================== PROGRAMMES D'UNE CLASSE (RESPONSABLE) ====================
@@ -468,7 +468,7 @@ class InscriptionService {
     const response = await HttpService.get<{ programs: ProgramRow[] }>(
       `${INSCRIPTION_ROUTES.BASE}/responsable/classes/${classGroupId}/programs`
     );
-    return response.data || response;
+    return (response as any).data || response;
   };
 
   // ==================== CAHIER DE TEXTE ====================
@@ -480,7 +480,7 @@ class InscriptionService {
     const response = await HttpService.get<CanAddResult>(
       `${INSCRIPTION_ROUTES.BASE}/responsable/programs/${programId}/textbook/can-add`
     );
-    return response.data || response;
+    return (response as any).data || response;
   };
 
   /**
@@ -490,7 +490,7 @@ class InscriptionService {
     const response = await HttpService.get<{ entries: TextbookEntry[] }>(
       `${INSCRIPTION_ROUTES.BASE}/responsable/programs/${programId}/textbook`
     );
-    return response.data || response;
+    return (response as any).data || response;
   };
 
   /**
@@ -504,7 +504,7 @@ class InscriptionService {
       `${INSCRIPTION_ROUTES.BASE}/responsable/programs/${programId}/textbook`,
       payload
     );
-    return response.data || response;
+    return (response as any).data || response;
   };
 
   /**
@@ -518,7 +518,7 @@ class InscriptionService {
       `${INSCRIPTION_ROUTES.BASE}/responsable/textbook/${entryId}`,
       payload
     );
-    return response.data || response;
+    return (response as any).data || response;
   };
 
   /**
@@ -528,7 +528,7 @@ class InscriptionService {
     const response = await HttpService.delete<{ message: string }>(
       `${INSCRIPTION_ROUTES.BASE}/responsable/textbook/${entryId}`
     );
-    return response.data || response;
+    return (response as any).data || response;
   };
 
   // ==================== EXPORTS ====================
@@ -539,6 +539,28 @@ class InscriptionService {
   ): Promise<string> => {
     const result = await HttpService.downloadFile(
       `${INSCRIPTION_ROUTES.BASE}/classes/${classId}/export/${type}`
+    );
+    return result.url;
+  };
+
+  exportList = async (
+    type: string,
+    yearId?: string | number,
+    filiereId?: string | number,
+    niveau?: string,
+    cohort?: string,
+    groupeId?: string | number
+  ): Promise<string> => {
+    const params = new URLSearchParams();
+    if (yearId && yearId !== 'all') params.append('academic_year_id', String(yearId));
+    if (filiereId && filiereId !== 'all') params.append('department_id', String(filiereId));
+    if (niveau && niveau !== 'all') params.append('study_level', String(niveau));
+    if (cohort && cohort !== 'all') params.append('cohort', String(cohort));
+    if (groupeId && groupeId !== 'all') params.append('group_id', String(groupeId));
+
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const result = await HttpService.downloadFile(
+      `${INSCRIPTION_ROUTES.BASE}/students/export/${type}${query}`
     );
     return result.url;
   };

@@ -21,6 +21,7 @@ import {
   inscriptionNavigation,
   attestationNavigation,
   getNoteNavigation,
+  getRhNavigation,
   rhNavigation,
   soutenanceNavigation,
   coursNavigation,
@@ -50,7 +51,7 @@ const AppSidebar = () => {
     if (path.startsWith('/demandes'))     return getDemandesNavigation(role)
     if (path.startsWith('/attestations')) return attestationNavigation
     if (path.startsWith('/notes'))        return getNoteNavigation(role)
-    if (path.startsWith('/rh'))           return rhNavigation
+    if (path.startsWith('/rh'))           return getRhNavigation(role)
     if (path.startsWith('/soutenance'))   return soutenanceNavigation
     if (path.startsWith('/emploi'))       return getEmploiNavigation(role)
     if (path.startsWith('/cahier'))       return getCahierNavigation(role)

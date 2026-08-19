@@ -11,11 +11,6 @@ import type {
   ProfessorProgram,
 } from '@/types/rh.types';
 
-// ─── Constantes rôles (droits d'accès page Contrats) ─────────────────────────
-const ROLE_CHEF_CAP = 3;   // accès complet SAUF supports de cours
-const ROLE_RD_FC    = 13;  // supports uniquement RD-FC ; autres boutons bloqués
-const ROLE_RD_FAD   = 12;  // supports uniquement RD-FAD ; autres boutons bloqués
-
 // ─── Types locaux ──────────────────────────────────────────────────────────────
 type Professor = {
   id: number;
@@ -767,6 +762,15 @@ return (
 };
 
 
+// ─── Normalisation division (pour comparaison robuste DB vs contrat) ─────────
+const normalizeDivision = (div: string | null | undefined): string | null => {
+  if (!div) return null;
+  const d = div.toLowerCase().trim();
+  if (d === 'formation_distance' || d === 'rd-fad' || d === 'fad') return 'RD-FAD';
+  if (d === 'formation_continue' || d === 'rd-fc' || d === 'fc') return 'RD-FC';
+  return div;
+};
+
 // ─── AdminCourseSupportModal (version corrigée avec gestion correcte des monographies) ──────────────────────────────────────────────
 
 const AdminCourseSupportModal: React.FC<{
@@ -776,7 +780,9 @@ const AdminCourseSupportModal: React.FC<{
   divisionFilter?: string | null;
 }> = ({ contrat, onClose, onSaved, divisionFilter = null }) => {
 
-  const divisionMismatch = divisionFilter !== null && contrat.division !== divisionFilter;
+  const contratDiv = normalizeDivision(contrat.division);
+  const filterDiv  = normalizeDivision(divisionFilter);
+  const divisionMismatch = filterDiv !== null && contratDiv !== null && contratDiv !== filterDiv;
   const programs = contrat.course_element_professors ?? [];
 
   type SupportEntry = { title: string; file?: string; url?: string };
@@ -1129,7 +1135,7 @@ const AdminCourseSupportModal: React.FC<{
 
   // Blocage si division ne correspond pas
   if (divisionMismatch) {
-    const divLabel = divisionFilter === 'RD-FC' ? 'Formation Continue (RD-FC)' : 'Formation à Distance (RD-FAD)';
+    const divLabel = filterDiv === 'RD-FC' ? 'Formation Continue (RD-FC)' : 'Formation à Distance (RD-FAD)';
     return (
       <Modal
         title="Supports de cours"
@@ -1734,29 +1740,35 @@ const FilterBar: React.FC<{
 // ─── Main Component ────────────────────────────────────────────────────────────
 const Contrats: React.FC = () => {
   // ─── Rôle de l'utilisateur connecté (récupéré via /auth/me) ────────────────
-  const [currentRoleId, setCurrentRoleId] = useState<number | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
-    // On récupère le rôle via la route auth/me — HttpService ajoute le token automatiquement
     import('@/services/http.service').then(({ default: http }) => {
       (http as any).get('auth/me')
         .then((res: any) => {
-          // La réponse peut être { data: { role_id } } ou { role_id } directement
-          const roleId = res?.data?.role_id ?? res?.role_id ?? null;
-          setCurrentRoleId(roleId !== null ? Number(roleId) : null);
+          const u = res?.data ?? res ?? null;
+          setCurrentUser(u);
         })
-        .catch(() => { /* silencieux — on laisse null, pas de restriction */ });
+        .catch(() => { /* silencieux — pas de restriction */ });
     });
   }, []);
 
-  // Dérivations des droits
-  const isChefCAP    = currentRoleId === ROLE_CHEF_CAP;   // 3 : complet sauf supports
-  const isRdFC       = currentRoleId === ROLE_RD_FC;      // 13 : supports RD-FC seulement
-  const isRdFAD      = currentRoleId === ROLE_RD_FAD;     // 12 : supports RD-FAD seulement
-  const isRestricted = isRdFC || isRdFAD;                 // boutons hors-supports bloqués
+  const userRole = currentUser?.role ?? localStorage.getItem('role') ?? '';
+  const userDivision = currentUser?.chef_division_type ?? null;
+
+  const isResponsableDivision =
+    userRole === 'responsable-division' ||
+    userRole === 'chef-division' ||
+    userRole === 'responsable';
+
+  const isChefCAP = userRole === 'chef-cap';
+  const isAdmin = userRole === 'admin' || isChefCAP;
+
+  // Actions administratives restreintes pour le Responsable Division
+  const isRestricted = isResponsableDivision;
 
   const supportDivisionFilter: string | null =
-    isRdFC ? 'RD-FC' : isRdFAD ? 'RD-FAD' : null;
+    userDivision ? normalizeDivision(userDivision) : null;
 
   const [contrats, setContrats]           = useState<Contrat[]>([]);
   const [professors, setProfessors]       = useState<Professor[]>([]);
@@ -2308,27 +2320,15 @@ const Contrats: React.FC = () => {
                             <Icon.ShieldCheck />
                           </button>
 
-                          {/* Supports de cours — bloqué pour role_id=3, filtré pour 12/13 */}
+                          {/* Supports de cours & Monographies */}
                           <button
                             className="ctr-btn-icon"
-                            title={
-                              isChefCAP
-                                ? "Droit d'accès non requis"
-                                : 'Supports de cours — voir et gérer les PDFs et monographies'
-                            }
+                            title="Supports de cours & Monographies — voir et gérer les PDFs et monographies"
                             onClick={() => {
-                              if (isChefCAP) {
-                                setShowAccessDenied(true);
-                              } else {
-                                setSupportContrat(c);
-                                setModalOpenKey(k => k + 1);
-                              }
+                              setSupportContrat(c);
+                              setModalOpenKey(k => k + 1);
                             }}
-                            style={
-                              isChefCAP
-                                ? { borderColor: '#fecaca', color: '#dc2626', background: '#fef2f2', opacity: 0.75 }
-                                : { borderColor: '#c7d2fe', color: '#4338ca', background: '#eef2ff' }
-                            }
+                            style={{ borderColor: '#c7d2fe', color: '#4338ca', background: '#eef2ff' }}
                           >
                             <Icon.BookOpen />
                           </button>

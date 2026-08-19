@@ -10,7 +10,7 @@ import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 import inscriptionNavigation  from './inscription.tsx'
 import alumniNavigation       from './alumni.tsx'
 import getEmploiNavigation    from './emploi-du-temps.tsx'
-import rhNavigation           from './rh.tsx'
+import { getRhNavigation, rhNavigation } from './rh.tsx'
 import soutenanceNavigation   from './soutenance.tsx'
 import coursNavigation        from './cours.tsx'
 import financeNavigation      from './finance.tsx'
@@ -160,6 +160,7 @@ export {
   coursNavigation,
   getCahierNavigation,
   soutenanceNavigation,
+  getRhNavigation,
   rhNavigation,
   presenceNavigation,
   getNoteNavigation,

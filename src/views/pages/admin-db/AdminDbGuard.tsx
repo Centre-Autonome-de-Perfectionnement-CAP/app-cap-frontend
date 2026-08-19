@@ -18,7 +18,7 @@ import { useAuth } from '@/contexts'
 import { FRONTEND_ROUTES } from '@/constants'
 import { LoadingSpinner } from '@/components'
 
-const ALLOWED_ROLES = ['admin', 'responsable-division']
+const ALLOWED_ROLES = ['admin', 'chef-cap', 'responsable-division', 'chef-division']
 
 interface Props {
   children: React.ReactNode

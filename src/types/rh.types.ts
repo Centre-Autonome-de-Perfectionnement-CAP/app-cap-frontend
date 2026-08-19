@@ -17,6 +17,7 @@ export interface AdminUser {
   ifu?: string
   ifu_url?: string
   bank?: string
+  chef_division_type?: 'formation_distance' | 'formation_continue' | null
   email_verified_at?: string
   roles?: Role[]
   created_at: string
@@ -26,6 +27,7 @@ export interface AdminUser {
 export interface Role {
   id: number
   name: string
+  slug: string
   description?: string
 }
 
@@ -41,6 +43,7 @@ export interface CreateAdminUserRequest {
   ifu_number?: string
   ifu?: File
   bank?: string
+  chef_division_type?: 'formation_distance' | 'formation_continue' | null
 }
 
 export interface UpdateAdminUserRequest {
@@ -55,6 +58,7 @@ export interface UpdateAdminUserRequest {
   ifu_number?: string
   ifu?: File
   bank?: string
+  chef_division_type?: 'formation_distance' | 'formation_continue' | null
 }
 
 export interface RhStats {

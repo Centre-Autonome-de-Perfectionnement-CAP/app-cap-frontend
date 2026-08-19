@@ -7,7 +7,7 @@
 import { useState } from 'react'
 import {
   CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
-  CButton, CFormInput, CFormLabel, CFormTextarea, CSpinner, CAlert,
+  CButton, CFormInput, CFormLabel, CFormTextarea, CFormSelect, CSpinner, CAlert,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSave, cilPencil, cilPlus } from '@coreui/icons'
@@ -120,7 +120,23 @@ const RecordFormModal = ({ columns, initialValues, onClose, onSubmit }: Props) =
                   {col}
                 </CFormLabel>
 
-                {isLong ? (
+                {col === 'chef_division_type' ? (
+                  <CFormSelect
+                    style={{
+                      height: 38,
+                      fontSize: '0.92rem',
+                      borderRadius: 8,
+                      border: '1.5px solid #cbd5e1',
+                      padding: '0 12px',
+                    }}
+                    value={values[col] ?? ''}
+                    onChange={(e) => setValues((v) => ({ ...v, [col]: e.target.value }))}
+                  >
+                    <option value="">(Non défini)</option>
+                    <option value="formation_distance">Formation à Distance (FAD)</option>
+                    <option value="formation_continue">Formation Continue (FC)</option>
+                  </CFormSelect>
+                ) : isLong ? (
                   <CFormTextarea
                     rows={3}
                     style={{

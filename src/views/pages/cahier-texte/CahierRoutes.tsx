@@ -1,9 +1,11 @@
-import { Suspense } from 'react'
+import { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { LoadingSpinner } from '@/components'
 import { useAuth } from '@/contexts'
 
 import { Dashboard, TextbookList, MesEntrees, EntryForm, EntryDetail, ViewByClass } from './index'
+
+const AdminFactures = lazy(() => import('../rh/AdminFactures'))
 
 const CahierRoutes = () => {
   const { role } = useAuth()
@@ -27,6 +29,9 @@ const CahierRoutes = () => {
 
         {/* Consultation par classe (admin) */}
         <Route path="/by-class" element={<ViewByClass />} />
+
+        {/* Factures normalisées (admin) */}
+        <Route path="/factures" element={<AdminFactures />} />
 
         {/* Redirection par défaut selon le rôle */}
         <Route

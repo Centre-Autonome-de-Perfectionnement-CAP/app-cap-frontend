@@ -38,12 +38,21 @@ class CahierService {
 
   /**
    * Récupérer la liste des entrées
+   *
+   * ✅ CORRIGÉ : quand aucun statut n'est fourni, le backend applique
+   * automatiquement le filtre par défaut (published + validated).
+   * Le service ne force plus de valeur par défaut côté front pour
+   * laisser la logique métier au backend.
    */
   getEntries = async (params?: {
     search?: string
     program_id?: number
     class_group_id?: number
     professor_id?: number
+    /**
+     * Valeurs possibles : 'draft' | 'published' | 'validated'
+     * Si absent → le backend retourne published + validated uniquement
+     */
     status?: string
     start_date?: string
     end_date?: string
@@ -95,7 +104,7 @@ class CahierService {
   }
 
   /**
-   * Publier une entrée
+   * Publier (signer) une entrée : draft → published
    */
   publishEntry = async (id: number): Promise<TextbookEntry> => {
     const response = await HttpService.post<{ success: boolean; data: TextbookEntry }>(
@@ -105,7 +114,10 @@ class CahierService {
   }
 
   /**
-   * Valider une entrée
+   * Valider une entrée : published → validated
+   *
+   * ✅ CORRIGÉ : méthode existait déjà dans le service mais la route backend
+   * POST /{id}/validate était manquante → maintenant corrigée dans api.php
    */
   validateEntry = async (id: number): Promise<TextbookEntry> => {
     const response = await HttpService.post<{ success: boolean; data: TextbookEntry }>(

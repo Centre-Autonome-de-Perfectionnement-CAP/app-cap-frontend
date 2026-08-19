@@ -62,6 +62,12 @@ const getEmploiNavigation = (role: string | null) => {
       icon: <CIcon icon={cilSearch} customClassName="nav-icon" />,
     },
     {
+      component: CNavItem,
+      name: 'Gestion Emplois du Temps',
+      to: '/emploi-du-temps/gestion',
+      icon: <CIcon icon={cilList} customClassName="nav-icon" />,
+    },
+    {
       component: CNavTitle,
       name: 'Gestion',
     },

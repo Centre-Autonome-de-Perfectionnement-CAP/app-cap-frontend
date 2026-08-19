@@ -223,4 +223,7 @@ export const FRONTEND_ROUTES = {
   // Errors
   PAGE_404: '/404',
   PAGE_500: '/500',
+
+  // Espace "responsable" (responsable de division) — voir ResponsableOnlyRoute dans App.tsx
+  RESPONSABLE_DASHBOARD: '/responsable/dashboard',
 } as const

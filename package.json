@@ -44,6 +44,7 @@
     "classnames": "^2.5.1",
     "core-js": "^3.45.0",
     "date-fns": "^4.1.0",
+    "html2pdf.js": "^0.14.0",
     "jspdf": "^3.0.2",
     "lodash": "^4.17.21",
     "prop-types": "^15.8.1",

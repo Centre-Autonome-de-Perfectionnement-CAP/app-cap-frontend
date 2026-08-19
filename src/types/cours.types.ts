@@ -72,7 +72,6 @@ export interface Professor {
   ifu_url?: string;
   bank?: string;
   speciality?: string;
-  specialty?: string;
   status?: 'active' | 'inactive' | 'on_leave';
   grade_id?: number;
   grade?: {
@@ -83,6 +82,13 @@ export interface Professor {
   bio?: string;
   created_at?: string;
   updated_at?: string;
+  nationality?: string;
+  profession?: string;
+  city?: string;
+  district?: string;
+  plot_number?: string;
+  house_number?: string;
+
 }
 
 export interface CourseElementProfessor {

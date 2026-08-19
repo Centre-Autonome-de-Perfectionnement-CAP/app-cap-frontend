@@ -1,29 +1,33 @@
 import HttpService from './http.service'
 import type { Professor } from '@/types/cours.types'
-import type { AdminUser, RhStats } from '@/types/rh.types'
+import type {
+  AdminUser,
+  RhStats,
+  Contrat,
+  CreateContratPayload,
+  UpdateContratPayload,
+  ProfessorProgram,
+  FactureEntry,
+} from '@/types/rh.types'
 import type { ApiResponse } from '@/types'
 
 class RhService {
-  // Professors
-  getProfessors = async (filters: any = {}): Promise<ApiResponse<Professor[]>> => {
+
+  // ─── Professors ─────────────────────────────────────────────────────────────
+
+  getProfessors = async (filters: Record<string, unknown> = {}): Promise<ApiResponse<Professor[]>> => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value.toString())
+        params.append(key, String(value))
       }
     })
-    
-    const url = params.toString() 
-      ? `rh/professors?${params.toString()}`
-      : 'rh/professors'
-    
-    const response = await HttpService.get<ApiResponse<Professor[]>>(url)
-    return response
+    const url = params.toString() ? `rh/professors?${params.toString()}` : 'rh/professors'
+    return HttpService.get<ApiResponse<Professor[]>>(url)
   }
 
   getGrades = async (): Promise<ApiResponse<any[]>> => {
-    const response = await HttpService.get<ApiResponse<any[]>>('rh/grades')
-    return response
+    return HttpService.get<ApiResponse<any[]>>('rh/grades')
   }
 
   getBanks = async (): Promise<string[]> => {
@@ -42,6 +46,11 @@ class RhService {
   }
 
   updateProfessor = async (id: number | string, data: any): Promise<Professor> => {
+    if (data instanceof FormData) {
+      data.append('_method', 'PUT')
+      const response = await HttpService.post<ApiResponse<Professor>>(`rh/professors/${id}`, data)
+      return response.data!
+    }
     const response = await HttpService.put<ApiResponse<Professor>>(`rh/professors/${id}`, data)
     return response.data!
   }
@@ -50,21 +59,24 @@ class RhService {
     await HttpService.delete(`rh/professors/${id}`)
   }
 
-  // Admin Users
-  getAdminUsers = async (filters: any = {}): Promise<ApiResponse<AdminUser[]>> => {
+  getProfessorPrograms = async (professorId: number | string): Promise<ProfessorProgram[]> => {
+    const response = await HttpService.get<ApiResponse<ProfessorProgram[]>>(
+      `rh/professors/${professorId}/programs`,
+    )
+    return response.data || []
+  }
+
+  // ─── Admin Users ────────────────────────────────────────────────────────────
+
+  getAdminUsers = async (filters: Record<string, unknown> = {}): Promise<ApiResponse<AdminUser[]>> => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value.toString())
+        params.append(key, String(value))
       }
     })
-    
-    const url = params.toString() 
-      ? `rh/admin-users?${params.toString()}`
-      : 'rh/admin-users'
-    
-    const response = await HttpService.get<ApiResponse<AdminUser[]>>(url)
-    return response
+    const url = params.toString() ? `rh/admin-users?${params.toString()}` : 'rh/admin-users'
+    return HttpService.get<ApiResponse<AdminUser[]>>(url)
   }
 
   getAdminUser = async (id: number | string): Promise<AdminUser> => {
@@ -86,22 +98,24 @@ class RhService {
     await HttpService.delete(`rh/admin-users/${id}`)
   }
 
-  // Statistics
+  // ─── Statistics ─────────────────────────────────────────────────────────────
+
   getStatistics = async (): Promise<RhStats> => {
     const response = await HttpService.get<ApiResponse<RhStats>>('rh/admin-users-statistics')
     return response.data!
   }
 
-  // Roles
+  // ─── Roles ──────────────────────────────────────────────────────────────────
+
   getRoles = async (): Promise<any[]> => {
     const response = await HttpService.get<ApiResponse<any[]>>('rh/roles')
     return response.data || []
   }
 
-  // Signataires
+  // ─── Signataires ────────────────────────────────────────────────────────────
+
   getSignataires = async (): Promise<ApiResponse<any[]>> => {
-    const response = await HttpService.get<ApiResponse<any[]>>('rh/signataires')
-    return response
+    return HttpService.get<ApiResponse<any[]>>('rh/signataires')
   }
 
   getSignataire = async (id: number | string): Promise<any> => {
@@ -123,17 +137,16 @@ class RhService {
     await HttpService.delete(`rh/signataires/${id}`)
   }
 
-  // Documents Management
+  // ─── Documents ──────────────────────────────────────────────────────────────
+
   getDocuments = async (categorie?: string): Promise<any[]> => {
-    const url = categorie ? `rh/documents?categorie=${categorie}` : 'rh/documents'
+    const url      = categorie ? `rh/documents?categorie=${categorie}` : 'rh/documents'
     const response = await HttpService.get<ApiResponse<any[]>>(url)
     return response.data || []
   }
 
   createDocument = async (formData: FormData): Promise<any> => {
-    const response = await HttpService.post<ApiResponse<any>>('rh/documents', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    const response = await HttpService.post<ApiResponse<any>>('rh/documents', formData)
     return response.data!
   }
 
@@ -146,7 +159,8 @@ class RhService {
     await HttpService.delete(`rh/documents/${id}`)
   }
 
-  // Important Informations
+  // ─── Important Informations ─────────────────────────────────────────────────
+
   getImportantInformations = async (): Promise<any[]> => {
     const response = await HttpService.get<ApiResponse<any[]>>('rh/important-informations')
     return response.data || []
@@ -171,13 +185,9 @@ class RhService {
           formData.append(key, value as string | Blob)
         }
       })
-      const response = await HttpService.post<ApiResponse<any>>('rh/important-informations', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      const response = await HttpService.post<ApiResponse<any>>('rh/important-informations', formData)
       return response.data!
     }
-    
-    // Sinon, on envoie en JSON classique
     const response = await HttpService.post<ApiResponse<any>>('rh/important-informations', data)
     return response.data!
   }
@@ -196,15 +206,10 @@ class RhService {
           formData.append(key, value as string | Blob)
         }
       })
-      // Laravel ne supporte pas PUT avec FormData, on utilise POST avec _method
       formData.append('_method', 'PUT')
-      const response = await HttpService.post<ApiResponse<any>>(`rh/important-informations/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      const response = await HttpService.post<ApiResponse<any>>(`rh/important-informations/${id}`, formData)
       return response.data!
     }
-    
-    // Sinon, on envoie en JSON classique
     const response = await HttpService.put<ApiResponse<any>>(`rh/important-informations/${id}`, data)
     return response.data!
   }
@@ -213,32 +218,143 @@ class RhService {
     await HttpService.delete(`rh/important-informations/${id}`)
   }
 
-  // Télécharger un fichier PDF en blob
-  downloadImportantInformationFile = async (fileId: number): Promise<{success: true, url: string, filename?: string}> => {
-    return await HttpService.downloadFile(`rh/files/${fileId}`)
+  downloadImportantInformationFile = async (
+    fileId: number,
+  ): Promise<{ success: true; url: string; filename?: string }> => {
+    return HttpService.downloadFile(`rh/files/${fileId}`)
   }
 
-  // Télécharger un document
-  downloadDocument = async (documentId: number): Promise<string> => {
-    const result = await HttpService.downloadFile(`rh/files/${documentId}?download=1`)
-    return result.url
+  // ─── Contrats ────────────────────────────────────────────────────────────────
+
+  getContrats = async (): Promise<ApiResponse<Contrat[]>> => {
+    return HttpService.get<ApiResponse<Contrat[]>>('rh/contrats')
   }
 
-  // Diffuser une information importante par email
-  broadcastImportantInformation = async (id: number, data: {
-    cycle_id: number
-    department_ids: number[]
-    levels: string[]
-    all_departments: boolean
-    all_levels: boolean
-  }): Promise<any> => {
-    const response = await HttpService.post<ApiResponse<any>>(`rh/important-informations/${id}/broadcast`, data)
+  getMyContrats = async (): Promise<ApiResponse<Contrat[]>> => {
+    return HttpService.get<ApiResponse<Contrat[]>>('rh/professor/my-contrats')
+  }
+
+  getContrat = async (id: number | string): Promise<Contrat> => {
+    const response = await HttpService.get<ApiResponse<Contrat>>(`rh/contrats/${id}`)
     return response.data!
   }
 
-  // Récupérer le statut d'un broadcast
-  getBroadcastStatus = async (broadcastId: string): Promise<any> => {
-    const response = await HttpService.get<ApiResponse<any>>(`rh/broadcast-status/${broadcastId}`)
+  getContratByToken = async (token: string): Promise<Contrat> => {
+    const response = await HttpService.get<ApiResponse<Contrat>>(
+      `rh/contrats/by-token/${token}`,
+    )
+    return response.data!
+  }
+
+  createContrat = async (data: CreateContratPayload): Promise<Contrat> => {
+    const response = await HttpService.post<ApiResponse<Contrat>>('rh/contrats', data)
+    return response.data!
+  }
+
+  updateContrat = async (id: number | string, data: UpdateContratPayload): Promise<Contrat> => {
+    const response = await HttpService.put<ApiResponse<Contrat>>(`rh/contrats/${id}`, data)
+    return response.data!
+  }
+
+  signContrat = async (token: string): Promise<{ success: boolean; message: string }> => {
+    return HttpService.post<{ success: boolean; message: string }>(
+      `rh/contrats/by-token/${token}/validate`,
+      {},
+    )
+  }
+
+  rejectContrat = async (
+    token: string,
+    rejectionReason: string,
+  ): Promise<{ success: boolean; message: string }> => {
+    return HttpService.post<{ success: boolean; message: string }>(
+      `rh/contrats/by-token/${token}/reject`,
+      { rejection_reason: rejectionReason },
+    )
+  }
+
+  authorizeContrat = async (id: number | string): Promise<Contrat> => {
+    const response = await HttpService.post<ApiResponse<Contrat>>(
+      `rh/contrats/${id}/authorize`,
+      {},
+    )
+    return response.data!
+  }
+
+  uploadContratPdf = async (
+    id: number | string,
+    pdfFile: File,
+  ): Promise<Contrat> => {
+    const formData = new FormData()
+    formData.append('pdf_file', pdfFile)
+    const response = await HttpService.post<ApiResponse<Contrat>>(
+      `rh/contrats/${id}/upload-pdf`,
+      formData,
+    )
+    return response.data!
+  }
+
+  deleteContrat = async (id: number | string): Promise<void> => {
+    await HttpService.delete(`rh/contrats/${id}`)
+  }
+
+  sendTransferEmail = async (
+    contratId: number | string,
+  ): Promise<ApiResponse<{ message: string }>> => {
+    return HttpService.post<ApiResponse<{ message: string }>>(
+      `rh/contrats/${contratId}/send-transfer-email`,
+      {},
+    )
+  }
+
+  downloadContratPdf = async (
+    idOrToken: number | string,
+  ): Promise<{ success: true; url: string; filename?: string }> => {
+    return HttpService.downloadFile(`rh/contrats/${idOrToken}/download`)
+  }
+
+  // ─── Factures normalisées ────────────────────────────────────────────────────
+
+  /**
+   * Retourne tous les contrats du professeur connecté
+   * ayant au moins une facture normalisée uploadée.
+   */
+  getMyFactures = async (): Promise<ApiResponse<FactureEntry[]>> => {
+    return HttpService.get<ApiResponse<FactureEntry[]>>('rh/professor/my-factures')
+  }
+
+  /**
+   * Upload des factures normalisées (et optionnellement le RIB) pour un contrat.
+   * Les fichiers sont stockés dans la colonne `factures_normalisees` (JSON).
+   */
+  uploadFacturesNormalisees = async (
+    id: number | string,
+    formData: FormData,
+  ): Promise<{ message: string; data: string[] }> => {
+    return HttpService.post<{ message: string; data: string[] }>(
+      `rh/contrats/${id}/factures-normalisees`,
+      formData,
+    )
+  }
+
+  // ─── Academic Years ──────────────────────────────────────────────────────────
+
+  getAcademicYears = async (): Promise<any[]> => {
+    const response = await HttpService.get<ApiResponse<any[]>>('rh/academic-years')
+    return response.data || []
+  }
+
+  // ─── Cycles ──────────────────────────────────────────────────────────────────
+
+  getCycles = async (): Promise<any[]> => {
+    const response = await HttpService.get<ApiResponse<any[]>>('rh/cycles')
+    return response.data || []
+  }
+
+  getProfessorProgram = async (professorId: number | string, programId: number | string): Promise<ProfessorProgram> => {
+    const response = await HttpService.get<ApiResponse<ProfessorProgram>>(
+      `rh/professors/${professorId}/programs/${programId}`
+    )
     return response.data!
   }
 

@@ -92,6 +92,70 @@ class NotesService {
     return await HttpService.downloadFile(`${this.baseUrl}/professor/export-grade-sheet/${programUuid}${queryString}`)
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // CAHIER DE TEXTE - NOUVELLES MÉTHODES CORRIGÉES
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Récupère les statistiques globales du professeur
+   */
+  getTextbookStats = async () => {
+    try {
+      return await HttpService.get(`${this.baseUrl}/professor/textbook/stats`)
+    } catch (error) {
+      console.error('Erreur getTextbookStats:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Récupère la liste des programmes du professeur avec leurs infos
+   */
+  getTextbookPrograms = async () => {
+    try {
+      return await HttpService.get(`${this.baseUrl}/professor/textbook/programs`)
+    } catch (error) {
+      console.error('Erreur getTextbookPrograms:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Récupère les entrées du cahier de texte pour un programme
+   */
+  getTextbookEntries = async (programId: number) => {
+    try {
+      return await HttpService.get(`${this.baseUrl}/professor/textbook/entries/${programId}`)
+    } catch (error) {
+      console.error('Erreur getTextbookEntries:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Publie une entrée (la rend visible à l'admin)
+   */
+  publishTextbookEntry = async (entryId: number) => {
+    try {
+      return await HttpService.put(`${this.baseUrl}/professor/textbook/publish/${entryId}`)
+    } catch (error) {
+      console.error('Erreur publishTextbookEntry:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Dépublie une entrée (reste en brouillon)
+   */
+  unpublishTextbookEntry = async (entryId: number) => {
+    try {
+      return await HttpService.put(`${this.baseUrl}/professor/textbook/unpublish/${entryId}`)
+    } catch (error) {
+      console.error('Erreur unpublishTextbookEntry:', error)
+      throw error
+    }
+  }
+
   // Admin - Dashboard
   getDashboard = async (academicYearId?: number) => {
     const queryParams = academicYearId ? `?academic_year_id=${academicYearId}` : ''

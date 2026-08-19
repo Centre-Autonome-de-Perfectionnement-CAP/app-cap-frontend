@@ -131,7 +131,7 @@ const applications: Application[] = [
   {
     title: 'CAP WhatsApp',
     description: 'Administration et journalisation des envois WhatsApp.',
-    image: getAssetUrl('images/cap.png'),
+    image: getAssetUrl('images/whatsapp.png'),
     url: '/whatsapp',
     hasBadge: false,
     rolesAllowed: ['admin', 'responsable-division'],

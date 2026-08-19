@@ -206,7 +206,7 @@ export const FRONTEND_ROUTES = {
     ROOMS: '/emploi-du-temps/rooms', TIME_SLOTS: '/emploi-du-temps/time-slots',
     SCHEDULED_COURSES: '/emploi-du-temps/scheduled-courses', SCHEDULE_VIEW: '/emploi-du-temps/schedule-view',
   },
-  NOTES:    { BASE: '/notes', SAISIE: '/notes/saisie', BULLETINS: '/notes/bulletins' },
+  NOTES:    { BASE: '/notes', SAISIE: '/notes/saisie', BULLETINS: '/notes/bulletins', PROFESSOR_DASHBOARD: '/notes/professor/dashboard' },
   PRESENCE: { BASE: '/presence', SAISIE: '/presence/saisie', LISTE: '/presence/liste' },
   BIBLIOTHEQUE: '/bibliotheque',
   ATTESTATIONS: '/attestations',

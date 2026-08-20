@@ -82,7 +82,12 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
   }, [filters])
 
   const openDetail  = (d: DocumentRequest) => { setSelected(d); setDetailOpen(true) }
-  const closeDetail = useCallback(() => { setSelected(null); setDetailOpen(false) }, [])
+  const closeDetail = useCallback(() => { 
+    setDetailOpen(false)
+    // Ne pas mettre selected à null tout de suite, sinon le CModal de CoreUI 
+    // est démonté avant la fin de l'animation, ce qui laisse le backdrop noir bloqué.
+    setTimeout(() => setSelected(null), 300)
+  }, [])
 
   const handleAction = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     if (!selected) return

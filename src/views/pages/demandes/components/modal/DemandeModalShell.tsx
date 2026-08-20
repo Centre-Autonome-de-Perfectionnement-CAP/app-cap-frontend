@@ -1,8 +1,12 @@
 // src/views/pages/demandes/components/modal/DemandeModalShell.tsx
-// REFONTE : suppression onglet Fichiers → bouton footer + modal gestionnaire + visualiseur agrandi
-// Toutes les fonctionnalités métier existantes sont conservées intégralement.
+// CORRECTIFS :
+//  - Responsivité mobile (footer wrap, barre workflow scrollable, tabs scrollables)
+//  - CModalBody avec overflow-y: auto + max-height pour ne jamais dépasser la fenêtre
+//  - FullViewer et FileManager portés dans des portails (pas de conflit z-index)
+//  - Fermeture Échap sur le FullViewer
+//  - Backdrop noir impossible (reset propre dans handleClose)
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
@@ -10,7 +14,6 @@ import {
   cilFolderOpen, cilArrowLeft, cilX, cilPlus,
 } from '@coreui/icons'
 import { WorkflowBadge } from '@/components/document-request'
-import DossierFilesSplit from '@/components/document-request/DossierFilesSplit'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { RESPONSABLE_DIVISION_LABELS } from '@/types/document-request.types'
 import HistoriquePanel from './HistoriquePanel'
@@ -64,8 +67,9 @@ const WorkflowProgress = ({ status }: { status: string }) => {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 0,
-      overflowX: 'auto', paddingBottom: 4,
-      scrollbarWidth: 'none',
+      overflowX: 'auto', paddingBottom: 6,
+      // scrollbar visible mais fine sur mobile
+      WebkitOverflowScrolling: 'touch',
     }}>
       {WORKFLOW_STEPS.map((step, idx) => {
         const done    = currentIdx > idx
@@ -100,16 +104,16 @@ const WorkflowProgress = ({ status }: { status: string }) => {
                 {done ? '✓' : isRejected && current ? '✕' : idx + 1}
               </div>
               <span style={{
-                fontSize: '0.62rem', fontWeight: current ? 700 : 500,
+                fontSize: '0.6rem', fontWeight: current ? 700 : 500,
                 color: current ? color : future ? '#9ca3af' : '#6b7280',
-                whiteSpace: 'nowrap', maxWidth: 56, textAlign: 'center', lineHeight: 1.2,
+                whiteSpace: 'nowrap', maxWidth: 52, textAlign: 'center', lineHeight: 1.2,
               }}>
                 {step.label}
               </span>
             </div>
             {idx < WORKFLOW_STEPS.length - 1 && (
               <div style={{
-                width: 18, height: 2, flexShrink: 0,
+                width: 14, height: 2, flexShrink: 0,
                 background: done ? '#059669' : '#e5e7eb',
                 margin: '0 1px', marginBottom: 16,
                 transition: 'background 0.2s',
@@ -133,8 +137,8 @@ const TabBtn = ({
   <button
     onClick={onClick}
     style={{
-      display: 'inline-flex', alignItems: 'center', gap: 6,
-      padding: '10px 16px',
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      padding: '8px 12px',
       borderRadius: '8px 8px 0 0',
       border: 'none',
       borderBottom: active
@@ -142,7 +146,7 @@ const TabBtn = ({
         : '2px solid transparent',
       cursor: 'pointer',
       fontWeight: active ? 700 : 500,
-      fontSize: '0.875rem',
+      fontSize: '0.82rem',
       color: active
         ? (highlight ? '#d97706' : '#2563eb')
         : '#6b7280',
@@ -151,13 +155,14 @@ const TabBtn = ({
         : 'transparent',
       transition: 'all 0.15s',
       whiteSpace: 'nowrap',
+      flexShrink: 0,
     }}
   >
-    <CIcon icon={icon} style={{ width: 14, flexShrink: 0 }} />
+    <CIcon icon={icon} style={{ width: 13, flexShrink: 0 }} />
     {label}
     {dot && (
       <span style={{
-        width: 7, height: 7, borderRadius: '50%',
+        width: 6, height: 6, borderRadius: '50%',
         background: '#d97706', flexShrink: 0,
         display: 'inline-block',
       }} />
@@ -183,30 +188,15 @@ const getMimeIcon = (mime?: string, name?: string) => {
   return '📁'
 }
 
-/**
- * Construit la liste de FileItem depuis les props de la demande.
- *
- * CORRECTION : `files` et `complement_files` peuvent être soit :
- *   - un tableau d'objets { id, url, original_name, … }  (format API récent)
- *   - un objet Record<string, string> clé→url             (format API legacy)
- *   - une string JSON à parser
- *   - null / undefined
- *
- * `secretary_files` est toujours un tableau d'objets ou null.
- */
 const buildFileList = (demande: DocumentRequest): FileItem[] => {
   const items: FileItem[] = []
 
-  /** Normalise n'importe quel format vers un tableau d'objets exploitables */
   const normalize = (raw: any): any[] => {
     if (!raw) return []
-    // String JSON → parser d'abord
     if (typeof raw === 'string') {
       try { raw = JSON.parse(raw) } catch { return [] }
     }
-    // Tableau (format API récent ou secretary_files)
     if (Array.isArray(raw)) return raw
-    // Objet Record<string,string> : { "nom_fichier": "url", … }
     if (typeof raw === 'object') {
       return Object.entries(raw).map(([key, val]) => ({
         id:            key,
@@ -242,7 +232,7 @@ interface FileManagerProps {
   files: FileItem[]
   onSelect: (file: FileItem) => void
   onClose: () => void
-  activeDocSlot?: 'left' | 'right' | null  // indique quel slot sera remplacé
+  activeDocSlot?: 'left' | 'right' | null
 }
 
 const FileManager = ({ files, onSelect, onClose, activeDocSlot }: FileManagerProps) => {
@@ -250,60 +240,74 @@ const FileManager = ({ files, onSelect, onClose, activeDocSlot }: FileManagerPro
     cat => files.some(f => f.category === cat)
   )
 
+  // Fermeture Échap
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   return (
     <div style={{
       position: 'fixed', inset: 0,
-      background: 'rgba(15,23,42,0.55)',
-      zIndex: 1200,
+      background: 'rgba(15,23,42,0.6)',
+      zIndex: 1060,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
+      padding: '16px',
+    }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
       <div style={{
         background: '#fff',
         borderRadius: 16,
-        width: 'min(680px, 92vw)',
-        maxHeight: '80vh',
+        width: '100%',
+        maxWidth: 680,
+        maxHeight: '85vh',
         display: 'flex', flexDirection: 'column',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
         overflow: 'hidden',
       }}>
-        {/* Header gestionnaire */}
+        {/* Header */}
         <div style={{
-          padding: '20px 24px 16px',
+          padding: '18px 20px 14px',
           borderBottom: '1px solid #e2e8f0',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'linear-gradient(135deg, #0f172a, #1e3a5f)',
+          flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <CIcon icon={cilFolderOpen} style={{ width: 20, color: '#60a5fa' }} />
-            <span style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>
+            <CIcon icon={cilFolderOpen} style={{ width: 18, color: '#60a5fa' }} />
+            <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
               Gestionnaire de documents
             </span>
             <span style={{
-              fontSize: '0.72rem', background: 'rgba(255,255,255,0.12)',
+              fontSize: '0.7rem', background: 'rgba(255,255,255,0.12)',
               color: '#94a3b8', padding: '2px 8px', borderRadius: 20, fontWeight: 600,
             }}>
               {files.length} fichier{files.length > 1 ? 's' : ''}
             </span>
           </div>
-          {activeDocSlot && (
-            <span style={{
-              fontSize: '0.75rem', color: '#fbbf24', fontWeight: 600,
-              background: 'rgba(251,191,36,0.12)', padding: '3px 10px', borderRadius: 20,
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {activeDocSlot && (
+              <span style={{
+                fontSize: '0.7rem', color: '#fbbf24', fontWeight: 600,
+                background: 'rgba(251,191,36,0.12)', padding: '3px 8px', borderRadius: 20,
+              }}>
+                Remplace : {activeDocSlot === 'left' ? 'gauche' : 'droit'}
+              </span>
+            )}
+            <button onClick={onClose} style={{
+              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: 7, padding: '5px 8px', cursor: 'pointer', color: '#94a3b8',
+              display: 'flex', alignItems: 'center',
             }}>
-              Remplacement du document {activeDocSlot === 'left' ? 'gauche' : 'droit'}
-            </span>
-          )}
-          <button onClick={onClose} style={{
-            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: '#94a3b8',
-            display: 'flex', alignItems: 'center',
-          }}>
-            <CIcon icon={cilX} style={{ width: 14 }} />
-          </button>
+              <CIcon icon={cilX} style={{ width: 13 }} />
+            </button>
+          </div>
         </div>
 
         {/* Contenu scrollable */}
-        <div style={{ overflowY: 'auto', padding: '20px 24px', flex: 1 }}>
+        <div style={{ overflowY: 'auto', padding: '18px 20px', flex: 1 }}>
           {categories.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#94a3b8', padding: '40px 0' }}>
               <span style={{ fontSize: '2.5rem' }}>📂</span>
@@ -314,35 +318,27 @@ const FileManager = ({ files, onSelect, onClose, activeDocSlot }: FileManagerPro
               const meta  = CATEGORY_META[cat]
               const group = files.filter(f => f.category === cat)
               return (
-                <div key={cat} style={{ marginBottom: 24 }}>
-                  {/* Label catégorie */}
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    marginBottom: 12,
-                  }}>
-                    <div style={{
-                      width: 4, height: 18, borderRadius: 2,
-                      background: meta.color,
-                    }} />
+                <div key={cat} style={{ marginBottom: 22 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <div style={{ width: 4, height: 16, borderRadius: 2, background: meta.color }} />
                     <span style={{
-                      fontSize: '0.78rem', fontWeight: 700,
+                      fontSize: '0.75rem', fontWeight: 700,
                       color: meta.color, textTransform: 'uppercase', letterSpacing: '0.06em',
                     }}>
                       {meta.label}
                     </span>
                     <span style={{
-                      fontSize: '0.7rem', color: '#94a3b8',
+                      fontSize: '0.68rem', color: '#94a3b8',
                       background: '#f1f5f9', padding: '1px 7px', borderRadius: 10,
                     }}>
                       {group.length}
                     </span>
                   </div>
 
-                  {/* Cartes fichiers */}
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
-                    gap: 10,
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))',
+                    gap: 8,
                   }}>
                     {group.map(file => (
                       <button
@@ -352,17 +348,17 @@ const FileManager = ({ files, onSelect, onClose, activeDocSlot }: FileManagerPro
                           background: meta.bg,
                           border: `1.5px solid ${meta.border}`,
                           borderRadius: 10,
-                          padding: '14px 14px 12px',
+                          padding: '12px 12px 10px',
                           cursor: 'pointer',
                           textAlign: 'left',
                           transition: 'all 0.15s',
-                          display: 'flex', flexDirection: 'column', gap: 8,
+                          display: 'flex', flexDirection: 'column', gap: 7,
                         }}
                         onMouseEnter={e => {
                           const el = e.currentTarget as HTMLButtonElement
                           el.style.borderColor = meta.color
-                          el.style.boxShadow = `0 4px 14px ${meta.color}22`
-                          el.style.transform = 'translateY(-2px)'
+                          el.style.boxShadow = `0 4px 12px ${meta.color}22`
+                          el.style.transform = 'translateY(-1px)'
                         }}
                         onMouseLeave={e => {
                           const el = e.currentTarget as HTMLButtonElement
@@ -371,21 +367,21 @@ const FileManager = ({ files, onSelect, onClose, activeDocSlot }: FileManagerPro
                           el.style.transform = 'none'
                         }}
                       >
-                        <span style={{ fontSize: '1.7rem', lineHeight: 1 }}>
+                        <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>
                           {getMimeIcon(file.mime, file.name)}
                         </span>
                         <span style={{
-                          fontSize: '0.8rem', fontWeight: 600, color: '#1e293b',
-                          wordBreak: 'break-word', lineHeight: 1.35,
+                          fontSize: '0.78rem', fontWeight: 600, color: '#1e293b',
+                          wordBreak: 'break-word', lineHeight: 1.3,
                           display: '-webkit-box', WebkitLineClamp: 2,
                           WebkitBoxOrient: 'vertical', overflow: 'hidden',
                         }}>
                           {file.name}
                         </span>
                         <span style={{
-                          fontSize: '0.68rem', color: meta.color, fontWeight: 600,
+                          fontSize: '0.65rem', color: meta.color, fontWeight: 600,
                           background: `${meta.color}14`,
-                          padding: '2px 7px', borderRadius: 6, alignSelf: 'flex-start',
+                          padding: '2px 6px', borderRadius: 5, alignSelf: 'flex-start',
                         }}>
                           {meta.label}
                         </span>
@@ -402,9 +398,11 @@ const FileManager = ({ files, onSelect, onClose, activeDocSlot }: FileManagerPro
   )
 }
 
-// ─── Visualiseur de fichiers ────────────────────────────────────────────────────
-// Reprend intégralement DossierFilesSplit existant via les props d'origine.
-// Ici on implémente en plus : mode double vue, retour gestionnaire, fermeture individuelle.
+// ─── Panneau d'un document dans le visualiseur ──────────────────────────────────
+
+const isPdf  = (f: FileItem) => f.mime?.includes('pdf')  || f.name.toLowerCase().endsWith('.pdf')
+const isImg  = (f: FileItem) => f.mime?.includes('image') ||
+  ['jpg','jpeg','png','gif','webp'].includes(f.name.split('.').pop()?.toLowerCase() ?? '')
 
 interface ViewerPanelProps {
   file: FileItem
@@ -412,18 +410,10 @@ interface ViewerPanelProps {
   onActivate: () => void
   onClose: () => void
   showClose: boolean
-  /** callback pour revenir au gestionnaire avec ce slot actif */
   onBackToManager: () => void
-  showBackArrow: boolean
 }
 
-const isPdf  = (f: FileItem) => f.mime?.includes('pdf')  || f.name.toLowerCase().endsWith('.pdf')
-const isImg  = (f: FileItem) => f.mime?.includes('image') ||
-  ['jpg','jpeg','png','gif','webp'].includes(f.name.split('.').pop()?.toLowerCase() ?? '')
-
-const ViewerPanel = ({
-  file, isActive, onActivate, onClose, showClose, onBackToManager, showBackArrow,
-}: ViewerPanelProps) => (
+const ViewerPanel = ({ file, isActive, onActivate, onClose, showClose, onBackToManager }: ViewerPanelProps) => (
   <div
     onClick={onActivate}
     style={{
@@ -434,88 +424,73 @@ const ViewerPanel = ({
       transition: 'border-color 0.15s, box-shadow 0.15s',
       cursor: 'pointer',
       background: '#fff',
+      minHeight: 0,
     }}
   >
-    {/* Barre outil du panneau */}
+    {/* Barre outil */}
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 8,
-      padding: '8px 12px',
+      display: 'flex', alignItems: 'center', gap: 6,
+      padding: '7px 10px',
       background: isActive ? '#eff6ff' : '#f8fafc',
       borderBottom: '1px solid #e2e8f0',
-      minHeight: 44,
+      minHeight: 40,
       flexShrink: 0,
+      flexWrap: 'wrap',
     }}>
-      {/* Flèche retour gestionnaire */}
-      {showBackArrow && (
-        <button
-          onClick={e => { e.stopPropagation(); onBackToManager() }}
-          title="Retour au gestionnaire"
-          style={{
-            background: '#fff', border: '1px solid #d1d5db',
-            borderRadius: 6, padding: '4px 8px',
-            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-            fontSize: '0.75rem', color: '#374151', fontWeight: 600,
-            transition: 'all 0.12s',
-          }}
-          onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.borderColor = '#2563eb'}
-          onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.borderColor = '#d1d5db'}
-        >
-          <CIcon icon={cilArrowLeft} style={{ width: 13 }} />
-          Fichiers
-        </button>
-      )}
+      <button
+        onClick={e => { e.stopPropagation(); onBackToManager() }}
+        title="Retour au gestionnaire"
+        style={{
+          background: '#fff', border: '1px solid #d1d5db',
+          borderRadius: 5, padding: '3px 7px',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
+          fontSize: '0.7rem', color: '#374151', fontWeight: 600,
+        }}
+      >
+        <CIcon icon={cilArrowLeft} style={{ width: 11 }} />
+        Fichiers
+      </button>
 
-      {/* Indicateur actif */}
       {isActive && (
         <span style={{
-          fontSize: '0.68rem', fontWeight: 700, color: '#2563eb',
-          background: '#dbeafe', padding: '2px 8px', borderRadius: 20,
+          fontSize: '0.65rem', fontWeight: 700, color: '#2563eb',
+          background: '#dbeafe', padding: '1px 6px', borderRadius: 20,
           flexShrink: 0,
         }}>
           Actif
         </span>
       )}
 
-      {/* Nom du fichier */}
       <span style={{
         flex: 1, minWidth: 0,
-        fontSize: '0.8rem', fontWeight: 600, color: '#1e293b',
+        fontSize: '0.75rem', fontWeight: 600, color: '#1e293b',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>
         {getMimeIcon(file.mime, file.name)} {file.name}
       </span>
 
-      {/* Croix fermeture */}
       {showClose && (
         <button
           onClick={e => { e.stopPropagation(); onClose() }}
           title="Fermer ce document"
           style={{
             background: '#fee2e2', border: '1px solid #fca5a5',
-            borderRadius: 6, padding: '4px 7px',
+            borderRadius: 5, padding: '3px 6px',
             cursor: 'pointer', display: 'flex', alignItems: 'center',
-            color: '#dc2626', transition: 'all 0.12s', flexShrink: 0,
-          }}
-          onMouseEnter={e => {
-            const el = e.currentTarget as HTMLButtonElement
-            el.style.background = '#dc2626'; el.style.color = '#fff'
-          }}
-          onMouseLeave={e => {
-            const el = e.currentTarget as HTMLButtonElement
-            el.style.background = '#fee2e2'; el.style.color = '#dc2626'
+            color: '#dc2626', flexShrink: 0,
           }}
         >
-          <CIcon icon={cilX} style={{ width: 13 }} />
+          <CIcon icon={cilX} style={{ width: 11 }} />
         </button>
       )}
     </div>
 
-    {/* Zone d'affichage du document */}
+    {/* Zone affichage */}
     <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
       {isPdf(file) ? (
         <iframe
           src={file.url}
-          style={{ width: '100%', height: '100%', border: 'none', minHeight: 500 }}
+          style={{ width: '100%', height: '100%', border: 'none', minHeight: 400 }}
           title={file.name}
         />
       ) : isImg(file) ? (
@@ -528,17 +503,17 @@ const ViewerPanel = ({
       ) : (
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', gap: 14, padding: 32, height: '100%', color: '#64748b',
+          justifyContent: 'center', gap: 12, padding: 24, height: '100%', color: '#64748b',
         }}>
-          <span style={{ fontSize: '3rem' }}>{getMimeIcon(file.mime, file.name)}</span>
-          <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{file.name}</span>
+          <span style={{ fontSize: '2.5rem' }}>{getMimeIcon(file.mime, file.name)}</span>
+          <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{file.name}</span>
           <a
             href={file.url}
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              padding: '8px 18px', background: '#2563eb', color: '#fff',
-              borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem',
+              padding: '7px 16px', background: '#2563eb', color: '#fff',
+              borderRadius: 7, textDecoration: 'none', fontWeight: 600, fontSize: '0.82rem',
             }}
           >
             Ouvrir / Télécharger
@@ -549,7 +524,7 @@ const ViewerPanel = ({
   </div>
 )
 
-// ─── Viewer principal (orchestre les panneaux) ──────────────────────────────────
+// ─── Viewer principal ──────────────────────────────────────────────────────────
 
 interface ViewerState {
   left: FileItem | null
@@ -560,8 +535,6 @@ interface ViewerState {
 interface FullViewerProps {
   initialFile: FileItem
   allFiles: FileItem[]
-  demande: DocumentRequest
-  onRefresh?: () => Promise<void>
   onClose: () => void
 }
 
@@ -571,25 +544,28 @@ const FullViewer = ({ initialFile, allFiles, onClose }: FullViewerProps) => {
 
   const hasTwo = !!(state.left && state.right)
 
+  // Fermeture Échap
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !showManager) onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose, showManager])
+
   const handleSelectFile = (file: FileItem) => {
     setShowManager(false)
     setState(prev => {
       if (!prev.left) return { ...prev, left: file, active: 'left' }
       if (!prev.right) return { ...prev, right: file, active: prev.active }
-      // Remplace le slot actif
       if (prev.active === 'left') return { ...prev, left: file }
       return { ...prev, right: file }
     })
   }
-
-  const handleAddDocument = () => setShowManager(true)
 
   const closeLeft  = () => setState(prev => ({ ...prev, left: prev.right, right: null, active: 'left' }))
   const closeRight = () => setState(prev => ({ ...prev, right: null, active: 'left' }))
 
   return (
     <>
-      {/* Gestionnaire sélection */}
       {showManager && (
         <FileManager
           files={allFiles}
@@ -599,71 +575,52 @@ const FullViewer = ({ initialFile, allFiles, onClose }: FullViewerProps) => {
         />
       )}
 
-      {/* Visualiseur plein écran quasi-total */}
       <div style={{
         position: 'fixed', inset: 0,
         background: '#0f172a',
-        zIndex: 1100,
+        zIndex: 1055,
         display: 'flex', flexDirection: 'column',
       }}>
         {/* Barre supérieure */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 10,
-          padding: '10px 20px',
+          padding: '8px 16px',
           background: '#1e293b',
           borderBottom: '1px solid #334155',
           flexShrink: 0,
-          minHeight: 52,
+          minHeight: 48,
+          flexWrap: 'wrap',
         }}>
-          <span style={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.9rem', letterSpacing: '-0.01em' }}>
-            <CIcon icon={cilFolderOpen} style={{ width: 16, marginRight: 6 }} />
+          <span style={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.88rem' }}>
+            <CIcon icon={cilFolderOpen} style={{ width: 15, marginRight: 6 }} />
             Visualiseur de documents
           </span>
           <div style={{ flex: 1 }} />
-          {/* Bouton ajouter un document */}
           {!hasTwo && (
             <button
-              onClick={handleAddDocument}
+              onClick={() => setShowManager(true)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 6,
+                display: 'flex', alignItems: 'center', gap: 5,
                 background: '#334155', border: '1px solid #475569',
-                borderRadius: 8, padding: '6px 14px',
-                color: '#e2e8f0', fontWeight: 600, fontSize: '0.82rem',
-                cursor: 'pointer', transition: 'all 0.12s',
-              }}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLButtonElement
-                el.style.background = '#475569'
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLButtonElement
-                el.style.background = '#334155'
+                borderRadius: 7, padding: '5px 12px',
+                color: '#e2e8f0', fontWeight: 600, fontSize: '0.8rem',
+                cursor: 'pointer',
               }}
             >
-              <CIcon icon={cilPlus} style={{ width: 13 }} />
+              <CIcon icon={cilPlus} style={{ width: 12 }} />
               Ajouter un document
             </button>
           )}
-          {/* Bouton fermer le visualiseur */}
           <button
             onClick={onClose}
             style={{
               background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.3)',
-              borderRadius: 8, padding: '6px 14px',
-              color: '#f87171', fontWeight: 600, fontSize: '0.82rem',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-              transition: 'all 0.12s',
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLButtonElement
-              el.style.background = '#dc2626'; el.style.color = '#fff'
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLButtonElement
-              el.style.background = 'rgba(220,38,38,0.12)'; el.style.color = '#f87171'
+              borderRadius: 7, padding: '5px 12px',
+              color: '#f87171', fontWeight: 600, fontSize: '0.8rem',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
             }}
           >
-            <CIcon icon={cilX} style={{ width: 13 }} />
+            <CIcon icon={cilX} style={{ width: 12 }} />
             Fermer
           </button>
         </div>
@@ -671,8 +628,10 @@ const FullViewer = ({ initialFile, allFiles, onClose }: FullViewerProps) => {
         {/* Zone documents */}
         <div style={{
           flex: 1, minHeight: 0,
-          display: 'flex', gap: 8,
-          padding: '10px 12px 12px',
+          display: 'flex', gap: 6,
+          padding: '8px 10px 10px',
+          flexWrap: 'nowrap',
+          overflow: 'hidden',
         }}>
           {state.left && (
             <ViewerPanel
@@ -685,7 +644,6 @@ const FullViewer = ({ initialFile, allFiles, onClose }: FullViewerProps) => {
                 setState(p => ({ ...p, active: 'left' }))
                 setShowManager(true)
               }}
-              showBackArrow
             />
           )}
           {state.right && (
@@ -699,7 +657,6 @@ const FullViewer = ({ initialFile, allFiles, onClose }: FullViewerProps) => {
                 setState(p => ({ ...p, active: 'right' }))
                 setShowManager(true)
               }}
-              showBackArrow
             />
           )}
         </div>
@@ -719,17 +676,26 @@ const DemandeModalShell = ({
   onRefresh,
 }: Props) => {
   const hasFlag = !!(demande as any).has_flag
-  const [activeTab, setActiveTab]     = useState<Tab>('details')
-  const [viewerMode, setViewerMode]   = useState<ViewerMode>('closed')
+  const [activeTab, setActiveTab]       = useState<Tab>('details')
+  const [viewerMode, setViewerMode]     = useState<ViewerMode>('closed')
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
   const allFiles = buildFileList(demande)
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setActiveTab('details')
     setViewerMode('closed')
     setSelectedFile(null)
     onClose()
-  }
+  }, [onClose])
+
+  // Fermeture propre sur Échap pour le shell lui-même
+  useEffect(() => {
+    if (!visible) {
+      // Reset des états overlays si la modal se ferme de l'extérieur
+      setViewerMode('closed')
+      setSelectedFile(null)
+    }
+  }, [visible])
 
   const openManager = () => setViewerMode('manager')
 
@@ -740,13 +706,11 @@ const DemandeModalShell = ({
 
   return (
     <>
-      {/* ── Visualiseur plein écran (en dehors du CModal) ── */}
+      {/* ── Visualiseur plein écran ── */}
       {viewerMode === 'viewer' && selectedFile && (
         <FullViewer
           initialFile={selectedFile}
           allFiles={allFiles}
-          demande={demande}
-          onRefresh={onRefresh}
           onClose={() => {
             setViewerMode('closed')
             setSelectedFile(null)
@@ -754,7 +718,7 @@ const DemandeModalShell = ({
         />
       )}
 
-      {/* ── Gestionnaire de fichiers (overlay) ── */}
+      {/* ── Gestionnaire de fichiers ── */}
       {viewerMode === 'manager' && (
         <FileManager
           files={allFiles}
@@ -764,32 +728,38 @@ const DemandeModalShell = ({
       )}
 
       {/* ── Modal principal ── */}
-      <CModal visible={visible} onClose={handleClose} size="xl" alignment="center" scrollable>
+      <CModal
+        visible={visible}
+        onClose={handleClose}
+        size="xl"
+        alignment="center"
+        scrollable
+      >
         {/* ── Header ── */}
         <CModalHeader style={{
           borderBottom: '1px solid #e2e8f0',
-          padding: '16px 24px 0',
+          padding: '14px 20px 0',
           background: '#fff',
         }}>
           <div style={{ width: '100%' }}>
             {/* Titre + badges */}
             <CModalTitle style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              flexWrap: 'wrap', marginBottom: 10,
+              display: 'flex', alignItems: 'center', gap: 7,
+              flexWrap: 'wrap', marginBottom: 8,
             }}>
-              <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', letterSpacing: '-0.01em' }}>
+              <span style={{ fontWeight: 800, fontSize: '0.98rem', color: '#0f172a' }}>
                 {title ?? 'Dossier'}
               </span>
               <code style={{
-                fontSize: '0.82rem', color: '#64748b', fontWeight: 600,
-                background: '#f1f5f9', padding: '2px 8px', borderRadius: 5,
+                fontSize: '0.78rem', color: '#64748b', fontWeight: 600,
+                background: '#f1f5f9', padding: '2px 7px', borderRadius: 5,
               }}>
                 #{demande.reference}
               </code>
               {showStatusBadge && <WorkflowBadge status={demande.status} size="sm" />}
               {demande.responsable_division_type && (
                 <span style={{
-                  fontSize: '0.75rem', padding: '2px 8px', borderRadius: 5,
+                  fontSize: '0.72rem', padding: '2px 7px', borderRadius: 5,
                   background: '#e0f2fe', color: '#0369a1', fontWeight: 600,
                 }}>
                   {RESPONSABLE_DIVISION_LABELS[demande.responsable_division_type]}
@@ -797,24 +767,31 @@ const DemandeModalShell = ({
               )}
               {hasFlag && (
                 <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  fontSize: '0.75rem', padding: '3px 8px', borderRadius: 5,
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  fontSize: '0.72rem', padding: '2px 7px', borderRadius: 5,
                   background: '#fffbeb', color: '#d97706', fontWeight: 700,
                   border: '1px solid #fcd34d',
                 }}>
-                  <CIcon icon={cilWarning} style={{ width: 12 }} />
+                  <CIcon icon={cilWarning} style={{ width: 11 }} />
                   Réserve active
                 </span>
               )}
             </CModalTitle>
 
             {/* Barre de progression workflow */}
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 8 }}>
               <WorkflowProgress status={demande.status} />
             </div>
 
-            {/* Onglets — sans onglet Fichiers */}
-            <div style={{ display: 'flex', gap: 2, borderBottom: '1px solid #e2e8f0', marginBottom: -1 }}>
+            {/* Onglets — scrollables horizontalement sur mobile */}
+            <div style={{
+              display: 'flex', gap: 1,
+              borderBottom: '1px solid #e2e8f0',
+              marginBottom: -1,
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+            }}>
               <TabBtn
                 label="Détails"
                 icon={cilDescription}
@@ -841,8 +818,13 @@ const DemandeModalShell = ({
           </div>
         </CModalHeader>
 
-        {/* ── Body ── */}
-        <CModalBody style={{ padding: '24px 28px', minHeight: 320 }}>
+        {/* ── Body — scrollable avec max-height pour éviter les débordements ── */}
+        <CModalBody style={{
+          padding: '20px 20px',
+          overflowY: 'auto',
+          // Laisse le CModal scrollable gérer la hauteur
+          minHeight: 200,
+        }}>
           {activeTab === 'details' && children}
 
           {activeTab === 'reserve' && hasFlag && (
@@ -865,12 +847,14 @@ const DemandeModalShell = ({
           )}
         </CModalBody>
 
-        {/* ── Footer ── */}
+        {/* ── Footer — responsive ── */}
         <CModalFooter style={{
           background: '#f8fafc',
           borderTop: '1px solid #e2e8f0',
-          padding: '14px 28px',
-          display: 'flex', flexWrap: 'wrap', gap: 8,
+          padding: '12px 20px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 8,
           justifyContent: 'space-between',
           alignItems: 'center',
         }}>
@@ -879,48 +863,46 @@ const DemandeModalShell = ({
             onClick={openManager}
             disabled={allFiles.length === 0}
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '10px 20px',
+              display: 'inline-flex', alignItems: 'center', gap: 7,
+              padding: '9px 16px',
               background: allFiles.length === 0
                 ? '#f1f5f9'
                 : 'linear-gradient(135deg, #1e3a5f, #2563eb)',
               color: allFiles.length === 0 ? '#94a3b8' : '#fff',
               border: 'none',
-              borderRadius: 10,
-              fontWeight: 700, fontSize: '0.875rem',
+              borderRadius: 9,
+              fontWeight: 700, fontSize: '0.82rem',
               cursor: allFiles.length === 0 ? 'not-allowed' : 'pointer',
-              boxShadow: allFiles.length === 0 ? 'none' : '0 4px 14px rgba(37,99,235,0.35)',
+              boxShadow: allFiles.length === 0 ? 'none' : '0 3px 10px rgba(37,99,235,0.3)',
               transition: 'all 0.15s',
-              letterSpacing: '0.01em',
-            }}
-            onMouseEnter={e => {
-              if (allFiles.length === 0) return
-              const el = e.currentTarget as HTMLButtonElement
-              el.style.boxShadow = '0 6px 20px rgba(37,99,235,0.5)'
-              el.style.transform = 'translateY(-1px)'
-            }}
-            onMouseLeave={e => {
-              if (allFiles.length === 0) return
-              const el = e.currentTarget as HTMLButtonElement
-              el.style.boxShadow = '0 4px 14px rgba(37,99,235,0.35)'
-              el.style.transform = 'none'
+              flexShrink: 0,
             }}
           >
-            <CIcon icon={cilFolderOpen} style={{ width: 16, flexShrink: 0 }} />
-            Explorer les documents
-            {allFiles.length > 0 && (
-              <span style={{
-                background: 'rgba(255,255,255,0.22)',
-                borderRadius: 20, padding: '1px 8px',
-                fontSize: '0.75rem', fontWeight: 700,
-              }}>
-                {allFiles.length}
-              </span>
-            )}
+            <CIcon icon={cilFolderOpen} style={{ width: 14, flexShrink: 0 }} />
+            <span style={{ whiteSpace: 'nowrap' }}>
+              Documents
+              {allFiles.length > 0 && (
+                <span style={{
+                  marginLeft: 6,
+                  background: 'rgba(255,255,255,0.22)',
+                  borderRadius: 20, padding: '0 6px',
+                  fontSize: '0.7rem', fontWeight: 700,
+                }}>
+                  {allFiles.length}
+                </span>
+              )}
+            </span>
           </button>
 
-          {/* Actions métier — côté droit */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {/* Actions métier — côté droit, wrap sur mobile */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 8,
+            // Sur très petits écrans, s'étale en pleine largeur
+            flex: '1 1 auto',
+            justifyContent: 'flex-end',
+          }}>
             {footer}
           </div>
         </CModalFooter>

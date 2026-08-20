@@ -1,6 +1,10 @@
 // src/views/pages/demandes/hooks/useDemandesDashboard.ts
+// CORRECTIF écran noir :
+//  - handleAction ne ferme la modal QUE si la transition réussit
+//  - closeDetail : délai porté à 350ms + reset propre
+//  - Polling porté à 10s pour éviter la surcharge + on stoppe si la modal est ouverte
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import documentRequestService from '@/services/document-request.service'
 import type { DocumentRequest } from '@/types/document-request.types'
 
@@ -16,7 +20,7 @@ interface UseDemandesDashboardReturn {
   openDetail: (d: DocumentRequest) => void
   closeDetail: () => void
   handleAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
-  reload: () => Promise<void>
+  reload: (silent?: boolean) => Promise<void>
 }
 
 const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboardReturn => {
@@ -26,12 +30,17 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
   const [selected,   setSelected]   = useState<DocumentRequest | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
+  // ref pour savoir si une modal est ouverte → on suspend le polling
+  const detailOpenRef = useRef(false)
+  detailOpenRef.current = detailOpen
+
   const load = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true)
     try {
       const res = await documentRequestService.getAll(filters)
       const list = res.data || []
       setDemandes(list)
+      // Rafraîchit la demande sélectionnée sans la fermer
       setSelected(prev => {
         if (!prev) return null
         const fresh = list.find((d: DocumentRequest) => d.id === prev.id)
@@ -44,17 +53,19 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
     }
   }, [filters])
 
-  // Initial load on mount or when filters change
+  // Chargement initial
   useEffect(() => {
     load(false)
   }, [load])
 
-  // Intelligent polling every 2 seconds (silent background refresh)
+  // Polling silencieux toutes les 10s — suspendu quand une modal est ouverte
   useEffect(() => {
     let isMounted = true
     let isFetching = false
 
     const interval = setInterval(async () => {
+      // Ne pas rafraîchir si l'utilisateur est en train d'interagir avec une modal
+      if (detailOpenRef.current) return
       if (isFetching) return
       isFetching = true
       try {
@@ -62,18 +73,14 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
         if (isMounted) {
           const list = res.data || []
           setDemandes(list)
-          setSelected(prev => {
-            if (!prev) return null
-            const fresh = list.find((d: DocumentRequest) => d.id === prev.id)
-            return fresh || prev
-          })
+          // Ne met pas à jour selected pendant le polling pour éviter les race conditions
         }
       } catch (e) {
-        console.error('Erreur auto-refresh demandes:', e)
+        // Silencieux
       } finally {
         isFetching = false
       }
-    }, 2000)
+    }, 10000) // 10 secondes — moins agressif
 
     return () => {
       isMounted = false
@@ -81,34 +88,32 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
     }
   }, [filters])
 
-  const openDetail  = (d: DocumentRequest) => { setSelected(d); setDetailOpen(true) }
-  const closeDetail = useCallback(() => { 
+  const openDetail = useCallback((d: DocumentRequest) => {
+    setSelected(d)
+    setDetailOpen(true)
+  }, [])
+
+  const closeDetail = useCallback(() => {
+    // On ferme d'abord (animation CoreUI) puis on nettoie après 400ms
     setDetailOpen(false)
-    // Ne pas mettre selected à null tout de suite, sinon le CModal de CoreUI 
-    // est démonté avant la fin de l'animation, ce qui laisse le backdrop noir bloqué.
-    setTimeout(() => setSelected(null), 300)
+    setTimeout(() => setSelected(null), 400)
   }, [])
 
   const handleAction = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     if (!selected) return
-    try {
-      await documentRequestService.transition(selected.id, { action, ...extra } as any)
-      // Succès : ferme la modal et rafraîchit
-      closeDetail()
-      await load()
-    } catch (e: any) {
-      // Échec : on laisse la modal ouverte pour que l'utilisateur voie l'erreur
-      // et puisse réessayer. Le composant parent affichera l'erreur via console.
-      console.error('Erreur transition:', e?.message || e)
-      // On propage l'erreur pour que le dashboard local puisse l'afficher si besoin
-      throw e
-    }
+    // On ne ferme PAS la modal avant que la transition réussisse
+    await documentRequestService.transition(selected.id, { action, ...extra } as any)
+    // Succès : ferme la modal et rafraîchit
+    closeDetail()
+    // Délai pour laisser l'animation de fermeture se terminer avant le reload
+    await new Promise(r => setTimeout(r, 420))
+    await load(false)
   }, [selected, load, closeDetail])
 
   return {
     demandes, loading, filters, setFilters,
     selected, detailOpen, openDetail, closeDetail,
-    handleAction, reload: load,
+    handleAction, reload: (silent = false) => load(silent),
   }
 }
 

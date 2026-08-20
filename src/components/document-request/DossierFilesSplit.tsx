@@ -371,7 +371,7 @@ const SecretaryFileRow = ({
     if (!demandeId || !file.id) return
     setLoading(true)
     try {
-      await HttpService.patch(`/attestations/document-requests/${demandeId}/secretary-files/${file.id}`, { comment })
+      await HttpService.patch(`attestations/document-requests/${demandeId}/secretary-files/${file.id}`, { comment })
       setEditing(false)
       toast.success("Commentaire mis à jour avec succès.")
       if (onRefresh) await onRefresh()
@@ -387,7 +387,7 @@ const SecretaryFileRow = ({
     if (!demandeId || !file.id) return
     setLoading(true)
     try {
-      await HttpService.delete(`/attestations/document-requests/${demandeId}/secretary-files/${file.id}`)
+      await HttpService.delete(`attestations/document-requests/${demandeId}/secretary-files/${file.id}`)
       toast.success("Fichier supprimé avec succès.")
       if (onRefresh) await onRefresh()
     } catch (err: any) {

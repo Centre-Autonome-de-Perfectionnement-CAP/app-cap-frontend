@@ -120,3 +120,115 @@ body {
   50% { transform: translateY(-3px); }
 }
 
+
+// ─── Correctifs Modaux — Responsivité & Scrollbar ───────────────────────────
+//
+// Problème : quand DevTools s'ouvre en bas dans Firefox, la hauteur de la
+// fenêtre diminue et les modals CoreUI se retrouvent coupées sans scrollbar.
+// Solution : forcer le modal-dialog à ne jamais dépasser 100vh - marges.
+
+.modal {
+  // Toujours afficher une scrollbar fine sur Firefox
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.modal-dialog {
+  // Ne jamais dépasser la hauteur disponible
+  max-height: calc(100vh - 2rem);
+
+  &.modal-dialog-centered {
+    // Centrer mais avec un minimum de marge en haut/bas
+    margin: 1rem auto;
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+.modal-content {
+  // Overflow caché sur le conteneur pour que les bords arrondis restent visibles
+  overflow: hidden;
+  // S'adapter à la hauteur dispo sans déborder
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+}
+
+// Le body du modal est scrollable — CoreUI le gère avec [scrollable],
+// mais on force quand même pour les cas sans scrollable.
+.modal-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  // scrollbar visible sur Chrome/Edge
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+}
+
+// Footer des modals : toujours en flex-wrap pour ne pas couper les boutons
+.modal-footer {
+  flex-wrap: wrap;
+  gap: 8px;
+  // Empêche le footer de s'étirer et de pousser le body hors écran
+  flex-shrink: 0;
+}
+
+// Header des modals : flex-shrink 0 aussi
+.modal-header {
+  flex-shrink: 0;
+}
+
+// ─── Correctifs Responsivité Mobile — Module Demandes ───────────────────────
+
+// Sur petit écran, les tableaux peuvent défiler horizontalement
+@media (max-width: 767px) {
+  // Modal xl : prend toute la largeur disponible avec marges minimales
+  .modal-xl {
+    max-width: calc(100vw - 1rem);
+    margin: 0.5rem auto;
+  }
+
+  .modal-lg {
+    max-width: calc(100vw - 1rem);
+    margin: 0.5rem auto;
+  }
+
+  // Footer des modals : boutons en colonne sur mobile
+  .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+
+    // Les boutons s'étirent à 100% sur mobile
+    button, .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  // Tableaux du module demandes — scroll horizontal
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+// ─── Scrollbar horizontale visible dans la barre de workflow ────────────────
+// (WorkflowProgress utilise overflowX: auto)
+
+.workflow-progress-bar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+
+  &::-webkit-scrollbar {
+    height: 3px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+  }
+}

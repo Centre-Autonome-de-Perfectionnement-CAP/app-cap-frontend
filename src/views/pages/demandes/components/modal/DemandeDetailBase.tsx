@@ -1,6 +1,5 @@
 // src/views/pages/demandes/components/modal/DemandeDetailBase.tsx
-// - Les fichiers sont retirés de cet onglet (déplacés dans l'onglet "Fichiers")
-// - Suppression des doublons de commentaires/statuts
+// - Les fichiers sont gérés via le bouton "Explorer les documents" dans DemandeModalShell
 // - Date ET heure de soumission correctes
 // - Texte ≥ 14px
 
@@ -65,7 +64,6 @@ const formatDateTime = (iso?: string | null) => {
 const DemandeDetailBase = ({ demande, children }: Props) => {
   const submittedAt = formatDateTime(demande.submitted_at)
 
-  // Le rejet ne s'affiche que si c'est une correction secrétaire et qu'il y a une raison
   const showRejection = demande.status === 'secretary_correction'
     && (demande.rejected_by || demande.rejected_reason)
 
@@ -96,8 +94,6 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
                 <span style={{ fontWeight: 500, color: '#374151' }}>{submittedAt}</span>
               </p>
             )}
-
-            {/* Badges de validation intermédiaires */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
               {demande.comptable_reviewed_at && (
                 <ValidationBadge color="#164e63" bg="#ecfeff">✓ Comptabilité</ValidationBadge>
@@ -134,7 +130,7 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
       {/* Contenu additionnel (ex. SecretaryFileUploader) */}
       {children && <div style={{ marginTop: 16 }}>{children}</div>}
 
-      {/* Commentaires des acteurs — affichés une seule fois chacun */}
+      {/* Commentaires des acteurs */}
       {demande.comptable_comment && (
         <CAlert color="info" className="mt-3 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
           <CIcon icon={cilInfo} className="me-1" />
@@ -148,7 +144,7 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
         </CAlert>
       )}
 
-      {/* Rejet — affiché une seule fois, proprement */}
+      {/* Rejet */}
       {showRejection && (
         <CAlert color="danger" className="mt-2 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
           <CIcon icon={cilWarning} className="me-1" />

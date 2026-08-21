@@ -84,7 +84,37 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
         <CTableDataCell>{(currentPage - 1) * 10 + index + 1}</CTableDataCell>
 
         {/* Nom et Prénoms */}
-        <CTableDataCell>{student.first_name + ' ' + student.last_name}</CTableDataCell>
+        <CTableDataCell>
+          <div className="d-flex align-items-start flex-wrap gap-1">
+            <span>{student.first_name + ' ' + student.last_name}</span>
+            {/* Badge Vague */}
+            {student.initial_wave && (
+              <CBadge
+                color="info"
+                className="ms-1"
+                style={{ fontSize: '0.68rem', fontFamily: 'monospace', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}
+                title={`Dossier soumis lors de la Vague ${student.initial_wave}`}
+              >
+                VAGUE {student.initial_wave}
+              </CBadge>
+            )}
+            {/* Badge Modifié par l'étudiant */}
+            {student.is_updated_by_student && student.last_student_update_at && (
+              <CBadge
+                color="warning"
+                className="ms-1"
+                style={{ fontSize: '0.68rem', whiteSpace: 'nowrap', cursor: 'help' }}
+                title={
+                  student.student_update_summary
+                    ? 'Champs modifiés : ' + Object.keys(student.student_update_summary).join(', ')
+                    : 'Dossier modifié par l\'étudiant'
+                }
+              >
+                🟡 Modifié le {new Date(student.last_student_update_at).toLocaleDateString('fr-FR')}
+              </CBadge>
+            )}
+          </div>
+        </CTableDataCell>
 
         {/* Contact Téléphonique */}
         <CTableDataCell>

@@ -154,6 +154,12 @@ export interface PendingStudentData {
   mailCuoCount?: number;
   exonere?: string;
   sponsorise?: string;
+  // Champs multi-vagues
+  tracking_code?: string;
+  initial_wave?: number;
+  is_updated_by_student?: boolean;
+  last_student_update_at?: string | null;
+  student_update_summary?: Record<string, { old: any; new: any }> | null;
 }
 
 // Period (période d'inscription)

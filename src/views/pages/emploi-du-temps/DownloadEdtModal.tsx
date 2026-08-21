@@ -11,8 +11,12 @@ import {
 import axios from 'axios'
 
 // ─── URLs ────────────────────────────────────────────────────────────────────
-const API     = 'http://localhost:8001/api/emploi-temps'
-const API_SEL = 'http://localhost:8001/api/emploi-temps/selects'
+// Respecte VITE_API_URL comme http.service.ts, et corrige le chemin
+// (c'était "emploi-temps" au lieu de "emploi-du-temps" — 404 garanti côté API,
+// voir EMPLOI_DU_TEMPS_ROUTES dans constants/routes.constants.ts).
+const API_BASE = (import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:8001') + '/api'
+const API     = `${API_BASE}/emploi-du-temps`
+const API_SEL = `${API_BASE}/emploi-du-temps/selects`
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface AcademicYear { id: number; academic_year: string; libelle: string; is_current: boolean }

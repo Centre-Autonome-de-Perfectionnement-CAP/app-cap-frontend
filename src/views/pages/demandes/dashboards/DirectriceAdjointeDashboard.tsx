@@ -8,7 +8,6 @@ import { cilX, cilCheck, cilWarning } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
-import useActionRunner from '../hooks/useActionRunner'
 import {
   DashboardShell, DemandeTable, DemandeModalShell, DemandeDetailBase,
   ConfirmCheckbox, ActionButton, useActionColumns,
@@ -65,14 +64,18 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
   demande: DocumentRequest; visible: boolean; onClose: () => void
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
 }) => {
+  const [loading,   setLoading]   = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const [rejectModal, setRejectModal] = useState(false)
   const [retourModal, setRetourModal] = useState(false)
   const palette   = STATUS_COLORS['deputy_director_review']
   const inCircuit = !!demande.is_in_correction_circuit
 
-  const { loadingAction, run } = useActionRunner(onAction)
-  const loading = !!loadingAction
+  const run = async (action: string, extra?: Record<string, unknown>) => {
+    setLoading(true)
+    try { await onAction(action, extra) } catch (e) { console.error(e) }
+    finally { setLoading(false); setConfirmed(false) }
+  }
 
   const footer = (<>
     <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={loading} />
@@ -87,7 +90,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
           label="Signer — Transmettre au Sec. Directeur" icon={cilCheck}
           customBg={confirmed && !loading ? palette.color : undefined}
           loading={loading} disabled={!confirmed}
-          onClick={async () => { await run('directrice_adjointe_sign'); setConfirmed(false) }}
+          onClick={() => run('directrice_adjointe_sign')}
         />
         <FlaggedValidationAction action="directrice_adjointe_sign_flagged"
           loading={loading} disabled={!confirmed} run={run} label="Signer sous réserve" />

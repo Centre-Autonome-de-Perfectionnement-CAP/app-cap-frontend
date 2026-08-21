@@ -2,9 +2,8 @@
 //
 // Garde d'accès dédiée, pattern identique à AdminDbGuard.tsx.
 // ALLOWED_ROLES doit rester synchronisé avec
-// WhatsAppAdminController::ALLOWED_ROLES côté backend (rôle 'admin' strict,
-// décision utilisateur du 15/08/2026 — pas de 'responsable-division' ici,
-// contrairement à AdminDb).
+// WhatsAppAdminController::ALLOWED_ROLES côté backend.
+// Rôles autorisés : 'admin' et 'responsable-division' (décision utilisateur).
 
 import React from 'react'
 import { Navigate } from 'react-router-dom'

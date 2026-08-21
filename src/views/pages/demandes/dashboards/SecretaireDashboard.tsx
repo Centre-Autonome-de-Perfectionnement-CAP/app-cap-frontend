@@ -12,7 +12,6 @@ import {
 } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
-import useActionRunner from '../hooks/useActionRunner'
 import {
   DemandeTable, DemandeModalShell, DemandeDetailBase,
   ResendModal, TabBar, ActionButton, StatCard, useActionColumns,
@@ -165,8 +164,9 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
   visible: boolean
   onClose: () => void
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
-  onReload: (silent?: boolean) => Promise<void>
+  onReload: () => Promise<void>
 }) => {
+  const [loadingAction,    setLoadingAction]    = useState<string | null>(null)
   const [resendModal,      setResendModal]      = useState(false)
   const [rejectModal,      setRejectModal]      = useState(false)
   const [rejectFinalModal, setRejectFinalModal] = useState(false)
@@ -176,7 +176,11 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
   // Navette active = circuit actif ET dossier PAS chez la secrétaire
   const navetteActive = inCircuit && s !== 'secretary_correction'
 
-  const { loadingAction, run } = useActionRunner(onAction)
+  const run = async (action: string, extra?: Record<string, unknown>) => {
+    setLoadingAction(action)
+    try { await onAction(action, extra) } catch (e) { console.error(e) }
+    finally { setLoadingAction(null) }
+  }
 
   const footer = (
     <>
@@ -255,16 +259,16 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       onClose={onClose}
       footer={footer}
       canClearFlag
-      onFlagCleared={async () => { await onReload(true) }}
+      onFlagCleared={async () => { await onReload() }}
       onRefresh={onReload}
     >
       {navetteActive && <NavetteEnCoursBanner demande={demande} />}
       {inCircuit && s === 'secretary_correction' && <CorrectionCircuitBanner demande={demande} />}
       {s === 'secretary_final_review' && <DirecteurSigneBanner />}
 
-      <DemandeDetailBase demande={demande} onRefresh={() => onReload(true)}>
+      <DemandeDetailBase demande={demande} onRefresh={onReload}>
         {(s === 'submitted' || s === 'secretary_correction') && (
-          <SecretaryFileUploader demandeId={demande.id} onSuccess={() => onReload(true)} />
+          <SecretaryFileUploader demandeId={demande.id} onSuccess={onReload} />
         )}
       </DemandeDetailBase>
     </DemandeModalShell>

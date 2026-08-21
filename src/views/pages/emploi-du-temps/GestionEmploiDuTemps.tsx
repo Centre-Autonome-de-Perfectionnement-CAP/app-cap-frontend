@@ -30,8 +30,11 @@ axios.interceptors.request.use(
 )
 
 // ─── URLs centralisées ────────────────────────────────────────────────────────
-const API     = 'http://localhost:8001/api/emploi-du-temps'
-const API_SEL = 'http://localhost:8001/api/emploi-du-temps/selects'
+// Respecte VITE_API_URL comme http.service.ts — évite le hardcode localhost
+// qui cassait ce module hors environnement de dev local.
+const API_BASE = (import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:8001') + '/api'
+const API     = `${API_BASE}/emploi-du-temps`
+const API_SEL = `${API_BASE}/emploi-du-temps/selects`
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface AcademicYear  { id: number; academic_year: string; libelle: string; is_current: boolean }
@@ -263,7 +266,7 @@ const GestionEmploiDuTemps: React.FC = () => {
     try {
       const params: any = { page, ...filters }
       Object.keys(params).forEach(k => { if (!params[k] && params[k] !== false) delete params[k] })
-      const { data } = await axios.get(`${API}/emploi-du-temps`, { params })
+      const { data } = await axios.get(`${API}`, { params })
       setRecords(data.data ?? [])
       setTotal(data.meta?.total ?? (data.data?.length ?? 0))
       setCurrentPage(data.meta?.current_page ?? 1)
@@ -367,10 +370,10 @@ const GestionEmploiDuTemps: React.FC = () => {
       if (form.notes)               payload.notes               = form.notes
 
       if (editRecord) {
-        await axios.put(`${API}/emploi-du-temps/${editRecord.id}`, payload)
+        await axios.put(`${API}/${editRecord.id}`, payload)
         setSuccessMsg('Emploi du temps modifié avec succès.')
       } else {
-        await axios.post(`${API}/emploi-du-temps`, payload)
+        await axios.post(`${API}`, payload)
         setSuccessMsg('Emploi du temps créé avec succès.')
       }
       setShowModal(false)
@@ -397,12 +400,12 @@ const GestionEmploiDuTemps: React.FC = () => {
     setShowDeleteModal(true)
   }
 
-  // Suppression effective via DELETE /api/emploi-temps/emploi-du-temps/{id}
+  // Suppression effective via DELETE /api/emploi-du-temps/{id}
   const doDelete = async () => {
     if (!deleteTarget) return
     setDeleteLoading(true)
     try {
-      await axios.delete(`${API}/emploi-du-temps/${deleteTarget.id}`)
+      await axios.delete(`${API}/${deleteTarget.id}`)
       setSuccessMsg('Emploi du temps supprimé avec succès.')
       setShowDeleteModal(false)
       setDeleteTarget(null)
@@ -420,7 +423,7 @@ const GestionEmploiDuTemps: React.FC = () => {
 
   const doCancel = async (rec: EmploiDuTemps) => {
     try {
-      await axios.post(`${API}/emploi-du-temps/${rec.id}/cancel`)
+      await axios.post(`${API}/${rec.id}/cancel`)
       setSuccessMsg('Cours annulé.')
       fetchRecords(currentPage)
       setTimeout(() => setSuccessMsg(null), 4000)

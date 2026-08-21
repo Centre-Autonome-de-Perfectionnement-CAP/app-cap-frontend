@@ -174,7 +174,8 @@ const MessagesTable: React.FC<Props> = ({ status }) => {
                   {status === 'failed' && (
                     <CTableDataCell>
                       <CButton
-                        color="ghost"
+                        color="secondary"
+                        variant="ghost"
                         size="sm"
                         disabled={retryingId === row.id}
                         onClick={() => handleRetry(row.id)}

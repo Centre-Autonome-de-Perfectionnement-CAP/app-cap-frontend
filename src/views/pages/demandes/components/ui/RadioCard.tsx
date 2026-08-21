@@ -8,7 +8,7 @@ interface Props {
   label: React.ReactNode
   description?: string
   color?: string
-  icon?: string | string[]
+  icon?: object
 }
 
 import CIcon from '@coreui/icons-react'

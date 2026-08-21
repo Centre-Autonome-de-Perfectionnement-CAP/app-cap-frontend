@@ -6,7 +6,6 @@ import { cilCheckAlt, cilX, cilWarning } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
-import useActionRunner from '../hooks/useActionRunner'
 import {
   DashboardShell, DemandeTable, DemandeModalShell, DemandeDetailBase,
   FinancialPanel, ActionButton, useActionColumns,
@@ -58,12 +57,16 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
   demande: DocumentRequest; visible: boolean; onClose: () => void
   onAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
 }) => {
-  const [rejectModal,    setRejectModal]    = useState(false)
-  const [retourModal,    setRetourModal]    = useState(false)
-  const [flagMotifModal, setFlagMotifModal] = useState(false)
+  const [loading,          setLoading]          = useState(false)
+  const [rejectModal,      setRejectModal]      = useState(false)
+  const [retourModal,      setRetourModal]      = useState(false)
+  // Chef division type selection removed as it's now automated
+  const [flagMotifModal,   setFlagMotifModal]   = useState(false)
 
-  const { loadingAction, run } = useActionRunner(onAction)
-  const loading = !!loadingAction
+  const run = async (action: string, extra?: Record<string, unknown>) => {
+    setLoading(true)
+    try { await onAction(action, extra) } catch (e) { console.error(e) } finally { setLoading(false) }
+  }
 
   const inCircuit = !!demande.is_in_correction_circuit
 
@@ -118,10 +121,11 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
 
     <MotifModal visible={flagMotifModal} title="Validation sous réserve"
       confirmLabel="Valider" confirmColor="warning" placeholder="Commentaire de réserve…"
-      onClose={() => setFlagMotifModal(false)}
+      onClose={() => { setFlagMotifModal(false); setPendingFlagType(null) }}
       onConfirm={async motif => {
         setFlagMotifModal(false)
         await run('comptable_validate_flagged', { motif })
+        setPendingFlagType(null)
       }} />
 
     <MotifModal visible={rejectModal} title="Rejeter — retour à la secrétaire"

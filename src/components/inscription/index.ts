@@ -1,6 +1,7 @@
 export { default as AcademicYearForm } from './AcademicYearForm'
 export { default as AcademicYearList } from './AcademicYearList'
 export { default as AddPeriodModal } from './AddPeriodModal'
+export { default as EditPeriodModal } from './EditPeriodModal'
 export { default as GroupCreationModal } from './GroupCreationModal'
 export { default as PendingStudentRow } from './PendingStudentRow'
 export { default as PendingStudentsTable } from './PendingStudentsTable'

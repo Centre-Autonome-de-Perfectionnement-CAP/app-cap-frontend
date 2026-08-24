@@ -125,11 +125,67 @@ const useAnneeAcademiquesData = () => {
     }
   };
 
+  // Fonction pour modifier une période
+  const updatePeriod = async (
+    yearId: number | string,
+    data: {
+      id?: number
+      type: string
+      old_start_date?: string
+      old_end_date?: string
+      start_date: string
+      end_date: string
+      departments: number[]
+    }
+  ): Promise<{ success: boolean; error?: any }> => {
+    try {
+      const response = await InscriptionService.updatePeriod(Number(yearId), data)
+      if (response && (response.success === true || response.success === undefined)) {
+        return { success: true }
+      } else {
+        const errorMsg = response?.error || response?.message || 'Échec de la modification de la période.'
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
+      }
+    } catch (error: any) {
+      console.error('Erreur lors de la modification de la période:', error)
+      const errorData = error?.errors ? error : { message: error?.message || 'Une erreur est survenue lors de la modification.' }
+      setError(errorData.message || 'Une erreur est survenue')
+      return { success: false, error: errorData }
+    }
+  }
+
+  // Fonction pour supprimer une période
+  const deletePeriod = async (
+    yearId: number | string,
+    data: {
+      id?: number
+      type: string
+      start_date?: string
+      end_date?: string
+    }
+  ): Promise<{ success: boolean; error?: any }> => {
+    try {
+      const response = await InscriptionService.deletePeriodGroup(Number(yearId), data)
+      if (response && (response.success === true || response.success === undefined)) {
+        return { success: true }
+      } else {
+        const errorMsg = response?.error || response?.message || 'Échec de la suppression de la période.'
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
+      }
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression de la période:', error)
+      const errorData = error?.errors ? error : { message: error?.message || 'Une erreur est survenue lors de la suppression.' }
+      setError(errorData.message || 'Une erreur est survenue')
+      return { success: false, error: errorData }
+    }
+  }
+
   // Fonction pour récupérer les périodes d'une année académique
   const getPeriods = async (yearId: any): Promise<{ success: boolean; data: any[] }> => {
     try {
       const periodsData = await InscriptionService.getPeriods(yearId);
-      // getPeriods peut retourner soit un tableau soit un objet
       const periodsArray = Array.isArray(periodsData) ? periodsData : (periodsData?.data || periodsData || []);
       
       if (!Array.isArray(periodsArray)) {
@@ -137,7 +193,6 @@ const useAnneeAcademiquesData = () => {
         return { success: false, data: [] };
       }
       
-      // Les dates sont déjà formatées par le backend, pas besoin de les reformater
       return { success: true, data: periodsArray || [] };
     } catch (error: any) {
       console.error('Erreur lors de la récupération des périodes:', error);
@@ -153,6 +208,8 @@ const useAnneeAcademiquesData = () => {
     error,
     createAcademicYear,
     addPeriod,
+    updatePeriod,
+    deletePeriod,
     getPeriods,
   };
 };

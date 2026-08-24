@@ -124,6 +124,33 @@ class InscriptionService {
   }
 
   /**
+   * Modifie une période d'une année académique
+   */
+  updatePeriod = async (yearId: number, data: {
+    id?: number,
+    type: string,
+    old_start_date?: string,
+    old_end_date?: string,
+    start_date: string,
+    end_date: string,
+    departments: number[]
+  }) => {
+    return await HttpService.put(INSCRIPTION_ROUTES.ACADEMIC_YEAR_PERIODS(yearId), data)
+  }
+
+  /**
+   * Supprime une période d'une année académique
+   */
+  deletePeriodGroup = async (yearId: number, data: {
+    id?: number,
+    type: string,
+    start_date?: string,
+    end_date?: string
+  }) => {
+    return await HttpService.delete(INSCRIPTION_ROUTES.ACADEMIC_YEAR_PERIODS(yearId), data)
+  }
+
+  /**
    * Récupère les périodes d'une année académique
    */
   getPeriods = async (yearId: number) => {

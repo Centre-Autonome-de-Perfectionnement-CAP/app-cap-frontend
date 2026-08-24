@@ -15,6 +15,8 @@ interface PeriodsModalProps {
   selectedYear: any
   periods: Period[]
   loading: boolean
+  onEditPeriod?: (period: any) => void
+  onDeletePeriod?: (period: any) => void
 }
 
 /**
@@ -26,6 +28,8 @@ const PeriodsModal: React.FC<PeriodsModalProps> = ({
   selectedYear,
   periods,
   loading,
+  onEditPeriod,
+  onDeletePeriod,
 }) => {
   const footer = (
     <CButton color="secondary" onClick={onClose}>
@@ -71,8 +75,8 @@ const PeriodsModal: React.FC<PeriodsModalProps> = ({
           ) : (
             <CListGroup>
               {periods.map((period, index) => (
-                <CListGroupItem key={index}>
-                  <div className="d-flex justify-content-between align-items-start">
+                <CListGroupItem key={index} className="p-3">
+                  <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div className="flex-grow-1">
                       <div className="mb-2">
                         {getPeriodTypeBadge(period.type)}
@@ -92,6 +96,29 @@ const PeriodsModal: React.FC<PeriodsModalProps> = ({
                           </>
                         )}
                       </div>
+                    </div>
+
+                    <div className="d-flex gap-2">
+                      {onEditPeriod && (
+                        <CButton
+                          color="primary"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onEditPeriod(period)}
+                        >
+                          <span className="me-1">✏️</span> Modifier
+                        </CButton>
+                      )}
+                      {onDeletePeriod && (
+                        <CButton
+                          color="danger"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onDeletePeriod(period)}
+                        >
+                          <span className="me-1">🗑️</span> Supprimer
+                        </CButton>
+                      )}
                     </div>
                   </div>
                 </CListGroupItem>

@@ -72,11 +72,16 @@ const AcademicYearList: React.FC<AcademicYearListProps> = ({
               {year.date_fin}
             </CTableDataCell>
             <CTableDataCell className="text-center">
-              {year.is_current ? (
-                <CBadge color="success">Active</CBadge>
-              ) : (
-                <CBadge color="secondary">Inactive</CBadge>
-              )}
+              {(() => {
+                const s = (year as any).status
+                if (s === 'active' || year.is_current) {
+                  return <CBadge color="success">Active</CBadge>
+                }
+                if (s === 'upcoming') {
+                  return <CBadge color="info">À venir</CBadge>
+                }
+                return <CBadge color="secondary">Terminée</CBadge>
+              })()}
             </CTableDataCell>
             <CTableDataCell className="text-center">
               <CButton

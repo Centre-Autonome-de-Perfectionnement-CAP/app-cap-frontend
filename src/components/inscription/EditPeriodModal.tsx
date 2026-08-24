@@ -52,23 +52,29 @@ export const EditPeriodModal: React.FC<EditPeriodModalProps> = ({
     if (period && visible) {
       setActiveTab(period.type || 'depot')
 
+      // Helper: parse une date ISO "YYYY-MM-DD" sans décalage UTC
+      const parseLocalDate = (raw: string): Date => {
+        // Ajouter T12:00:00 pour éviter le décalage UTC→local qui peut changer le jour
+        return new Date(raw.includes('T') ? raw : `${raw}T12:00:00`)
+      }
+
       // Date de début
       if (period.start_raw) {
-        setPeriodStartDate(new Date(period.start_raw))
+        setPeriodStartDate(parseLocalDate(period.start_raw))
       } else if (period.start) {
         const parts = period.start.split('/')
         if (parts.length === 3) {
-          setPeriodStartDate(new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])))
+          setPeriodStartDate(new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]), 12))
         }
       }
 
       // Date de fin
       if (period.end_raw) {
-        setPeriodEndDate(new Date(period.end_raw))
+        setPeriodEndDate(parseLocalDate(period.end_raw))
       } else if (period.end) {
         const parts = period.end.split('/')
         if (parts.length === 3) {
-          setPeriodEndDate(new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])))
+          setPeriodEndDate(new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]), 12))
         }
       }
 
@@ -115,20 +121,32 @@ export const EditPeriodModal: React.FC<EditPeriodModalProps> = ({
     e.preventDefault()
     if (!periodStartDate || !periodEndDate) return
 
-    const formatISO = (date: Date) => {
+    const formatDateTime = (date: Date, time: Date | null, defaultHour: number, defaultMinute: number) => {
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
+      const h = time ? String(time.getHours()).padStart(2, '0') : String(defaultHour).padStart(2, '0')
+      const m = time ? String(time.getMinutes()).padStart(2, '0') : String(defaultMinute).padStart(2, '0')
+      return `${year}-${month}-${day} ${h}:${m}:00`
+    }
+
+    // old_start_date doit être au format YYYY-MM-DD (pas dd/mm/yyyy)
+    const toRaw = (raw: string | undefined, formatted: string | undefined) => {
+      if (raw) return raw
+      if (formatted) {
+        const parts = formatted.split('/')
+        if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`
+      }
+      return undefined
     }
 
     await onSubmit({
       id: period.id,
       type: activeTab,
-      old_start_date: period.start_raw || period.start,
-      old_end_date: period.end_raw || period.end,
-      start_date: formatISO(periodStartDate),
-      end_date: formatISO(periodEndDate),
+      old_start_date: toRaw(period.start_raw, period.start),
+      old_end_date:   toRaw(period.end_raw,   period.end),
+      start_date: formatDateTime(periodStartDate, periodStartTime, 8, 0),
+      end_date:   formatDateTime(periodEndDate,   periodEndTime,  23, 59),
       departments: selectedFilieres,
     })
   }

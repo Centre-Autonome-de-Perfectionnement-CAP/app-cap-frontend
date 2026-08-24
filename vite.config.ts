@@ -1,11 +1,21 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import autoprefixer from 'autoprefixer'
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  // Charge les variables d'env pour ce mode (.env, .env.development, .env.production...)
+  const env = loadEnv(mode, process.cwd(), '')
+
+  // En dev  : base = VITE_ROUTER_BASENAME (/services/) pour que Vite et React Router
+  //           soient alignés → http://localhost:3000/services/login fonctionne.
+  // En prod : base = /app-cap-frontend/ (chemin réel des assets sur le serveur).
+  const base = mode === 'development'
+    ? (env.VITE_ROUTER_BASENAME || '/services/')
+    : '/app-cap-frontend/'
+
   return {
-    base: '/app-cap-frontend/',
+    base,
     define: {
       __APP_BASE__: '"/"'
     },

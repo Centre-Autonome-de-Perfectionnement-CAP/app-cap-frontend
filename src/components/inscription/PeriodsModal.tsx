@@ -41,12 +41,15 @@ const PeriodsModal: React.FC<PeriodsModalProps> = ({
     return type === 'depot' ? 'Dépôt de dossiers' : 'Réclamation'
   }
 
-  const getPeriodTypeBadge = (type: string) => {
-    return type === 'depot' ? (
-      <CBadge color="primary">Dépôt</CBadge>
-    ) : (
-      <CBadge color="warning">Réclamation</CBadge>
-    )
+  const getPeriodTypeBadge = (period: any, index: number) => {
+    if (period.type === 'depot') {
+      return (
+        <CBadge color="primary">
+          {period.wave_number ? `Vague ${period.wave_number}` : `Vague ${index + 1}`}
+        </CBadge>
+      )
+    }
+    return <CBadge color="warning">Réclamation</CBadge>
   }
 
   return (
@@ -79,7 +82,7 @@ const PeriodsModal: React.FC<PeriodsModalProps> = ({
                   <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div className="flex-grow-1">
                       <div className="mb-2">
-                        {getPeriodTypeBadge(period.type)}
+                        {getPeriodTypeBadge(period, index)}
                         <span className="ms-2 fw-bold">
                           {getPeriodTypeLabel(period.type)}
                         </span>

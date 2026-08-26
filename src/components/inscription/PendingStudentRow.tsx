@@ -105,9 +105,11 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
                 className="ms-1"
                 style={{ fontSize: '0.68rem', whiteSpace: 'nowrap', cursor: 'help' }}
                 title={
-                  student.student_update_summary
-                    ? 'Champs modifiés : ' + Object.keys(student.student_update_summary).join(', ')
-                    : 'Dossier modifié par l\'étudiant'
+                  Array.isArray(student.student_update_summary) && student.student_update_summary.length > 0
+                    ? 'Modifications : ' + student.student_update_summary.flatMap((item: any) => item.changes || []).join(' | ')
+                    : (student.student_update_summary && typeof student.student_update_summary === 'object'
+                        ? 'Champs modifiés : ' + Object.keys(student.student_update_summary).join(', ')
+                        : "Dossier modifié par l'étudiant")
                 }
               >
                 🟡 Modifié le {new Date(student.last_student_update_at).toLocaleDateString('fr-FR')}

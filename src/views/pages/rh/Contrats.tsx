@@ -144,7 +144,7 @@ const Contrats: React.FC = () => {
 
   useEffect(() => {
     reload();
-    rhService.getProfessors().then(r => setProfessors((r.data || []) as Professor[])).catch(() => {});
+    rhService.getProfessorsForSelect().then(r => setProfessors((r.data || []) as Professor[])).catch(() => {});
     rhService.getCycles().then(setCycles).catch(() => {});
     rhService.getAcademicYears().then(setAcademicYears).catch(() => {});
   }, [reload]);

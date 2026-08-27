@@ -107,7 +107,7 @@ export const EMPLOI_DU_TEMPS_ROUTES = {
   BUILDING: (id: number | string) => `emploi-du-temps/buildings/${id}`,
   ROOMS: 'emploi-du-temps/rooms',
   ROOM: (id: number | string) => `emploi-du-temps/rooms/${id}`,
-  ROOMS_AVAILABLE: 'emploi-du-temps/rooms/available',
+  ROOMS_AVAILABLE: 'emploi-du-temps/rooms-available',
   TIME_SLOTS: 'emploi-du-temps/time-slots',
   TIME_SLOT: (id: number | string) => `emploi-du-temps/time-slots/${id}`,
   TIME_SLOTS_BY_DAY: (day: string) => `emploi-du-temps/time-slots/day/${day}`,

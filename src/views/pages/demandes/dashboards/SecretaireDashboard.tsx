@@ -8,9 +8,10 @@ import { CRow, CCol, CBadge } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilInbox, cilWarning, cilFlagAlt, cilCheckAlt, cilFolder,
-  cilX, cilArrowCircleRight, cilBan, cilSend, cilSync,
+  cilX, cilArrowCircleRight, cilBan, cilSend, cilSync, cilCommentBubble,
 } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
+import ContactDemandeurModal from '../components/modal/ContactDemandeurModal'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
 import {
   DemandeTable, DemandeModalShell, DemandeDetailBase,
@@ -170,6 +171,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
   const [resendModal,      setResendModal]      = useState(false)
   const [rejectModal,      setRejectModal]      = useState(false)
   const [rejectFinalModal, setRejectFinalModal] = useState(false)
+  const [contactModal,     setContactModal]     = useState(false)
 
   const s         = demande.status
   const inCircuit = !!demande.is_in_correction_circuit
@@ -185,6 +187,16 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
   const footer = (
     <>
       <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={!!loadingAction} />
+
+      {/* Contacter le demandeur — visible quel que soit le statut, secrétaire uniquement */}
+      <ActionButton
+        label="Contacter le demandeur"
+        icon={cilCommentBubble}
+        color="primary"
+        variant="outline"
+        disabled={!!loadingAction}
+        onClick={() => setContactModal(true)}
+      />
 
       {/* SUBMITTED */}
       {s === 'submitted' && (<>
@@ -298,6 +310,12 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       confirmColor="danger"
       onClose={() => setRejectFinalModal(false)}
       onConfirm={async motif => { setRejectFinalModal(false); await run('secretaire_reject_final', { motif }) }}
+    />
+
+    <ContactDemandeurModal
+      demande={demande}
+      visible={contactModal}
+      onClose={() => setContactModal(false)}
     />
   </>)
 }

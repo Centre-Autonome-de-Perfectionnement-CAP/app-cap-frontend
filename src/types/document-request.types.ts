@@ -31,6 +31,7 @@ export interface DocumentRequest {
   type: DocumentRequestType
   status: DocumentRequestStatus
   email: string | null
+  demandeur_whatsapp: string | null
   files: Record<string, string> | null | string
   complement_files: Record<string, string> | null | string
   secretary_files?: { id: string, path: string, original_name: string, comment?: string, uploaded_at: string }[] | null | string

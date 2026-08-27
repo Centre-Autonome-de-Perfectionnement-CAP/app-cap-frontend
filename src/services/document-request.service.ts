@@ -61,6 +61,19 @@ class DocumentRequestService {
   transition = async (id: number, payload: WorkflowAction) => {
     return HttpService.post(`${BASE}/${id}/transition`, payload)
   }
+
+  /**
+   * Message libre secrétaire → demandeur (texte + pièces jointes),
+   * envoyé par WhatsApp ET email. Réponse : détail succès/échec par canal
+   * avec motif exact en cas d'échec (voir ContactDemandeurModal).
+   */
+  contactDemandeur = async (id: number, message: string, attachments: File[]) => {
+    const formData = new FormData()
+    formData.append('message', message)
+    attachments.forEach(file => formData.append('attachments[]', file))
+
+    return HttpService.post(`${BASE}/${id}/contact-demandeur`, formData)
+  }
 }
 
 export default new DocumentRequestService()

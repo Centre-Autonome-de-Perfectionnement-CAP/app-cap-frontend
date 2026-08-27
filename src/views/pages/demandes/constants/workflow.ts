@@ -24,7 +24,7 @@ export const STATUS_COLORS: Record<string, { color: string; bg: string; text: st
   circuit_correction:           { color: '#ea580c', bg: '#fff7ed', text: '#7c2d12' },
 }
 
-export interface TabConfig { key: string; label: string; icon: object }
+export interface TabConfig { key: string; label: string; icon: string | string[] }
 export interface StatConfig { key: string; label: string; color?: string; bg?: string; urgent?: boolean; icon?: React.ReactNode; onClick?: () => void }
 
 export const SECRETAIRE_TABS: TabConfig[] = [

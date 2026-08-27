@@ -81,6 +81,8 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
             <InfoLine label="Matricule" value={demande.matricule} />
             <InfoLine label="Filière"   value={demande.department} />
             <InfoLine label="Année"     value={demande.academic_year} />
+            <InfoLine label="WhatsApp"  value={demande.demandeur_whatsapp} />
+            <InfoLine label="Email"     value={demande.email} />
           </InfoBlock>
         </CCol>
 

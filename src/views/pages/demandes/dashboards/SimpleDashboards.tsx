@@ -19,7 +19,7 @@ import {
 } from '../components'
 import type { DocumentRequest } from '@/types/document-request.types'
 
-const ComptableDetailModal = ({ demande, logs, visible, onClose, onAction }: any) => {
+const ComptableDetailModal = ({ demande, visible, onClose, onAction }: any) => {
   const [loading, setLoading] = useState(false)
   const [showReject, setShowReject] = useState(false)
   const run = async (action: string, extra?: any) => {
@@ -36,7 +36,7 @@ const ComptableDetailModal = ({ demande, logs, visible, onClose, onAction }: any
   return (<>
     <DemandeModalShell demande={demande} visible={visible} onClose={onClose}
       title="Vérification financière — Comptabilité" footer={footer}>
-      <DemandeDetailBase demande={demande} logs={logs}>
+      <DemandeDetailBase demande={demande}>
         <FinancialPanel demande={demande} />
         <CAlert color="info" className="mt-3 py-2" style={{ fontSize: '0.875rem' }}>
           Vérifiez la situation financière avant de valider.
@@ -53,7 +53,7 @@ const ComptableDetailModal = ({ demande, logs, visible, onClose, onAction }: any
 }
 
 export const ComptableDashboard = () => {
-  const { demandes, loading, filters, setFilters, selected, logs, detailOpen, openDetail, closeDetail, handleAction } =
+  const { demandes, loading, filters, setFilters, selected, detailOpen, openDetail, closeDetail, handleAction } =
     useDemandesDashboard()
   const columns = useActionColumns([
     { header: 'Référence', render: (d: DocumentRequest) => <ReferenceCell d={d} /> },
@@ -68,7 +68,7 @@ export const ComptableDashboard = () => {
       counts={{ accounting_review: demandes.length }}>
       <DemandeTable demandes={demandes} loading={loading} columns={columns}
         emptyMessage="Aucun dossier en attente de vérification" onRowClick={openDetail} />
-      {selected && <ComptableDetailModal demande={selected} logs={logs} visible={detailOpen}
+      {selected && <ComptableDetailModal demande={selected} visible={detailOpen}
         onClose={closeDetail} onAction={handleAction} />}
     </DashboardShell>
   )
@@ -97,7 +97,7 @@ export const SimpleTransmitDashboard = ({
   validateColor = 'success',
 }: SimpleTransmitDashboardProps) => {
   const [showReject, setShowReject] = useState(false)
-  const { demandes, loading, filters, setFilters, selected, logs, detailOpen, openDetail, closeDetail, handleAction } =
+  const { demandes, loading, filters, setFilters, selected, detailOpen, openDetail, closeDetail, handleAction } =
     useDemandesDashboard()
 
   const run = async (action: string, extra?: any) => {
@@ -129,7 +129,7 @@ export const SimpleTransmitDashboard = ({
             <ActionButton label={validateLabel} icon={cilCheckAlt} color={validateColor as any}
               onClick={() => run(validateAction)} />
           </>}>
-          <DemandeDetailBase demande={selected} logs={logs} />
+          <DemandeDetailBase demande={selected} />
         </DemandeModalShell>
       )}
       {selected && (

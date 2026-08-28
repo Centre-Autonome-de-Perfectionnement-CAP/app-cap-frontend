@@ -26,12 +26,15 @@ export interface FormState {
   status: string; program_ids: number[];
   /** Montant par heure pour chaque programme sélectionné (clé = program id) */
   program_amounts: Record<number, string>;
+  /** Volume horaire pour chaque programme sélectionné (clé = program id) */
+  program_hours: Record<number, string>;
 }
 export const emptyForm: FormState = {
   division: '', professor_id: '', academic_year_id: '', cycle_id: '',
   regroupement: '', start_date: '', end_date: '', amount: '0', notes: '',
   status: 'pending', program_ids: [],
   program_amounts: {},
+  program_hours: {},
 };
 
 // ─── ContratFormFields ─────────────────────────────────────────────────────────

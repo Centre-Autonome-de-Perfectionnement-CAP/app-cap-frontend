@@ -66,13 +66,13 @@ const GLOBAL_STYLE = `
   .ctr-table tbody tr:last-child td { border-bottom: none; }
 
   /* Modal */
-  .ctr-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; animation: fadeIn .18s; }
+  .ctr-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1060; padding: 12px; animation: fadeIn .18s; }
   @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-  .ctr-modal { background: #fff; border-radius: 16px; box-shadow: 0 32px 80px rgba(0,0,0,.2); display: flex; flex-direction: column; max-height: 92vh; animation: slideUp .2s ease; overflow: hidden; }
+  .ctr-modal { background: #fff; border-radius: 16px; box-shadow: 0 32px 80px rgba(0,0,0,.25); display: flex; flex-direction: column; width: 95%; max-width: 820px; max-height: 90vh; margin: auto; animation: slideUp .2s ease; overflow: hidden; position: relative; }
   @keyframes slideUp { from { opacity:0; transform: translateY(20px) } to { opacity:1; transform: translateY(0) } }
-  .ctr-modal-header { padding: 24px 28px 20px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  .ctr-modal-body   { flex: 1; overflow-y: auto; padding: 24px 28px; }
-  .ctr-modal-footer { padding: 16px 28px; border-top: 1px solid #f3f4f6; display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0; }
+  .ctr-modal-header { padding: 18px 24px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .ctr-modal-body   { flex: 1; overflow-y: auto; padding: 20px 24px; }
+  .ctr-modal-footer { padding: 14px 24px; border-top: 1px solid #f3f4f6; display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0; background: #fff; }
   .ctr-modal-close  { width: 32px; height: 32px; border-radius: 8px; border: none; background: #f3f4f6; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; transition: all .15s; }
   .ctr-modal-close:hover { background: #e5e7eb; color: #111827; }
 

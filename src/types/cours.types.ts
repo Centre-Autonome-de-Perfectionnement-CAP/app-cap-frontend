@@ -29,6 +29,7 @@ export interface CourseElement {
   name: string;
   code: string;
   credits: number;
+  hours?: number;
   teaching_unit_id: number;
   teaching_unit?: TeachingUnit;
   professors?: Professor[];
@@ -44,6 +45,7 @@ export interface CreateCourseElementRequest {
   name: string;
   code: string;
   credits: number;
+  hours?: number;
   teaching_unit_id: number;
 }
 
@@ -51,6 +53,7 @@ export interface UpdateCourseElementRequest {
   name?: string;
   code?: string;
   credits?: number;
+  hours?: number;
   teaching_unit_id?: number;
 }
 

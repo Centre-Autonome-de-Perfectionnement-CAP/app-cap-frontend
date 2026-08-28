@@ -92,6 +92,15 @@ export interface ProfessorProgram {
   label: string
   hours?: number
 
+  academic_year_id?: number | null
+  academic_year_name?: string | null
+  cycle_id?: number | null
+  cycle_name?: string | null
+  department_id?: number | null
+  department_name?: string | null
+  class_group_id?: number | null
+  class_group_name?: string | null
+
   number_monographie?: number | null
   amount_monographie?: number | null
 
@@ -103,6 +112,7 @@ export interface ProfessorProgram {
     name: string
     code: string
     hours?: number
+    credits?: number | null
     teaching_unit: {
       id: number
       name: string
@@ -195,6 +205,8 @@ export interface CreateContratPayload {
   course_element_professor_ids?: number[]
   /** Montant par heure par programme : clé = course_element_professor id, valeur = montant */
   program_amounts?: Record<number | string, number>
+  /** Volume horaire par programme : clé = course_element_professor id, valeur = heures */
+  program_hours?: Record<number | string, number>
 }
 
 export interface UpdateContratPayload extends CreateContratPayload {

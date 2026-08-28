@@ -186,12 +186,17 @@ const Contrats: React.FC = () => {
       addToast('warning', 'Contrat verrouillé', 'Ce contrat a été validé ou autorisé. Aucune modification n\'est possible.');
       return;
     }
-    // Pré-remplir les montants/heure existants depuis les programmes du contrat
+    // Pré-remplir les montants/heure et heures existants depuis les programmes du contrat
     const existingAmounts: Record<number, string> = {};
+    const existingHours: Record<number, string> = {};
     (c.course_element_professors ?? []).forEach(p => {
       const amt = (p as any).amount_program;
       if (amt !== undefined && amt !== null) {
         existingAmounts[p.id] = String(amt);
+      }
+      const hrs = (p as any).hours ?? p.course_element?.hours;
+      if (hrs !== undefined && hrs !== null && Number(hrs) > 0) {
+        existingHours[p.id] = String(hrs);
       }
     });
     setEditForm({
@@ -202,11 +207,12 @@ const Contrats: React.FC = () => {
       regroupement:     c.regroupement ?? '',
       start_date:       c.start_date?.substring(0, 10) ?? '',
       end_date:         c.end_date?.substring(0, 10) ?? '',
-      amount:           '0',
+      amount:           String(c.amount ?? 0),
       notes:            c.notes ?? '',
       status:           c.status,
       program_ids:      (c.course_element_professors ?? []).map(p => p.id),
       program_amounts:  existingAmounts,
+      program_hours:    existingHours,
     });
     setEditingContrat(c);
     setEditError('');
@@ -220,6 +226,7 @@ const Contrats: React.FC = () => {
 
   const buildCreate = (f: FormState): CreateContratPayload => {
     console.log('program_amounts envoyé:', f.program_amounts);
+    console.log('program_hours envoyé:', f.program_hours);
     // Calcul automatique du montant total = somme des (montant/heure × heures) par programme
     // Si aucun montant renseigné, on envoie 0
     const filteredAmounts = Object.fromEntries(
@@ -227,7 +234,17 @@ const Contrats: React.FC = () => {
         .filter(([, v]) => v !== '' && !isNaN(parseFloat(v)))
         .map(([k, v]) => [k, parseFloat(v)])
     );
-    const totalAmount = Object.values(filteredAmounts).reduce((sum, v) => sum + v, 0);
+    const filteredHours = Object.fromEntries(
+      Object.entries(f.program_hours)
+        .filter(([, v]) => v !== '' && !isNaN(parseFloat(v)))
+        .map(([k, v]) => [k, parseFloat(v)])
+    );
+
+    let totalAmount = 0;
+    Object.entries(filteredAmounts).forEach(([k, rate]) => {
+      const hrs = filteredHours[k] ?? 0;
+      totalAmount += hrs > 0 ? rate * hrs : rate;
+    });
 
     return {
       division:                     f.division || null,
@@ -241,6 +258,7 @@ const Contrats: React.FC = () => {
       notes:                        f.notes || null,
       course_element_professor_ids: f.program_ids.length ? f.program_ids : undefined,
       program_amounts:              Object.keys(filteredAmounts).length ? filteredAmounts : undefined,
+      program_hours:                Object.keys(filteredHours).length ? filteredHours : undefined,
     };
   };
   const buildUpdate = (f: FormState): UpdateContratPayload => ({

@@ -33,8 +33,9 @@ axios.interceptors.request.use(
 // Respecte VITE_API_URL comme http.service.ts — évite le hardcode localhost
 // qui cassait ce module hors environnement de dev local.
 const API_BASE = (import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:8001') + '/api'
-const API     = `${API_BASE}/emploi-du-temps`
-const API_SEL = `${API_BASE}/emploi-du-temps/selects`
+const API_ROOT = `${API_BASE}/emploi-du-temps`          // bâtiments, salles, selects…
+const API      = `${API_BASE}/emploi-du-temps/emploi-du-temps`  // CRUD emploi-du-temps
+const API_SEL  = `${API_BASE}/emploi-du-temps/selects`
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface AcademicYear  { id: number; academic_year: string; libelle: string; is_current: boolean }
@@ -198,8 +199,8 @@ const GestionEmploiDuTemps: React.FC = () => {
       const [ay, dep, bld, rms, profs, ce] = await Promise.all([
         axios.get(`${API_SEL}/academic-years`),
         axios.get(`${API_SEL}/departments`),
-        axios.get(`${API}/buildings`),
-        axios.get(`${API}/rooms`),
+        axios.get(`${API_ROOT}/buildings`),
+        axios.get(`${API_ROOT}/rooms`),
         axios.get(`${API_SEL}/professors`),
         axios.get(`${API_SEL}/course-elements`),
       ])

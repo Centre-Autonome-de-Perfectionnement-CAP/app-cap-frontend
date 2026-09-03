@@ -26,6 +26,7 @@ export interface LegacyFiliere {
   name: string;
   abbreviation?: string;
   cycle?: string;
+  cycle_id?: number;
 }
 
 export interface LegacyStudentServiceRequest {
@@ -89,6 +90,7 @@ export interface LegacyStudentFormData {
 export interface LegacyStudentFilters {
   search?: string;
   status?: LegacyStudentStatus | 'all';
+  cycle?: string;
   enrollment_year?: number | string;
   department_id?: number | string;
   page?: number;

@@ -87,6 +87,15 @@ const LegacyStudentsTable = ({
     }
   }
 
+  const filteredFilieres = filieres.filter((f) => {
+    if (!filters.cycle || filters.cycle === 'all') return true
+    if (filters.cycle === 'Licence Professionnelle') return f.cycle_id === 1
+    if (filters.cycle === 'Master Professionnel') return f.cycle_id === 2
+    if (filters.cycle === 'Cycle Ingénieur - Prépa') return f.cycle_id === 3 && f.name.toLowerCase().startsWith('prépa')
+    if (filters.cycle === 'Cycle Ingénieur - Spécialité') return f.cycle_id === 3 && !f.name.toLowerCase().startsWith('prépa')
+    return true
+  })
+
   return (
     <>
       {/* Filtres */}
@@ -94,10 +103,44 @@ const LegacyStudentsTable = ({
         <CCol md={3}>
           <CFormInput
             type="text"
-            placeholder="Rechercher par matricule, nom..."
+            placeholder="Rechercher matricule, nom..."
             value={filters.search || ''}
             onChange={e => setFilters({ ...filters, search: e.target.value, page: 1 })}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                setFilters({ ...filters, page: 1 })
+              }
+            }}
           />
+        </CCol>
+        <CCol md={2}>
+          <CFormSelect
+            value={filters.cycle || 'all'}
+            onChange={e => {
+              const newCycle = e.target.value
+              setFilters({ ...filters, cycle: newCycle, department_id: '', page: 1 })
+            }}
+          >
+            <option value="all">Tous cycles</option>
+            <option value="Licence Professionnelle">Licence Pro</option>
+            <option value="Master Professionnel">Master Pro</option>
+            <option value="Cycle Ingénieur - Prépa">Ingénieur Prépa</option>
+            <option value="Cycle Ingénieur - Spécialité">Ingénieur Spécialité</option>
+          </CFormSelect>
+        </CCol>
+        <CCol md={3}>
+          <CFormSelect
+            value={filters.department_id || ''}
+            onChange={e => setFilters({ ...filters, department_id: e.target.value, page: 1 })}
+          >
+            <option value="">Toutes filières</option>
+            {filteredFilieres.map(d => (
+              <option key={d.id} value={d.id}>
+                {d.name} {d.abbreviation ? `(${d.abbreviation})` : ''}
+              </option>
+            ))}
+          </CFormSelect>
         </CCol>
         <CCol md={2}>
           <CFormSelect value={filters.status || 'all'} onChange={e => setFilters({ ...filters, status: e.target.value as any, page: 1 })}>
@@ -107,25 +150,17 @@ const LegacyStudentsTable = ({
             <option value="rejected">Rejeté</option>
           </CFormSelect>
         </CCol>
-        <CCol md={2}>
+        <CCol md={1}>
           <CFormInput
             type="text"
-            placeholder="Année promo (ex: 2020)"
+            placeholder="Année"
             maxLength={4}
             value={filters.enrollment_year || ''}
             onChange={e => setFilters({ ...filters, enrollment_year: e.target.value, page: 1 })}
           />
         </CCol>
-        <CCol md={4}>
-          <CFormSelect value={filters.department_id || ''} onChange={e => setFilters({ ...filters, department_id: e.target.value, page: 1 })}>
-            <option value="">Toutes filières</option>
-            {filieres.map(d => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </CFormSelect>
-        </CCol>
         <CCol md={1}>
-          <CButton color="primary" className="w-100" onClick={() => setFilters({ ...filters, page: 1 })}>
+          <CButton color="primary" className="w-100" onClick={() => setFilters({ ...filters, page: 1 })} title="Rechercher">
             <CIcon icon={cilSearch} />
           </CButton>
         </CCol>

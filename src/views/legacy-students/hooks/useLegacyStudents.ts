@@ -30,6 +30,7 @@ export function useLegacyStudents() {
   const [filters, setFilters] = useState<LegacyStudentFilters>({
     search: '',
     status: 'all',
+    cycle: 'all',
     enrollment_year: '',
     department_id: '',
     page: 1,

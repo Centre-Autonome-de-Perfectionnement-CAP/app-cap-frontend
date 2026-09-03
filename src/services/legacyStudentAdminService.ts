@@ -149,6 +149,7 @@ export const legacyStudentAdminService = {
       const params = new URLSearchParams();
       if (filters.search) params.set('search', filters.search);
       if (filters.status && filters.status !== 'all') params.set('status', filters.status);
+      if (filters.cycle && filters.cycle !== 'all') params.set('cycle', filters.cycle);
       if (filters.enrollment_year) params.set('enrollment_year', String(filters.enrollment_year));
       if (filters.department_id) params.set('department_id', String(filters.department_id));
       if (filters.page) params.set('page', String(filters.page));

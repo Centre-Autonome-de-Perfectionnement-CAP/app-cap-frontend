@@ -36,6 +36,7 @@ import Swal from 'sweetalert2'
 const Validation = () => {
   const {
     pendingPayments,
+    counts,
     loading,
     error,
     validatePayment,
@@ -201,18 +202,37 @@ const Validation = () => {
   return (
     <>
       <CCard>
-        <CCardHeader className="d-flex justify-content-between align-items-center">
+        <CCardHeader className="d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h5 className="mb-0">Validation des Quittances</h5>
-          <div className="d-flex gap-2">
+          <div className="d-flex gap-2 align-items-center">
             <CFormInput
-              placeholder="Rechercher par matricule, nom..."
+              placeholder="Rechercher par matricule, nom, référence..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ width: '300px' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleSearch()
+                }
+              }}
+              style={{ width: '320px' }}
             />
-            <CButton color="primary" onClick={handleSearch}>
+            <CButton color="primary" onClick={handleSearch} title="Rechercher">
               <CIcon icon={cilSearch} />
             </CButton>
+            {searchTerm && (
+              <CButton
+                color="secondary"
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm('')
+                  searchPayments('', 1)
+                }}
+                title="Effacer la recherche"
+              >
+                <CIcon icon={cilXCircle} />
+              </CButton>
+            )}
           </div>
         </CCardHeader>
         <CCardBody>
@@ -227,36 +247,48 @@ const Validation = () => {
             <CNavItem>
               <CNavLink
                 active={activeTab === 'pending'}
-                onClick={() => changeTab('pending')}
+                onClick={() => changeTab('pending', searchTerm)}
                 style={{ cursor: 'pointer' }}
               >
                 En attente
-                {activeTab === 'pending' && pagination?.total > 0 && (
-                  <CBadge color="warning" className="ms-2">{pagination.total}</CBadge>
+                {typeof counts?.pending === 'number' ? (
+                  <CBadge color="warning" className="ms-2">{counts.pending}</CBadge>
+                ) : (
+                  activeTab === 'pending' && pagination?.total > 0 && (
+                    <CBadge color="warning" className="ms-2">{pagination.total}</CBadge>
+                  )
                 )}
               </CNavLink>
             </CNavItem>
             <CNavItem>
               <CNavLink
                 active={activeTab === 'approved'}
-                onClick={() => changeTab('approved')}
+                onClick={() => changeTab('approved', searchTerm)}
                 style={{ cursor: 'pointer' }}
               >
                 Validés
-                {activeTab === 'approved' && pagination?.total > 0 && (
-                  <CBadge color="success" className="ms-2">{pagination.total}</CBadge>
+                {typeof counts?.approved === 'number' ? (
+                  <CBadge color="success" className="ms-2">{counts.approved}</CBadge>
+                ) : (
+                  activeTab === 'approved' && pagination?.total > 0 && (
+                    <CBadge color="success" className="ms-2">{pagination.total}</CBadge>
+                  )
                 )}
               </CNavLink>
             </CNavItem>
             <CNavItem>
               <CNavLink
                 active={activeTab === 'rejected'}
-                onClick={() => changeTab('rejected')}
+                onClick={() => changeTab('rejected', searchTerm)}
                 style={{ cursor: 'pointer' }}
               >
                 Rejetés
-                {activeTab === 'rejected' && pagination?.total > 0 && (
-                  <CBadge color="danger" className="ms-2">{pagination.total}</CBadge>
+                {typeof counts?.rejected === 'number' ? (
+                  <CBadge color="danger" className="ms-2">{counts.rejected}</CBadge>
+                ) : (
+                  activeTab === 'rejected' && pagination?.total > 0 && (
+                    <CBadge color="danger" className="ms-2">{pagination.total}</CBadge>
+                  )
                 )}
               </CNavLink>
             </CNavItem>

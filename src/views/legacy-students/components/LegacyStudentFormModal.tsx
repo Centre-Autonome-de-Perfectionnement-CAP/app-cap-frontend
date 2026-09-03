@@ -106,8 +106,8 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
       newErrors.enrollment_year = 'Ce champ est requis.'
     } else {
       const year = Number(form.enrollment_year)
-      if (year >= 2023) {
-        newErrors.enrollment_year = 'L\'année doit être strictement inférieure à 2023.'
+      if (year > 2025) {
+        newErrors.enrollment_year = 'L\'année doit être inférieure ou égale à 2025.'
       }
     }
     
@@ -156,7 +156,7 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
             <CCol md={6}>
               <CFormInput
                 type="number"
-                label="Année d'inscription (< 2023)"
+                label="Année d'inscription (≤ 2025)"
                 value={form.enrollment_year}
                 onChange={e => setForm({ ...form, enrollment_year: e.target.value as unknown as number })}
                 invalid={!!errors.enrollment_year}
@@ -246,7 +246,22 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
               <label className="form-label">Cycle d'études</label>
               <CFormSelect
                 value={form.cycle || ''}
-                onChange={(e) => setForm({ ...form, cycle: e.target.value || undefined })}
+                onChange={(e) => {
+                  const newCycle = e.target.value || undefined
+                  const isDeptValid = filieres.some((f) => {
+                    if (String(f.id) !== String(form.department_id)) return false
+                    if (newCycle === 'Licence Professionnelle') return f.cycle_id === 1
+                    if (newCycle === 'Master Professionnel') return f.cycle_id === 2
+                    if (newCycle === 'Cycle Ingénieur - Prépa') return f.cycle_id === 3 && f.name.toLowerCase().startsWith('prépa')
+                    if (newCycle === 'Cycle Ingénieur - Spécialité') return f.cycle_id === 3 && !f.name.toLowerCase().startsWith('prépa')
+                    return true
+                  })
+                  setForm({
+                    ...form,
+                    cycle: newCycle,
+                    department_id: isDeptValid ? form.department_id : '',
+                  })
+                }}
                 invalid={!!errors.cycle}
               >
                 <option value="">-- Choisir un cycle --</option>
@@ -266,9 +281,20 @@ const LegacyStudentFormModal = ({ visible, mode, student, filieres, onClose, onS
                 invalid={!!errors.department_id}
               >
                 <option value="">-- Choisir une filière --</option>
-                {filieres.map(f => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
+                {filieres
+                  .filter((f) => {
+                    if (!form.cycle) return true
+                    if (form.cycle === 'Licence Professionnelle') return f.cycle_id === 1
+                    if (form.cycle === 'Master Professionnel') return f.cycle_id === 2
+                    if (form.cycle === 'Cycle Ingénieur - Prépa') return f.cycle_id === 3 && f.name.toLowerCase().startsWith('prépa')
+                    if (form.cycle === 'Cycle Ingénieur - Spécialité') return f.cycle_id === 3 && !f.name.toLowerCase().startsWith('prépa')
+                    return true
+                  })
+                  .map(f => (
+                    <option key={f.id} value={f.id}>
+                      {f.name} {f.abbreviation ? `(${f.abbreviation})` : ''}
+                    </option>
+                  ))}
               </CFormSelect>
               {errors.department_id && <div className="invalid-feedback d-block">{errors.department_id}</div>}
             </CCol>

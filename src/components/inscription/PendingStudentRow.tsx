@@ -6,9 +6,11 @@ import {
   CFormInput,
   CFormSwitch,
   CBadge,
+  CButton,
+  CTooltip,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilCheckCircle, cilXCircle, cilPencil } from '@coreui/icons'
+import { cilCheckCircle, cilXCircle, cilPencil, cilTransfer } from '@coreui/icons'
 import Select from 'react-select'
 import type { PendingStudentData } from '../../types/inscription.types'
 import RenamePieceModal from './RenamePieceModal'
@@ -33,6 +35,7 @@ interface PendingStudentRowProps {
   onStatusChange: (studentId: number, field: 'exonere' | 'sponsorise', checked: boolean) => void
   onLevelChange: (studentId: number, level: string) => void
   onRenamePiece: (studentId: number, pieceKey: string, customName: string) => Promise<void | { success: boolean }>
+  onTransferWave?: (student: PendingStudentData) => void
 }
 
 /**
@@ -52,6 +55,7 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
   onStatusChange,
   onLevelChange,
   onRenamePiece,
+  onTransferWave,
 }) => {
   const getStatusColor = (status: string) => {
     if (status === 'approved') return 'success'
@@ -85,24 +89,49 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
 
         {/* Nom et Prénoms */}
         <CTableDataCell>
-          <div className="d-flex align-items-start flex-wrap gap-1">
-            <span>{student.first_name + ' ' + student.last_name}</span>
+          {/* Ligne 1 : Nom + badges de statut */}
+          <div className="d-flex align-items-center flex-wrap gap-1">
+            <span className="fw-semibold">{student.first_name + ' ' + student.last_name}</span>
             {/* Badge Vague */}
             {student.initial_wave && (
               <CBadge
                 color="info"
-                className="ms-1"
                 style={{ fontSize: '0.68rem', fontFamily: 'monospace', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}
-                title={`Dossier soumis lors de la Vague ${student.initial_wave}`}
+                title={`Dossier affecté à la Vague ${student.initial_wave}`}
               >
                 VAGUE {student.initial_wave}
               </CBadge>
+            )}
+            {/* Badge Transféré avec historique */}
+            {student.transfer_history && student.transfer_history.length > 0 && (
+              <CTooltip
+                content={
+                  <div style={{ textAlign: 'left', minWidth: '220px' }}>
+                    <strong>Historique des transferts :</strong>
+                    {student.transfer_history.map((t, i) => (
+                      <div key={i} style={{ marginTop: '4px', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.2)' : 'none', paddingTop: i > 0 ? '4px' : 0 }}>
+                        <div>V{t.from_wave} ➔ V{t.to_wave}</div>
+                        <div style={{ opacity: 0.8, fontSize: '0.85em' }}>{new Date(t.transferred_at).toLocaleString('fr-FR')}</div>
+                        <div style={{ opacity: 0.8, fontSize: '0.85em' }}>Par : {t.transferred_by}</div>
+                        {t.reason && <div style={{ opacity: 0.7, fontSize: '0.82em', fontStyle: 'italic' }}>{t.reason}</div>}
+                      </div>
+                    ))}
+                  </div>
+                }
+                placement="top"
+              >
+                <CBadge
+                  color="secondary"
+                  style={{ fontSize: '0.68rem', whiteSpace: 'nowrap', cursor: 'help' }}
+                >
+                  🔄 Transféré ×{student.transfer_history.length}
+                </CBadge>
+              </CTooltip>
             )}
             {/* Badge Modifié par l'étudiant */}
             {student.is_updated_by_student && student.last_student_update_at && (
               <CBadge
                 color="warning"
-                className="ms-1"
                 style={{ fontSize: '0.68rem', whiteSpace: 'nowrap', cursor: 'help' }}
                 title={
                   Array.isArray(student.student_update_summary) && student.student_update_summary.length > 0
@@ -116,6 +145,21 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
               </CBadge>
             )}
           </div>
+          {/* Ligne 2 : Bouton de transfert — toujours visible */}
+          {onTransferWave && (
+            <div className="mt-1">
+              <CButton
+                size="sm"
+                color="warning"
+                className="py-0 px-2 d-flex align-items-center gap-1"
+                style={{ fontSize: '0.72rem', fontWeight: 600 }}
+                onClick={() => onTransferWave(student)}
+              >
+                <CIcon icon={cilTransfer} size="sm" />
+                Changer de vague
+              </CButton>
+            </div>
+          )}
         </CTableDataCell>
 
         {/* Contact Téléphonique */}

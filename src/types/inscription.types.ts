@@ -157,6 +157,14 @@ export interface PendingStudentData {
   // Champs multi-vagues
   tracking_code?: string;
   initial_wave?: number;
+  transferred_from_wave?: number | null;
+  transfer_history?: Array<{
+    from_wave: number;
+    to_wave: number;
+    transferred_at: string;
+    transferred_by: string;
+    reason?: string;
+  }> | null;
   is_updated_by_student?: boolean;
   last_student_update_at?: string | null;
   student_update_summary?: Record<string, { old: any; new: any }> | null;

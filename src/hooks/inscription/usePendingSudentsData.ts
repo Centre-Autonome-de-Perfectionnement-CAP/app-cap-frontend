@@ -307,6 +307,39 @@ const usePendingStudentsData = () => {
     }
   };
 
+  // Fonction pour transférer un étudiant vers une autre vague
+  const transferWave = async (studentId: number, toWave: number, reason: string): Promise<FunctionResult> => {
+    try {
+      const response = await InscriptionService.transferWave(studentId, toWave, reason);
+      // Mettre à jour localement le dossier pour refléter le transfert
+      setPendingStudents(prev =>
+        prev.map(student => {
+          if (student.id !== studentId) return student;
+          const newHistory = [
+            ...(student.transfer_history || []),
+            {
+              from_wave: student.initial_wave || 1,
+              to_wave: toWave,
+              transferred_at: new Date().toISOString(),
+              transferred_by: 'Administrateur',
+              reason: reason || undefined,
+            },
+          ];
+          return {
+            ...student,
+            transferred_from_wave: student.initial_wave || 1,
+            initial_wave: toWave,
+            transfer_history: newHistory,
+          };
+        })
+      );
+      return { success: true };
+    } catch (error: any) {
+      console.error('Erreur lors du transfert de vague:', error);
+      return { success: false, error: error?.response?.data?.message || error?.message || String(error) };
+    }
+  };
+
   return {
     academicYears,
     pendingStudents,
@@ -336,6 +369,7 @@ const usePendingStudentsData = () => {
     updateStudentStatus,
     updateStudentLevel,
     renamePiece,
+    transferWave,
   };
 };
 

@@ -6,6 +6,7 @@ import {
   PendingStudentsToolbar,
   StudentsFilter,
   ValidatedStudentsModal,
+  TransferWaveModal,
 } from '../../../components/inscription'
 import { Pagination, LoadingSpinner } from '../../../components/common'
 import usePendingStudentsData from '../../../hooks/inscription/usePendingSudentsData'
@@ -53,12 +54,14 @@ const PendingStudents: React.FC = () => {
     updateStudentStatus,
     updateStudentLevel,
     renamePiece,
+    transferWave,
   } = usePendingStudentsData()
 
   const [editedData, setEditedData] = useState<PendingStudentData[]>(pendingStudents)
   const [localSearchQuery, setLocalSearchQuery] = useState<string>(searchQuery)
   const [selectedStudents, setSelectedStudents] = useState<number[]>([])
   const [showValidatedStudentsModal, setShowValidatedStudentsModal] = useState(false)
+  const [transferModalStudent, setTransferModalStudent] = useState<PendingStudentData | null>(null)
 
   const debouncedSearchQuery = useDebounce(localSearchQuery, 300)
 
@@ -390,6 +393,43 @@ const PendingStudents: React.FC = () => {
     [handleExport]
   )
 
+  const handleTransferWave = useCallback(
+    async (studentId: number, toWave: number, reason: string): Promise<void> => {
+      const result = await transferWave(studentId, toWave, reason)
+      if (result.success) {
+        setEditedData(prev =>
+          prev.map(s => {
+            if (s.id !== studentId) return s
+            const newHistory = [
+              ...(s.transfer_history || []),
+              {
+                from_wave: s.initial_wave || 1,
+                to_wave: toWave,
+                transferred_at: new Date().toISOString(),
+                transferred_by: 'Administrateur',
+                reason: reason || undefined,
+              },
+            ]
+            return { ...s, transferred_from_wave: s.initial_wave || 1, initial_wave: toWave, transfer_history: newHistory }
+          })
+        )
+        Swal.fire({
+          icon: 'success',
+          title: 'Transfert effectué',
+          text: `Dossier transféré vers la Vague ${toWave} avec succès.`,
+          timer: 2000,
+          showConfirmButton: false,
+        })
+      } else {
+        const errMsg = result.error
+          ? (typeof result.error === 'string' ? result.error : result.error?.message)
+          : 'Erreur lors du transfert de vague.'
+        Swal.fire({ icon: 'error', title: 'Erreur', text: errMsg })
+      }
+    },
+    [transferWave]
+  )
+
   return (
     <CCard className="mb-4 shadow-sm">
       <CCardHeader>
@@ -437,6 +477,7 @@ const PendingStudents: React.FC = () => {
               onStatusChange={handleStatusChange}
               onLevelChange={handleLevelChange}
               onRenamePiece={renamePiece}
+              onTransferWave={(student) => setTransferModalStudent(student)}
             />
             {totalPages > 1 && (
               <Pagination
@@ -453,6 +494,13 @@ const PendingStudents: React.FC = () => {
         visible={showValidatedStudentsModal}
         onClose={() => setShowValidatedStudentsModal(false)}
         onExport={handleValidatedStudentsExport}
+      />
+
+      <TransferWaveModal
+        visible={!!transferModalStudent}
+        onClose={() => setTransferModalStudent(null)}
+        student={transferModalStudent}
+        onTransfer={handleTransferWave}
       />
     </CCard>
   )

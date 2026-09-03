@@ -246,6 +246,16 @@ class InscriptionService {
   }
 
   /**
+   * Transfère un étudiant vers une autre vague
+   */
+  transferWave = async (id: number | string, toWave: number, reason?: string) => {
+    return await HttpService.patch(`${INSCRIPTION_ROUTES.PENDING_STUDENTS}/${id}/transfer-wave`, {
+      to_wave: toWave,
+      reason,
+    })
+  }
+
+  /**
    * Envoie un mail aux étudiants
    */
   sendMail = async (studentsData: any) => {

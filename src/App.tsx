@@ -29,6 +29,7 @@ const BibliothequeRoutes = React.lazy(() => import('./views/pages/bibliotheque/B
 const AlumniRoutes       = React.lazy(() => import('./views/pages/alumni/AlumniRoutes.tsx'))
 const AlumniList         = React.lazy(() => import('./views/pages/alumni/AlumniList.tsx'))
 const LegacyStudentsIndex = React.lazy(() => import('./views/legacy-students/LegacyStudentsIndex.tsx'))
+const LegacyPrepaRoutes   = React.lazy(() => import('./views/pages/legacy-prepa/LegacyPrepaRoutes.tsx'))
 const DemandesRoutes     = React.lazy(() => import('./views/pages/demandes/DemandesRoutes.tsx'))
 const AdminDbRoutes      = React.lazy(() => import('./views/pages/admin-db/AdminDbRoutes.tsx'))
 const Register           = React.lazy(() => import('./views/pages/register/Register.tsx'))
@@ -209,6 +210,16 @@ const App = () => {
               element={
                 <DefaultLayout>
                   <LegacyStudentsIndex />
+                </DefaultLayout>
+              }
+            />
+
+            {/* ── Module Rattachement Prépa ancien — réservé à l'administrateur ── */}
+            <Route
+              path={`${FRONTEND_ROUTES.LEGACY_PREPA}/*`}
+              element={
+                <DefaultLayout>
+                  <LegacyPrepaRoutes />
                 </DefaultLayout>
               }
             />

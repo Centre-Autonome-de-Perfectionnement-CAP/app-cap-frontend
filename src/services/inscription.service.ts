@@ -612,6 +612,34 @@ class InscriptionService {
     const response = await HttpService.post('inscription/broadcast/whatsapp-invitation', data)
     return response.data
   }
+
+  /**
+   * RATTACHEMENT PREPA ANCIEN - liste des candidats (pending_students Prépa de l'année courante)
+   */
+  getLegacyPrepaCandidates = async (params?: any) => {
+    const query = new URLSearchParams(params || {}).toString()
+    const url = query
+      ? `${INSCRIPTION_ROUTES.LEGACY_PREPA_CANDIDATES}?${query}`
+      : INSCRIPTION_ROUTES.LEGACY_PREPA_CANDIDATES
+    const response = await HttpService.get<{ data: any }>(url)
+    return response.data
+  }
+
+  /**
+   * Vérifie l'état du rattachement pour un étudiant en attente donné
+   */
+  checkLegacyPrepaLink = async (pendingStudentId: number | string) => {
+    const response = await HttpService.get<{ data: any }>(INSCRIPTION_ROUTES.LEGACY_PREPA_CHECK(pendingStudentId))
+    return response.data
+  }
+
+  /**
+   * Exécute le rattachement de l'historique Prépa à l'étudiant en attente
+   */
+  linkLegacyPrepa = async (pendingStudentId: number | string, data: any) => {
+    const response = await HttpService.post<{ data: any }>(INSCRIPTION_ROUTES.LEGACY_PREPA_LINK(pendingStudentId), data)
+    return response.data
+  }
 }
 
 export default new InscriptionService()

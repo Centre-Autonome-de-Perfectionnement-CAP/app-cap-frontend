@@ -21,7 +21,8 @@ import attestationNavigation  from './attestation.tsx'
 import presenceNavigation     from './presence.tsx'
 import getNoteNavigation      from './note.tsx'
 import getCahierNavigation    from './cahier.tsx'
-import getDemandesNavigation  from './demandes.tsx'   // ← remplace workflow.tsx
+import getDemandesNavigation  from './demandes.tsx'
+import getLegacyPrepaNavigation from './legacy-prepa.tsx'
 
 const mainNavigation = [
   {
@@ -152,4 +153,5 @@ export {
   presenceNavigation,
   getNoteNavigation,
   getDemandesNavigation,   // ← ajouté, workflow retiré
+  getLegacyPrepaNavigation,
 }

@@ -3,8 +3,8 @@ import { cilTask } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
 const getLegacyPrepaNavigation = (role: string | null) => {
-  // Module réservé à l'administrateur / Chef CAP uniquement
-  if (role !== 'admin' && role !== 'chef-cap') {
+  // Module réservé au Chef CAP / Chef Division
+  if (role !== 'chef-cap' && role !== 'chef-division') {
     return []
   }
 

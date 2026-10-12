@@ -1,6 +1,6 @@
 // src/views/pages/legacy-prepa/LegacyPrepaGuard.tsx
 //
-// Garde d'accès dédiée : module réservé à l'administrateur uniquement.
+// Garde d'accès dédiée : module réservé au Chef CAP / Chef Division.
 // Volontairement isolée de src/protected/ProtectedRoutes.tsx pour rester
 // autonome et facile à retirer. Pour changer les rôles autorisés, modifier
 // uniquement ALLOWED_ROLES ci-dessous ET la même constante côté backend
@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts'
 import { FRONTEND_ROUTES } from '@/constants'
 import { LoadingSpinner } from '@/components'
 
-const ALLOWED_ROLES = ['admin', 'chef-cap']
+const ALLOWED_ROLES = ['chef-cap', 'chef-division']
 
 interface Props {
   children: React.ReactNode

@@ -2,7 +2,7 @@
 //
 // Module séparé et autonome (comme admin-db) : Rattachement des historiques
 // Prépa (< 2023) aux dossiers Prépa Ingénieur en cours.
-// Réservé à l'administrateur via LegacyPrepaGuard.
+// Réservé au Chef CAP / Chef Division via LegacyPrepaGuard.
 
 import React, { Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'

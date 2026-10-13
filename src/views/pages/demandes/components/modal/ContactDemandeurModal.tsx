@@ -3,8 +3,10 @@
 // Modal secrétaire (uniquement) : envoie un message libre + pièces jointes
 // au demandeur, par WhatsApp ET email en une seule action.
 //
-// Comportement demandé explicitement :
-//   - Envoi SYNCHRONE avec état de chargement visible
+// Comportement :
+//   - Envoi ASYNCHRONE côté serveur (13/10/2026) : WhatsApp et email sont mis
+//     en file d'envoi indépendamment, avec retry automatique — la réponse est
+//     immédiate (plus d'erreur de délai alors que le message part bien)
 //   - À la fin : modal de résultat avec succès/échec PAR CANAL, motif exact
 //     affiché en cas d'échec (pas de message générique)
 //   - En cas d'échec : bouton "Réessayer"
@@ -29,6 +31,7 @@ import type { DocumentRequest } from '@/types/document-request.types'
 interface ChannelResult {
   attempted: boolean
   success: boolean
+  queued?: boolean
   reason: string | null
 }
 
@@ -47,6 +50,8 @@ interface Props {
 
 const MAX_FILES     = 5
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 Mo — doit rester aligné avec la limite backend
+// Formats acceptés — alignés sur la validation backend (contactDemandeur)
+const ACCEPTED_EXT  = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx']
 
 // ─── Ligne de résultat par canal ─────────────────────────────────────────────
 
@@ -84,10 +89,10 @@ const ChannelRow = ({ label, result }: { label: string; result: ChannelResult })
       />
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 700, fontSize: '0.875rem', color: ok ? '#166534' : '#991b1b' }}>
-          {label} — {ok ? 'Envoyé avec succès' : 'Échec de l\u2019envoi'}
+          {label} — {ok ? (result.queued ? 'Pris en charge — envoi en cours' : 'Envoyé avec succès') : 'Échec de l\u2019envoi'}
         </div>
-        {!ok && result.reason && (
-          <div style={{ fontSize: '0.8rem', color: '#b91c1c', marginTop: 4, lineHeight: 1.5 }}>
+        {result.reason && (
+          <div style={{ fontSize: '0.8rem', color: ok ? '#92400e' : '#b91c1c', marginTop: 4, lineHeight: 1.5 }}>
             {result.reason}
           </div>
         )}
@@ -130,12 +135,16 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
     setFileError(null)
 
     const incoming = Array.from(files)
+    const extOk    = (f: File) => ACCEPTED_EXT.includes((f.name.split('.').pop() || '').toLowerCase())
+    const badType  = incoming.find(f => !extOk(f))
     const tooLarge = incoming.find(f => f.size > MAX_FILE_SIZE)
-    if (tooLarge) {
+    if (badType) {
+      setFileError(`"${badType.name}" : format non accepté (PDF, images, Word, Excel) — fichier ignoré.`)
+    } else if (tooLarge) {
       setFileError(`"${tooLarge.name}" dépasse 10 Mo — fichier ignoré.`)
     }
 
-    const valid = incoming.filter(f => f.size <= MAX_FILE_SIZE)
+    const valid = incoming.filter(f => f.size <= MAX_FILE_SIZE && extOk(f))
     const merged = [...attachments, ...valid].slice(0, MAX_FILES)
 
     if (attachments.length + valid.length > MAX_FILES) {
@@ -265,6 +274,7 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
               ref={fileInputRef}
               type="file"
               multiple
+              accept={ACCEPTED_EXT.map(e => `.${e}`).join(',')}
               onChange={e => handleFilesSelected(e.target.files)}
               style={{ fontSize: '0.85rem' }}
               disabled={attachments.length >= MAX_FILES}
@@ -309,7 +319,7 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
               Envoi en cours...
             </div>
             <div style={{ fontSize: '0.82rem', color: '#94a3b8', textAlign: 'center' }}>
-              WhatsApp et email sont contactés — merci de patienter, ne fermez pas cette fenêtre.
+              Préparation de l'envoi WhatsApp et email — merci de patienter.
             </div>
           </div>
         )}
@@ -325,7 +335,7 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
                 style={{ width: 22, color: overallFailed ? '#d97706' : '#16a34a' }}
               />
               <span style={{ fontWeight: 800, fontSize: '1rem', color: overallFailed ? '#92400e' : '#166534' }}>
-                {overallFailed ? 'Envoi partiellement échoué' : 'Message envoyé avec succès'}
+                {overallFailed ? 'Envoi partiellement échoué' : 'Message pris en charge'}
               </span>
             </div>
 

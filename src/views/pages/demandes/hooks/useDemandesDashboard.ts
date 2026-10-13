@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import documentRequestService from '@/services/document-request.service'
+import { useToast } from '@/contexts'
 import type { DocumentRequest } from '@/types/document-request.types'
 
 interface Filters { search?: string; type?: string }
@@ -19,7 +20,19 @@ interface UseDemandesDashboardReturn {
   reload: () => Promise<void>
 }
 
+// Rafraîchissement silencieux en arrière-plan. CORRECTIF : 2 s générait une
+// requête de listing (lourde : jointures + sous-requêtes) toutes les 2 s par
+// onglet ouvert. 10 s reste quasi temps réel pour un circuit de validation,
+// et aucun appel n'est fait quand l'onglet n'est pas visible.
+const POLLING_INTERVAL_MS = 10_000
+
+const extractErrorMessage = (e: any): string =>
+  e?.response?.data?.message ||
+  e?.message ||
+  "L'action n'a pas pu être effectuée. Veuillez réessayer."
+
 const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboardReturn => {
+  const toast = useToast()
   const [demandes,   setDemandes]   = useState<DocumentRequest[]>([])
   const [loading,    setLoading]    = useState(true)
   const [filters,    setFilters]    = useState<Filters>(initialFilters)
@@ -49,13 +62,13 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
     load(false)
   }, [load])
 
-  // Intelligent polling every 2 seconds (silent background refresh)
+  // Polling silencieux (voir POLLING_INTERVAL_MS) — suspendu si l'onglet est masqué
   useEffect(() => {
     let isMounted = true
     let isFetching = false
 
     const interval = setInterval(async () => {
-      if (isFetching) return
+      if (isFetching || document.visibilityState === 'hidden') return
       isFetching = true
       try {
         const res = await documentRequestService.getAll(filters)
@@ -73,7 +86,7 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
       } finally {
         isFetching = false
       }
-    }, 2000)
+    }, POLLING_INTERVAL_MS)
 
     return () => {
       isMounted = false
@@ -88,17 +101,19 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
     if (!selected) return
     try {
       await documentRequestService.transition(selected.id, { action, ...extra } as any)
-      // Succès : ferme la modal et rafraîchit
+      // Succès : retour visible, fermeture de la modal et rafraîchissement
+      toast.success(`Dossier ${selected.reference} : action enregistrée.`)
       closeDetail()
       await load()
     } catch (e: any) {
-      // Échec : on laisse la modal ouverte pour que l'utilisateur voie l'erreur
-      // et puisse réessayer. Le composant parent affichera l'erreur via console.
+      // CORRECTIF : l'erreur n'était que loguée en console — l'acteur cliquait
+      // sans aucun retour (403, 422 motif manquant…). Elle est désormais
+      // affichée ; la modal reste ouverte pour corriger / réessayer.
       console.error('Erreur transition:', e?.message || e)
-      // On propage l'erreur pour que le dashboard local puisse l'afficher si besoin
+      toast.error(extractErrorMessage(e), 'Action impossible')
       throw e
     }
-  }, [selected, load, closeDetail])
+  }, [selected, load, closeDetail, toast])
 
   return {
     demandes, loading, filters, setFilters,

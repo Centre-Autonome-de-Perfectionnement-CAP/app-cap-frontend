@@ -8,6 +8,7 @@ import { CRow, CCol, CSpinner, CFormTextarea } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilWarning, cilCheckCircle, cilHistory, cilCommentBubble } from '@coreui/icons'
 import documentRequestService from '@/services/document-request.service'
+import { useToast } from '@/contexts'
 import type { HistoryEntry } from './HistoriquePanel'
 import type { DocumentRequest } from '@/types/document-request.types'
 
@@ -22,6 +23,8 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
   const [loading,   setLoading]   = useState(true)
   const [clearing,  setClearing]  = useState(false)
   const [comment,   setComment]   = useState('')
+
+  const toast = useToast()
 
   useEffect(() => {
     let cancelled = false
@@ -47,9 +50,11 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
         action: 'clear_flag',
         ...(comment.trim() ? { comment: comment.trim() } : {}),
       } as any)
+      toast.success('Réserve levée.')
       onFlagCleared?.()
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
+      toast.error(e?.message || 'La réserve n\u2019a pas pu être levée.', 'Action impossible')
     } finally {
       setClearing(false)
     }

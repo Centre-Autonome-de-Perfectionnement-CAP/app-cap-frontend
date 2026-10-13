@@ -143,7 +143,8 @@ const LegacyPrepaLink: React.FC = () => {
         ...linkData,
         academic_year_id: Number(linkData.academic_year_id),
       })
-      const matricule = res?.student?.student_id_number
+      const matricule =
+        res?.student?.student_id_number ?? res?.data?.student?.student_id_number
       setSuccess(
         matricule
           ? `Historique Prépa rattaché avec succès. Matricule de l'étudiant : ${matricule}. Il est désormais éligible à l'inscription Spécialité.`

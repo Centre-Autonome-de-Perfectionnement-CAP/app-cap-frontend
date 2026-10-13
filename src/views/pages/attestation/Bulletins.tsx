@@ -22,7 +22,7 @@ import attestationService from '@/services/attestation.service'
 import type { EligibleStudent } from '@/types/attestation.types'
 
 const Bulletins = () => {
-  const { students, loading, loadStudents } = useAttestationData('passage')
+  const { students, loading, loadStudents } = useAttestationData('bulletins')
   const { academicYears } = useAnneeAcademiqueData()
 
   const [generatingId,   setGeneratingId]   = useState<number | null>(null)

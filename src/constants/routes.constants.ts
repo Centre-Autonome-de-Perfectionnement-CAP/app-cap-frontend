@@ -42,6 +42,10 @@ export const INSCRIPTION_ROUTES = {
   PUBLIC_ACADEMIC_YEARS_FOR_DEPARTMENT: (departmentId: number | string) =>
     `inscription/public/academic-years/department/${departmentId}`,
   PUBLIC_ENTRY_DIPLOMAS: 'inscription/public/entry-diplomas',
+  LEGACY_PREPA_CANDIDATES: 'inscription/legacy-prepa/candidates',
+  LEGACY_PREPA_CHECK: (id: number | string) => `inscription/legacy-prepa/check/${id}`,
+  LEGACY_PREPA_LINK: (id: number | string) => `inscription/legacy-prepa/link/${id}`,
+
 } as const
 
 export const FINANCE_ROUTES = {
@@ -219,6 +223,9 @@ export const FRONTEND_ROUTES = {
   DEMANDES:           '/demandes',          // rôles secrétaire/comptable/chef-cap (DefaultLayout)
   DEMANDES_CAP_LOGIN: '/demandes/login',    // page de login dédiée direction
   DEMANDES_CAP:       '/demandes/cap',      // espace isolé direction (CAPLayout)
+
+  // ── Module Rattachement Prépa ancien (admin uniquement) ─────────────────────
+  LEGACY_PREPA: '/legacy-prepa',
 
   // Errors
   PAGE_404: '/404',

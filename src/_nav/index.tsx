@@ -4,11 +4,13 @@ import CIcon from '@coreui/icons-react'
 import {
   cilBell, cilCalculator, cilChartPie, cilCursor, cilExternalLink,
   cilNotes, cilPencil, cilDrop, cilPuzzle, cilSpeedometer, cilStar,
+  cilFolderOpen,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
 import inscriptionNavigation  from './inscription.tsx'
 import alumniNavigation       from './alumni.tsx'
+import legacyStudentsNavigation from './legacy-students.tsx'
 import getEmploiNavigation    from './emploi-du-temps.tsx'
 import { getRhNavigation, rhNavigation } from './rh.tsx'
 import soutenanceNavigation   from './soutenance.tsx'
@@ -21,6 +23,7 @@ import getNoteNavigation      from './note.tsx'
 import getCahierNavigation    from './cahier.tsx'
 import getDemandesNavigation  from './demandes.tsx'   // ← remplace workflow.tsx
 import whatsappNavigation     from './whatsapp.tsx'
+import getLegacyPrepaNavigation from './legacy-prepa.tsx'
 
 const mainNavigationBase = [
   {
@@ -29,6 +32,18 @@ const mainNavigationBase = [
     to: '/dashboard',
     icon: <CIcon icon={cilSpeedometer} className="nav-icon" />,
     badge: { color: 'info', text: 'NEW' },
+  },
+  { component: CNavTitle, name: 'Archives & Scolarité (< 2023)' },
+  {
+    component: CNavGroup,
+    name: 'Anciens Étudiants',
+    to: '/legacy-students',
+    icon: <CIcon icon={cilFolderOpen} className="nav-icon" />,
+    items: [
+      { component: CNavItem, name: 'Registres & Fiches', to: '/legacy-students/registres' },
+      { component: CNavItem, name: 'Demandes de Services', to: '/legacy-students/services' },
+      { component: CNavItem, name: 'Délivrance Documents', to: '/legacy-students/documents' },
+    ],
   },
   { component: CNavTitle, name: 'Alumni' },
   { component: CNavItem, name: 'Fiches Alumni', to: '/alumni/list', icon: <CIcon icon={cilStar} className="nav-icon" /> },
@@ -153,6 +168,7 @@ export {
   getMainNavigation,
   inscriptionNavigation,
   alumniNavigation,
+  legacyStudentsNavigation,
   getEmploiNavigation,
   attestationNavigation,
   bibliothequeNavigation,
@@ -166,4 +182,5 @@ export {
   getNoteNavigation,
   getDemandesNavigation,
   whatsappNavigation,
+  getLegacyPrepaNavigation,
 }

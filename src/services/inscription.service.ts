@@ -244,6 +244,33 @@ class InscriptionService {
   };
 
   /**
+   * Modifie une période d'une année académique
+   */
+  updatePeriod = async (yearId: number, data: {
+    id?: number,
+    type: string,
+    old_start_date?: string,
+    old_end_date?: string,
+    start_date: string,
+    end_date: string,
+    departments: number[]
+  }) => {
+    return await HttpService.put(INSCRIPTION_ROUTES.ACADEMIC_YEAR_PERIODS(yearId), data)
+  }
+
+  /**
+   * Supprime une période d'une année académique
+   */
+  deletePeriodGroup = async (yearId: number, data: {
+    id?: number,
+    type: string,
+    start_date?: string,
+    end_date?: string
+  }) => {
+    return await HttpService.delete(INSCRIPTION_ROUTES.ACADEMIC_YEAR_PERIODS(yearId), data)
+  }
+
+  /**
    * Récupère les périodes d'une année académique
    */
   getPeriods = async (yearId: number) => {
@@ -339,6 +366,16 @@ class InscriptionService {
       custom_name: customName
     });
   };
+
+  /**
+   * Transfère un étudiant vers une autre vague
+   */
+  transferWave = async (id: number | string, toWave: number, reason?: string) => {
+    return await HttpService.patch(`${INSCRIPTION_ROUTES.PENDING_STUDENTS}/${id}/transfer-wave`, {
+      to_wave: toWave,
+      reason,
+    })
+  }
 
   /**
    * Soumet des documents pour un étudiant en attente
@@ -779,6 +816,34 @@ class InscriptionService {
     
     return result;
   };
+
+  /**
+   * RATTACHEMENT PREPA ANCIEN - liste des candidats (pending_students Prépa de l'année courante)
+   */
+  getLegacyPrepaCandidates = async (params?: any) => {
+    const query = new URLSearchParams(params || {}).toString()
+    const url = query
+      ? `${INSCRIPTION_ROUTES.LEGACY_PREPA_CANDIDATES}?${query}`
+      : INSCRIPTION_ROUTES.LEGACY_PREPA_CANDIDATES
+    const response = await HttpService.get<{ data: any }>(url)
+    return response.data
+  }
+
+  /**
+   * Vérifie l'état du rattachement pour un étudiant en attente donné
+   */
+  checkLegacyPrepaLink = async (pendingStudentId: number | string) => {
+    const response = await HttpService.get<{ data: any }>(INSCRIPTION_ROUTES.LEGACY_PREPA_CHECK(pendingStudentId))
+    return response.data
+  }
+
+  /**
+   * Exécute le rattachement de l'historique Prépa à l'étudiant en attente
+   */
+  linkLegacyPrepa = async (pendingStudentId: number | string, data: any) => {
+    const response = await HttpService.post<{ data: any }>(INSCRIPTION_ROUTES.LEGACY_PREPA_LINK(pendingStudentId), data)
+    return response.data
+  }
 }
 
 export default new InscriptionService();

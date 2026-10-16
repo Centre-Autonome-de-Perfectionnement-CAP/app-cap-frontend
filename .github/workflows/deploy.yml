@@ -3,7 +3,7 @@ name: 🚀 Deploy app-cap-frontend (Progiciel)
 on:
   push:
     branches:
-      - mirco-dev
+      - main
 
 jobs:
   deploy:

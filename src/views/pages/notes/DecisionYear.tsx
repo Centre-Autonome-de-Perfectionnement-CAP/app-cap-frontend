@@ -137,20 +137,24 @@ const DecisionYear = () => {
     if (!selectedAcademicYear) return
     // setLoading(true) // Fonction non disponible dans ce contexte
     try {
-      const decisionsArray = Object.entries(decisions).map(([studentId, decision]) => ({
-        student_id: parseInt(studentId),
-        decision
-      }))
+      const decisionsArray = Object.entries(decisions).map(([studentId, decision]) => {
+        const studentObj = students.find(s => s.id === parseInt(studentId))
+        return {
+          student_id: parseInt(studentId),
+          student_pending_student_id: (studentObj as any)?.student_pending_student_id,
+          decision,
+          year_decision: decision
+        }
+      })
       
       await notesService.saveYearDecisions({
         academic_year_id: selectedAcademicYear,
         decisions: decisionsArray
       })
     } catch (err: any) {
-      // setError(err.message || 'Erreur lors de la sauvegarde') // Fonction non disponible
       console.error('Erreur lors de la sauvegarde:', err)
     } finally {
-      // setLoading(false) // Fonction non disponible dans ce contexte
+      // Fin
     }
   }
 
@@ -160,7 +164,7 @@ const DecisionYear = () => {
       autoDecisions[student.id] = getAutomaticDecision(
         student.moyenneAnnuelle || 0,
         (student.creditsS1 || 0) + (student.creditsS2 || 0),
-        student.totalCredits,
+        student.totalCredits || 60,
         student.level || 'L1'
       )
     })
@@ -168,8 +172,7 @@ const DecisionYear = () => {
   }
 
   const handleExportPV = async () => {
-    if (!selectedAcademicYear || !selectedDepartment || !selectedLevel || !selectedCohort) return
-    // setLoading(true) // Fonction non disponible dans ce contexte
+    if (!selectedAcademicYear || !selectedDepartment || !selectedLevel) return
     try {
       const result = await exportPVFinAnnee({
         academic_year_id: selectedAcademicYear,
@@ -189,14 +192,13 @@ const DecisionYear = () => {
         URL.revokeObjectURL(result.url)
       }
     } catch (err: any) {
-      // setError(err.message || 'Erreur lors de l\'export') // Fonction non disponible
       console.error('Erreur lors de l\'export:', err)
     } finally {
-      // setLoading(false) // Fonction non disponible dans ce contexte
+      // Fin
     }
   }
 
-  const isFiltersComplete = selectedAcademicYear && selectedDepartment && selectedLevel && selectedCohort
+  const isFiltersComplete = selectedAcademicYear && selectedDepartment && selectedLevel
 
   console.log('DecisionYear - Filters:', {
     selectedAcademicYear,
@@ -289,7 +291,7 @@ const DecisionYear = () => {
           </CRow>
           {!isFiltersComplete && (
             <CAlert color="info" className="mt-3 mb-0">
-              Veuillez sélectionner tous les filtres (Année, Filière, Niveau, Cohorte) pour activer les exports.
+              Veuillez sélectionner les filtres obligatoires (Année, Filière, Niveau) pour afficher les étudiants et délibérer.
             </CAlert>
           )}
         </CCardBody>

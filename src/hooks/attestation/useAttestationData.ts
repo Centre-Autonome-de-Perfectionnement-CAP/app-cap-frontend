@@ -13,6 +13,7 @@ export type AttestationType =
   | 'preparatory'
   | 'licence'
   | 'bulletin'
+  | 'bulletins'
 
 // ─── Helpers internes ────────────────────────────────────────────────────────
 
@@ -53,6 +54,9 @@ const useAttestationData = (type: AttestationType = 'passage') => {
         case 'passage':
         case 'licence':    // la licence filtre par niveau, mais la liste = passage
           response = await attestationService.getEligibleForSuccess(filters)
+          break
+        case 'bulletins':
+          response = await attestationService.getEligibleForBulletins(filters)
           break
         case 'definitive':
           response = await attestationService.getEligibleForDefinitive(filters)

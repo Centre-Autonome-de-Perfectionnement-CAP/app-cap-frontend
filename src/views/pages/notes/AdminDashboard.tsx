@@ -38,10 +38,12 @@ const AdminDashboard = () => {
   const {
     dashboardStats,
     gradesByFilters,
+    programDetails,
     loading,
     error,
     loadDashboard,
     loadGradesByFilters,
+    loadProgramDetails,
     exportByDepartment
   } = useAdminGrades()
 
@@ -122,13 +124,18 @@ const AdminDashboard = () => {
     }))
   }, [levels])
 
-  const programOptions = [
-    { value: null, label: 'Tous les programmes' }
-  ]
+  const programOptions = useMemo(() => {
+    return [
+      { value: null, label: 'Tous les programmes (Vue d\'ensemble)' },
+      ...(gradesByFilters || []).map((p: any) => ({
+        value: p.program_id,
+        label: `${p.program_name} (${p.class_name})`
+      }))
+    ]
+  }, [gradesByFilters])
 
-  // Charger le dashboard au montage
+  // Charger l'année académique courante par défaut
   useEffect(() => {
-    // Sélectionner l'année académique courante par défaut
     const currentYear = academicYears.find((year: any) => year.is_current)
     if (currentYear) {
       setSelectedAcademicYear(currentYear.id)
@@ -154,6 +161,13 @@ const AdminDashboard = () => {
     loadGradesByFilters(filters)
   }, [selectedAcademicYear, selectedCohort, selectedDepartment, selectedLevel, selectedProgram])
 
+  // Charger le détail du programme sélectionné
+  useEffect(() => {
+    if (selectedProgram) {
+      loadProgramDetails(selectedProgram)
+    }
+  }, [selectedProgram])
+
   const handleExport = async (format: 'pdf' | 'excel') => {
     if (!selectedAcademicYear) {
       alert('Veuillez sélectionner une année académique')
@@ -171,7 +185,7 @@ const AdminDashboard = () => {
     }
   }
 
-  if (loading && !dashboardStats) {
+  if (loading && !dashboardStats && (!gradesByFilters || gradesByFilters.length === 0)) {
     return <LoadingSpinner fullPage message="Chargement du dashboard..." />
   }
 
@@ -181,40 +195,50 @@ const AdminDashboard = () => {
         <CCol>
           <h2>Dashboard des Notes</h2>
           <p className="text-muted">
-            Vue d'ensemble des évaluations et des résultats par filière
+            Vue d'ensemble des évaluations et des résultats par filière et par programme
           </p>
         </CCol>
       </CRow>
 
       {/* Statistiques */}
-      {gradesByFilters && gradesByFilters.length > 0 && (
-        <CRow className="mb-4">
-          <StatsCard
-            value={gradesByFilters.length}
-            label="Total Étudiants"
-            icon={cilPeople}
-            color="primary"
-          />
-          <StatsCard
-            value={gradesByFilters.filter((s: any) => s.validated).length}
-            label="Étudiants Validés"
-            icon={cilCheckCircle}
-            color="success"
-          />
-          <StatsCard
-            value={gradesByFilters.filter((s: any) => s.programs_count).reduce((sum: number, s: any) => sum + (s.programs_count || 0), 0)}
-            label="Total Programmes"
-            icon={cilBook}
-            color="info"
-          />
-          <StatsCard
-            value={`${((gradesByFilters.filter((s: any) => s.validated).length / gradesByFilters.length) * 100).toFixed(1)}%`}
-            label="Taux de Réussite"
-            icon={cilChart}
-            color="warning"
-          />
-        </CRow>
-      )}
+      {gradesByFilters && gradesByFilters.length > 0 && (() => {
+        const totalPrograms = gradesByFilters.length
+        const totalStudents = gradesByFilters.reduce((sum: number, p: any) => sum + (p.total_students || 0), 0)
+        const studentsWithGrades = gradesByFilters.reduce((sum: number, p: any) => sum + (p.students_with_grades || 0), 0)
+        const evaluatedPrograms = gradesByFilters.filter((p: any) => p.average_class != null && !isNaN(Number(p.average_class)))
+        const globalAverage = evaluatedPrograms.length > 0
+          ? (evaluatedPrograms.reduce((sum: number, p: any) => sum + Number(p.average_class), 0) / evaluatedPrograms.length).toFixed(2)
+          : '-'
+
+        return (
+          <CRow className="mb-4">
+            <StatsCard
+              value={totalPrograms}
+              label="Total Programmes"
+              icon={cilBook}
+              color="primary"
+            />
+            <StatsCard
+              value={totalStudents}
+              label="Inscriptions Cours"
+              icon={cilPeople}
+              color="info"
+            />
+            <StatsCard
+              value={studentsWithGrades}
+              label="Étudiants avec Notes"
+              icon={cilCheckCircle}
+              color="success"
+            />
+            <StatsCard
+              value={globalAverage !== '-' ? `${globalAverage} / 20` : 'N/A'}
+              label="Moyenne des Classes"
+              icon={cilChart}
+              color="warning"
+            />
+          </CRow>
+        )
+      })()}
 
       {/* Filtres */}
       <CCard className="mb-4">
@@ -232,6 +256,7 @@ const AdminDashboard = () => {
                 onChange={(option: any) => {
                   setSelectedAcademicYear(option?.value || null)
                   setSelectedCohort(null)
+                  setSelectedProgram(null)
                 }}
                 placeholder="Sélectionner..."
                 isSearchable
@@ -273,12 +298,23 @@ const AdminDashboard = () => {
             </CCol>
           </CRow>
           
-          <CRow className="mt-3">
-            <CCol>
+          <CRow>
+            <CCol md={6}>
+              <label className="form-label">Programme / Cours spécifique</label>
+              <Select
+                options={programOptions}
+                value={programOptions.find(opt => opt.value === selectedProgram)}
+                onChange={(option: any) => setSelectedProgram(option?.value ?? null)}
+                placeholder="Tous les programmes..."
+                isSearchable
+                isClearable
+              />
+            </CCol>
+            <CCol md={6} className="d-flex align-items-end">
               <CDropdown>
                 <CDropdownToggle color="primary">
                   <CIcon icon={cilCloudDownload} className="me-1" />
-                  Exporter
+                  Exporter par Filière
                 </CDropdownToggle>
                 <CDropdownMenu>
                   <CDropdownItem onClick={() => handleExport('pdf')}>
@@ -302,10 +338,26 @@ const AdminDashboard = () => {
 
       {/* Tableau des résultats */}
       <CCard>
-        <CCardHeader>
-          <strong>Résultats par Programme</strong>
-          {selectedProgram === null && (
-            <span className="ms-2 text-muted">(Vue d'ensemble)</span>
+        <CCardHeader className="d-flex justify-content-between align-items-center">
+          <div>
+            <strong>
+              {selectedProgram === null 
+                ? 'Résultats par Programme (Vue d\'ensemble)' 
+                : `Détail des Notes — ${programDetails?.program?.name || 'Programme'}`}
+            </strong>
+            {selectedProgram !== null && programDetails?.program?.class_group?.name && (
+              <span className="ms-2 text-muted">({programDetails.program.class_group.name})</span>
+            )}
+          </div>
+          {selectedProgram !== null && (
+            <CButton
+              size="sm"
+              color="secondary"
+              variant="outline"
+              onClick={() => setSelectedProgram(null)}
+            >
+              ← Revenir à la vue d'ensemble
+            </CButton>
           )}
         </CCardHeader>
         <CCardBody>
@@ -315,40 +367,53 @@ const AdminDashboard = () => {
               <CTable striped hover>
                 <CTableHead>
                   <CTableRow>
-                    <CTableHeaderCell>Matricule</CTableHeaderCell>
-                    <CTableHeaderCell>Nom et Prénoms</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Programmes</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Moyenne Générale</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Statut</CTableHeaderCell>
+                    <CTableHeaderCell>Programme / Matière</CTableHeaderCell>
+                    <CTableHeaderCell>Classe / Niveau</CTableHeaderCell>
+                    <CTableHeaderCell>Professeur</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Total Inscrits</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Avec Notes</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Moyenne Classe</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
                   {gradesByFilters && gradesByFilters.length > 0 ? (
-                    gradesByFilters.map((student: any) => (
-                      <CTableRow key={student.id}>
-                        <CTableDataCell>{student.matricule || 'N/A'}</CTableDataCell>
+                    gradesByFilters.map((program: any) => (
+                      <CTableRow key={program.program_id}>
                         <CTableDataCell>
-                          <strong>{student.nom} {student.prenoms}</strong>
+                          <strong>{program.program_name}</strong>
+                        </CTableDataCell>
+                        <CTableDataCell>{program.class_name}</CTableDataCell>
+                        <CTableDataCell>{program.professor || 'Non assigné'}</CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          <CBadge color="primary">{program.total_students || 0}</CBadge>
                         </CTableDataCell>
                         <CTableDataCell className="text-center">
-                          {student.programs_count || 0}
-                        </CTableDataCell>
-                        <CTableDataCell className="text-center">
-                          <CBadge color={student.average >= 12 ? 'success' : student.average >= 10 ? 'info' : 'danger'}>
-                            {student.average ? student.average.toFixed(2) : '-'}
+                          <CBadge color={program.students_with_grades > 0 ? 'success' : 'secondary'}>
+                            {program.students_with_grades || 0}
                           </CBadge>
                         </CTableDataCell>
                         <CTableDataCell className="text-center">
-                          <CBadge color={student.validated ? 'success' : 'danger'}>
-                            {student.validated ? 'Validé' : 'Non validé'}
+                          <CBadge color={program.average_class >= 12 ? 'success' : program.average_class >= 10 ? 'info' : program.average_class ? 'danger' : 'secondary'}>
+                            {program.average_class ? Number(program.average_class).toFixed(2) : '-'}
                           </CBadge>
+                        </CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          <CButton
+                            size="sm"
+                            color="info"
+                            variant="outline"
+                            onClick={() => setSelectedProgram(program.program_id)}
+                          >
+                            Consulter Notes
+                          </CButton>
                         </CTableDataCell>
                       </CTableRow>
                     ))
                   ) : (
                     <CTableRow>
-                      <CTableDataCell colSpan={5} className="text-center">
-                        {loading ? 'Chargement...' : 'Aucune donnée disponible. Sélectionnez des filtres.'}
+                      <CTableDataCell colSpan={7} className="text-center py-4 text-muted">
+                        {loading ? 'Chargement...' : 'Aucun programme disponible pour ces filtres.'}
                       </CTableDataCell>
                     </CTableRow>
                   )}
@@ -356,64 +421,77 @@ const AdminDashboard = () => {
               </CTable>
             </div>
           ) : (
-            // Vue détaillée d'un programme spécifique
+            // Vue détaillée d'un programme spécifique avec vrais étudiants
             <div className="table-responsive">
               <CTable striped hover>
                 <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell>Matricule</CTableHeaderCell>
                     <CTableHeaderCell>Nom et Prénoms</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Eval 1 (30%)</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Eval 2 (40%)</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Eval 3 (30%)</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Moyenne</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Évaluations</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Moyenne Normale</CTableHeaderCell>
                     <CTableHeaderCell className="text-center">Rattrapage</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Moy. Finale</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Professeur</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Moyenne Finale</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Statut</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {/* Données simulées */}
-                  <CTableRow>
-                    <CTableDataCell>2024001</CTableDataCell>
-                    <CTableDataCell>
-                      <strong>DUPONT Jean</strong>
-                    </CTableDataCell>
-                    <CTableDataCell className="text-center">15.0</CTableDataCell>
-                    <CTableDataCell className="text-center">14.0</CTableDataCell>
-                    <CTableDataCell className="text-center">14.5</CTableDataCell>
-                    <CTableDataCell className="text-center">
-                      <CBadge color="success">14.3</CBadge>
-                    </CTableDataCell>
-                    <CTableDataCell className="text-center">
-                      <CBadge color="success">V</CBadge>
-                    </CTableDataCell>
-                    <CTableDataCell className="text-center">
-                      <CBadge color="success">14.3</CBadge>
-                    </CTableDataCell>
-                    <CTableDataCell className="text-center">
-                      <small>Prof. BERNARD</small>
-                    </CTableDataCell>
-                  </CTableRow>
-                  <CTableRow>
-                    <CTableDataCell>2024002</CTableDataCell>
-                    <CTableDataCell>
-                      <strong>MARTIN Marie</strong>
-                    </CTableDataCell>
-                    <CTableDataCell className="text-center">8.0</CTableDataCell>
-                    <CTableDataCell className="text-center">9.0</CTableDataCell>
-                    <CTableDataCell className="text-center">7.5</CTableDataCell>
-                    <CTableDataCell className="text-center">
-                      <CBadge color="danger">8.2</CBadge>
-                    </CTableDataCell>
-                    <CTableDataCell className="text-center">12.0</CTableDataCell>
-                    <CTableDataCell className="text-center">
-                      <CBadge color="success">12.0</CBadge>
-                    </CTableDataCell>
-                    <CTableDataCell className="text-center">
-                      <small>Prof. BERNARD</small>
-                    </CTableDataCell>
-                  </CTableRow>
+                  {programDetails?.students && programDetails.students.length > 0 ? (
+                    programDetails.students.map((student: any) => {
+                      const finalAvg = student.retake_average != null ? student.retake_average : student.average
+                      return (
+                        <CTableRow key={student.student_pending_student_id || student.student_id}>
+                          <CTableDataCell>{student.student_id || 'N/A'}</CTableDataCell>
+                          <CTableDataCell>
+                            <strong>{student.last_name} {student.first_names}</strong>
+                          </CTableDataCell>
+                          <CTableDataCell className="text-center">
+                            {Array.isArray(student.grades) && student.grades.length > 0 ? (
+                              <div className="d-flex justify-content-center gap-1">
+                                {student.grades.map((g: number, idx: number) => (
+                                  <CBadge key={idx} color={g >= 10 ? 'light' : 'warning'} className="border text-dark">
+                                    {g >= 0 ? g : '-'}
+                                  </CBadge>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-muted">-</span>
+                            )}
+                          </CTableDataCell>
+                          <CTableDataCell className="text-center">
+                            <CBadge color={student.average >= 12 ? 'success' : student.average >= 10 ? 'info' : student.average != null ? 'danger' : 'secondary'}>
+                              {student.average != null ? Number(student.average).toFixed(2) : '-'}
+                            </CBadge>
+                          </CTableDataCell>
+                          <CTableDataCell className="text-center">
+                            {student.retake_average != null ? (
+                              <CBadge color={student.retake_average >= 10 ? 'success' : 'danger'}>
+                                {Number(student.retake_average).toFixed(2)}
+                              </CBadge>
+                            ) : (
+                              <span className="text-muted">-</span>
+                            )}
+                          </CTableDataCell>
+                          <CTableDataCell className="text-center">
+                            <CBadge color={finalAvg >= 12 ? 'success' : finalAvg >= 10 ? 'info' : finalAvg != null ? 'danger' : 'secondary'}>
+                              {finalAvg != null ? Number(finalAvg).toFixed(2) : '-'}
+                            </CBadge>
+                          </CTableDataCell>
+                          <CTableDataCell className="text-center">
+                            <CBadge color={student.validated ? 'success' : 'danger'}>
+                              {student.validated ? 'Validé' : 'Non validé'}
+                            </CBadge>
+                          </CTableDataCell>
+                        </CTableRow>
+                      )
+                    })
+                  ) : (
+                    <CTableRow>
+                      <CTableDataCell colSpan={7} className="text-center py-4 text-muted">
+                        {loading ? 'Chargement des détails...' : 'Aucun étudiant trouvé dans ce cours.'}
+                      </CTableDataCell>
+                    </CTableRow>
+                  )}
                 </CTableBody>
               </CTable>
             </div>

@@ -74,7 +74,10 @@ const Dashboard = () => {
       label: 'Nom et Prénoms',
       align: 'center' as const,
       render: (_: any, item: any) => 
-        item.student ? `${item.student.first_name} ${item.student.last_name}` : 'N/A',
+        item.student_full_name
+          || (item.student ? `${item.student.first_name || ''} ${item.student.last_name || ''}`.trim() : '')
+          || (item.legacy_student ? `${item.legacy_student.first_name || ''} ${item.legacy_student.last_name || ''}`.trim() : '')
+          || 'N/A',
     },
     {
       key: 'amount',

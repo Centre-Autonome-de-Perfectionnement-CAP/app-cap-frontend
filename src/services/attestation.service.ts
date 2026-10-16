@@ -78,6 +78,23 @@ class AttestationService {
     return HttpService.get(qs ? `${BASE_URL}/eligible/preparatory?${qs}` : `${BASE_URL}/eligible/preparatory`)
   }
 
+  /** Étudiants éligibles — bulletins (avec notes pour l'année sélectionnée) */
+  getEligibleForBulletins = async (filters: {
+    academic_year_id?: number
+    department_id?: number
+    cohort?: string
+    search?: string
+  }) => {
+    const params = new URLSearchParams()
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+        params.append(key, value.toString())
+      }
+    })
+    const qs = params.toString()
+    return HttpService.get(qs ? `${BASE_URL}/eligible/bulletins?${qs}` : `${BASE_URL}/eligible/bulletins`)
+  }
+
   // ── Génération unitaire ─────────────────────────────────────────────────────
 
   /** Attestation de passage (en cours de cycle, décision favorable) */

@@ -30,7 +30,7 @@ const useDecisionData = (
 
   useEffect(() => {
     const loadStudents = async () => {
-      if (!academicYearId || !departmentId || !level || !cohort) {
+      if (!academicYearId || !departmentId || !level) {
         setStudents([])
         return
       }
@@ -39,21 +39,20 @@ const useDecisionData = (
       setError(null)
       try {
         let response
+        const params: any = {
+          academic_year_id: academicYearId,
+          department_id: departmentId,
+          level
+        }
+        if (cohort && cohort !== 'all') {
+          params.cohort = cohort
+        }
+
         if (semester !== undefined) {
-          response = await notesService.getStudentsBySemester({
-            academic_year_id: academicYearId,
-            department_id: departmentId,
-            level,
-            cohort,
-            semester
-          })
+          params.semester = semester
+          response = await notesService.getStudentsBySemester(params)
         } else {
-          response = await notesService.getStudentsByYear({
-            academic_year_id: academicYearId,
-            department_id: departmentId,
-            level,
-            cohort
-          })
+          response = await notesService.getStudentsByYear(params)
         }
         setStudents(response.data || [])
       } catch (err: any) {

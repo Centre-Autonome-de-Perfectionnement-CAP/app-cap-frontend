@@ -36,6 +36,7 @@ import Swal from 'sweetalert2'
 const Validation = () => {
   const {
     pendingPayments,
+    counts,
     loading,
     error,
     validatePayment,
@@ -56,6 +57,24 @@ const Validation = () => {
   const [rejectionReason, setRejectionReason] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [receiptUrl, setReceiptUrl] = useState('')
+
+  const getStudentName = (payment: any) => {
+    if (!payment) return 'N/A'
+    if (payment.student_full_name) return payment.student_full_name
+    if (payment.legacy_student) return `${payment.legacy_student.first_name} ${payment.legacy_student.last_name}`
+    if (payment.student_pending_student?.pending_student?.personal_information) {
+      const pi = payment.student_pending_student.pending_student.personal_information
+      return `${pi.first_names} ${pi.last_name}`
+    }
+    if (payment.studentPendingStudent?.first_name || payment.studentPendingStudent?.last_name) {
+      return `${payment.studentPendingStudent.first_name || ''} ${payment.studentPendingStudent.last_name || ''}`.trim()
+    }
+    if (payment.student?.personal_information) {
+      const pi = payment.student.personal_information
+      return `${pi.first_names} ${pi.last_name}`
+    }
+    return 'N/A'
+  }
 
   const handleValidate = (payment: any) => {
     setSelectedPayment(payment)
@@ -183,18 +202,37 @@ const Validation = () => {
   return (
     <>
       <CCard>
-        <CCardHeader className="d-flex justify-content-between align-items-center">
+        <CCardHeader className="d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h5 className="mb-0">Validation des Quittances</h5>
-          <div className="d-flex gap-2">
+          <div className="d-flex gap-2 align-items-center">
             <CFormInput
-              placeholder="Rechercher par matricule, nom..."
+              placeholder="Rechercher par matricule, nom, référence..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ width: '300px' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleSearch()
+                }
+              }}
+              style={{ width: '320px' }}
             />
-            <CButton color="primary" onClick={handleSearch}>
+            <CButton color="primary" onClick={handleSearch} title="Rechercher">
               <CIcon icon={cilSearch} />
             </CButton>
+            {searchTerm && (
+              <CButton
+                color="secondary"
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm('')
+                  searchPayments('', 1)
+                }}
+                title="Effacer la recherche"
+              >
+                <CIcon icon={cilXCircle} />
+              </CButton>
+            )}
           </div>
         </CCardHeader>
         <CCardBody>
@@ -209,36 +247,48 @@ const Validation = () => {
             <CNavItem>
               <CNavLink
                 active={activeTab === 'pending'}
-                onClick={() => changeTab('pending')}
+                onClick={() => changeTab('pending', searchTerm)}
                 style={{ cursor: 'pointer' }}
               >
                 En attente
-                {activeTab === 'pending' && pagination?.total > 0 && (
-                  <CBadge color="warning" className="ms-2">{pagination.total}</CBadge>
+                {typeof counts?.pending === 'number' ? (
+                  <CBadge color="warning" className="ms-2">{counts.pending}</CBadge>
+                ) : (
+                  activeTab === 'pending' && pagination?.total > 0 && (
+                    <CBadge color="warning" className="ms-2">{pagination.total}</CBadge>
+                  )
                 )}
               </CNavLink>
             </CNavItem>
             <CNavItem>
               <CNavLink
                 active={activeTab === 'approved'}
-                onClick={() => changeTab('approved')}
+                onClick={() => changeTab('approved', searchTerm)}
                 style={{ cursor: 'pointer' }}
               >
                 Validés
-                {activeTab === 'approved' && pagination?.total > 0 && (
-                  <CBadge color="success" className="ms-2">{pagination.total}</CBadge>
+                {typeof counts?.approved === 'number' ? (
+                  <CBadge color="success" className="ms-2">{counts.approved}</CBadge>
+                ) : (
+                  activeTab === 'approved' && pagination?.total > 0 && (
+                    <CBadge color="success" className="ms-2">{pagination.total}</CBadge>
+                  )
                 )}
               </CNavLink>
             </CNavItem>
             <CNavItem>
               <CNavLink
                 active={activeTab === 'rejected'}
-                onClick={() => changeTab('rejected')}
+                onClick={() => changeTab('rejected', searchTerm)}
                 style={{ cursor: 'pointer' }}
               >
                 Rejetés
-                {activeTab === 'rejected' && pagination?.total > 0 && (
-                  <CBadge color="danger" className="ms-2">{pagination.total}</CBadge>
+                {typeof counts?.rejected === 'number' ? (
+                  <CBadge color="danger" className="ms-2">{counts.rejected}</CBadge>
+                ) : (
+                  activeTab === 'rejected' && pagination?.total > 0 && (
+                    <CBadge color="danger" className="ms-2">{pagination.total}</CBadge>
+                  )
                 )}
               </CNavLink>
             </CNavItem>
@@ -267,13 +317,8 @@ const Validation = () => {
                     {(pagination?.current_page - 1) * (pagination?.per_page || 10) + index + 1}
                   </CTableDataCell>
                   <CTableDataCell>{payment.student_id_number}</CTableDataCell>
-                  <CTableDataCell>
-                    {payment.student 
-                      ? `${payment.student_pending_student.pending_student.personal_information.first_names} ${payment.student_pending_student.pending_student.personal_information.last_name}`
-                      : payment.studentPendingStudent
-                      ? `${payment.studentPendingStudent.first_name} ${payment.studentPendingStudent.last_name}`
-                      : 'N/A'
-                    }
+                  <CTableDataCell className="fw-semibold">
+                    {getStudentName(payment)}
                   </CTableDataCell>
                   <CTableDataCell>{payment.amount?.toLocaleString()} FCFA</CTableDataCell>
                   <CTableDataCell>
@@ -474,13 +519,8 @@ const Validation = () => {
               <div className="col-md-6">
                 <div className="mb-3">
                   <label className="form-label fw-bold text-muted small">Nom et Prénoms</label>
-                  <p className="mb-0">
-                    {selectedPayment.student 
-                      ? `${selectedPayment.student_pending_student.pending_student.personal_information.first_names} ${selectedPayment.student_pending_student.pending_student.personal_information.last_name}`
-                      : selectedPayment.studentPendingStudent
-                      ? `${selectedPayment.studentPendingStudent.first_name} ${selectedPayment.studentPendingStudent.last_name}`
-                      : 'N/A'
-                    }
+                  <p className="mb-0 fw-semibold">
+                    {getStudentName(selectedPayment)}
                   </p>
                 </div>
               </div>

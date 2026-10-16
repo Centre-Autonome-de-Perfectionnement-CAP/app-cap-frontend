@@ -34,6 +34,7 @@ interface PendingStudentsTableProps {
   ) => void
   onLevelChange: (studentId: number, level: string) => void
   onRenamePiece: (studentId: number, pieceKey: string, customName: string) => Promise<void | { success: boolean }>;
+  onTransferWave?: (student: PendingStudentData) => void;
 }
 
 /**
@@ -53,6 +54,7 @@ const PendingStudentsTable: React.FC<PendingStudentsTableProps> = ({
   onStatusChange,
   onLevelChange,
   onRenamePiece,
+  onTransferWave,
 }) => {
   if (students.length === 0) {
     return (
@@ -123,6 +125,7 @@ const PendingStudentsTable: React.FC<PendingStudentsTableProps> = ({
             onStatusChange={onStatusChange}
             onLevelChange={onLevelChange}
             onRenamePiece={onRenamePiece}
+            onTransferWave={onTransferWave}
           />
         ))}
       </CTableBody>

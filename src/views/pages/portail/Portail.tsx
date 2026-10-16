@@ -122,6 +122,20 @@ const applications: Application[] = [
     hasBadge: false,
   },
   {
+    title: 'CAP Ancien Etudiant(< 2023)',
+    description: '',
+    image: getAssetUrl('images/anciens-etudiants.jpg'),
+    url: '/legacy-students',
+    hasBadge: false,
+  },
+  {
+    title: 'CAP Rattachement Prépa',
+    description: 'Rattacher l\'historique Prépa (< 2023) aux dossiers en cours.',
+    image: getAssetUrl('images/inscription.png'),
+    url: '/legacy-prepa',
+    hasBadge: false,
+  },
+  {
     title: 'CAP Demandes',
     description: '',
     image: getAssetUrl('images/attestations.jpeg'),

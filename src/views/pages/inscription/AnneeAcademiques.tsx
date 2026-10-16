@@ -10,6 +10,7 @@ import {
   AcademicYearForm,
   AcademicYearList,
   AddPeriodModal,
+  EditPeriodModal,
   PeriodsModal,
 } from '../../../components/inscription'
 import { LoadingSpinner } from '../../../components/common'
@@ -31,12 +32,18 @@ const AnneeAcademiques = () => {
     error,
     createAcademicYear,
     addPeriod,
+    updatePeriod,
+    deletePeriod,
     getPeriods,
   } = useAnneeAcademiqueData()
 
   const createModal = useModal()
   const addPeriodModal = useModal()
+  const editPeriodModal = useModal()
   const periodsModal = useModal()
+
+  const [selectedPeriod, setSelectedPeriod] = useState<any>(null)
+  const [editLoading, setEditLoading] = useState(false)
 
   const [newYearStart, setNewYearStart] = useState<Date | null>(null)
   const [newYearEnd, setNewYearEnd] = useState<Date | null>(null)
@@ -326,6 +333,97 @@ const AnneeAcademiques = () => {
     [getPeriods, periodsModal]
   )
 
+  const handleOpenEditPeriod = useCallback((period: any) => {
+    setSelectedPeriod(period)
+    editPeriodModal.open()
+  }, [editPeriodModal])
+
+  const handleUpdatePeriod = useCallback(async (data: any) => {
+    if (!selectedYear?.id) return
+    setEditLoading(true)
+
+    try {
+      const result = await updatePeriod(selectedYear.id, data)
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Succès',
+          text: 'Période modifiée avec succès.',
+        })
+        editPeriodModal.close()
+        // Recharger les périodes de l'année
+        const refresh = await getPeriods(selectedYear.id)
+        if (refresh.success) {
+          setPeriods(refresh.data || [])
+        }
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Erreur',
+          text: result.error?.message || result.error || 'Échec de la modification de la période.',
+        })
+      }
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: err.message || 'Une erreur est survenue lors de la modification.',
+      })
+    } finally {
+      setEditLoading(false)
+    }
+  }, [selectedYear, updatePeriod, getPeriods, editPeriodModal])
+
+  const handleDeletePeriod = useCallback(async (period: any) => {
+    if (!selectedYear?.id) return
+
+    const confirm = await Swal.fire({
+      title: 'Supprimer cette période ?',
+      text: `Êtes-vous sûr de vouloir supprimer la période du ${period.start} au ${period.end} ?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler',
+    })
+
+    if (!confirm.isConfirmed) return
+
+    try {
+      const result = await deletePeriod(selectedYear.id, {
+        id: period.id,
+        type: period.type,
+        start_date: period.start_raw || period.start,
+        end_date: period.end_raw || period.end,
+      })
+
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Supprimée',
+          text: 'La période a été supprimée avec succès.',
+        })
+        const refresh = await getPeriods(selectedYear.id)
+        if (refresh.success) {
+          setPeriods(refresh.data || [])
+        }
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Erreur',
+          text: result.error?.message || result.error || 'Échec de la suppression.',
+        })
+      }
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: err.message || 'Une erreur est survenue lors de la suppression.',
+      })
+    }
+  }, [selectedYear, deletePeriod, getPeriods])
+
   if (loading) {
     return <LoadingSpinner message="Chargement des années académiques..." fullPage />
   }
@@ -394,6 +492,17 @@ const AnneeAcademiques = () => {
         selectedYear={selectedYear}
         periods={periods}
         loading={periodsLoading}
+        onEditPeriod={handleOpenEditPeriod}
+        onDeletePeriod={handleDeletePeriod}
+      />
+
+      <EditPeriodModal
+        visible={editPeriodModal.isOpen}
+        onClose={editPeriodModal.close}
+        onSubmit={handleUpdatePeriod}
+        period={selectedPeriod}
+        filieres={filieres}
+        loading={editLoading}
       />
     </>
   )

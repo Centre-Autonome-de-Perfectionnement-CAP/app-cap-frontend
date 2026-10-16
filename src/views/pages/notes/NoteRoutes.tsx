@@ -24,7 +24,10 @@ const NoteRoutes = () => {
   }
 
   const isProfesseur = role === 'professeur';
-  const isAdmin      = role === 'admin' || role === 'scolarite' || role === 'direction';
+  // FUSION main : tout le personnel administratif (chef-division,
+  // responsable-division, chef CAP…) accède à l'administration des notes ;
+  // l'API applique ses propres contrôles de rôle.
+  const isAdmin      = !!role && !isProfesseur && role !== 'etudiant';
 
   // Routes contrats : publiques (accessibles même sans authentification)
   const publicContratRoutes = (
@@ -78,6 +81,9 @@ const NoteRoutes = () => {
             <Route path="admin/consultation"      element={<AdminConsultation />} />
             <Route path="admin/decision-semester" element={<DecisionSemester />} />
             <Route path="admin/decision-year"     element={<DecisionYear />} />
+            {/* Adresses de main (liens existants) */}
+            <Route path="decisions/semester"      element={<DecisionSemester />} />
+            <Route path="decisions/year"          element={<DecisionYear />} />
           </>
         )}
 

@@ -127,10 +127,15 @@ const DecisionSemester = () => {
     if (!selectedAcademicYear) return
     // setLoading(true) // Fonction non disponible dans ce contexte
     try {
-      const decisionsArray = Object.entries(decisions).map(([studentId, decision]) => ({
-        student_id: parseInt(studentId),
-        decision
-      }))
+      const decisionsArray = Object.entries(decisions).map(([studentId, decision]) => {
+        const studentObj = students.find(s => s.id === parseInt(studentId))
+        return {
+          student_id: parseInt(studentId),
+          student_pending_student_id: (studentObj as any)?.student_pending_student_id,
+          decision,
+          semester_decision: decision
+        }
+      })
       
       await notesService.saveSemesterDecisions({
         academic_year_id: selectedAcademicYear,
@@ -138,10 +143,9 @@ const DecisionSemester = () => {
         decisions: decisionsArray
       })
     } catch (err: any) {
-      // setError(err.message || 'Erreur lors de la sauvegarde') // Fonction non disponible
       console.error('Erreur lors de la sauvegarde:', err)
     } finally {
-      // setLoading(false) // Fonction non disponible dans ce contexte
+      // Fin
     }
   }
 
@@ -149,24 +153,23 @@ const DecisionSemester = () => {
     const autoDecisions: Record<number, string> = {}
     students.forEach(student => {
       autoDecisions[student.id] = getAutomaticDecision(
-        student.moyenne,
-        student.credits,
-        student.totalCredits
+        student.moyenne || 0,
+        student.credits || 0,
+        student.totalCredits || 30
       )
     })
     setDecisions(autoDecisions)
   }
 
   const handleExportPV = async () => {
-    if (!selectedAcademicYear || !selectedDepartment || !selectedLevel || !selectedCohort) return
-    // setLoading(true) // Fonction non disponible dans ce contexte
+    if (!selectedAcademicYear || !selectedDepartment || !selectedLevel) return
     try {
       const result = await exportPVDeliberation({
         academic_year_id: selectedAcademicYear,
         department_id: selectedDepartment,
         level: selectedLevel,
         semester: selectedSemester,
-        cohort: selectedCohort
+        cohort: selectedCohort || undefined
       })
       
       if (result.success && result.url) {
@@ -179,14 +182,13 @@ const DecisionSemester = () => {
         URL.revokeObjectURL(result.url)
       }
     } catch (err: any) {
-      // setError(err.message || 'Erreur lors de l\'export') // Fonction non disponible
       console.error('Erreur lors de l\'export:', err)
     } finally {
-      // setLoading(false) // Fonction non disponible dans ce contexte
+      // Fin
     }
   }
 
-  const isFiltersComplete = selectedAcademicYear && selectedDepartment && selectedLevel && selectedCohort
+  const isFiltersComplete = selectedAcademicYear && selectedDepartment && selectedLevel
 
   console.log('DecisionSemester - Filters:', {
     selectedAcademicYear,
@@ -290,7 +292,7 @@ const DecisionSemester = () => {
           </CRow>
           {!isFiltersComplete && (
             <CAlert color="info" className="mt-3 mb-0">
-              Veuillez sélectionner tous les filtres (Année, Filière, Niveau, Cohorte) pour activer les exports.
+              Veuillez sélectionner les filtres obligatoires (Année, Filière, Niveau) pour afficher les étudiants et délibérer.
             </CAlert>
           )}
         </CCardBody>

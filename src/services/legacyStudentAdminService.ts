@@ -140,6 +140,8 @@ const mockAvailableFilieres: LegacyFiliere[] = [
   { id: 7, name: 'Génie Biomédical', abbreviation: 'GBM', cycle: 'Licence' },
 ];
 
+const useMocks = (): boolean => import.meta.env.DEV && import.meta.env.VITE_LEGACY_MOCKS === 'true';
+
 export const legacyStudentAdminService = {
   /**
    * Récupérer la liste paginée et filtrée des anciens étudiants
@@ -174,7 +176,11 @@ export const legacyStudentAdminService = {
         };
       }
       throw new Error('Fallback to mock');
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       let filtered = [...mockLegacyStudents];
 
       if (filters.search) {
@@ -261,7 +267,11 @@ export const legacyStudentAdminService = {
         };
       }
       throw new Error('Fallback to mock');
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       let allServices = mockLegacyStudents.flatMap((s) => s.services_requested || []);
 
       if (filters.search) {
@@ -319,7 +329,11 @@ export const legacyStudentAdminService = {
         reason: rejection_reason,
       });
       return true;
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       mockLegacyStudents.forEach((student) => {
         if (student.services_requested) {
           student.services_requested = student.services_requested.map((srv) => {
@@ -349,7 +363,11 @@ export const legacyStudentAdminService = {
       const response = await this.getAll({ per_page: 1 });
       if (response && response.stats) return response.stats;
       throw new Error('Fallback to mock');
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       const allServices = mockLegacyStudents.flatMap((s) => s.services_requested || []);
       return {
         total: mockLegacyStudents.length,
@@ -372,7 +390,11 @@ export const legacyStudentAdminService = {
       const filieres = Array.isArray(response) ? response : response?.data;
       if (Array.isArray(filieres) && filieres.length > 0) return filieres;
       throw new Error('Fallback to mock');
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       return mockAvailableFilieres;
     }
   },
@@ -385,7 +407,11 @@ export const legacyStudentAdminService = {
       const response = await HttpService.get<any>(`admin/legacy-students/${id}`);
       if (response && response.data) return response.data;
       throw new Error('Fallback to mock');
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       return mockLegacyStudents.find((s) => String(s.id) === String(id)) || null;
     }
   },
@@ -398,7 +424,11 @@ export const legacyStudentAdminService = {
       const response = await HttpService.post<any>('admin/legacy-students', data);
       if (response) return response.data || response;
       throw new Error('Fallback to mock');
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       const department = mockAvailableFilieres.find((f) => String(f.id) === String(data.department_id)) || null;
 
       const newStudent: LegacyStudent = {
@@ -435,7 +465,11 @@ export const legacyStudentAdminService = {
       const response = await HttpService.put<any>(`admin/legacy-students/${id}`, data);
       if (response) return response.data || response;
       throw new Error('Fallback to mock');
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       const index = mockLegacyStudents.findIndex((s) => String(s.id) === String(id));
       if (index === -1) throw new Error('Étudiant introuvable');
 
@@ -473,7 +507,11 @@ export const legacyStudentAdminService = {
       const response = await HttpService.post<any>(`admin/legacy-students/${id}/validate`);
       if (response && response.data) return response.data;
       throw new Error('Fallback to mock');
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       const index = mockLegacyStudents.findIndex((s) => String(s.id) === String(id));
       if (index !== -1) {
         mockLegacyStudents[index] = {
@@ -497,7 +535,11 @@ export const legacyStudentAdminService = {
       const response = await HttpService.post<any>(`admin/legacy-students/${id}/reject`, { reason });
       if (response && response.data) return response.data;
       throw new Error('Fallback to mock');
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       const index = mockLegacyStudents.findIndex((s) => String(s.id) === String(id));
       if (index !== -1) {
         mockLegacyStudents[index] = {
@@ -520,7 +562,11 @@ export const legacyStudentAdminService = {
     try {
       await HttpService.post<any>('admin/legacy-students/bulk-validate', { ids });
       return true;
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       mockLegacyStudents.forEach((student) => {
         if (ids.map(String).includes(String(student.id))) {
           student.status = 'validated';
@@ -540,7 +586,11 @@ export const legacyStudentAdminService = {
     try {
       await HttpService.post<any>('admin/legacy-students/bulk-reject', { ids, reason });
       return true;
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       mockLegacyStudents.forEach((student) => {
         if (ids.map(String).includes(String(student.id))) {
           student.status = 'rejected';
@@ -576,7 +626,11 @@ export const legacyStudentAdminService = {
       formData.append('file', file);
       const response = await HttpService.post<any>('admin/legacy-students/import', formData);
       return { success: true, importedCount: response?.imported_count };
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       return { success: false };
     }
   },
@@ -591,7 +645,11 @@ export const legacyStudentAdminService = {
       const response = await HttpService.get<any>(`admin/legacy-students/${studentId}/academic-records`);
       const data = response?.data ?? response;
       return Array.isArray(data) ? data : [];
-    } catch {
+    } catch (error) {
+      // Données fictives UNIQUEMENT si activées explicitement en dev : en
+      // production, une erreur API (401/403/500) ne doit jamais être masquée
+      // par un faux succès (ex. « dossier validé » alors que rien n'a changé).
+      if (!useMocks()) throw error;
       return [];
     }
   },

@@ -65,7 +65,24 @@ export interface DocumentRequest {
   is_in_correction_circuit?: boolean  // true = boucle active, acteurs verrouillés
   correction_origin_role?: string | null   // slug du rôle ayant déclenché le rejet
   correction_origin_status?: string | null // statut BD avant le rejet
+  // ── Anciens étudiants (déclarés, avant 2023) ─────────────────────────────
+  legacy_student_id?: number | null
+  is_legacy?: boolean | number              // 1/0 renvoyé par MySQL
+  legacy_declaration_status?: LegacyDeclarationStatus | null
+  bulletin_year?: string | null             // année choisie (bulletin, AAAA-AAAA)
+  legacy_enrollment_year?: number | null
+  legacy_cycle?: string | null
+  legacy_place_of_birth?: string | null
+  legacy_email?: string | null
+  legacy_phone?: string | null
+  legacy_rejection_reason?: string | null
+  birth_date?: string | null
 }
+
+export type LegacyDeclarationStatus = 'pending' | 'validated' | 'rejected'
+
+export const isLegacyDemande = (d: Pick<DocumentRequest, 'is_legacy' | 'legacy_student_id'>): boolean =>
+  !!Number(d.is_legacy ?? 0) || !!d.legacy_student_id
 
 export interface WorkflowAction {
   action: string

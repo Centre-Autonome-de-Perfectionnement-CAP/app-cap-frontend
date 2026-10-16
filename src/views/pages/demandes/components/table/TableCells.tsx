@@ -6,7 +6,8 @@ import CIcon from '@coreui/icons-react'
 import { cilExternalLink, cilWarning } from '@coreui/icons'
 import { WorkflowBadge } from '@/components/document-request'
 import type { DocumentRequest } from '@/types/document-request.types'
-import { TYPE_LABELS, RESPONSABLE_DIVISION_LABELS } from '@/types/document-request.types'
+import { TYPE_LABELS, RESPONSABLE_DIVISION_LABELS, isLegacyDemande } from '@/types/document-request.types'
+import { LegacyBadge } from '../modal/LegacyDeclarationPanel'
 
 export const ReferenceCell = ({ d }: { d: DocumentRequest }) => (
   <CTableDataCell style={{ verticalAlign: 'middle' }}>
@@ -27,8 +28,9 @@ export const ReferenceCell = ({ d }: { d: DocumentRequest }) => (
 
 export const EtudiantCell = ({ d, showDept = true }: { d: DocumentRequest; showDept?: boolean }) => (
   <CTableDataCell style={{ verticalAlign: 'middle' }}>
-    <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a' }}>
+    <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
       {d.last_name} {d.first_names}
+      {isLegacyDemande(d) && <LegacyBadge status={d.legacy_declaration_status} />}
     </div>
     <small style={{ color: '#64748b', fontSize: '0.82rem', marginTop: 1, display: 'block', fontWeight: 500 }}>
       {d.matricule || '—'}{showDept && d.department ? ` · ${d.department}` : ''}

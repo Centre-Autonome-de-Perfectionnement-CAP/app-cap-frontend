@@ -17,12 +17,13 @@ import {
   DemandeTable, DemandeModalShell, DemandeDetailBase,
   ResendModal, TabBar, ActionButton, StatCard, useActionColumns,
   ReferenceCell, EtudiantCell, TypeCell, DateCell, StatutCell,
-  SECRETAIRE_TABS, DemandeSearchBar,
+  SECRETAIRE_TABS, DemandeSearchBar, LegacyDeclarationPanel,
 } from '../components'
 import { SecretaryFileUploader } from '@/components/document-request'
 import { STATUS_COLORS } from '../constants/workflow'
 import { CCard, CCardBody, CCardHeader } from '@coreui/react'
 import type { DocumentRequest } from '@/types/document-request.types'
+import { isLegacyDemande } from '@/types/document-request.types'
 import { ROLE_LABELS } from '@/types/document-request.types'
 
 // ─── Bannière circuit de correction ───────────────────────────────────────────
@@ -175,6 +176,9 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
 
   const s         = demande.status
   const inCircuit = !!demande.is_in_correction_circuit
+  // Ancien étudiant : transmission bloquée tant que la déclaration n'est pas validée (D1)
+  const isLegacy          = isLegacyDemande(demande)
+  const legacyNotValidated = isLegacy && demande.legacy_declaration_status !== 'validated'
   // Navette active = circuit actif ET dossier PAS chez la secrétaire
   const navetteActive = inCircuit && s !== 'secretary_correction'
 
@@ -209,11 +213,11 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
           onClick={() => setRejectModal(true)}
         />
         <ActionButton
-          label="Valider → Comptable"
+          label={legacyNotValidated ? 'Valider → Comptable (déclaration à valider)' : 'Valider → Comptable'}
           icon={cilCheckAlt}
           color="primary"
           loading={loadingAction === 'secretaire_validate'}
-          disabled={!!loadingAction && loadingAction !== 'secretaire_validate'}
+          disabled={legacyNotValidated || (!!loadingAction && loadingAction !== 'secretaire_validate')}
           onClick={() => run('secretaire_validate')}
         />
       </>)}
@@ -277,6 +281,13 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       {navetteActive && <NavetteEnCoursBanner demande={demande} />}
       {inCircuit && s === 'secretary_correction' && <CorrectionCircuitBanner demande={demande} />}
       {s === 'secretary_final_review' && <DirecteurSigneBanner />}
+      {isLegacy && (
+        <LegacyDeclarationPanel
+          demande={demande}
+          canDecide={s !== 'rejected' && s !== 'picked_up'}
+          onChanged={onReload}
+        />
+      )}
 
       <DemandeDetailBase demande={demande} onRefresh={onReload}>
         {(s === 'submitted' || s === 'secretary_correction') && (

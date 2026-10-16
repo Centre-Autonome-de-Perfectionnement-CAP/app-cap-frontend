@@ -8,7 +8,8 @@ import { CRow, CCol, CAlert } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilWarning, cilInfo } from '@coreui/icons'
 import type { DocumentRequest } from '@/types/document-request.types'
-import { TYPE_LABELS, RESPONSABLE_DIVISION_LABELS } from '@/types/document-request.types'
+import { TYPE_LABELS, RESPONSABLE_DIVISION_LABELS, isLegacyDemande } from '@/types/document-request.types'
+import { LegacyBadge } from './LegacyDeclarationPanel'
 
 interface Props {
   demande: DocumentRequest
@@ -75,8 +76,9 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
         {/* Bloc Étudiant */}
         <CCol md={6}>
           <InfoBlock title="Étudiant">
-            <p style={{ fontWeight: 700, fontSize: '1rem', color: '#111827', marginBottom: 10 }}>
+            <p style={{ fontWeight: 700, fontSize: '1rem', color: '#111827', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               {demande.last_name} {demande.first_names}
+              {isLegacyDemande(demande) && <LegacyBadge status={demande.legacy_declaration_status} />}
             </p>
             <InfoLine label="Matricule" value={demande.matricule} />
             <InfoLine label="Filière"   value={demande.department} />

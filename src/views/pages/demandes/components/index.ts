@@ -25,6 +25,7 @@ export { default as ConfirmCheckbox }   from './modal/ConfirmCheckbox'
 export { default as HistoriquePanel }   from './modal/HistoriquePanel'
 export { ResendModal } from './modal/SecretaireModals'
 export { default as RetourSecretaireModal } from './modal/RetourSecretaireModal'
+export { default as LegacyDeclarationPanel, LegacyBadge } from './modal/LegacyDeclarationPanel'
 
 // Layout direction
 export { default as DirectionShell }    from './layout/DirectionShell'

@@ -62,6 +62,27 @@ class DocumentRequestService {
     return HttpService.post(`${BASE}/${id}/transition`, payload)
   }
 
+  // ── Commentaires des acteurs sur les pièces du dossier ───────────────────
+  // Tout acteur peut commenter ; seul l'auteur modifie / supprime ;
+  // l'historique (révisions, commentaires supprimés) n'est renvoyé qu'à la
+  // secrétaire et à l'administrateur.
+
+  listFileComments = async (id: number) => {
+    return HttpService.get(`${BASE}/${id}/file-comments`)
+  }
+
+  addFileComment = async (id: number, source: string, key: string, body: string) => {
+    return HttpService.post(`${BASE}/${id}/file-comments`, { file_source: source, file_key: key, body })
+  }
+
+  updateFileComment = async (id: number, commentId: number, body: string) => {
+    return HttpService.patch(`${BASE}/${id}/file-comments/${commentId}`, { body })
+  }
+
+  deleteFileComment = async (id: number, commentId: number) => {
+    return HttpService.delete(`${BASE}/${id}/file-comments/${commentId}`)
+  }
+
   /**
    * Message libre secrétaire → demandeur (texte + pièces jointes),
    * envoyé par WhatsApp ET email. Réponse : détail succès/échec par canal

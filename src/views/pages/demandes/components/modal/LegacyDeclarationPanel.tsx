@@ -7,6 +7,7 @@
 
 import { useState } from 'react'
 import { CAlert } from '@coreui/react'
+import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
 import CIcon from '@coreui/icons-react'
 import { cilBan, cilCheckAlt, cilHistory } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
@@ -68,8 +69,9 @@ const LegacyDeclarationPanel = ({ demande, canDecide = false, onChanged }: Props
     try {
       await legacyStudentAdminService.validate(id)
       await onChanged()
+      await showSuccess('Déclaration validée', "L'ancien étudiant est prévenu. Ses demandes peuvent maintenant être transmises au Comptable.")
     } catch (e: any) {
-      setError(e?.message || 'Validation impossible.')
+      await showError("La déclaration n'a pas été validée", friendlyError(e))
     } finally {
       setLoading(false)
     }
@@ -77,8 +79,15 @@ const LegacyDeclarationPanel = ({ demande, canDecide = false, onChanged }: Props
 
   const reject = async (motif: string) => {
     if (!id) return
-    await legacyStudentAdminService.reject(id, motif)
+    try {
+      await legacyStudentAdminService.reject(id, motif)
+    } catch (e: any) {
+      const msg = friendlyError(e)
+      await showError("La déclaration n'a pas été rejetée", msg)
+      throw new Error(msg)
+    }
     await onChanged()
+    await showSuccess('Déclaration rejetée', "L'ancien étudiant est informé du motif par e-mail et WhatsApp.")
   }
 
   return (

@@ -37,11 +37,7 @@ const ComptableDetailModal = ({ demande, visible, onClose, onAction }: any) => {
     <DemandeModalShell demande={demande} visible={visible} onClose={onClose}
       title="Vérification financière — Comptabilité" footer={footer}>
       <DemandeDetailBase demande={demande}>
-        <FinancialPanel demande={demande} />
-        <CAlert color="info" className="mt-3 py-2" style={{ fontSize: '0.875rem' }}>
-          Vérifiez la situation financière avant de valider.
-          En cas de problème, rejetez avec un commentaire explicite.
-        </CAlert>
+        {null}
       </DemandeDetailBase>
     </DemandeModalShell>
     <MotifModal visible={showReject} title="Rejeter — retour secrétaire"

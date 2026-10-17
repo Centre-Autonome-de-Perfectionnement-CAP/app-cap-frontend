@@ -14,6 +14,7 @@ export { default as StatCard }         from './ui/StatCard'
 export { default as TabBar }           from './ui/TabBar'
 export { default as ActionButton }     from './ui/ActionButton'
 export { default as RadioCard }        from './ui/RadioCard'
+export { default as StatusNote, ReportedIssue, ActorCorrectionNote, CorrectionListNote } from './ui/StatusNote'
 
 // Modal / Shell
 export { default as DashboardShell }    from './modal/DashboardShell'

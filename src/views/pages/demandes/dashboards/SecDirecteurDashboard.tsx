@@ -4,7 +4,7 @@
 
 import { useState } from 'react'
 import { CAlert, CBadge } from '@coreui/react'
-import { cilCheckAlt, cilX, cilWarning } from '@coreui/icons'
+import { cilCheckAlt, cilX, cilWarning, cilSend } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import useDemandesDashboard from '../hooks/useDemandesDashboard'
 import {
@@ -12,49 +12,10 @@ import {
   ActionButton, useActionColumns,
   ReferenceCell, EtudiantCell, TypeCell, DateCell, SignatureTypeCell,
   DemandeSearchBar, RetourSecretaireModal,
+  ActorCorrectionNote, CorrectionListNote
 } from '../components'
 import FlaggedValidationAction from '../components/workflow/FlaggedValidationAction'
 import type { DocumentRequest } from '@/types/document-request.types'
-
-// ─── Bannière circuit de correction ───────────────────────────────────────────
-
-const CorrectionBanner = ({ demande }: { demande: DocumentRequest }) => (
-  <div style={{
-    background: 'linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%)',
-    border: '2px solid #fcd34d',
-    borderLeft: '5px solid #f59e0b',
-    borderRadius: 12, padding: '18px 20px', marginBottom: 20,
-  }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-      <span style={{
-        display: 'inline-flex', width: 28, height: 28, borderRadius: '50%',
-        background: '#f97316', color: '#fff', fontSize: '0.9rem',
-        fontWeight: 900, alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-      }}>⟳</span>
-      <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#78350f' }}>
-        Dossier en circuit de correction
-      </span>
-      <CBadge color="warning" style={{ marginLeft: 'auto', fontSize: '0.875rem', padding: '6px 12px', color: '#fff' }}>
-        Navette active
-      </CBadge>
-    </div>
-    <div style={{ fontSize: '0.95rem', color: '#92400e', lineHeight: 1.7 }}>
-      Veuillez traiter les corrections nécessaires, puis cliquez sur{' '}
-      <strong>"Renvoyer à la Secrétaire"</strong>.
-      <br/>
-      <span style={{ color: '#dc2626', fontWeight: 700 }}>Un commentaire est obligatoire.</span>
-    </div>
-    {demande.rejected_reason && (
-      <div style={{
-        marginTop: 14, padding: '12px 16px', borderRadius: 10,
-        background: 'rgba(255,255,255,0.85)', border: '1px solid #fcd34d',
-        fontSize: '0.92rem', color: '#78350f',
-      }}>
-        <strong>Note de la secrétaire :</strong> {demande.rejected_reason}
-      </div>
-    )}
-  </div>
-)
 
 // ─── Modal détail ─────────────────────────────────────────────────────────────
 
@@ -75,7 +36,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
   const footer = (<>
     <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={loading} />
     {inCircuit ? (
-      <ActionButton label="Renvoyer à la Secrétaire" icon={cilWarning} color="warning"
+      <ActionButton label="Renvoyer à la Secrétaire" icon={cilSend} color="primary"
         loading={loading} onClick={() => setRetourModal(true)} />
     ) : (
       <>
@@ -94,7 +55,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
       title="Transmission — Sec. Directeur" footer={footer}>
       <DemandeDetailBase demande={demande}>
         {inCircuit ? (
-          <CorrectionBanner demande={demande} />
+          <ActorCorrectionNote />
         ) : (
           <CAlert color="info" className="mt-3 py-3" style={{ borderRadius: 12, border: 'none', background: '#f0f9ff', color: '#0369a1' }}>
             <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: 4 }}>Information de transfert</div>

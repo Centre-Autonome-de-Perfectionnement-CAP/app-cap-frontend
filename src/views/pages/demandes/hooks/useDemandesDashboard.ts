@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import documentRequestService from '@/services/document-request.service'
-import { useToast } from '@/contexts'
+import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
+import { successFeedback, FAILURE_TITLE } from '../utils/actionFeedback'
 import type { DocumentRequest } from '@/types/document-request.types'
 
 interface Filters { search?: string; type?: string }
@@ -26,13 +27,7 @@ interface UseDemandesDashboardReturn {
 // et aucun appel n'est fait quand l'onglet n'est pas visible.
 const POLLING_INTERVAL_MS = 10_000
 
-const extractErrorMessage = (e: any): string =>
-  e?.response?.data?.message ||
-  e?.message ||
-  "L'action n'a pas pu être effectuée. Veuillez réessayer."
-
 const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboardReturn => {
-  const toast = useToast()
   const [demandes,   setDemandes]   = useState<DocumentRequest[]>([])
   const [loading,    setLoading]    = useState(true)
   const [filters,    setFilters]    = useState<Filters>(initialFilters)
@@ -99,21 +94,23 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
 
   const handleAction = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     if (!selected) return
+    const reference = selected.reference
     try {
-      await documentRequestService.transition(selected.id, { action, ...extra } as any)
-      // Succès : retour visible, fermeture de la modal et rafraîchissement
-      toast.success(`Dossier ${selected.reference} : action enregistrée.`)
+      const res: any = await documentRequestService.transition(selected.id, { action, ...extra } as any)
+      // Succès : fermeture de la fiche, rafraîchissement, puis modal central
+      // de confirmation (reste affiché jusqu'au clic sur OK).
       closeDetail()
-      await load()
+      void load()
+      const fb = successFeedback(action, reference, res?.data?.status)
+      await showSuccess(fb.title, fb.message)
     } catch (e: any) {
-      // CORRECTIF : l'erreur n'était que loguée en console — l'acteur cliquait
-      // sans aucun retour (403, 422 motif manquant…). Elle est désormais
-      // affichée ; la modal reste ouverte pour corriger / réessayer.
+      // Échec : la fiche reste ouverte pour corriger ou réessayer ; le modal
+      // explique simplement ce qui s'est passé.
       console.error('Erreur transition:', e?.message || e)
-      toast.error(extractErrorMessage(e), 'Action impossible')
+      await showError(FAILURE_TITLE, friendlyError(e) + "\nLe dossier n'a pas été modifié.")
       throw e
     }
-  }, [selected, load, closeDetail, toast])
+  }, [selected, load, closeDetail])
 
   return {
     demandes, loading, filters, setFilters,

@@ -4,11 +4,11 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CRow, CCol, CBadge } from '@coreui/react'
+import { CRow, CCol } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilInbox, cilWarning, cilFlagAlt, cilCheckAlt, cilFolder,
-  cilX, cilArrowCircleRight, cilBan, cilSend, cilSync, cilCommentBubble,
+  cilBan, cilSend, cilSync, cilCommentBubble,
 } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import ContactDemandeurModal from '../components/modal/ContactDemandeurModal'
@@ -17,7 +17,7 @@ import {
   DemandeTable, DemandeModalShell, DemandeDetailBase,
   ResendModal, TabBar, ActionButton, StatCard, useActionColumns,
   ReferenceCell, EtudiantCell, TypeCell, DateCell, StatutCell,
-  SECRETAIRE_TABS, DemandeSearchBar, LegacyDeclarationPanel,
+  SECRETAIRE_TABS, DemandeSearchBar, LegacyDeclarationPanel, StatusNote,
 } from '../components'
 import { STATUS_COLORS } from '../constants/workflow'
 import { CCard, CCardBody, CCardHeader } from '@coreui/react'
@@ -25,137 +25,48 @@ import type { DocumentRequest } from '@/types/document-request.types'
 import { isLegacyDemande } from '@/types/document-request.types'
 import { ROLE_LABELS } from '@/types/document-request.types'
 
-// ─── Bannière circuit de correction ───────────────────────────────────────────
+// ─── Notes d'état (sobres) ────────────────────────────────────────────────────
 
-const CorrectionCircuitBanner = ({ demande }: { demande: DocumentRequest }) => {
-  const originLabel = demande.correction_origin_role
+const STEP_HOLDER: Record<string, string> = {
+  accounting_review:                'le Comptable',
+  division_manager_review:          'le Responsable de division',
+  cap_manager_review:               'le Chef CAP',
+  deputy_director_secretary_review: 'le Secrétariat de la Directrice Adjointe',
+  deputy_director_review:           'la Directrice Adjointe',
+  director_secretary_review:        'le Secrétariat du Directeur',
+  director_review:                  'le Directeur',
+}
+
+const SecretaireStatusNote = ({ demande }: { demande: DocumentRequest }) => {
+  const s         = demande.status
+  const inCircuit = !!demande.is_in_correction_circuit
+  const origin    = demande.correction_origin_role
     ? (ROLE_LABELS[demande.correction_origin_role] ?? demande.correction_origin_role)
     : null
 
-  return (
-    <div style={{
-      background: '#fef2f2',
-      border: '1.5px solid #fca5a5',
-      borderLeft: '5px solid #dc2626',
-      borderRadius: 12,
-      padding: '16px 18px',
-      marginBottom: 20,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 28, height: 28, borderRadius: '50%',
-          background: '#dc2626', color: '#fff',
-          fontSize: '0.95rem', fontWeight: 900, flexShrink: 0,
-        }}>⟳</span>
-        <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#7f1d1d' }}>
-          Circuit de correction actif
-        </span>
-        <CBadge color="danger" style={{ fontSize: '0.8rem', marginLeft: 'auto', padding: '4px 10px' }}>
-          Mode navette
-        </CBadge>
-      </div>
-
-      <div style={{ fontSize: '0.875rem', color: '#991b1b', lineHeight: 1.65 }}>
-        Utilisez <strong>«&nbsp;Gérer la navette&nbsp;»</strong> pour envoyer le dossier à un acteur,
-        ou <strong>«&nbsp;Sortir du circuit&nbsp;»</strong> pour reprendre le workflow normal.
-      </div>
-
-      {originLabel && (
-        <div style={{
-          marginTop: 10, padding: '9px 14px', borderRadius: 8,
-          background: 'rgba(255,255,255,0.75)', border: '1px solid #fecaca',
-          fontSize: '0.875rem', color: '#7f1d1d',
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          <CIcon icon={cilArrowCircleRight} style={{ width: 14, color: '#dc2626', flexShrink: 0 }} />
-          En sortant du circuit, le dossier retourne chez <strong style={{ marginLeft: 4 }}>{originLabel}</strong>.
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Bannière finalisation après signature Directeur ─────────────────────────
-
-const DirecteurSigneBanner = () => (
-  <div style={{
-    background: 'linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)',
-    border: '2px solid #5eead4',
-    borderLeft: '5px solid #0d9488',
-    borderRadius: 12,
-    padding: '16px 18px',
-    marginBottom: 20,
-  }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-      <span style={{
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: 28, height: 28, borderRadius: '50%',
-        background: '#0d9488', color: '#fff',
-        fontSize: '1rem', fontWeight: 900, flexShrink: 0,
-      }}>✓</span>
-      <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#134e4a' }}>
-        Signé par le Directeur — Finalisation requise
-      </span>
-    </div>
-    <div style={{ fontSize: '0.875rem', color: '#0f766e', lineHeight: 1.65 }}>
-      Le Directeur a apposé sa signature. Veuillez préparer le document physique
-      puis cliquer sur <strong>«&nbsp;Marquer document prêt&nbsp;»</strong> pour notifier l'étudiant.
-    </div>
-  </div>
-)
-
-// ─── Bannière navette en cours ────────────────────────────────────────────────
-
-const NavetteEnCoursBanner = ({ demande }: { demande: DocumentRequest }) => {
-  const { status, correction_origin_role } = demande
-  const originLabel = correction_origin_role
-    ? (ROLE_LABELS[correction_origin_role] ?? correction_origin_role)
-    : null
-
-  const statusLabels: Record<string, string> = {
-    accounting_review:                 'Comptable',
-    division_manager_review:           'Responsable Division',
-    cap_manager_review:                'Chef CAP',
-    deputy_director_secretary_review:  'Sec. Dir. Adjointe',
-    deputy_director_review:            'Directrice Adjointe',
-    director_secretary_review:         'Sec. Directeur',
-    director_review:                   'Directeur',
+  if (s === 'secretary_correction') {
+    return (
+      <StatusNote title="Dossier revenu pour correction">
+        {origin ? <>{origin} a signalé un point à revoir. </> : <>Un point est à revoir. </>}
+        Faites la correction, puis cliquez sur <strong>Renvoyer le dossier</strong> : le motif y est rappelé.
+      </StatusNote>
+    )
   }
-
-  return (
-    <div style={{
-      background: '#fff7ed',
-      border: '1.5px solid #fed7aa',
-      borderLeft: '5px solid #f97316',
-      borderRadius: 12,
-      padding: '16px 18px',
-      marginBottom: 20,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 28, height: 28, borderRadius: '50%',
-          background: '#f97316', color: '#fff',
-          fontSize: '0.95rem', fontWeight: 900, flexShrink: 0,
-        }}>↺</span>
-        <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#7c2d12' }}>
-          Navette active — dossier chez {statusLabels[status] ?? status}
-        </span>
-        <CBadge color="warning" style={{ fontSize: '0.8rem', marginLeft: 'auto', padding: '4px 10px', color: '#fff' }}>
-          En attente
-        </CBadge>
-      </div>
-
-      <div style={{ fontSize: '0.875rem', color: '#92400e', lineHeight: 1.65 }}>
-        Ce dossier a été envoyé à <strong>{statusLabels[status] ?? status}</strong> pour correction.
-        Il vous reviendra dès que l'acteur aura terminé.
-        {originLabel && (
-          <> Le problème initial a été signalé par <strong>{originLabel}</strong>.</>
-        )}
-      </div>
-    </div>
-  )
+  if (inCircuit && STEP_HOLDER[s]) {
+    return (
+      <StatusNote tone="waiting" title={`Dossier chez ${STEP_HOLDER[s]} pour correction`}>
+        Il vous reviendra automatiquement dès que la correction sera faite. Aucune action n'est nécessaire.
+      </StatusNote>
+    )
+  }
+  if (s === 'secretary_final_review') {
+    return (
+      <StatusNote tone="done" title="Signé par le Directeur">
+        Préparez le document, puis cliquez sur <strong>Document prêt</strong> pour prévenir l'étudiant.
+      </StatusNote>
+    )
+  }
+  return null
 }
 
 // ─── Modal de détail ──────────────────────────────────────────────────────────
@@ -174,12 +85,9 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
   const [contactModal,     setContactModal]     = useState(false)
 
   const s         = demande.status
-  const inCircuit = !!demande.is_in_correction_circuit
   // Ancien étudiant : transmission bloquée tant que la déclaration n'est pas validée (D1)
   const isLegacy          = isLegacyDemande(demande)
   const legacyNotValidated = isLegacy && demande.legacy_declaration_status !== 'validated'
-  // Navette active = circuit actif ET dossier PAS chez la secrétaire
-  const navetteActive = inCircuit && s !== 'secretary_correction'
 
   const run = async (action: string, extra?: Record<string, unknown>) => {
     setLoadingAction(action)
@@ -212,7 +120,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
           onClick={() => setRejectModal(true)}
         />
         <ActionButton
-          label={legacyNotValidated ? 'Valider → Comptable (déclaration à valider)' : 'Valider → Comptable'}
+          label={legacyNotValidated ? "Transmettre au Comptable (valider d'abord la déclaration)" : 'Valider et transmettre au Comptable'}
           icon={cilCheckAlt}
           color="primary"
           loading={loadingAction === 'secretaire_validate'}
@@ -232,9 +140,9 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
           onClick={() => setRejectFinalModal(true)}
         />
         <ActionButton
-          label={inCircuit ? 'Gérer la navette' : 'Renvoyer'}
+          label="Renvoyer le dossier"
           icon={cilSend}
-          color={inCircuit ? 'warning' : 'info'}
+          color="primary"
           disabled={!!loadingAction}
           onClick={() => setResendModal(true)}
         />
@@ -243,7 +151,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       {/* READY */}
       {s === 'ready_for_pickup' && (
         <ActionButton
-          label="Marquer comme retiré"
+          label="Document remis à l'étudiant"
           icon={cilCheckAlt}
           color="success"
           loading={loadingAction === 'secretaire_deliver'}
@@ -255,7 +163,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       {/* FINALISATION APRÈS SIGNATURE DIRECTEUR */}
       {s === 'secretary_final_review' && (
         <ActionButton
-          label="Marquer document prêt"
+          label="Document prêt"
           icon={cilCheckAlt}
           color="success"
           loading={loadingAction === 'secretaire_mark_ready'}
@@ -277,9 +185,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       onFlagCleared={async () => { await onReload() }}
       onRefresh={onReload}
     >
-      {navetteActive && <NavetteEnCoursBanner demande={demande} />}
-      {inCircuit && s === 'secretary_correction' && <CorrectionCircuitBanner demande={demande} />}
-      {s === 'secretary_final_review' && <DirecteurSigneBanner />}
+      <SecretaireStatusNote demande={demande} />
       {isLegacy && (
         <LegacyDeclarationPanel
           demande={demande}

@@ -4,9 +4,7 @@
 // - Date ET heure de soumission correctes
 // - Texte ≥ 14px
 
-import { CRow, CCol, CAlert } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilWarning, cilInfo } from '@coreui/icons'
+import { CRow, CCol } from '@coreui/react'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { TYPE_LABELS, RESPONSABLE_DIVISION_LABELS, isLegacyDemande } from '@/types/document-request.types'
 import { LegacyBadge } from './LegacyDeclarationPanel'
@@ -66,10 +64,6 @@ const formatDateTime = (iso?: string | null) => {
 
 const DemandeDetailBase = ({ demande, children, onRefresh }: Props) => {
   const submittedAt = formatDateTime(demande.submitted_at)
-
-  // Le rejet ne s'affiche que si c'est une correction secrétaire et qu'il y a une raison
-  const showRejection = demande.status === 'secretary_correction'
-    && (demande.rejected_by || demande.rejected_reason)
 
   return (
     <>
@@ -152,30 +146,9 @@ const DemandeDetailBase = ({ demande, children, onRefresh }: Props) => {
         />
       </div>
 
-      {/* Commentaires des acteurs — affichés une seule fois chacun */}
-      {demande.comptable_comment && (
-        <CAlert color="info" className="mt-3 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
-          <CIcon icon={cilInfo} className="me-1" />
-          <strong>Comptable :</strong> {demande.comptable_comment}
-        </CAlert>
-      )}
-      {demande.responsable_division_comment && (
-        <CAlert color="warning" className="mt-2 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
-          <CIcon icon={cilInfo} className="me-1" />
-          <strong>Responsable Division :</strong> {demande.responsable_division_comment}
-        </CAlert>
-      )}
-
-      {/* Rejet — affiché une seule fois, proprement */}
-      {showRejection && (
-        <CAlert color="danger" className="mt-2 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
-          <CIcon icon={cilWarning} className="me-1" />
-          {demande.rejected_by && (
-            <strong>Rejeté par {demande.rejected_by}{demande.rejected_reason ? ' : ' : ''}</strong>
-          )}
-          {demande.rejected_reason}
-        </CAlert>
-      )}
+      {/* Commentaires et motifs des acteurs (rejets, retours) : plus affichés
+          ici. Le motif utile est rappelé dans la fenêtre de l'action
+          concernée ; tout reste consultable dans l'onglet « Historique ». */}
     </>
   )
 }

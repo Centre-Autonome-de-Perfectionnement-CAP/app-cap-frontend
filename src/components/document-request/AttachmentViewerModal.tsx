@@ -1,33 +1,30 @@
 // src/components/document-request/AttachmentViewerModal.tsx
 //
-// Visualiseur intégré de pièce jointe — remplace l'ouverture dans un nouvel
-// onglet (ancien lien direct vers /storage/{path}, non authentifié et source
-// des 403 / aperçus PDF vides).
-//
-// Le fichier est récupéré via documentRequestService.previewFile(), qui passe
-// par la route authentifiée (auth:sanctum) du backend et renvoie une URL blob
-// locale — cf. HttpService.downloadFile(), déjà utilisé ailleurs dans
-// l'application (RH, cours, inscriptions).
+// Visualiseur plein écran — style original conservé, agrandi via portal.
+// Panneau latéral rétractable via bouton toggle.
 
 import { useEffect, useRef, useState } from 'react'
-import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton, CSpinner } from '@coreui/react'
+import { createPortal } from 'react-dom'
+import { CButton, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
-  cilCloudDownload, cilFile, cilWarning, cilZoomIn, cilZoomOut, cilFullscreen,
+  cilCloudDownload, cilFile, cilWarning,
+  cilZoomIn, cilZoomOut, cilFullscreen,
+  cilChevronRight, cilChevronLeft,
 } from '@coreui/icons'
 import documentRequestService from '@/services/document-request.service'
 import { useToast } from '@/contexts'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { TYPE_LABELS } from '@/types/document-request.types'
 
-// ─── Origine du document ──────────────────────────────────────────────────
+// ─── Types publics ────────────────────────────────────────────────────────────
 
 export type AttachmentSource = 'initial' | 'complement' | 'secretary'
 
 const ORIGIN_LABELS: Record<AttachmentSource, string> = {
   initial:    'Document fourni lors de la demande',
-  complement: 'Document fourni lors du complément',
-  secretary:  'Document ajouté par la secrétaire',
+  complement: 'Document fourni lors du complement',
+  secretary:  'Document ajoute par la secretaire',
 }
 
 const ORIGIN_STYLES: Record<AttachmentSource, { bg: string; color: string }> = {
@@ -38,11 +35,8 @@ const ORIGIN_STYLES: Record<AttachmentSource, { bg: string; color: string }> = {
 
 export interface AttachmentViewerFile {
   source: AttachmentSource
-  /** Clé du fichier (initial/complément) ou id du fichier (secrétariat) */
   key: string
-  /** Chemin de stockage — utilisé uniquement pour déduire l'extension côté client */
   path: string
-  /** Nom affiché dans l'en-tête du modal */
   label: string
   uploadedAt?: string | null
   comment?: string | null
@@ -55,7 +49,7 @@ interface Props {
   onClose: () => void
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const extensionOf = (path: string) => (path.split('.').pop() || '').toLowerCase()
 
@@ -64,16 +58,15 @@ const formatDateTime = (iso?: string | null) => {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return null
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-    + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    + ' a ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
-// ─── Petits blocs d'info du panneau latéral ────────────────────────────────
+// ─── Blocs info panneau lateral ───────────────────────────────────────────────
 
 const InfoBlock = ({ title, children, accent }: { title: string; children: React.ReactNode; accent?: boolean }) => (
   <div style={{
     border: `1px solid ${accent ? '#bbf7d0' : '#e2e8f0'}`,
-    borderRadius: 10,
-    padding: '14px 16px',
+    borderRadius: 10, padding: '14px 16px',
     background: accent ? '#f0fdf4' : '#f8fafc',
   }}>
     <p style={{
@@ -96,11 +89,10 @@ const InfoLine = ({ label, value }: { label: string; value?: string | null }) =>
   )
 }
 
-// ─── Visualiseur image avec zoom ───────────────────────────────────────────
+// ─── Visualiseur image avec zoom ──────────────────────────────────────────────
 
 const ImageViewer = ({ src, alt }: { src: string; alt: string }) => {
   const [zoom, setZoom] = useState(1)
-
   return (
     <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div style={{
@@ -118,7 +110,7 @@ const ImageViewer = ({ src, alt }: { src: string; alt: string }) => {
         <CButton size="sm" color="light" onClick={() => setZoom(z => Math.min(4, +(z + 0.25).toFixed(2)))}>
           <CIcon icon={cilZoomIn} style={{ width: 14 }} />
         </CButton>
-        <CButton size="sm" color="light" onClick={() => setZoom(1)}>
+        <CButton size="sm" color="light" onClick={() => setZoom(1)} title="Reinitialiser">
           <CIcon icon={cilFullscreen} style={{ width: 14 }} />
         </CButton>
       </div>
@@ -128,80 +120,69 @@ const ImageViewer = ({ src, alt }: { src: string; alt: string }) => {
         justifyContent: zoom <= 1 ? 'center' : 'flex-start',
         background: '#f1f5f9', borderRadius: 10,
       }}>
-        <img
-          src={src}
-          alt={alt}
-          style={{
-            transform: `scale(${zoom})`,
-            transformOrigin: 'top left',
-            maxWidth: zoom <= 1 ? '100%' : 'none',
-            maxHeight: zoom <= 1 ? '100%' : 'none',
-            transition: 'transform 0.15s ease',
-          }}
-        />
+        <img src={src} alt={alt} style={{
+          transform: `scale(${zoom})`, transformOrigin: 'top left',
+          maxWidth: zoom <= 1 ? '100%' : 'none',
+          maxHeight: zoom <= 1 ? '100%' : 'none',
+          transition: 'transform 0.15s ease',
+        }} />
       </div>
     </div>
   )
 }
 
-// ─── Composant principal ───────────────────────────────────────────────────
+// ─── Composant principal ──────────────────────────────────────────────────────
 
 const AttachmentViewerModal = ({ demandeId, demande, file, onClose }: Props) => {
   const toast = useToast()
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
-  const [blobUrl, setBlobUrl] = useState<string | null>(null)
-  const [filename, setFilename] = useState<string | undefined>(undefined)
+  const [loading,     setLoading]     = useState(false)
+  const [error,       setError]       = useState<string | null>(null)
+  const [blobUrl,     setBlobUrl]     = useState<string | null>(null)
+  const [filename,    setFilename]    = useState<string | undefined>(undefined)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const blobUrlRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    blobUrlRef.current = blobUrl
-  }, [blobUrl])
+  useEffect(() => { blobUrlRef.current = blobUrl }, [blobUrl])
+  useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current) }, [])
 
   useEffect(() => {
-    // Nettoyage de l'URL blob précédente à chaque changement de fichier / fermeture
-    return () => {
-      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
-    }
-  }, [])
+    if (file) { document.body.style.overflow = 'hidden'; setSidebarOpen(true) }
+    else        document.body.style.overflow = ''
+    return () => { document.body.style.overflow = '' }
+  }, [file])
 
   useEffect(() => {
-    if (!file) {
-      setBlobUrl(null)
-      setError(null)
-      return
-    }
+    if (!file) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [file, onClose])
 
+  useEffect(() => {
+    if (!file) { setBlobUrl(null); setError(null); return }
     let cancelled = false
-    setLoading(true)
-    setError(null)
-    setBlobUrl(null)
-
+    setLoading(true); setError(null); setBlobUrl(null)
     documentRequestService.previewFile(demandeId, file.source, file.key)
-      .then(result => {
-        if (cancelled) return
-        setBlobUrl(result.url)
-        setFilename(result.filename)
-      })
+      .then(result => { if (!cancelled) { setBlobUrl(result.url); setFilename(result.filename) } })
       .catch((err: any) => {
-        if (cancelled) return
-        const message = err?.message || "Impossible de charger ce document."
-        setError(message)
-        toast.error(message)
+        if (!cancelled) {
+          const msg = err?.message || 'Impossible de charger ce document.'
+          setError(msg); toast.error(msg)
+        }
       })
       .finally(() => { if (!cancelled) setLoading(false) })
-
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file?.source, file?.key, demandeId])
 
   if (!file) return null
 
-  const ext = extensionOf(file.path)
-  const isPdf   = ext === 'pdf'
-  const isImage = ['jpg', 'jpeg', 'png'].includes(ext)
-  const dateLabel = formatDateTime(file.uploadedAt)
+  const ext         = extensionOf(file.path)
+  const isPdf       = ext === 'pdf'
+  const isImage     = ['jpg', 'jpeg', 'png'].includes(ext)
+  const dateLabel   = formatDateTime(file.uploadedAt)
   const originStyle = ORIGIN_STYLES[file.source]
+  const hasSidebar  = !!(demande || (file.source === 'secretary' && file.comment))
 
   const downloadName = file.source === 'secretary'
     ? (filename || file.label)
@@ -210,17 +191,33 @@ const AttachmentViewerModal = ({ demandeId, demande, file, onClose }: Props) => 
   const handleDownload = () => {
     if (!blobUrl) return
     const a = document.createElement('a')
-    a.href = blobUrl
-    a.download = downloadName
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    a.href = blobUrl; a.download = downloadName
+    document.body.appendChild(a); a.click(); document.body.removeChild(a)
   }
 
-  return (
-    <CModal visible={!!file} onClose={onClose} size="xl" alignment="center">
-      <CModalHeader style={{ borderBottom: '1px solid #e2e8f0', padding: '16px 24px' }}>
-        <CModalTitle style={{ width: '100%' }}>
+  const content = (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.65)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backdropFilter: 'blur(2px)',
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div style={{
+        width: '96vw', height: '94vh',
+        background: '#ffffff', borderRadius: 12,
+        display: 'flex', flexDirection: 'column',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
+        overflow: 'hidden',
+      }}>
+
+        {/* ── Header ─────────────────────────────────────────────────── */}
+        <div style={{
+          borderBottom: '1px solid #e2e8f0', padding: '16px 24px',
+          flexShrink: 0, background: '#fff',
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <CIcon icon={cilFile} style={{ width: 18, color: '#475569' }} />
             <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>{file.label}</span>
@@ -233,18 +230,20 @@ const AttachmentViewerModal = ({ demandeId, demande, file, onClose }: Props) => 
           </div>
           {dateLabel && (
             <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: 6, fontWeight: 500 }}>
-              Ajouté le {dateLabel}
+              Ajoute le {dateLabel}
             </div>
           )}
-        </CModalTitle>
-      </CModalHeader>
+        </div>
 
-      <CModalBody style={{ padding: 20 }}>
-        <div style={{ display: 'flex', gap: 18, height: '68vh', minHeight: 420 }}>
-          {/* ── Zone de visualisation ── */}
+        {/* ── Body ───────────────────────────────────────────────────── */}
+        <div style={{ flex: 1, padding: 20, display: 'flex', gap: 0, minHeight: 0, overflow: 'hidden' }}>
+
+          {/* Zone de visualisation */}
           <div style={{
             flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column',
-            background: '#f1f5f9', borderRadius: 10, overflow: 'hidden',
+            background: '#f1f5f9',
+            borderRadius: hasSidebar && sidebarOpen ? '10px 0 0 10px' : 10,
+            overflow: 'hidden',
           }}>
             {loading && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
@@ -252,81 +251,110 @@ const AttachmentViewerModal = ({ demandeId, demande, file, onClose }: Props) => 
                 <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Chargement du document…</span>
               </div>
             )}
-
             {!loading && error && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 20, textAlign: 'center' }}>
                 <CIcon icon={cilWarning} style={{ width: 36, color: '#dc2626' }} />
                 <span style={{ fontSize: '0.9rem', color: '#7f1d1d', fontWeight: 600 }}>{error}</span>
               </div>
             )}
-
             {!loading && !error && blobUrl && isPdf && (
-              <iframe
-                src={blobUrl}
-                title={file.label}
-                style={{ flex: 1, width: '100%', border: 'none' }}
-              />
+              <iframe src={blobUrl} title={file.label} style={{ flex: 1, width: '100%', border: 'none' }} />
             )}
-
             {!loading && !error && blobUrl && isImage && (
               <ImageViewer src={blobUrl} alt={file.label} />
             )}
-
             {!loading && !error && blobUrl && !isPdf && !isImage && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 20, textAlign: 'center' }}>
                 <CIcon icon={cilFile} style={{ width: 40, color: '#94a3b8' }} />
                 <span style={{ fontSize: '0.9rem', color: '#475569' }}>
-                  Aperçu non disponible pour ce type de fichier.
+                  Apercu non disponible pour ce type de fichier.
                 </span>
                 <CButton color="primary" onClick={handleDownload}>
                   <CIcon icon={cilCloudDownload} className="me-2" style={{ width: 14 }} />
-                  Télécharger pour consulter
+                  Telecharger pour consulter
                 </CButton>
               </div>
             )}
           </div>
 
-          {/* ── Panneau latéral ── */}
-          <div style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto' }}>
-            {demande && (
-              <>
-                <InfoBlock title="Étudiant">
-                  <p style={{ fontWeight: 700, fontSize: '0.92rem', color: '#111827', marginBottom: 8 }}>
-                    {demande.last_name} {demande.first_names}
+          {/* Bouton toggle panneau lateral */}
+          {hasSidebar && (
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              background: '#f1f5f9',
+              borderLeft: '1px solid #e2e8f0',
+            }}>
+              <button
+                onClick={() => setSidebarOpen(o => !o)}
+                title={sidebarOpen ? 'Masquer le panneau' : 'Afficher le panneau'}
+                style={{
+                  width: 20, height: '100%', background: 'transparent', border: 'none',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#94a3b8', padding: 0,
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#475569' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8' }}
+              >
+                <CIcon icon={sidebarOpen ? cilChevronRight : cilChevronLeft} style={{ width: 12 }} />
+              </button>
+            </div>
+          )}
+
+          {/* Panneau lateral retractable */}
+          {hasSidebar && sidebarOpen && (
+            <div style={{
+              width: 280, flexShrink: 0,
+              display: 'flex', flexDirection: 'column', gap: 14,
+              overflowY: 'auto',
+              borderLeft: '1px solid #e2e8f0',
+              background: '#fff',
+              padding: '0 0 0 16px',
+            }}>
+              {demande && (
+                <>
+                  <InfoBlock title="Etudiant">
+                    <p style={{ fontWeight: 700, fontSize: '0.92rem', color: '#111827', marginBottom: 8 }}>
+                      {demande.last_name} {demande.first_names}
+                    </p>
+                    <InfoLine label="Matricule"        value={demande.matricule} />
+                    <InfoLine label="Filiere"          value={demande.department} />
+                    <InfoLine label="Niveau"           value={(demande as any).study_level} />
+                    <InfoLine label="Annee academique" value={demande.academic_year} />
+                  </InfoBlock>
+                  <InfoBlock title="Demande">
+                    <InfoLine label="Type"      value={TYPE_LABELS[demande.type] ?? demande.type} />
+                    <InfoLine label="Reference" value={demande.reference} />
+                  </InfoBlock>
+                </>
+              )}
+              {file.source === 'secretary' && file.comment && (
+                <InfoBlock title="Commentaire" accent>
+                  <p style={{ fontSize: '0.84rem', color: '#166534', margin: 0, lineHeight: 1.5 }}>
+                    {file.comment}
                   </p>
-                  <InfoLine label="Matricule"       value={demande.matricule} />
-                  <InfoLine label="Filière"         value={demande.department} />
-                  <InfoLine label="Niveau"          value={demande.study_level} />
-                  <InfoLine label="Année académique" value={demande.academic_year} />
                 </InfoBlock>
-
-                <InfoBlock title="Demande">
-                  <InfoLine label="Type" value={TYPE_LABELS[demande.type] ?? demande.type} />
-                  <InfoLine label="Référence" value={demande.reference} />
-                </InfoBlock>
-              </>
-            )}
-
-            {file.source === 'secretary' && file.comment && (
-              <InfoBlock title="Commentaire de la secrétaire" accent>
-                <p style={{ fontSize: '0.84rem', color: '#166534', margin: 0, lineHeight: 1.5 }}>
-                  {file.comment}
-                </p>
-              </InfoBlock>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
-      </CModalBody>
 
-      <CModalFooter style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', padding: '14px 24px' }}>
-        <CButton color="secondary" variant="ghost" onClick={onClose}>Fermer</CButton>
-        <CButton color="primary" onClick={handleDownload} disabled={!blobUrl}>
-          <CIcon icon={cilCloudDownload} className="me-2" style={{ width: 14 }} />
-          Télécharger
-        </CButton>
-      </CModalFooter>
-    </CModal>
+        {/* ── Footer ─────────────────────────────────────────────────── */}
+        <div style={{
+          background: '#f8fafc', borderTop: '1px solid #e2e8f0',
+          padding: '14px 24px', flexShrink: 0,
+          display: 'flex', justifyContent: 'flex-end', gap: 8,
+        }}>
+          <CButton color="secondary" variant="ghost" onClick={onClose}>Fermer</CButton>
+          <CButton color="primary" onClick={handleDownload} disabled={!blobUrl}>
+            <CIcon icon={cilCloudDownload} className="me-2" style={{ width: 14 }} />
+            Telecharger
+          </CButton>
+        </div>
+      </div>
+    </div>
   )
+
+  return createPortal(content, document.body)
 }
 
 export default AttachmentViewerModal

@@ -19,7 +19,6 @@ import {
   ReferenceCell, EtudiantCell, TypeCell, DateCell, StatutCell,
   SECRETAIRE_TABS, DemandeSearchBar, LegacyDeclarationPanel,
 } from '../components'
-import { SecretaryFileUploader } from '@/components/document-request'
 import { STATUS_COLORS } from '../constants/workflow'
 import { CCard, CCardBody, CCardHeader } from '@coreui/react'
 import type { DocumentRequest } from '@/types/document-request.types'
@@ -290,9 +289,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
       )}
 
       <DemandeDetailBase demande={demande} onRefresh={onReload}>
-        {(s === 'submitted' || s === 'secretary_correction') && (
-          <SecretaryFileUploader demandeId={demande.id} onSuccess={onReload} />
-        )}
+        {null}
       </DemandeDetailBase>
     </DemandeModalShell>
 
@@ -342,7 +339,7 @@ const BASE_COLUMNS = [
 ]
 
 const STAT_DEFS = [
-  { key: 'submitted',              label: 'Nouvelles demandes',  urgent: false, icon: cilInbox    },
+  { key: 'submitted',              label: 'Nouvelles demandes',  urgent: true,  icon: cilInbox    },
   { key: 'secretary_final_review', label: 'À finaliser',         urgent: true,  icon: cilCheckAlt },
   { key: 'secretary_correction',   label: 'À corriger',          urgent: true,  icon: cilWarning  },
   { key: 'circuit_correction',     label: 'Navette active',      urgent: true,  icon: cilSync     },

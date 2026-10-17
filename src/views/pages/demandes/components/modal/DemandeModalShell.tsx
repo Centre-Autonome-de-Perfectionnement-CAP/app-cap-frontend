@@ -4,10 +4,9 @@ import { useState } from 'react'
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
-  cilDescription, cilHistory, cilWarning, cilFolderOpen,
+  cilDescription, cilHistory, cilWarning,
 } from '@coreui/icons'
 import { WorkflowBadge } from '@/components/document-request'
-import DocumentExplorerModal from '@/components/document-request/DocumentExplorerModal'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { RESPONSABLE_DIVISION_LABELS } from '@/types/document-request.types'
 import HistoriquePanel from './HistoriquePanel'
@@ -29,8 +28,6 @@ interface Props {
   onFlagCleared?: () => void
   onRefresh?: () => Promise<void>
 }
-
-// ─── Workflow progress bar ──────────────────────────────────────────────────────
 
 const WORKFLOW_STEPS = [
   { key: 'submitted',                        label: 'Soumis'         },
@@ -189,25 +186,15 @@ const DemandeModalShell = ({
   onRefresh,
 }: Props) => {
   const hasFlag = !!(demande as any).has_flag
-  const [activeTab, setActiveTab]     = useState<Tab>('details')
-  const [explorerOpen, setExplorerOpen] = useState(false)
-  const fileCount = countFiles(demande)
+  const [activeTab, setActiveTab] = useState<Tab>('details')
 
   const handleClose = () => {
     setActiveTab('details')
-    setExplorerOpen(false)
     onClose()
   }
 
   return (
     <>
-      {/* ── Explorateur de documents ── */}
-      <DocumentExplorerModal
-        demande={demande}
-        visible={explorerOpen}
-        onClose={() => setExplorerOpen(false)}
-      />
-
       {/* ── Modal principal ── */}
       <CModal visible={visible} onClose={handleClose} size="xl" alignment="center" scrollable>
 
@@ -318,56 +305,10 @@ const DemandeModalShell = ({
           borderTop: '1px solid #e2e8f0',
           padding: '14px 28px',
           display: 'flex', flexWrap: 'wrap', gap: 8,
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
           alignItems: 'center',
         }}>
-
-          {/* Bouton Explorer les documents — côté gauche */}
-          <button
-            onClick={() => setExplorerOpen(true)}
-            disabled={fileCount === 0}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '10px 20px',
-              background: fileCount === 0 ? '#f1f5f9' : '#fff',
-              color: fileCount === 0 ? '#94a3b8' : '#2563eb',
-              border: fileCount === 0 ? '1.5px solid #e2e8f0' : '1.5px solid #bfdbfe',
-              borderRadius: 10,
-              fontWeight: 700, fontSize: '0.875rem',
-              cursor: fileCount === 0 ? 'not-allowed' : 'pointer',
-              transition: 'all 0.15s',
-              letterSpacing: '0.01em',
-            }}
-            onMouseEnter={e => {
-              if (fileCount === 0) return
-              const el = e.currentTarget as HTMLButtonElement
-              el.style.background = '#eff6ff'
-              el.style.borderColor = '#2563eb'
-              el.style.boxShadow = '0 2px 10px rgba(37,99,235,0.15)'
-            }}
-            onMouseLeave={e => {
-              if (fileCount === 0) return
-              const el = e.currentTarget as HTMLButtonElement
-              el.style.background = '#fff'
-              el.style.borderColor = '#bfdbfe'
-              el.style.boxShadow = 'none'
-            }}
-          >
-            <CIcon icon={cilFolderOpen} style={{ width: 16, flexShrink: 0 }} />
-            Explorer les documents
-            {fileCount > 0 && (
-              <span style={{
-                background: '#dbeafe',
-                color: '#1d4ed8',
-                borderRadius: 20, padding: '1px 8px',
-                fontSize: '0.75rem', fontWeight: 700,
-              }}>
-                {fileCount}
-              </span>
-            )}
-          </button>
-
-          {/* Actions métier — côté droit */}
+          {/* Actions métier */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {footer}
           </div>

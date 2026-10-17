@@ -10,6 +10,7 @@ import { cilWarning, cilInfo } from '@coreui/icons'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { TYPE_LABELS, RESPONSABLE_DIVISION_LABELS, isLegacyDemande } from '@/types/document-request.types'
 import { LegacyBadge } from './LegacyDeclarationPanel'
+import DossierFilesSplit from '@/components/document-request/DossierFilesSplit'
 
 interface Props {
   demande: DocumentRequest
@@ -63,7 +64,7 @@ const formatDateTime = (iso?: string | null) => {
   }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
-const DemandeDetailBase = ({ demande, children }: Props) => {
+const DemandeDetailBase = ({ demande, children, onRefresh }: Props) => {
   const submittedAt = formatDateTime(demande.submitted_at)
 
   // Le rejet ne s'affiche que si c'est une correction secrétaire et qu'il y a une raison
@@ -137,6 +138,19 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
 
       {/* Contenu additionnel (ex. SecretaryFileUploader) */}
       {children && <div style={{ marginTop: 16 }}>{children}</div>}
+
+      {/* Fichiers du dossier — liste avec actions pour la secrétaire */}
+      <div style={{ marginTop: 16 }}>
+        <DossierFilesSplit
+          demandeId={demande.id}
+          demande={demande}
+          status={demande.status}
+          files={demande.files}
+          complementFiles={demande.complement_files}
+          secretaryFiles={(demande as any).secretary_files}
+          onRefresh={onRefresh}
+        />
+      </div>
 
       {/* Commentaires des acteurs — affichés une seule fois chacun */}
       {demande.comptable_comment && (

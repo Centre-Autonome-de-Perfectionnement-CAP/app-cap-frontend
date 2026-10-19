@@ -18,7 +18,8 @@ import {
 import type { DocumentRequest } from '@/types/document-request.types'
 import { TYPE_LABELS } from '@/types/document-request.types'
 import FileCommentsPanel from './FileCommentsPanel'
-import { getDossierFile, peekDossierFile, prefetchDossierFiles } from './dossierFileCache'
+import PdfViewer from './PdfViewer'
+import { getDossierFile, peekDossierFile, prefetchDossierFiles, type FileKind } from './dossierFileCache'
 import useFileComments from './useFileComments'
 
 // ─── Types publics ────────────────────────────────────────────────────────────
@@ -106,8 +107,22 @@ const InfoLine = ({ label, value }: { label: string; value?: string | null }) =>
 
 // ─── Visualiseur image avec zoom ──────────────────────────────────────────────
 
-const ImageViewer = ({ src, alt }: { src: string; alt: string }) => {
+const ImageViewer = ({ src, alt, onDownload }: { src: string; alt: string; onDownload: () => void }) => {
   const [zoom, setZoom] = useState(1)
+  const [broken, setBroken] = useState(false)
+  // Image illisible par le navigateur : message clair au lieu d'une zone vide
+  if (broken) return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 20, textAlign: 'center' }}>
+      <CIcon icon={cilFile} style={{ width: 40, color: '#94a3b8' }} />
+      <span style={{ fontSize: '0.9rem', color: '#475569' }}>
+        Cette image ne peut pas s'afficher ici (format non pris en charge par le navigateur).
+      </span>
+      <CButton color="primary" onClick={onDownload}>
+        <CIcon icon={cilCloudDownload} className="me-2" style={{ width: 14 }} />
+        Telecharger pour consulter
+      </CButton>
+    </div>
+  )
   return (
     <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div style={{
@@ -135,7 +150,7 @@ const ImageViewer = ({ src, alt }: { src: string; alt: string }) => {
         justifyContent: zoom <= 1 ? 'center' : 'flex-start',
         background: '#f1f5f9', borderRadius: 10,
       }}>
-        <img src={src} alt={alt} style={{
+        <img src={src} alt={alt} onError={() => setBroken(true)} style={{
           transform: `scale(${zoom})`, transformOrigin: 'top left',
           maxWidth: zoom <= 1 ? '100%' : 'none',
           maxHeight: zoom <= 1 ? '100%' : 'none',
@@ -153,6 +168,8 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
   const [error,       setError]       = useState<string | null>(null)
   const [blobUrl,     setBlobUrl]     = useState<string | null>(null)
   const [filename,    setFilename]    = useState<string | undefined>(undefined)
+  const [kind,        setKind]        = useState<FileKind | null>(null)
+  const [realExt,     setRealExt]     = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [index,       setIndex]       = useState(0)
 
@@ -209,14 +226,14 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
     if (!active) { setBlobUrl(null); setError(null); return }
     // Déjà en mémoire : affichage immédiat
     const hit = peekDossierFile(demandeId, active)
-    if (hit) { setBlobUrl(hit.url); setFilename(hit.filename); setError(null); setLoading(false) }
+    if (hit) { setBlobUrl(hit.url); setFilename(hit.filename); setKind(hit.kind); setRealExt(hit.ext); setError(null); setLoading(false) }
     else {
       setBlobUrl(null); setLoading(true); setError(null)
     }
     let cancelled = false
     if (!hit) {
       getDossierFile(demandeId, active)
-        .then(result => { if (!cancelled) { setBlobUrl(result.url); setFilename(result.filename) } })
+        .then(result => { if (!cancelled) { setBlobUrl(result.url); setFilename(result.filename); setKind(result.kind); setRealExt(result.ext) } })
         .catch((err: any) => {
           if (!cancelled) setError(err?.message || 'Impossible de charger ce document.')
         })
@@ -233,9 +250,10 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
 
   if (!file || !active) return null
 
-  const ext         = extensionOf(active.path)
-  const isPdf       = ext === 'pdf'
-  const isImage     = ['jpg', 'jpeg', 'png'].includes(ext)
+  // Affichage selon le contenu réel du fichier (voir dossierFileCache)
+  const ext         = realExt || extensionOf(active.path)
+  const isPdf       = kind === 'pdf'
+  const isImage     = kind === 'image'
   const dateLabel   = formatDateTime(active.uploadedAt)
   const originStyle = ORIGIN_STYLES[active.source]
   const hasSidebar  = true
@@ -341,10 +359,10 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
               </div>
             )}
             {!loading && !error && blobUrl && isPdf && (
-              <iframe src={blobUrl} title={active.label} style={{ flex: 1, width: '100%', border: 'none' }} />
+              <PdfViewer key={blobUrl} src={blobUrl} title={active.label} onDownload={handleDownload} />
             )}
             {!loading && !error && blobUrl && isImage && (
-              <ImageViewer src={blobUrl} alt={active.label} />
+              <ImageViewer key={blobUrl} src={blobUrl} alt={active.label} onDownload={handleDownload} />
             )}
             {!loading && !error && blobUrl && !isPdf && !isImage && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 20, textAlign: 'center' }}>

@@ -4,11 +4,10 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CRow, CCol } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilInbox, cilWarning, cilFlagAlt, cilCheckAlt, cilFolder,
-  cilBan, cilSend, cilSync, cilCommentBubble,
+  cilBan, cilSend, cilSync, cilCommentBubble, cilPen,
 } from '@coreui/icons'
 import { MotifModal } from '@/components/document-request'
 import ContactDemandeurModal from '../components/modal/ContactDemandeurModal'
@@ -19,7 +18,6 @@ import {
   ReferenceCell, EtudiantCell, TypeCell, DateCell, StatutCell,
   SECRETAIRE_TABS, DemandeSearchBar, LegacyDeclarationPanel, StatusNote,
 } from '../components'
-import { STATUS_COLORS } from '../constants/workflow'
 import { CCard, CCardBody, CCardHeader } from '@coreui/react'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { isLegacyDemande } from '@/types/document-request.types'
@@ -244,14 +242,23 @@ const BASE_COLUMNS = [
   { header: 'Statut',    render: (d: DocumentRequest) => <StatutCell d={d} /> },
 ]
 
+// Cartes de la secrétaire. `blink` : clignote tant qu'il y a des dossiers
+// qui attendent SON action ; les cartes d'information restent fixes.
+const CIRCUIT_STATUSES = [
+  'accounting_review', 'division_manager_review', 'cap_manager_review',
+  'deputy_director_secretary_review', 'deputy_director_review',
+  'director_secretary_review', 'director_review',
+]
+
 const STAT_DEFS = [
-  { key: 'submitted',              label: 'Nouvelles demandes',  urgent: true,  icon: cilInbox    },
-  { key: 'secretary_final_review', label: 'À finaliser',         urgent: true,  icon: cilCheckAlt },
-  { key: 'secretary_correction',   label: 'À corriger',          urgent: true,  icon: cilWarning  },
-  { key: 'circuit_correction',     label: 'Navette active',      urgent: true,  icon: cilSync     },
-  { key: 'flagged',                label: 'Réserves actives',    urgent: true,  icon: cilFlagAlt  },
-  { key: 'ready_for_pickup',       label: 'Prêts à retirer',     urgent: false, icon: cilCheckAlt },
-  { key: 'picked_up',              label: 'Archivés',            urgent: false, icon: cilFolder   },
+  { key: 'submitted',              label: 'Nouvelles demandes',  blink: true,  icon: cilInbox,    color: '#d97706', bg: '#fef3c7' },
+  { key: 'secretary_correction',   label: 'À corriger',          blink: true,  icon: cilWarning,  color: '#dc2626', bg: '#fee2e2' },
+  { key: 'secretary_final_review', label: 'À finaliser',         blink: true,  icon: cilPen,      color: '#0d9488', bg: '#ccfbf1' },
+  { key: 'ready_for_pickup',       label: 'Prêts à retirer',     blink: true,  icon: cilCheckAlt, color: '#059669', bg: '#d1fae5' },
+  { key: 'flagged',                label: 'Réserves actives',    blink: true,  icon: cilFlagAlt,  color: '#b45309', bg: '#fef3c7' },
+  { key: 'in_circuit',             label: 'Chez les acteurs',    blink: false, icon: cilSync,     color: '#2563eb', bg: '#dbeafe' },
+  { key: 'circuit_correction',     label: 'Navette en cours',    blink: false, icon: cilSend,     color: '#7c3aed', bg: '#ede9fe' },
+  { key: 'picked_up',              label: 'Archivés',            blink: false, icon: cilFolder,   color: '#475569', bg: '#f1f5f9' },
 ]
 
 const SecretaireDashboard = () => {
@@ -266,6 +273,7 @@ const SecretaireDashboard = () => {
     return acc
   }, {} as Record<string, number>)
   counts['flagged']              = demandes.filter(d => !!(d as any).has_flag).length
+  counts['in_circuit']           = demandes.filter(d => CIRCUIT_STATUSES.includes(d.status)).length
   counts['circuit_correction']   = demandes.filter(
     d => !!d.is_in_correction_circuit && d.status !== 'secretary_correction'
   ).length
@@ -277,34 +285,30 @@ const SecretaireDashboard = () => {
       ? demandes.filter(d => !!(d as any).has_flag)
       : activeTab === 'circuit_correction'
         ? demandes.filter(d => !!d.is_in_correction_circuit && d.status !== 'secretary_correction')
-        : demandes.filter(d => d.status === activeTab)
+        : activeTab === 'in_circuit'
+          ? demandes.filter(d => CIRCUIT_STATUSES.includes(d.status))
+          : demandes.filter(d => d.status === activeTab)
 
   return (
     <div>
-      <CRow className="mb-5 g-4">
-        {STAT_DEFS.map(s => {
-          const palette = STATUS_COLORS[s.key] ?? STATUS_COLORS['submitted']
-          const n  = STAT_DEFS.length
-          const xs = 12
-          const sm = n >= 6 ? 4 : 6
-          const md = n >= 5 ? 4 : n >= 4 ? 6 : Math.floor(12 / n) || 4
-          const lg = n >= 6 ? 2 : Math.floor(12 / n) || 3
-          return (
-            <CCol key={s.key} xs={xs} sm={sm} md={md} lg={lg}>
-              <StatCard
-                label={s.label}
-                count={counts[s.key] ?? 0}
-                color={palette.color}
-                bg={palette.bg}
-                text={palette.text}
-                urgent={s.urgent}
-                icon={<CIcon icon={s.icon} style={{ width: 15 }} />}
-                onClick={() => setSearchParams({ tab: s.key })}
-              />
-            </CCol>
-          )
-        })}
-      </CRow>
+      <div className="dmd-stat-grid" style={{
+        display: 'grid', gap: 14, marginBottom: 28,
+        gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))',
+      }}>
+        {STAT_DEFS.map(s => (
+          <StatCard
+            key={s.key}
+            label={s.label}
+            count={counts[s.key] ?? 0}
+            color={s.color}
+            bg={s.bg}
+            blink={s.blink}
+            active={activeTab === s.key}
+            icon={<CIcon icon={s.icon} style={{ width: 20, height: 20 }} />}
+            onClick={() => setSearchParams({ tab: s.key })}
+          />
+        ))}
+      </div>
 
       <CCard className="border-0" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.07)', borderRadius: 14 }}>
         <CCardHeader className="bg-white" style={{
@@ -345,6 +349,8 @@ const SecretaireDashboard = () => {
                 ? 'Aucun dossier avec réserve active'
                 : activeTab === 'circuit_correction'
                   ? 'Aucune navette active en ce moment'
+                  : activeTab === 'in_circuit'
+                    ? 'Aucun dossier chez les acteurs en ce moment'
                   : activeTab === 'secretary_final_review'
                     ? 'Aucun dossier en attente de finalisation'
                     : 'Aucune demande dans cette catégorie'

@@ -4,13 +4,15 @@ import { useState } from 'react'
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
-  cilDescription, cilHistory, cilWarning,
+  cilDescription, cilHistory, cilWarning, cilFolderOpen,
 } from '@coreui/icons'
 import { WorkflowBadge } from '@/components/document-request'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { RESPONSABLE_DIVISION_LABELS } from '@/types/document-request.types'
 import HistoriquePanel from './HistoriquePanel'
 import SousReservePanel from './SousReservePanel'
+import AttachmentViewerModal, { type AttachmentViewerFile } from '@/components/document-request/AttachmentViewerModal'
+import { buildDossierFiles } from '@/components/document-request/DossierFilesSplit'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -187,6 +189,10 @@ const DemandeModalShell = ({
 }: Props) => {
   const hasFlag = !!(demande as any).has_flag
   const [activeTab, setActiveTab] = useState<Tab>('details')
+  const [viewerFile, setViewerFile] = useState<AttachmentViewerFile | null>(null)
+
+  // Tous les documents du dossier ; « Voir les documents » ouvre le premier.
+  const dossierFiles = buildDossierFiles(demande as any)
 
   const handleClose = () => {
     setActiveTab('details')
@@ -305,15 +311,51 @@ const DemandeModalShell = ({
           borderTop: '1px solid #e2e8f0',
           padding: '14px 28px',
           display: 'flex', flexWrap: 'wrap', gap: 8,
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
           alignItems: 'center',
         }}>
+          {/* Documents du dossier (à gauche) */}
+          <button
+            type="button"
+            onClick={() => setViewerFile(dossierFiles[0] ?? null)}
+            disabled={dossierFiles.length === 0}
+            title={dossierFiles.length === 0 ? 'Aucun document dans ce dossier' : 'Ouvrir les documents du dossier'}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '7px 14px', borderRadius: 8,
+              border: '1.5px solid #cbd5e1', background: '#fff',
+              color: dossierFiles.length ? '#1e293b' : '#94a3b8',
+              fontWeight: 700, fontSize: '0.88rem',
+              cursor: dossierFiles.length ? 'pointer' : 'not-allowed',
+            }}
+          >
+            <CIcon icon={cilFolderOpen} style={{ width: 16, color: '#2563eb' }} />
+            Voir les documents
+            <span style={{
+              minWidth: 22, padding: '0 7px', borderRadius: 999,
+              background: dossierFiles.length ? '#dbeafe' : '#f1f5f9',
+              color: dossierFiles.length ? '#1d4ed8' : '#94a3b8',
+              fontSize: '0.75rem', fontWeight: 800, textAlign: 'center',
+            }}>
+              {dossierFiles.length}
+            </span>
+          </button>
+
           {/* Actions métier */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end', marginLeft: 'auto' }}>
             {footer}
           </div>
         </CModalFooter>
       </CModal>
+
+      {/* Visualiseur des documents du dossier */}
+      <AttachmentViewerModal
+        demandeId={demande.id}
+        demande={demande}
+        file={viewerFile}
+        files={dossierFiles}
+        onClose={() => setViewerFile(null)}
+      />
     </>
   )
 }

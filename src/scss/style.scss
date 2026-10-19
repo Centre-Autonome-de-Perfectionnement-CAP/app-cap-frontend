@@ -32,6 +32,17 @@
   padding: 0.4rem 0.8rem !important; // Proportionnel et lisible
 }
 
+// Menus déroulants : la règle ci-dessus supprimait la marge réservée à la
+// flèche, qui chevauchait alors le texte. On la rétablit (et un texte trop
+// long est coupé proprement avec « … »).
+.form-select {
+  padding-right: 2.25rem !important;
+  background-position: right 0.75rem center !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .dropdown-item {
   font-size: 0.875rem !important; // 14px min pour les options des menus
   padding: 0.45rem 1rem !important;

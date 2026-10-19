@@ -285,7 +285,7 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
                 value={index}
                 onChange={e => setIndex(Number(e.target.value))}
                 aria-label="Choisir un document du dossier"
-                style={{ width: 'auto', maxWidth: 260 }}
+                style={{ width: 260, maxWidth: '100%' }}
               >
                 {list.map((f, i) => (
                   <option key={`${f.source}:${f.key}`} value={i}>{i + 1}. {f.label}</option>

@@ -62,139 +62,6 @@ function fileMetaFromName(name: string): FileMeta {
   }
 }
 
-// ─── Carte fichier cliquable ──────────────────────────────────────────────────
-
-const FileCard = ({
-  name, path, date, comment, comments = 0, isEditable, onClick, onEdit, onDelete,
-}: {
-  comments?: number
-  name: string
-  path: string
-  date?: string | null
-  comment?: string | null
-  isEditable: boolean
-  onClick: () => void
-  onEdit?: () => void
-  onDelete?: () => void
-}) => {
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const meta = fileMetaFromName(path || name)
-
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      background: '#fff',
-      border: '1px solid #e2e8f0',
-      borderRadius: 10,
-      padding: '10px 12px',
-      transition: 'box-shadow 0.15s',
-    }}>
-      {/* Icône extension */}
-      <div
-        onClick={onClick}
-        style={{
-          width: 36, height: 36, borderRadius: 8,
-          background: meta.bg,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0, cursor: 'pointer',
-        }}
-      >
-        <CIcon icon={meta.icon} style={{ width: 18, color: meta.color }} />
-      </div>
-
-      {/* Nom + date + commentaire */}
-      <div
-        onClick={onClick}
-        style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
-      >
-        <div style={{
-          fontWeight: 600, fontSize: '0.84rem', color: '#1e293b',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-        }}>
-          {name}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
-          <span style={{
-            fontSize: '0.68rem', fontWeight: 600, padding: '1px 6px',
-            borderRadius: 4, background: meta.bg, color: meta.color,
-          }}>
-            {meta.label}
-          </span>
-          {comments > 0 && (
-            <span style={{ fontSize: '0.72rem', color: '#2563eb', fontWeight: 600 }}>
-              {comments} commentaire{comments > 1 ? 's' : ''}
-            </span>
-          )}
-          {date && (
-            <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-              {new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
-              {' '}
-              {new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
-        </div>
-        {comment && (
-          <div style={{
-            marginTop: 4, fontSize: '0.76rem', color: '#64748b',
-            fontStyle: 'italic',
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-          }}>
-            {comment}
-          </div>
-        )}
-      </div>
-
-      {/* Actions secrétaire */}
-      {isEditable && (
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-          {confirmDelete ? (
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              background: '#fef2f2', border: '1px solid #fca5a5',
-              borderRadius: 7, padding: '3px 8px',
-            }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#b91c1c' }}>
-                Supprimer ?
-              </span>
-              <CButton size="sm" color="danger"
-                style={{ padding: '1px 7px', fontSize: '0.7rem', fontWeight: 700, color: '#fff' }}
-                onClick={onDelete}
-              >
-                Oui
-              </CButton>
-              <CButton size="sm" color="secondary" variant="outline"
-                style={{ padding: '1px 7px', fontSize: '0.7rem' }}
-                onClick={() => setConfirmDelete(false)}
-              >
-                Non
-              </CButton>
-            </div>
-          ) : (
-            <>
-              <CButton
-                size="sm" color="secondary" variant="ghost"
-                style={{ padding: '3px 7px' }}
-                onClick={onEdit}
-                title="Modifier"
-              >
-                <CIcon icon={cilPencil} style={{ width: 13 }} />
-              </CButton>
-              <CButton
-                size="sm" color="danger" variant="ghost"
-                style={{ padding: '3px 7px' }}
-                onClick={() => setConfirmDelete(true)}
-                title="Supprimer"
-              >
-                <CIcon icon={cilTrash} style={{ width: 13 }} />
-              </CButton>
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── Fenêtre ajout / modification d'un document du secrétariat ───────────────
 //
 // Une seule fenêtre, simple : on choisit (ou glisse) le fichier, on peut en
@@ -442,43 +309,6 @@ const FileFormModal = ({
   )
 }
 
-// ─── Pill onglet ──────────────────────────────────────────────────────────────
-
-const Pill = ({ label, count, active, onClick, accent }: {
-  label: string; count: number; active: boolean; onClick: () => void; accent: string
-}) => (
-  <button onClick={onClick} style={{
-    display: 'inline-flex', alignItems: 'center', gap: 5,
-    padding: '4px 12px', borderRadius: 20, border: 'none', cursor: 'pointer',
-    fontWeight: active ? 700 : 500, fontSize: '0.78rem',
-    color: active ? '#fff' : '#6b7280',
-    background: active ? accent : '#f1f5f9',
-    transition: 'all 0.15s',
-    boxShadow: active ? `0 2px 6px ${accent}44` : 'none',
-  }}>
-    {label}
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      width: 17, height: 17, borderRadius: '50%', fontSize: '0.65rem', fontWeight: 700,
-      background: active ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
-      color: active ? '#fff' : '#374151',
-    }}>
-      {count}
-    </span>
-  </button>
-)
-
-// ─── Section label ─────────────────────────────────────────────────────────────
-
-const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <p style={{
-    fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
-    letterSpacing: '0.07em', color: '#94a3b8', margin: '0 0 8px',
-  }}>
-    {children}
-  </p>
-)
-
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -605,21 +435,42 @@ const SecretaryFileRow = ({
 
 const studentLabel = (key: string) => FILE_LABELS[key] ?? key.replace(/_/g, ' ')
 
+/**
+ * Tous les documents d'un dossier, dans l'ordre : pièces de l'étudiant,
+ * compléments, pièces du secrétariat. Sert au visualiseur (bouton « Voir les
+ * documents » du pied de la fiche, et « Ouvrir » des pièces du secrétariat).
+ */
+export function buildDossierFiles(demande: {
+  files?: any; complement_files?: any; secretary_files?: any; submitted_at?: string | null
+}): AttachmentViewerFile[] {
+  const initial    = parseKV(demande.files)
+  const complement = parseKV(demande.complement_files)
+  const secFiles   = parseArray(demande.secretary_files)
+  return [
+    ...Object.entries(initial).map(([key, path]) => ({
+      source: 'initial' as AttachmentSource, key, path, label: studentLabel(key), uploadedAt: demande.submitted_at ?? null,
+    })),
+    ...Object.entries(complement).map(([key, path]) => ({
+      source: 'complement' as AttachmentSource, key, path, label: `${studentLabel(key)} (complément)`, uploadedAt: null,
+    })),
+    ...secFiles.map((f: any) => ({
+      source: 'secretary' as AttachmentSource, key: f.id, path: f.path,
+      label: f.original_name, uploadedAt: f.uploaded_at, comment: f.comment,
+    })),
+  ]
+}
+
 const DossierFilesSplit = ({
   demandeId, demande, status,
   files, complementFiles, secretaryFiles, onRefresh,
 }: Props) => {
   const { role } = useAuth()
 
-  const initial    = parseKV(files)
-  const complement = parseKV(complementFiles)
   const secFiles   = parseArray(secretaryFiles)
 
-  const hasComplement     = Object.keys(complement).length > 0
   const hasSecretaryFiles = secFiles.length > 0
   const isEditable = role === 'secretaire' && (status === 'submitted' || status === 'secretary_correction')
 
-  const [tab, setTab]               = useState<'initial' | 'complement'>('initial')
   const [viewerFile, setViewerFile] = useState<AttachmentViewerFile | null>(null)
   const comments = useFileComments(demandeId)
 
@@ -631,19 +482,10 @@ const DossierFilesSplit = ({
   const [formLoading, setFormLoading] = useState(false)
   const [dropOver,    setDropOver]    = useState(false)
 
-  // ── Tous les documents du dossier, dans l'ordre d'affichage ───────────────
-  const allFiles: AttachmentViewerFile[] = [
-    ...Object.entries(initial).map(([key, path]) => ({
-      source: 'initial' as AttachmentSource, key, path, label: studentLabel(key), uploadedAt: demande?.submitted_at ?? null,
-    })),
-    ...Object.entries(complement).map(([key, path]) => ({
-      source: 'complement' as AttachmentSource, key, path, label: `${studentLabel(key)} (complément)`, uploadedAt: null,
-    })),
-    ...secFiles.map((f: any) => ({
-      source: 'secretary' as AttachmentSource, key: f.id, path: f.path,
-      label: f.original_name, uploadedAt: f.uploaded_at, comment: f.comment,
-    })),
-  ]
+  // ── Tous les documents du dossier (pour le visualiseur) ───────────────────
+  const allFiles = buildDossierFiles({
+    files, complement_files: complementFiles, secretary_files: secretaryFiles, submitted_at: demande?.submitted_at,
+  })
   const open = (source: AttachmentSource, key: string) =>
     setViewerFile(allFiles.find(f => f.source === source && f.key === key) ?? null)
 
@@ -716,57 +558,8 @@ const DossierFilesSplit = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
-      {/* ── Pièces étudiantes ─────────────────────────────────────────────── */}
-      <div>
-        {hasComplement ? (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
-              <SectionLabel>Pièces jointes de l'étudiant</SectionLabel>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <Pill label="Initiales"       count={Object.keys(initial).length}    active={tab === 'initial'}    onClick={() => setTab('initial')}    accent="#2563eb" />
-                <Pill label="Complémentaires" count={Object.keys(complement).length} active={tab === 'complement'} onClick={() => setTab('complement')} accent="#7c3aed" />
-              </div>
-            </div>
-            <div style={{
-              border: `1.5px solid ${tab === 'complement' ? '#ede9fe' : '#e2e8f0'}`,
-              borderRadius: 10, padding: '12px 14px',
-              background: tab === 'complement' ? '#faf5ff' : '#f8fafc',
-            }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {Object.entries(tab === 'initial' ? initial : complement).map(([key, path]) => (
-                  <FileCard
-                    key={key}
-                    name={studentLabel(key)}
-                    path={path}
-                    comments={comments.countFor(tab, key)}
-                    isEditable={false}
-                    onClick={() => open(tab as AttachmentSource, key)}
-                  />
-                ))}
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <SectionLabel>Pièces jointes de l'étudiant</SectionLabel>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {Object.keys(initial).length === 0
-                ? <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>Aucune pièce jointe.</p>
-                : Object.entries(initial).map(([key, path]) => (
-                    <FileCard
-                      key={key}
-                      name={studentLabel(key)}
-                      path={path}
-                      comments={comments.countFor('initial', key)}
-                      isEditable={false}
-                      onClick={() => open('initial', key)}
-                    />
-                  ))
-              }
-            </div>
-          </>
-        )}
-      </div>
+      {/* Les pièces de l'étudiant ne sont plus listées ici : elles s'ouvrent
+          avec « Voir les documents », en bas à gauche de la fiche. */}
 
       {/* ── Pièces du secrétariat ─────────────────────────────────────────── */}
       <section

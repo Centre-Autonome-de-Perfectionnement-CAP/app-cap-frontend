@@ -48,6 +48,29 @@ class DocumentRequestService {
   }
 
   /**
+   * Contenu d'une pièce pour le visualiseur, reçu en JSON (base64) puis
+   * reconstitué en fichier local. Les gestionnaires de téléchargement
+   * (Internet Download Manager…) interceptent les réponses PDF/image, même
+   * chargées en arrière-plan ; une réponse JSON n'est jamais interceptée.
+   */
+  previewFileContent = async (
+    id: number,
+    source: 'initial' | 'complement' | 'secretary',
+    key: string,
+  ): Promise<{ url: string; filename?: string; mime: string }> => {
+    const res: any = await HttpService.get(
+      `${BASE}/${id}/files/${source}/${encodeURIComponent(key)}?format=json`,
+    )
+    const data = res?.data
+    if (!data?.content) throw new Error("Ce document n'a pas pu être chargé.")
+    const bin = atob(data.content)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    const mime = String(data.mime || 'application/octet-stream')
+    return { url: URL.createObjectURL(new Blob([bytes], { type: mime })), filename: data.name, mime }
+  }
+
+  /**
    * Historique d'une demande
    * (✔️ AJOUTÉ — manquait dans ton service)
    */

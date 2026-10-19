@@ -97,7 +97,7 @@ export function getDossierFile(demandeId: number, f: AttachmentViewerFile): Prom
   const pending = inFlight.get(k)
   if (pending) return pending
 
-  const p = documentRequestService.previewFile(demandeId, f.source, f.key)
+  const p = documentRequestService.previewFileContent(demandeId, f.source, f.key)
     .then(async r => {
       const t = await retype(r.url, r.filename || f.path)
       const v: CachedFile = { url: t.url, filename: r.filename, kind: t.kind, ext: t.ext }

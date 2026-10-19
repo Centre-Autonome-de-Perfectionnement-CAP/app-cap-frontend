@@ -17,11 +17,15 @@ type PdfJs = typeof import('pdfjs-dist')
 let pdfjsPromise: Promise<PdfJs> | null = null
 const loadPdfJs = (): Promise<PdfJs> => {
   if (!pdfjsPromise) {
+    // Le moteur de rendu tourne dans un « worker » que Vite compile en fichier
+    // .js classique : certains serveurs servent mal les fichiers .mjs (type
+    // MIME), ce qui empêchait l'affichage des PDF.
     pdfjsPromise = Promise.all([
       import('pdfjs-dist'),
-      import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+      import('pdfjs-dist/build/pdf.worker.min.mjs?worker'),
     ]).then(([lib, worker]) => {
-      lib.GlobalWorkerOptions.workerSrc = (worker as any).default
+      const PdfWorker = (worker as any).default as new () => Worker
+      lib.GlobalWorkerOptions.workerPort = new PdfWorker()
       return lib
     })
   }

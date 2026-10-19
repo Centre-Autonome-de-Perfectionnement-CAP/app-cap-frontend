@@ -292,8 +292,8 @@ const SecretaireDashboard = () => {
   return (
     <div>
       <div className="dmd-stat-grid" style={{
-        display: 'grid', gap: 14, marginBottom: 28,
-        gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))',
+        display: 'grid', gap: 10, marginBottom: 20,
+        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
       }}>
         {STAT_DEFS.map(s => (
           <StatCard
@@ -304,7 +304,7 @@ const SecretaireDashboard = () => {
             bg={s.bg}
             blink={s.blink}
             active={activeTab === s.key}
-            icon={<CIcon icon={s.icon} style={{ width: 20, height: 20 }} />}
+            icon={<CIcon icon={s.icon} style={{ width: 17, height: 17 }} />}
             onClick={() => setSearchParams({ tab: s.key })}
           />
         ))}

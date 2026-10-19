@@ -38,13 +38,13 @@ const StatCard = ({
         ['--stat-bg' as any]: bg,
         position: 'relative',
         height: '100%',
-        minHeight: 92,
+        minHeight: 64,
         display: 'flex',
         alignItems: 'center',
-        gap: 14,
-        padding: '14px 16px',
+        gap: 10,
+        padding: '10px 12px',
         background: '#fff',
-        borderRadius: 14,
+        borderRadius: 12,
         border: `1px solid ${active || alerting ? color : '#e6ebf2'}`,
         boxShadow: active ? `0 0 0 3px ${color}22, 0 6px 18px rgba(15,23,42,0.06)` : '0 1px 3px rgba(15,23,42,0.05)',
         cursor: onClick ? 'pointer' : 'default',
@@ -63,10 +63,10 @@ const StatCard = ({
         .dmd-stat--blink { animation: dmdStatBlink 1.4s ease-in-out infinite; }
         @keyframes dmdStatBlink {
           0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--stat-color) 45%, transparent); background: #fff; }
-          50%      { box-shadow: 0 0 0 7px color-mix(in srgb, var(--stat-color) 0%, transparent); background: var(--stat-bg); }
+          50%      { box-shadow: 0 0 0 5px color-mix(in srgb, var(--stat-color) 0%, transparent); background: var(--stat-bg); }
         }
         .dmd-stat-dot {
-          position: absolute; top: 10px; right: 10px; width: 9px; height: 9px; border-radius: 50%;
+          position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%;
           background: var(--stat-color);
         }
         .dmd-stat-dot::after {
@@ -81,7 +81,7 @@ const StatCard = ({
 
       {icon && (
         <span style={{
-          width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+          width: 34, height: 34, borderRadius: 10, flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: bg, color,
         }}>
@@ -91,13 +91,13 @@ const StatCard = ({
 
       <div style={{ minWidth: 0 }}>
         <div style={{
-          fontSize: '1.75rem', fontWeight: 800, lineHeight: 1.05,
+          fontSize: '1.3rem', fontWeight: 800, lineHeight: 1.05,
           color: count > 0 ? '#0f172a' : '#94a3b8', letterSpacing: '-0.02em',
         }}>
           {count}
         </div>
         <div style={{
-          marginTop: 3, fontSize: '0.8rem', fontWeight: 600, lineHeight: 1.25,
+          marginTop: 2, fontSize: '0.74rem', fontWeight: 600, lineHeight: 1.2,
           color: '#64748b',
         }}>
           {label}

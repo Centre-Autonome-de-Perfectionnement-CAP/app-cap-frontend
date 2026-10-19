@@ -55,8 +55,8 @@ const DashboardShell = ({
     <div>
       {stats.length > 0 && (
         <div style={{
-          display: 'grid', gap: 14, marginBottom: 28,
-          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 230px), 1fr))',
+          display: 'grid', gap: 10, marginBottom: 20,
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 180px), 220px))',
         }}>
           {stats.map(s => {
             const palette = STATUS_COLORS[s.key]
@@ -68,7 +68,7 @@ const DashboardShell = ({
                 count={counts[s.key] ?? 0}
                 color={s.color ?? palette?.color ?? '#475569'}
                 bg={s.bg ?? palette?.bg ?? '#f1f5f9'}
-                icon={<CIcon icon={icon} style={{ width: 20, height: 20 }} />}
+                icon={<CIcon icon={icon} style={{ width: 17, height: 17 }} />}
                 onClick={s.onClick}
               />
             )

@@ -1,6 +1,6 @@
 // src/views/pages/demandes/components/modal/DemandeModalShell.tsx
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
@@ -13,6 +13,7 @@ import HistoriquePanel from './HistoriquePanel'
 import SousReservePanel from './SousReservePanel'
 import AttachmentViewerModal, { type AttachmentViewerFile } from '@/components/document-request/AttachmentViewerModal'
 import { buildDossierFiles } from '@/components/document-request/DossierFilesSplit'
+import { prefetchDossierFiles } from '@/components/document-request/dossierFileCache'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -193,6 +194,14 @@ const DemandeModalShell = ({
 
   // Tous les documents du dossier ; « Voir les documents » ouvre le premier.
   const dossierFiles = buildDossierFiles(demande as any)
+
+  // Dès que la fiche s'ouvre, les documents se chargent en arrière-plan
+  // (le premier d'abord) : « Voir les documents » les affiche sans attente.
+  const filesSignature = dossierFiles.map(f => `${f.source}:${f.key}:${f.path}`).join('|')
+  useEffect(() => {
+    if (visible) prefetchDossierFiles(demande.id, dossierFiles)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, demande.id, filesSignature])
 
   const handleClose = () => {
     setActiveTab('details')

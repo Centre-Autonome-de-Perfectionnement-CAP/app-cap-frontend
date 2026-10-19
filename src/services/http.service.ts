@@ -81,7 +81,9 @@ export class HttpService {
         responseType: 'blob',
         headers: {
           'Accept': 'application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'Content-Type': 'application/json',
+          // Content-Type seulement pour un POST : sur un GET il est inutile et
+          // provoque une requête de vérification CORS supplémentaire.
+          ...(method === 'post' ? { 'Content-Type': 'application/json' } : {}),
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
       };
@@ -97,17 +99,11 @@ export class HttpService {
       
       const contentDisposition = response.headers['content-disposition'];
       let filename = undefined;
-      console.log('All headers:', response.headers);
-      console.log('Content-Disposition:', contentDisposition);
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[*]?=['"]?([^'"\s;]+)['"]?/i);
-        console.log('Filename match result:', filenameMatch);
         if (filenameMatch && filenameMatch[1]) {
           filename = decodeURIComponent(filenameMatch[1]);
-          console.log('Extracted filename:', filename);
         }
-      } else {
-        console.log('No Content-Disposition header found');
       }
       
       return { success: true, url: blobUrl, filename };

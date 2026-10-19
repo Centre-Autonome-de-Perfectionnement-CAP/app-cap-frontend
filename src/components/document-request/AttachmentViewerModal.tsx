@@ -6,7 +6,7 @@
 // acteurs sur le document. Précédent / Suivant (ou flèches du clavier) et
 // liste déroulante pour passer d'un document du dossier à l'autre.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { CButton, CSpinner, CFormSelect } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
@@ -15,10 +15,10 @@ import {
   cilZoomIn, cilZoomOut, cilFullscreen,
   cilChevronRight, cilChevronLeft,
 } from '@coreui/icons'
-import documentRequestService from '@/services/document-request.service'
 import type { DocumentRequest } from '@/types/document-request.types'
 import { TYPE_LABELS } from '@/types/document-request.types'
 import FileCommentsPanel from './FileCommentsPanel'
+import { getDossierFile, peekDossierFile, prefetchDossierFiles } from './dossierFileCache'
 import useFileComments from './useFileComments'
 
 // ─── Types publics ────────────────────────────────────────────────────────────
@@ -155,7 +155,6 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
   const [filename,    setFilename]    = useState<string | undefined>(undefined)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [index,       setIndex]       = useState(0)
-  const blobUrlRef = useRef<string | null>(null)
 
   // Liste des documents : celle fournie, sinon le seul document ouvert
   const list = useMemo<AttachmentViewerFile[]>(() => {
@@ -167,8 +166,8 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
 
   const comments = useFileComments(file ? demandeId : undefined)
 
-  useEffect(() => { blobUrlRef.current = blobUrl }, [blobUrl])
-  useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current) }, [])
+  // Les URL des documents appartiennent au cache partagé (dossierFileCache) :
+  // elles ne sont pas libérées ici, pour un réaffichage instantané.
 
   useEffect(() => {
     if (file) {
@@ -208,15 +207,26 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
 
   useEffect(() => {
     if (!active) { setBlobUrl(null); setError(null); return }
+    // Déjà en mémoire : affichage immédiat
+    const hit = peekDossierFile(demandeId, active)
+    if (hit) { setBlobUrl(hit.url); setFilename(hit.filename); setError(null); setLoading(false) }
+    else {
+      setBlobUrl(null); setLoading(true); setError(null)
+    }
     let cancelled = false
-    setLoading(true); setError(null)
-    setBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null })
-    documentRequestService.previewFile(demandeId, active.source, active.key)
-      .then(result => { if (!cancelled) { setBlobUrl(result.url); setFilename(result.filename) } else URL.revokeObjectURL(result.url) })
-      .catch((err: any) => {
-        if (!cancelled) setError(err?.message || 'Impossible de charger ce document.')
-      })
-      .finally(() => { if (!cancelled) setLoading(false) })
+    if (!hit) {
+      getDossierFile(demandeId, active)
+        .then(result => { if (!cancelled) { setBlobUrl(result.url); setFilename(result.filename) } })
+        .catch((err: any) => {
+          if (!cancelled) setError(err?.message || 'Impossible de charger ce document.')
+        })
+        .finally(() => { if (!cancelled) setLoading(false) })
+    }
+    // Précharge les documents voisins (Précédent / Suivant)
+    if (total > 1) {
+      const i = list.findIndex(f => sameFile(f, active))
+      prefetchDossierFiles(demandeId, [list[(i + 1) % total], list[(i - 1 + total) % total]])
+    }
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active?.source, active?.key, demandeId])

@@ -22,6 +22,7 @@ import { useDemandesBadge } from '@/hooks/demandes/useDemandesBadge'
 import { DemandesBadge }   from '@/components/demandes/DemandesBadge'
 
 import { useAuth } from '@/contexts'
+import { useStagesAccess } from '@/views/pages/stages/useStagesAccess'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Liste des modules — ordre alphabétique maintenu, "CAP Demandes" marqué
@@ -167,8 +168,12 @@ const Portail = () => {
   // Tâche 11.1 / 11.3 : badge en temps réel (polling 60 s)
   const { count } = useDemandesBadge()
 
+  // CAP Stages : seulement le Responsable de division concerné (formation continue)
+  const stagesAllowed = useStagesAccess(role)
+
   const userApplications = applications.filter(
-    (app) => !app.rolesAllowed || (role && app.rolesAllowed.includes(role))
+    (app) => (!app.rolesAllowed || (role && app.rolesAllowed.includes(role)))
+      && (app.url !== '/stages' || stagesAllowed === true)
   )
 
   return (

@@ -11,6 +11,7 @@ const StagiairesPage    = React.lazy(() => import('./StagiairesPage'))
 const BinomesPage       = React.lazy(() => import('./BinomesPage'))
 const SuperviseursPage  = React.lazy(() => import('./SuperviseursPage'))
 const GroupeWhatsAppPage = React.lazy(() => import('./GroupeWhatsAppPage'))
+const DemandesStagiairesPage = React.lazy(() => import('./DemandesStagiairesPage'))
 
 /** Accueil du module : on garde ?ref=… (liens reçus par WhatsApp / email). */
 const Home = () => {
@@ -34,6 +35,7 @@ const StagesRoutes = () => (
           <Route path="/demandes" element={<StagesPage />} />
           <Route path="/stagiaires" element={<StagiairesPage />} />
           <Route path="/binomes" element={<BinomesPage />} />
+          <Route path="/demandes-stagiaires" element={<DemandesStagiairesPage />} />
           <Route path="/superviseurs" element={<LeadOnly><SuperviseursPage /></LeadOnly>} />
           <Route path="/groupe-whatsapp" element={<LeadOnly><GroupeWhatsAppPage /></LeadOnly>} />
           <Route path="*" element={<Navigate to="/stages" replace />} />

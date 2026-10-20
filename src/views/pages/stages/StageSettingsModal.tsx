@@ -26,6 +26,23 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
     stageService.getSettings().then(setForm).catch(e => setError(friendlyError(e)))
   }, [visible])
 
+  const [locating, setLocating] = useState(false)
+  const [accuracy, setAccuracy] = useState<number | null>(null)
+
+  const takePosition = () => {
+    if (!('geolocation' in navigator)) { setError('La localisation n\'est pas disponible sur cet appareil.'); return }
+    setLocating(true); setError(null)
+    navigator.geolocation.getCurrentPosition(
+      p => {
+        set('lieu_position', { lat: +p.coords.latitude.toFixed(7), lng: +p.coords.longitude.toFixed(7) })
+        setAccuracy(Math.round(p.coords.accuracy))
+        setLocating(false)
+      },
+      () => { setError('Position non obtenue. Autorisez la localisation et réessayez, de préférence près d\'une fenêtre.'); setLocating(false) },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
+    )
+  }
+
   const set = <K extends keyof StageSettings>(k: K, v: StageSettings[K]) => setForm(f => (f ? { ...f, [k]: v } : f))
 
   const save = async () => {
@@ -39,6 +56,10 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
         default_service: form.default_service,
         default_lieu: form.default_lieu,
         default_horaires: form.default_horaires,
+        lieu_position: form.lieu_position,
+        lieu_rayon: form.lieu_rayon,
+        reglement_text: form.reglement_text,
+        permission_delay_days: form.permission_delay_days,
       })
       onSaved(saved)
       onClose()
@@ -101,6 +122,36 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
                   </CCol>
                 ))}
               </CRow>
+            </CCol>
+            <CCol xs={12}><hr className="my-1" /><strong>Pointage des stagiaires</strong></CCol>
+            <CCol xs={12}>
+              <div style={{ border: `1px solid ${form.lieu_position ? '#a7f3d0' : '#fde68a'}`, background: form.lieu_position ? '#ecfdf5' : '#fffbeb', borderRadius: 12, padding: '10px 12px' }}>
+                <div style={{ fontWeight: 700 }}>{form.lieu_position ? 'Position du lieu de stage enregistrée' : 'Position du lieu de stage non relevée'}</div>
+                <div style={{ fontSize: '.82rem', color: '#475569' }}>
+                  {form.lieu_position
+                    ? `${form.lieu_position.lat}, ${form.lieu_position.lng}${accuracy !== null ? ` (précision ±${accuracy} m)` : ''}. Les pointages doivent se faire à moins de ${form.lieu_rayon} m.`
+                    : 'Tant qu\'elle n\'est pas relevée, les positions des stagiaires sont acceptées sans contrôle de distance. Relevez-la depuis le lieu de stage, avec votre téléphone.'}
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                  <CButton size="sm" color="primary" onClick={takePosition} disabled={locating}>
+                    {locating && <CSpinner size="sm" className="me-1" />}Utiliser ma position actuelle
+                  </CButton>
+                  {form.lieu_position && <CButton size="sm" color="secondary" variant="ghost" onClick={() => { set('lieu_position', null); setAccuracy(null) }}>Effacer</CButton>}
+                </div>
+              </div>
+            </CCol>
+            <CCol xs={6} md={4}>
+              <CFormLabel className="fw-semibold small">Rayon autorisé (m)</CFormLabel>
+              <CFormInput type="number" min={20} max={500} value={form.lieu_rayon} onChange={e => set('lieu_rayon', Math.max(20, Math.min(500, Number(e.target.value) || 50)))} />
+            </CCol>
+            <CCol xs={6} md={4}>
+              <CFormLabel className="fw-semibold small">Permission après coup (jours ouvrés)</CFormLabel>
+              <CFormInput type="number" min={0} max={15} value={form.permission_delay_days} onChange={e => set('permission_delay_days', Math.max(0, Math.min(15, Number(e.target.value) || 0)))} />
+            </CCol>
+            <CCol xs={12}>
+              <CFormLabel className="fw-semibold small">Règlement intérieur (version {form.reglement_version})</CFormLabel>
+              <CFormTextarea rows={8} maxLength={10000} value={form.reglement_text} onChange={e => set('reglement_text', e.target.value)} />
+              <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: 4 }}>Toute modification crée une nouvelle version : chaque stagiaire devra la relire et l'accepter.</div>
             </CCol>
             <CCol xs={12}>
               <div style={{ fontSize: '.8rem', color: '#64748b' }}>

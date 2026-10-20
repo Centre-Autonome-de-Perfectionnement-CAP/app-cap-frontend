@@ -6,7 +6,7 @@ import HttpService from './http.service'
 const BASE = 'stages/admin'
 
 export type StageStatus =
-  | 'submitted' | 'proposal_sent' | 'counter_proposed' | 'accepted' | 'rejected' | 'expired'
+  | 'submitted' | 'proposal_sent' | 'counter_proposed' | 'accepted' | 'rejected' | 'expired' | 'withdrawn'
 
 export interface StageHoraires { arrivee: string; pause_debut: string; pause_fin: string; sortie: string }
 
@@ -61,6 +61,9 @@ export interface StageDetail extends StageListRow {
   files: { key: string; label: string; ext: string }[]
   terms: StageTerms | null
   rejection_reason: string | null
+  date_debut_reelle: string | null
+  activated_at: string | null
+  activation_sent_at: string | null
   proposal_sent_at: string | null
   proposal_expires_at: string | null
   exchanges: StageExchange[]
@@ -80,6 +83,56 @@ export interface StageSettings {
   default_horaires: StageHoraires
   proposal_reminder_days: number
   proposal_expiry_days: number
+  lieu_position: { lat: number; lng: number } | null
+  lieu_rayon: number
+  reglement_text: string
+  reglement_version: number
+  permission_delay_days: number
+}
+
+export interface AttendanceSummary {
+  jours_ouvres: number; presents: number; demi_journees: number; absences: number; retards: number; justifies: number; taux: number | null
+}
+
+export interface InternPresence {
+  account: {
+    activated_at: string | null
+    last_login_at: string | null
+    reglement_accepted_at: string | null
+    reglement_version: number | null
+    devices: { id: number; device_label: string | null; created_at: string; last_used_at: string | null; revoked_at: string | null }[]
+  } | null
+  activation: { sent_at: string | null; reminders: number }
+  date_debut_reelle: string | null
+  shift: { planned: string; real: string; suggested_end: string; applied: boolean } | null
+  summary: AttendanceSummary
+  days: {
+    day: string
+    status: 'present' | 'half' | 'absent' | 'justified' | 'in_progress'
+    justification: string | null
+    punches: Record<string, { at: string; late_minutes: number; early: boolean; distance_m: number | null } | null>
+  }[]
+  failures: Record<string, number>
+}
+
+export interface InternRequestRow {
+  id: number
+  kind: 'permission' | 'prolongation' | 'raccourcissement'
+  kind_label: string
+  type: string | null
+  type_label: string | null
+  date_from: string | null
+  date_to: string | null
+  time_from: string | null
+  time_to: string | null
+  new_date_fin: string | null
+  motif: string
+  has_file: boolean
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled'
+  decision_comment: string | null
+  decided_at: string | null
+  created_at: string
+  stage: { id: number; reference: string; nom_complet: string; date_fin: string }
 }
 
 export interface StageListResponse {
@@ -205,6 +258,28 @@ class StageService {
   syncWhatsappGroup = () => HttpService.post(`${BASE}/groupe-whatsapp/synchroniser`)
 
   dissolveWhatsappGroup = (id: number) => HttpService.post(`${BASE}/groupe-whatsapp/${id}/dissoudre`)
+
+  // ── Assiduité et demandes des stagiaires (lot 3) ───────────────────────
+
+  presence = async (id: number): Promise<InternPresence> => (await HttpService.get(`${BASE}/stagiaires/${id}/presence`)).data
+
+  resetDevice = (id: number) => HttpService.post(`${BASE}/stagiaires/${id}/appareil/reinitialiser`)
+
+  internRequests = (status: string, mine: boolean): Promise<{ data: InternRequestRow[]; pending: number }> =>
+    HttpService.get(`${BASE}/demandes-stagiaires?status=${status}${mine ? '&mine=1' : ''}`)
+
+  decideInternRequest = (id: number, decision: 'approved' | 'rejected', comment?: string) =>
+    HttpService.post(`${BASE}/demandes-stagiaires/${id}/decision`, { decision, comment: comment || null })
+
+  internRequestFile = async (id: number): Promise<{ url: string; name: string; mime: string }> => {
+    const res: any = await HttpService.get(`${BASE}/demandes-stagiaires/${id}/piece`)
+    if (!res?.content) throw new Error("Ce document n'a pas pu être chargé.")
+    const bin = atob(res.content)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    const mime = String(res.mime || 'application/octet-stream')
+    return { url: URL.createObjectURL(new Blob([bytes], { type: mime })), name: String(res.name || 'justificatif'), mime }
+  }
 
   // ── Invitation (page publique) ─────────────────────────────────────────
 

@@ -6,7 +6,7 @@ import { useSearchParams } from 'react-router-dom'
 import { CButton, CCard, CCardBody, CFormInput, CSpinner, CBadge, CInputGroup, CInputGroupText } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
-  cilSettings, cilSearch, cilInbox, cilCommentBubble, cilSend, cilCheckCircle, cilBan, cilClock, cilList, cilReload,
+  cilSettings, cilSearch, cilInbox, cilCommentBubble, cilSend, cilCheckCircle, cilBan, cilClock, cilList, cilReload, cilUserUnfollow,
 } from '@coreui/icons'
 import StatCard from '@/views/pages/demandes/components/ui/StatCard'
 import stageService, { type StageListResponse, type StageStatus } from '@/services/stage.service'
@@ -26,6 +26,7 @@ const CARDS: { key: Filter; label: string; icon: any; color: string; bg: string 
   { key: 'accepted',         label: 'Acceptées',          icon: cilCheckCircle,   color: '#059669', bg: '#ecfdf5' },
   { key: 'rejected',         label: 'Non retenues',       icon: cilBan,           color: '#e11d48', bg: '#fff1f2' },
   { key: 'expired',          label: 'Expirées',           icon: cilClock,         color: '#64748b', bg: '#f1f5f9' },
+  { key: 'withdrawn',        label: 'Désistements',       icon: cilUserUnfollow,  color: '#9a3412', bg: '#fff7ed' },
   { key: 'all',              label: 'Toutes',             icon: cilList,          color: '#0f766e', bg: '#f0fdfa' },
 ]
 

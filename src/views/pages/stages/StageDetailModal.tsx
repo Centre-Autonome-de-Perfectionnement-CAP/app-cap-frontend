@@ -8,12 +8,13 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
-  cilSend, cilBan, cilCheckAlt, cilPencil, cilFile, cilHistory, cilCommentBubble, cilDescription, cilUser,
+  cilSend, cilBan, cilCheckAlt, cilPencil, cilFile, cilHistory, cilCommentBubble, cilDescription, cilUser, cilCalendarCheck,
 } from '@coreui/icons'
 import stageService, { type StageDetail, type StageTerms } from '@/services/stage.service'
 import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
 import TermsForm, { validateTerms } from './TermsForm'
 import StageFileViewer from './StageFileViewer'
+import PresencePanel from './PresencePanel'
 import { STATUS_STYLE, HISTORY_LABELS, frDate, frDateTime, horairesLabel, durationLabel } from './stageUtils'
 
 interface Props {
@@ -182,6 +183,20 @@ const StageDetailModal = ({ idOrRef, onClose, onChanged }: Props) => {
               </div>
 
               <div className="stg-col">
+                {detail.status === 'accepted' && (
+                  <Section icon={cilCalendarCheck} title="Présence et assiduité" tone="#059669">
+                    <PresencePanel
+                      stageId={detail.id}
+                      onConfirmShift={(newEnd, motif) => {
+                        if (!detail.terms) return
+                        setTerms({ ...detail.terms, date_fin: newEnd })
+                        setNote(motif)
+                        setFormError(null)
+                        setMode('rectify')
+                      }}
+                    />
+                  </Section>
+                )}
                 {detail.notes.length > 0 && (
                   <Section icon={cilDescription} title="Notes de service">
                     {detail.notes.map(n => (

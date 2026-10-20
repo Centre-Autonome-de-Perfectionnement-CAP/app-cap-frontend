@@ -8,6 +8,7 @@ export const STATUS_STYLE: Record<StageStatus, { color: string; bg: string }> = 
   accepted:         { color: '#059669', bg: '#ecfdf5' },
   rejected:         { color: '#e11d48', bg: '#fff1f2' },
   expired:          { color: '#64748b', bg: '#f1f5f9' },
+  withdrawn:        { color: '#9a3412', bg: '#fff7ed' },
 }
 
 export const frDate = (iso: string | null | undefined, long = false): string => {
@@ -74,4 +75,20 @@ export const HISTORY_LABELS: Record<string, string> = {
   rectified:        'Conditions modifiées — note rectificative',
   reminder_sent:    'Relance envoyée au demandeur',
   expired:          'Proposition expirée (sans réponse)',
+  activation_sent:  "Lien d'activation envoyé au stagiaire",
+  activation_reminder: "Rappel d'activation envoyé",
+  activated:        'Présence confirmée — espace stagiaire activé',
+  withdrawn:        'Désistement (présence jamais confirmée)',
+  reglement_accepted: 'Règlement intérieur accepté',
+  device_reset:     'Empreinte réinitialisée',
+  intern_request:   'Demande du stagiaire',
+  intern_request_approved: 'Demande du stagiaire acceptée',
+  intern_request_rejected: 'Demande du stagiaire refusée',
+  supervisor_added: 'Superviseur attribué',
+  supervisor_removed: 'Superviseur retiré',
+  team_joined:      'Ajouté à un binôme / groupe',
+  whatsapp_group_added: 'Ajouté au groupe WhatsApp',
+  whatsapp_group_invited: 'Lien du groupe WhatsApp envoyé',
+  whatsapp_group_removed: 'Retiré du groupe WhatsApp',
+  whatsapp_group_unreachable: 'Groupe WhatsApp : numéro injoignable',
 }

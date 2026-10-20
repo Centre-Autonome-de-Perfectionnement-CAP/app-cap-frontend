@@ -64,7 +64,12 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
         report_grace_days: form.report_grace_days,
         final_report_open_days: form.final_report_open_days,
         seuil_assiduite: form.seuil_assiduite,
-        attestation_prefix: form.attestation_prefix,
+        attestation_structure: form.attestation_structure,
+        numero_suffixe: form.numero_suffixe,
+        pdf_ville: form.pdf_ville,
+        signataire_titre: form.signataire_titre,
+        signataire_nom: form.signataire_nom,
+        pdf_pied_de_page: form.pdf_pied_de_page,
       })
       onSaved(saved)
       onClose()
@@ -175,14 +180,31 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
               <CFormLabel className="fw-semibold small">Assiduité minimale (%)</CFormLabel>
               <CFormInput type="number" min={50} max={100} value={form.seuil_assiduite} onChange={e => set('seuil_assiduite', Math.max(50, Math.min(100, Number(e.target.value) || 80)))} />
             </CCol>
+            <CCol xs={12} md={8}>
+              <CFormLabel className="fw-semibold small">Structure d'accueil (« … un stage académique au sein … »)</CFormLabel>
+              <CFormInput maxLength={200} value={form.attestation_structure} onChange={e => set('attestation_structure', e.target.value)} />
+            </CCol>
+            <CCol xs={12}><hr className="my-1" /><strong>Documents PDF (attestation, note de service)</strong></CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Préfixe des numéros</CFormLabel>
-              <CFormInput maxLength={30} value={form.attestation_prefix} onChange={e => set('attestation_prefix', e.target.value.replace(/[^A-Za-z0-9/\-_.]/g, ''))} />
+              <CFormLabel className="fw-semibold small">Après le numéro</CFormLabel>
+              <CFormInput maxLength={40} value={form.numero_suffixe} onChange={e => set('numero_suffixe', e.target.value.replace(/[^A-Za-z0-9/\-_. ]/g, ''))} />
+              <div style={{ fontSize: '.74rem', color: '#64748b' }}>Ex. : N° 22-26/{form.numero_suffixe || '…'}</div>
+            </CCol>
+            <CCol xs={6} md={4}>
+              <CFormLabel className="fw-semibold small">Ville (« …, le »)</CFormLabel>
+              <CFormInput maxLength={60} value={form.pdf_ville} onChange={e => set('pdf_ville', e.target.value)} />
             </CCol>
             <CCol xs={12} md={4}>
-              <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: 4 }}>
-                Numéro proposé : {form.attestation_prefix || '…'}/{new Date().getFullYear()}/001. Il reste modifiable à l'impression.
-              </div>
+              <CFormLabel className="fw-semibold small">Titre du signataire</CFormLabel>
+              <CFormInput maxLength={80} value={form.signataire_titre} onChange={e => set('signataire_titre', e.target.value)} />
+            </CCol>
+            <CCol xs={12} md={6}>
+              <CFormLabel className="fw-semibold small">Nom du signataire</CFormLabel>
+              <CFormInput maxLength={100} value={form.signataire_nom} onChange={e => set('signataire_nom', e.target.value)} />
+            </CCol>
+            <CCol xs={12} md={6}>
+              <CFormLabel className="fw-semibold small">Pied de page</CFormLabel>
+              <CFormInput maxLength={150} value={form.pdf_pied_de_page} onChange={e => set('pdf_pied_de_page', e.target.value)} />
             </CCol>
             <CCol xs={12}><hr className="my-1" /></CCol>
             <CCol xs={12}>

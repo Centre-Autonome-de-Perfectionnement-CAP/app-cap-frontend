@@ -39,6 +39,7 @@ const StageDetailModal = ({ idOrRef, onClose, onChanged }: Props) => {
   const [note, setNote] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [viewerKey, setViewerKey] = useState<string | null>(null)
+  const [noteView, setNoteView] = useState<number | null>(null)
 
   const load = useCallback(async () => {
     if (idOrRef === null) return
@@ -216,12 +217,16 @@ const StageDetailModal = ({ idOrRef, onClose, onChanged }: Props) => {
                   <Section icon={cilDescription} title="Notes de service">
                     {detail.notes.map(n => (
                       <div key={n.id} className="stg-item">
-                        <strong>{n.kind === 'rectificative' ? 'Rectificative' : 'Initiale'} · {n.number}</strong>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <strong style={{ flex: 1 }}>{n.kind === 'rectificative' ? 'Rectificative' : 'Initiale'} · {n.number}</strong>
+                          <CButton size="sm" color="primary" variant="outline" onClick={() => setNoteView(n.id)}>
+                            <CIcon icon={cilFile} className="me-1" />PDF
+                          </CButton>
+                        </span>
                         <span className="stg-muted">Émise le {frDateTime(n.issued_at)}{n.issued_by ? ` par ${n.issued_by}` : ' (accord du demandeur)'}</span>
                         {n.motif && <span className="stg-muted">Motif : {n.motif}</span>}
                       </div>
                     ))}
-                    <p className="stg-muted" style={{ margin: '6px 0 0' }}>Le document PDF sera disponible dès l'intégration du modèle officiel.</p>
                   </Section>
                 )}
 
@@ -362,6 +367,17 @@ const StageDetailModal = ({ idOrRef, onClose, onChanged }: Props) => {
         `}</style>
       </CModal>
 
+      {detail && (
+        <StageFileViewer
+          visible={noteView !== null}
+          stageId={detail.id}
+          files={detail.notes.map(n => ({ key: String(n.id), label: `Note ${n.kind === 'rectificative' ? 'rectificative' : 'de service'} · ${n.number}` }))}
+          initialKey={noteView !== null ? String(noteView) : null}
+          title="Notes de service"
+          loader={key => stageService.notePdf(detail.id, Number(key))}
+          onClose={() => setNoteView(null)}
+        />
+      )}
       {detail && (
         <StageFileViewer
           visible={viewerKey !== null}

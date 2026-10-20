@@ -92,7 +92,12 @@ export interface StageSettings {
   report_grace_days: number
   final_report_open_days: number
   seuil_assiduite: number
-  attestation_prefix: string
+  attestation_structure: string
+  numero_suffixe: string
+  pdf_ville: string
+  signataire_titre: string
+  signataire_nom: string
+  pdf_pied_de_page: string
 }
 
 // ── Attestations (lot 5) ───────────────────────────────────────────────────
@@ -116,7 +121,8 @@ export interface AttestationContent {
   date_naissance: string | null; lieu_naissance: string; nationalite: string
   etablissement: string; filiere: string; service: string | null; lieu: string | null
   date_debut: string | null; date_fin: string | null; duree: string | null
-  theme: string | null; observations: string | null
+  theme: string | null
+  pays_naissance: string | null; type_stage: string; structure: string
 }
 
 export interface Attestation {
@@ -144,7 +150,7 @@ export interface Attestation {
   has_scan: boolean
   stage: { id: number; reference: string; nom_complet: string; date_fin: string | null; whatsapp: string } | null
   content?: AttestationContent
-  overrides?: { theme?: string; service?: string; observations?: string }
+  overrides?: { pays_naissance?: string; type_stage?: string; structure?: string }
   eligibility?: AttestationEligibility | null
 }
 
@@ -460,7 +466,7 @@ class StageService {
   exceptionalAttestation = (stageId: number, password: string, motif: string) =>
     HttpService.post(`${BASE}/stagiaires/${stageId}/attestation-exceptionnelle`, { password, motif })
 
-  updateAttestation = (id: number, values: { theme?: string | null; service?: string | null; observations?: string | null }) =>
+  updateAttestation = (id: number, values: { pays_naissance?: string | null; type_stage?: string | null; structure?: string | null }) =>
     HttpService.put(`${BASE}/attestations/${id}`, values)
 
   validateAttestation = (id: number) => HttpService.post(`${BASE}/attestations/${id}/valider`)
@@ -476,6 +482,21 @@ class StageService {
     fd.append('file', file)
     return HttpService.post(`${BASE}/attestations/${id}/scan`, fd)
   }
+
+  /** PDF reçu en JSON (base64) → URL locale. */
+  private pdfFrom = (res: any, fallback: string) => {
+    if (!res?.content) throw new Error("Ce document n'a pas pu être préparé.")
+    const bin = atob(res.content)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    return { url: URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })), name: String(res.name || fallback), mime: 'application/pdf' }
+  }
+
+  attestationPdf = async (id: number, numero?: string): Promise<{ url: string; name: string; mime: string }> =>
+    this.pdfFrom(await HttpService.get(`${BASE}/attestations/${id}/pdf${numero ? `?numero=${encodeURIComponent(numero)}` : ''}`), 'attestation.pdf')
+
+  notePdf = async (stageId: number, noteId: number): Promise<{ url: string; name: string; mime: string }> =>
+    this.pdfFrom(await HttpService.get(`${BASE}/demandes/${stageId}/notes/${noteId}/pdf`), 'note-de-service.pdf')
 
   attestationScan = async (id: number): Promise<{ url: string; name: string; mime: string }> => {
     const res: any = await HttpService.get(`${BASE}/attestations/${id}/scan`)

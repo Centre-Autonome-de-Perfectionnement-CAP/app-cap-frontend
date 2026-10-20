@@ -135,6 +135,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, module }) => 
     return <Navigate to={FRONTEND_ROUTES.LOGIN} replace />;
   }
 
+  // Superviseur de stage → module Stages uniquement
+  if (r === 'superviseur') {
+    return <Navigate to="/stages/stagiaires" replace />;
+  }
+
   // Responsable → son dashboard uniquement, quel que soit le module demandé
   if (r === 'responsable') {
     return <Navigate to={FRONTEND_ROUTES.RESPONSABLE_DASHBOARD} replace />;

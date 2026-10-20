@@ -89,6 +89,57 @@ export interface StageListResponse {
   labels: Record<StageStatus, string>
 }
 
+export type InternScope = 'current' | 'upcoming' | 'finished' | 'all' | 'mine' | 'unsupervised'
+
+export interface Intern {
+  id: number
+  reference: string
+  nom_complet: string
+  whatsapp: string
+  email: string
+  formation: string
+  etablissement: string
+  service: string | null
+  date_debut: string
+  date_fin: string
+  phase: 'current' | 'upcoming' | 'finished'
+  team: { id: number; name: string | null } | null
+  supervisors: { id: number; name: string }[]
+  supervised_by_me: boolean
+  whatsapp_group: 'added' | 'invited' | 'removed' | null
+}
+
+export interface InternListResponse {
+  data: Intern[]
+  counts: Record<InternScope, number>
+  me: { id: number; is_lead: boolean; is_supervisor: boolean }
+}
+
+export interface Supervisor { id: number; name: string; email: string; phone: string | null; since: string; active_interns: number }
+
+export interface SupervisorInvitation {
+  id: number
+  phone: string
+  name: string | null
+  status: 'pending' | 'accepted' | 'expired' | 'revoked'
+  expires_at: string
+  last_sent_at: string | null
+  send_count: number
+  accepted_at: string | null
+  invited_by_name: string | null
+  accepted_name: string | null
+  created_at: string
+}
+
+export interface StageTeam { id: number; name: string; members: { id: number; reference: string; nom_complet: string }[] }
+
+export interface WhatsAppGroupOverview {
+  year: number
+  group: { id: number; name: string; origin: 'created' | 'linked'; created_at: string; members: number } | null
+  waiting: number
+  history: { id: number; year: number; name: string; origin: string; created_at: string; dissolved_at: string | null }[]
+}
+
 class StageService {
   list = (params: { status?: string; q?: string; page?: number } = {}): Promise<StageListResponse> => {
     const qs = new URLSearchParams()
@@ -115,6 +166,53 @@ class StageService {
 
   updateSettings = async (values: Partial<StageSettings>): Promise<StageSettings> =>
     (await HttpService.put(`${BASE}/reglages`, values)).data
+
+  // ── Stagiaires, superviseurs, binômes, groupe WhatsApp (lot 2) ─────────
+
+  interns = (scope: InternScope, q?: string): Promise<InternListResponse> => {
+    const qs = new URLSearchParams({ scope })
+    if (q) qs.append('q', q)
+    return HttpService.get(`${BASE}/stagiaires?${qs}`)
+  }
+
+  setSupervisor = (stageIds: number[], supervisorId: number, action: 'add' | 'remove') =>
+    HttpService.post(`${BASE}/stagiaires/superviseur`, { stage_ids: stageIds, supervisor_id: supervisorId, action })
+
+  supervisors = async (): Promise<Supervisor[]> => (await HttpService.get(`${BASE}/superviseurs`)).data
+
+  invitations = async (): Promise<SupervisorInvitation[]> => (await HttpService.get(`${BASE}/invitations`)).data
+
+  invite = (numeros: string, nom?: string) => HttpService.post(`${BASE}/invitations`, { numeros, nom: nom || null })
+
+  resendInvitation = (id: number) => HttpService.post(`${BASE}/invitations/${id}/renvoyer`)
+
+  revokeInvitation = (id: number) => HttpService.delete(`${BASE}/invitations/${id}`)
+
+  teams = async (): Promise<StageTeam[]> => (await HttpService.get(`${BASE}/equipes`)).data
+
+  saveTeam = (id: number | null, nom: string, stageIds: number[]) =>
+    id ? HttpService.put(`${BASE}/equipes/${id}`, { nom, stage_ids: stageIds })
+       : HttpService.post(`${BASE}/equipes`, { nom, stage_ids: stageIds })
+
+  deleteTeam = (id: number) => HttpService.delete(`${BASE}/equipes/${id}`)
+
+  whatsappGroup = async (): Promise<WhatsAppGroupOverview> => (await HttpService.get(`${BASE}/groupe-whatsapp`)).data
+
+  createWhatsappGroup = () => HttpService.post(`${BASE}/groupe-whatsapp/creer`)
+
+  linkWhatsappGroup = (lien: string) => HttpService.post(`${BASE}/groupe-whatsapp/lier`, { lien })
+
+  syncWhatsappGroup = () => HttpService.post(`${BASE}/groupe-whatsapp/synchroniser`)
+
+  dissolveWhatsappGroup = (id: number) => HttpService.post(`${BASE}/groupe-whatsapp/${id}/dissoudre`)
+
+  // ── Invitation (page publique) ─────────────────────────────────────────
+
+  invitationInfo = async (token: string): Promise<{ phone: string; name: string | null; expires_at: string }> =>
+    (await HttpService.get(`stages/invitation?token=${encodeURIComponent(token)}`)).data
+
+  acceptInvitation = (payload: { token: string; prenom: string; nom: string; email: string; password: string; password_confirmation: string }) =>
+    HttpService.post('stages/invitation/accepter', payload)
 
   /** Pièce reçue en JSON (base64) : jamais interceptée par un gestionnaire de téléchargement. */
   fileContent = async (id: number, key: string): Promise<{ url: string; name: string; mime: string }> => {

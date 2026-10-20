@@ -8,7 +8,8 @@ import { useAuth } from '@/contexts'
 import { FRONTEND_ROUTES } from '@/constants'
 import { LoadingSpinner } from '@/components'
 
-export const STAGES_ROLES = ['admin', 'responsable-division', 'chef-division']
+export const STAGES_ROLES = ['admin', 'responsable-division', 'chef-division', 'superviseur']
+export const isStagesLead = (role: string | null) => role === 'admin' || role === 'responsable-division' || role === 'chef-division'
 
 const StagesGuard = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, role } = useAuth()

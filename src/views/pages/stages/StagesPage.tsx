@@ -11,6 +11,8 @@ import {
 import StatCard from '@/views/pages/demandes/components/ui/StatCard'
 import stageService, { type StageListResponse, type StageStatus } from '@/services/stage.service'
 import { friendlyError } from '@/components/common/ActionResult'
+import { useAuth } from '@/contexts'
+import { isStagesLead } from './StagesGuard'
 import StageDetailModal from './StageDetailModal'
 import StageSettingsModal from './StageSettingsModal'
 import { STATUS_STYLE, frDate, durationLabel } from './stageUtils'
@@ -29,6 +31,8 @@ const CARDS: { key: Filter; label: string; icon: any; color: string; bg: string 
 
 const StagesPage = () => {
   const [params, setParams] = useSearchParams()
+  const { role } = useAuth()
+  const lead = isStagesLead(role as string)
   const [filter, setFilter] = useState<Filter>('to_handle')
   const [q, setQ] = useState('')
   const [search, setSearch] = useState('')
@@ -54,8 +58,9 @@ const StagesPage = () => {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
+    if (!lead) return
     stageService.getSettings().then(s => setRequestsOpen(s.requests_open)).catch(() => setRequestsOpen(null))
-  }, [])
+  }, [lead])
 
   // Recherche : déclenchée 400 ms après la frappe
   useEffect(() => {
@@ -91,9 +96,11 @@ const StagesPage = () => {
           <CButton color="secondary" variant="outline" size="sm" onClick={() => load()} disabled={loading} title="Actualiser">
             <CIcon icon={cilReload} />
           </CButton>
-          <CButton color="primary" variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
-            <CIcon icon={cilSettings} className="me-1" />Réglages
-          </CButton>
+          {lead && (
+            <CButton color="primary" variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+              <CIcon icon={cilSettings} className="me-1" />Réglages
+            </CButton>
+          )}
         </div>
       </div>
 
@@ -172,7 +179,7 @@ const StagesPage = () => {
       </CCard>
 
       <StageDetailModal idOrRef={openId} onClose={closeDetail} onChanged={load} />
-      <StageSettingsModal visible={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={s => setRequestsOpen(s.requests_open)} />
+      {lead && <StageSettingsModal visible={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={s => setRequestsOpen(s.requests_open)} />}
 
       <style>{`
         .stg-page { display: flex; flex-direction: column; gap: 14px; }

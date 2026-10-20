@@ -98,6 +98,9 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     } else if (r === 'responsable') {
       // Responsable de division → son espace dédié
       navigate(FRONTEND_ROUTES.RESPONSABLE_DASHBOARD);
+    } else if (r === 'superviseur') {
+      // Superviseur de stage → uniquement le module Stages
+      navigate('/stages/stagiaires');
     } else if (r === 'professeur') {
       // Professeur → dashboard notes
       navigate(FRONTEND_ROUTES.NOTES.PROFESSOR_DASHBOARD);

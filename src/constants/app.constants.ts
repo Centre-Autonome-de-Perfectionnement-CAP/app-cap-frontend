@@ -16,6 +16,7 @@ export const ROLES = {
   RESPONSABLE_DIVISION: 'responsable-division',
   SCOLARITE:            'scolarite',
   DIRECTION:            'direction',
+  SUPERVISEUR:          'superviseur',
 } as const
 
 export type UserRole = typeof ROLES[keyof typeof ROLES]
@@ -36,6 +37,7 @@ export const ROLE_NAMES: Record<UserRole, string> = {
   [ROLES.RESPONSABLE_DIVISION]: 'Responsable Division',
   [ROLES.SCOLARITE]:            'Scolarité',
   [ROLES.DIRECTION]:            'Direction',
+  [ROLES.SUPERVISEUR]:          'Superviseur de stage',
 }
 
 export const STATUTS = {

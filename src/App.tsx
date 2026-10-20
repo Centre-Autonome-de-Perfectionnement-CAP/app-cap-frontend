@@ -34,6 +34,7 @@ const DemandesRoutes     = React.lazy(() => import('./views/pages/demandes/Deman
 const AdminDbRoutes      = React.lazy(() => import('./views/pages/admin-db/AdminDbRoutes.tsx'))
 const WhatsAppRoutes     = React.lazy(() => import('./views/pages/whatsapp/WhatsAppRoutes.tsx'))
 const StagesRoutes       = React.lazy(() => import('./views/pages/stages/StagesRoutes.tsx'))
+const SupervisorInvitationPage = React.lazy(() => import('./views/pages/stages/SupervisorInvitationPage.tsx'))
 const Register           = React.lazy(() => import('./views/pages/register/Register.tsx'))
 const Page404            = React.lazy(() => import('./views/pages/page404/Page404.tsx'))
 const Page500            = React.lazy(() => import('./views/pages/page500/Page500.tsx'))
@@ -259,6 +260,8 @@ const App = () => {
             } />
             {/* Module Stages — Responsable de division (formation continue) + admin, voir StagesGuard.tsx */}
             <Route path="/stages/*" element={<StagesRoutes />} />
+            {/* Lien d'invitation reçu par un superviseur (public) */}
+            <Route path="/invitation-superviseur" element={<SupervisorInvitationPage />} />
 
             <Route path="*" element={<Navigate to={FRONTEND_ROUTES.PORTAIL} replace />} />
           </Routes>

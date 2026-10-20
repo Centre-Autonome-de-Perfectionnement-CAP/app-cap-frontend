@@ -10,7 +10,7 @@ import { cilReload, cilBadge } from '@coreui/icons'
 import stageService, { type Attestation, type AttestationStatus } from '@/services/stage.service'
 import { friendlyError } from '@/components/common/ActionResult'
 import { useAuth } from '@/contexts'
-import { PageHead, Empty, Pill, StagesStyles } from './StagesUi'
+import { PageHead, Empty, Pill, StagesStyles, ExportButton } from './StagesUi'
 import { isStagesLead } from './StagesGuard'
 import AttestationModal, { ATT_STATUS } from './AttestationModal'
 import { frDate, frDateTime } from './stageUtils'
@@ -54,7 +54,10 @@ const AttestationsPage = () => {
         subtitle={lead
           ? `${todo} attestation(s) à valider. Après validation, le secrétariat imprime et remet l'attestation.`
           : `${todo} attestation(s) à imprimer ou à remettre.`}
-        actions={<CButton color="secondary" variant="outline" size="sm" onClick={load} title="Actualiser"><CIcon icon={cilReload} /></CButton>}
+        actions={<>
+          <ExportButton path={`attestations?status=${status}`} label="Registre (Excel)" />
+          <CButton color="secondary" variant="outline" size="sm" onClick={load} title="Actualiser"><CIcon icon={cilReload} /></CButton>
+        </>}
       />
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {filters.map(([k, l]) => (

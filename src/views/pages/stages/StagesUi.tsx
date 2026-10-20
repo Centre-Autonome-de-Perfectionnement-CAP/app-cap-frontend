@@ -1,8 +1,11 @@
 // src/views/pages/stages/StagesUi.tsx
 // Petits éléments communs aux pages du module Stages (thème clair).
-import React from 'react'
+import React, { useState } from 'react'
+import { CButton, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilInbox } from '@coreui/icons'
+import { cilInbox, cilSpreadsheet } from '@coreui/icons'
+import stageService from '@/services/stage.service'
+import { showError, friendlyError } from '@/components/common/ActionResult'
 
 export const PageHead = ({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) => (
   <div className="stg-head">
@@ -24,6 +27,20 @@ export const Empty = ({ text }: { text: string }) => (
 export const Pill = ({ color, bg, children }: { color: string; bg: string; children: React.ReactNode }) => (
   <span className="stg-pill" style={{ color, background: bg }}>{children}</span>
 )
+
+/** Bouton d'export Excel (fichier reçu en JSON, enregistré par le navigateur). */
+export const ExportButton = ({ path, label = 'Exporter (Excel)', size = 'sm' }: { path: string; label?: string; size?: 'sm' | 'lg' }) => {
+  const [busy, setBusy] = useState(false)
+  const run = async () => {
+    setBusy(true)
+    try { await stageService.exportFile(path) } catch (e) { await showError('Export impossible', friendlyError(e)) } finally { setBusy(false) }
+  }
+  return (
+    <CButton color="success" variant="outline" size={size} onClick={run} disabled={busy} title="Télécharger au format Excel">
+      {busy ? <CSpinner size="sm" className="me-1" /> : <CIcon icon={cilSpreadsheet} className="me-1" />}{label}
+    </CButton>
+  )
+}
 
 export const StagesStyles = () => (
   <style>{`

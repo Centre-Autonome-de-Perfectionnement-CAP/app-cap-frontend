@@ -148,6 +148,43 @@ export interface Attestation {
   eligibility?: AttestationEligibility | null
 }
 
+// ── Tableau de bord et suivi (lot 6) ───────────────────────────────────────
+
+export interface FollowRow extends Intern {
+  activated: boolean
+  date_debut_reelle: string | null
+  fin_proche: boolean
+  taux: number | null
+  jours_ouvres: number
+  absences: number
+  retards: number
+  justifies: number
+  rapports: { deposited: number; validated: number; missing: number; final_validated: boolean }
+  attestation: { id: number; status: AttestationStatus; label: string; numero: string | null } | null
+}
+
+export interface DashboardAlert {
+  type: 'non_active' | 'assiduite' | 'fin_proche' | 'rapports' | 'sans_superviseur'
+  stage_id: number
+  reference: string
+  nom: string
+  detail: string
+}
+
+export interface StagesDashboard {
+  lead: boolean
+  today: string
+  seuil: number
+  requests_open: boolean
+  demandes: { a_traiter: number; proposition: number; acceptees: number; non_retenues: number }
+  stagiaires: { en_cours: number; a_venir: number; fin_proche: number; termines_annee: number; sans_superviseur: number | null }
+  a_faire: { rapports: number; demandes_stagiaires: number; attestations: number | null }
+  assiduite: { moyenne: number | null; sous_seuil: number; mesures: number }
+  alertes: DashboardAlert[]
+  alertes_total: number
+  mensuel: { mois: string; recues: number; acceptees: number }[]
+}
+
 export interface StageAttestationOverview {
   prepare_day: string | null
   eligibility: AttestationEligibility
@@ -209,6 +246,7 @@ export interface InternPresence {
   date_debut_reelle: string | null
   shift: { planned: string; real: string; suggested_end: string; applied: boolean } | null
   summary: AttendanceSummary
+  seuil?: number
   days: {
     day: string
     status: 'present' | 'half' | 'absent' | 'justified' | 'in_progress'
@@ -447,6 +485,30 @@ class StageService {
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
     const mime = String(res.mime || 'application/octet-stream')
     return { url: URL.createObjectURL(new Blob([bytes], { type: mime })), name: String(res.name || 'attestation'), mime }
+  }
+
+  // ── Tableau de bord, suivi, exports (lot 6) ────────────────────────────
+
+  dashboard = async (): Promise<StagesDashboard> => (await HttpService.get(`${BASE}/tableau-de-bord`)).data
+
+  follow = (scope: InternScope, q = ''): Promise<{ data: FollowRow[]; seuil: number }> =>
+    HttpService.get(`${BASE}/suivi?scope=${scope}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ''}`)
+
+  /**
+   * Export Excel reçu en JSON (base64) puis enregistré par le navigateur :
+   * jamais intercepté par un gestionnaire de téléchargement.
+   */
+  exportFile = async (path: string): Promise<void> => {
+    const res: any = await HttpService.get(`${BASE}/exports/${path}`)
+    if (!res?.content) throw new Error("Le fichier n'a pas pu être préparé.")
+    const bin = atob(res.content)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    const url = URL.createObjectURL(new Blob([bytes], { type: String(res.mime || 'application/octet-stream') }))
+    const a = document.createElement('a')
+    a.href = url; a.download = String(res.name || 'export.xlsx')
+    document.body.appendChild(a); a.click(); a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 10000)
   }
 
   // ── Invitation (page publique) ─────────────────────────────────────────

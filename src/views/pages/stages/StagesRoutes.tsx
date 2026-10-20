@@ -14,13 +14,16 @@ const GroupeWhatsAppPage = React.lazy(() => import('./GroupeWhatsAppPage'))
 const DemandesStagiairesPage = React.lazy(() => import('./DemandesStagiairesPage'))
 const RapportsPage = React.lazy(() => import('./RapportsPage'))
 const AttestationsPage = React.lazy(() => import('./AttestationsPage'))
+const DashboardPage = React.lazy(() => import('./DashboardPage'))
+const SuiviPage = React.lazy(() => import('./SuiviPage'))
 
 /** Accueil du module : on garde ?ref=… (liens reçus par WhatsApp / email). */
 const Home = () => {
   const { search } = useLocation()
   const { role } = useAuth()
   if (isStagesSecretariat(role as string)) return <Navigate to="/stages/attestations" replace />
-  const target = role === 'superviseur' && !search ? '/stages/stagiaires' : `/stages/demandes${search}`
+  // Liens reçus (?ref=…) : la fiche dans « Demandes » ; sinon le tableau de bord.
+  const target = search ? `/stages/demandes${search}` : '/stages/tableau-de-bord'
   return <Navigate to={target} replace />
 }
 
@@ -47,6 +50,8 @@ const StagesRoutes = () => (
       <Suspense fallback={<LoadingSpinner fullPage message="Chargement…" />}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/tableau-de-bord" element={<Staff><DashboardPage /></Staff>} />
+          <Route path="/suivi" element={<Staff><SuiviPage /></Staff>} />
           <Route path="/demandes" element={<Staff><StagesPage /></Staff>} />
           <Route path="/stagiaires" element={<Staff><StagiairesPage /></Staff>} />
           <Route path="/binomes" element={<Staff><BinomesPage /></Staff>} />

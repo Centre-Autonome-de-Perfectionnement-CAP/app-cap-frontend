@@ -13,6 +13,7 @@ import stageService, { type StageListResponse, type StageStatus } from '@/servic
 import { friendlyError } from '@/components/common/ActionResult'
 import { useAuth } from '@/contexts'
 import { isStagesLead } from './StagesGuard'
+import { ExportButton } from './StagesUi'
 import StageDetailModal from './StageDetailModal'
 import StageSettingsModal from './StageSettingsModal'
 import { STATUS_STYLE, frDate, durationLabel } from './stageUtils'
@@ -97,6 +98,7 @@ const StagesPage = () => {
           <CButton color="secondary" variant="outline" size="sm" onClick={() => load()} disabled={loading} title="Actualiser">
             <CIcon icon={cilReload} />
           </CButton>
+          {lead && <ExportButton path={`demandes?status=${filter}`} />}
           {lead && (
             <CButton color="primary" variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
               <CIcon icon={cilSettings} className="me-1" />Réglages

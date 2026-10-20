@@ -8,6 +8,7 @@ import CIcon from '@coreui/icons-react'
 import { cilFingerprint, cilWarning, cilCalendarCheck } from '@coreui/icons'
 import stageService, { type InternPresence } from '@/services/stage.service'
 import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
+import { ExportButton } from './StagesUi'
 import { frDate, frDateTime } from './stageUtils'
 
 const DAY = {
@@ -95,7 +96,7 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
       {data.account && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8 }}>
           {[
-            ['Assiduité', s.taux !== null ? `${s.taux} %` : '—', s.taux !== null && s.taux < 80 ? '#d97706' : '#059669'],
+            ['Assiduité', s.taux !== null ? `${s.taux} %` : '—', s.taux !== null && s.taux < (data.seuil ?? 80) ? '#d97706' : '#059669'],
             ['Jours ouvrés', String(s.jours_ouvres), '#0f172a'],
             ['Absences', String(s.absences), s.absences ? '#e11d48' : '#0f172a'],
             ['Retards', String(s.retards), s.retards ? '#d97706' : '#0f172a'],
@@ -106,6 +107,12 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
               <div style={{ fontSize: '.72rem', fontWeight: 600, color: '#64748b' }}>{l}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {data.account && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <ExportButton path={`stagiaires/${stageId}/presences`} label="Exporter les présences" />
         </div>
       )}
 

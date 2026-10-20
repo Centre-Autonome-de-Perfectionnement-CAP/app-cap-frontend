@@ -97,7 +97,7 @@ const StatCard = ({
           {count}
         </div>
         <div style={{
-          marginTop: 2, fontSize: '0.74rem', fontWeight: 600, lineHeight: 1.2,
+          marginTop: 2, fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.2,
           color: '#64748b',
         }}>
           {label}

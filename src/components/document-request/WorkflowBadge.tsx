@@ -13,7 +13,7 @@ export const WorkflowBadge = ({ status, size }: Props) => (
   <CBadge
     color={STATUS_COLORS[status] as any}
     shape="rounded-pill"
-    style={{ fontSize: size === 'sm' ? '0.7rem' : '0.8rem', padding: '4px 10px' }}
+    style={{ fontSize: '0.875rem', padding: '4px 10px' }}
   >
     {STATUS_LABELS[status] ?? status}
   </CBadge>
@@ -57,7 +57,7 @@ export const WorkflowTimeline = ({ currentStatus, isRejected }: TimelineProps) =
                 {isCurrent && !isRejected && <span style={{ color: '#fff', fontSize: 10 }}>●</span>}
                 {isRejected && isCurrent && <span style={{ color: '#fff', fontSize: 11 }}>✕</span>}
               </div>
-              <div style={{ fontSize: '0.6rem', color: isCurrent ? color : '#9ca3af', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: '0.875rem', color: isCurrent ? color : '#9ca3af', whiteSpace: 'nowrap' }}>
                 {step.label}
               </div>
             </div>

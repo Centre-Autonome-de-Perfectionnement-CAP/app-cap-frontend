@@ -33,7 +33,7 @@ const StatusNote = ({ tone = 'info', title, children }: Props) => {
       <div style={{ minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: '0.92rem', color: t.title }}>{title}</div>
         {children && (
-          <div style={{ fontSize: '0.86rem', color: t.text, lineHeight: 1.55, marginTop: 2 }}>
+          <div style={{ fontSize: '0.875rem', color: t.text, lineHeight: 1.55, marginTop: 2 }}>
             {children}
           </div>
         )}
@@ -53,7 +53,7 @@ export const ReportedIssue = ({ from, reason }: { from?: string | null; reason?:
       background: '#f8fafc', border: '1px solid #e2e8f0',
       borderRadius: 10, padding: '12px 14px', marginBottom: 16,
     }}>
-      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', marginBottom: 4 }}>
+      <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#64748b', marginBottom: 4 }}>
         {from ? `Point signalé par ${from}` : 'Point signalé'}
       </div>
       <div style={{ fontSize: '0.9rem', color: '#1e293b', lineHeight: 1.55, whiteSpace: 'pre-line' }}>

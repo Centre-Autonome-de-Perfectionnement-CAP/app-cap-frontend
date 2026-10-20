@@ -86,7 +86,7 @@ const InfoBlock = ({ title, children, accent }: { title: string; children: React
     background: accent ? '#f0fdf4' : '#f8fafc',
   }}>
     <p style={{
-      fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
+      fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase',
       letterSpacing: '0.07em', color: accent ? '#15803d' : '#94a3b8', marginBottom: 10,
     }}>
       {title}
@@ -98,8 +98,8 @@ const InfoBlock = ({ title, children, accent }: { title: string; children: React
 const InfoLine = ({ label, value }: { label: string; value?: string | null }) => {
   if (!value) return null
   return (
-    <p style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: 6 }}>
-      <span style={{ color: '#9ca3af' }}>{label} : </span>
+    <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: 6 }}>
+      <span style={{ color: '#64748b' }}>{label} : </span>
       <span style={{ fontWeight: 600, color: '#374151' }}>{value}</span>
     </p>
   )
@@ -113,7 +113,7 @@ const ImageViewer = ({ src, alt, onDownload }: { src: string; alt: string; onDow
   // Image illisible par le navigateur : message clair au lieu d'une zone vide
   if (broken) return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 20, textAlign: 'center' }}>
-      <CIcon icon={cilFile} style={{ width: 40, color: '#94a3b8' }} />
+      <CIcon icon={cilFile} style={{ width: 40, color: '#64748b' }} />
       <span style={{ fontSize: '0.9rem', color: '#475569' }}>
         Cette image ne peut pas s'afficher ici (format non pris en charge par le navigateur).
       </span>
@@ -134,7 +134,7 @@ const ImageViewer = ({ src, alt, onDownload }: { src: string; alt: string; onDow
         <CButton size="sm" color="light" onClick={() => setZoom(z => Math.max(0.25, +(z - 0.25).toFixed(2)))}>
           <CIcon icon={cilZoomOut} style={{ width: 14 }} />
         </CButton>
-        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#374151', minWidth: 42, textAlign: 'center' }}>
+        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151', minWidth: 42, textAlign: 'center' }}>
           {Math.round(zoom * 100)}%
         </span>
         <CButton size="sm" color="light" onClick={() => setZoom(z => Math.min(4, +(z + 0.25).toFixed(2)))}>
@@ -298,7 +298,7 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
             <CIcon icon={cilFile} style={{ width: 18, color: '#475569' }} />
             <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>{active.label}</span>
             <span style={{
-              fontSize: '0.72rem', fontWeight: 600, padding: '3px 10px', borderRadius: 6,
+              fontSize: '0.875rem', fontWeight: 600, padding: '3px 10px', borderRadius: 6,
               background: originStyle.bg, color: originStyle.color,
             }}>
               {ORIGIN_LABELS[active.source]}
@@ -322,7 +322,7 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
               <CButton size="sm" color="secondary" variant="outline" onClick={() => go(-1)} title="Document précédent (flèche gauche)">
                 <CIcon icon={cilChevronLeft} style={{ width: 12 }} className="me-1" />Précédent
               </CButton>
-              <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{index + 1} / {total}</span>
+              <span style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 600 }}>{index + 1} / {total}</span>
               <CButton size="sm" color="secondary" variant="outline" onClick={() => go(1)} title="Document suivant (flèche droite)">
                 Suivant<CIcon icon={cilChevronRight} style={{ width: 12 }} className="ms-1" />
               </CButton>
@@ -330,7 +330,7 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
           )}
           </div>
           {dateLabel && (
-            <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: 6, fontWeight: 500 }}>
+            <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: 6, fontWeight: 500 }}>
               Ajoute le {dateLabel}
             </div>
           )}
@@ -349,7 +349,7 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
             {loading && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                 <CSpinner color="primary" />
-                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Chargement du document…</span>
+                <span style={{ fontSize: '0.875rem', color: '#64748b' }}>Chargement du document…</span>
               </div>
             )}
             {!loading && error && (
@@ -366,7 +366,7 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
             )}
             {!loading && !error && blobUrl && !isPdf && !isImage && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 20, textAlign: 'center' }}>
-                <CIcon icon={cilFile} style={{ width: 40, color: '#94a3b8' }} />
+                <CIcon icon={cilFile} style={{ width: 40, color: '#64748b' }} />
                 <span style={{ fontSize: '0.9rem', color: '#475569' }}>
                   Apercu non disponible pour ce type de fichier.
                 </span>
@@ -391,7 +391,7 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
                 style={{
                   width: 20, height: '100%', background: 'transparent', border: 'none',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#94a3b8', padding: 0,
+                  color: '#64748b', padding: 0,
                 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#475569' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8' }}
@@ -430,7 +430,7 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
               )}
               {active.source === 'secretary' && active.comment && (
                 <InfoBlock title="Commentaire" accent>
-                  <p style={{ fontSize: '0.84rem', color: '#166534', margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontSize: '0.875rem', color: '#166534', margin: 0, lineHeight: 1.5 }}>
                     {active.comment}
                   </p>
                 </InfoBlock>

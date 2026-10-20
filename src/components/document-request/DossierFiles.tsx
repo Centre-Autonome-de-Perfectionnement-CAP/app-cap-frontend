@@ -41,7 +41,7 @@ const DossierFiles = ({ files }: Props) => {
           target="_blank"
           rel="noopener noreferrer"
           className="d-flex align-items-center gap-1"
-          style={{ fontSize: '0.78rem' }}
+          style={{ fontSize: '0.875rem' }}
         >
           <CIcon icon={cilFile} size="sm" />
           {FILE_LABELS[key] ?? key}

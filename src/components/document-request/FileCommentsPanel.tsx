@@ -28,7 +28,7 @@ const btn = (kind: 'primary' | 'ghost' | 'danger'): React.CSSProperties => ({
   background: kind === 'primary' ? '#2563eb' : kind === 'danger' ? '#dc2626' : '#fff',
   color: kind === 'ghost' ? '#334155' : '#fff',
   borderRadius: 8, padding: '6px 12px',
-  fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
+  fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
 })
 
 const textareaStyle: React.CSSProperties = {
@@ -83,20 +83,20 @@ const CommentItem = ({ c, demandeId, historyVisible, onChanged }: {
       background: deleted ? '#f8fafc' : c.is_mine ? '#f8fbff' : '#fff',
     }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 700, fontSize: '0.86rem', color: '#0f172a' }}>
+        <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0f172a' }}>
           {c.is_mine ? 'Vous' : c.author_name}
         </span>
         {c.author_role_label && (
-          <span style={{ fontSize: '0.74rem', color: '#64748b' }}>{c.author_role_label}</span>
+          <span style={{ fontSize: '0.875rem', color: '#64748b' }}>{c.author_role_label}</span>
         )}
       </div>
-      <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: 1 }}>
+      <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: 1 }}>
         {fmt(c.created_at)}
         {c.edited_at && !deleted && <> · modifié</>}
       </div>
 
       {deleted ? (
-        <div style={{ fontSize: '0.85rem', color: '#64748b', fontStyle: 'italic', marginTop: 8 }}>
+        <div style={{ fontSize: '0.875rem', color: '#64748b', fontStyle: 'italic', marginTop: 8 }}>
           Commentaire supprimé par son auteur le {fmt(c.deleted_at)}.
         </div>
       ) : editing ? (
@@ -133,7 +133,7 @@ const CommentItem = ({ c, demandeId, historyVisible, onChanged }: {
             display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
             marginTop: 10, padding: '8px 10px', borderRadius: 8, background: '#fef2f2',
           }}>
-            <span style={{ fontSize: '0.82rem', color: '#991b1b', fontWeight: 600, marginRight: 'auto' }}>
+            <span style={{ fontSize: '0.875rem', color: '#991b1b', fontWeight: 600, marginRight: 'auto' }}>
               Supprimer ce commentaire ?
             </span>
             <button type="button" style={btn('ghost')} disabled={busy} onClick={() => setConfirm(false)}>Non</button>
@@ -159,7 +159,7 @@ const CommentItem = ({ c, demandeId, historyVisible, onChanged }: {
           <button
             type="button"
             onClick={() => setShowHist(v => !v)}
-            style={{ border: 'none', background: 'none', padding: 0, color: '#2563eb', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+            style={{ border: 'none', background: 'none', padding: 0, color: '#2563eb', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}
           >
             {showHist ? "Masquer l'historique" : `Voir l'historique (${revisions.length})`}
           </button>
@@ -167,10 +167,10 @@ const CommentItem = ({ c, demandeId, historyVisible, onChanged }: {
             <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {revisions.map((r, i) => (
                 <div key={i} style={{ borderLeft: '3px solid #e2e8f0', paddingLeft: 10 }}>
-                  <div style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
                     {r.action === 'deleted' ? 'Supprimé' : 'Modifié'} par {r.author_name} le {fmt(r.created_at)}
                   </div>
-                  <div style={{ fontSize: '0.83rem', color: '#475569', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#475569', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                     {r.action === 'deleted' ? 'Texte supprimé : ' : 'Texte avant modification : '}
                     <em>{r.previous_body}</em>
                   </div>
@@ -226,7 +226,7 @@ const FileCommentsPanel = ({ demandeId, source, fileKey, comments, historyVisibl
           <div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}><CSpinner size="sm" /></div>
         )}
         {loaded && list.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.86rem', padding: '24px 8px', lineHeight: 1.6 }}>
+          <div style={{ textAlign: 'center', color: '#64748b', fontSize: '0.875rem', padding: '24px 8px', lineHeight: 1.6 }}>
             Aucun commentaire sur ce document.
             <br />Écrivez le premier ci-dessous.
           </div>
@@ -237,7 +237,7 @@ const FileCommentsPanel = ({ demandeId, source, fileKey, comments, historyVisibl
       </div>
 
       <div style={{ borderTop: '1px solid #e2e8f0', padding: '12px 16px', background: '#fff' }}>
-        <label htmlFor="file-comment-new" style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: 6 }}>
+        <label htmlFor="file-comment-new" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, color: '#334155', marginBottom: 6 }}>
           Votre commentaire
         </label>
         <textarea
@@ -251,7 +251,7 @@ const FileCommentsPanel = ({ demandeId, source, fileKey, comments, historyVisibl
           disabled={busy}
         />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-          <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>Visible par tous les acteurs du dossier</span>
+          <span style={{ fontSize: '0.875rem', color: '#64748b' }}>Visible par tous les acteurs du dossier</span>
           <button
             type="button"
             onClick={publish}

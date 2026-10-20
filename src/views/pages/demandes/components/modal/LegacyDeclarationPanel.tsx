@@ -28,7 +28,7 @@ export const LegacyBadge = ({ status }: { status?: LegacyDeclarationStatus | nul
       title={ui?.label ?? 'Ancien étudiant'}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 4,
-        fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: 5,
+        fontSize: '0.875rem', fontWeight: 700, padding: '2px 8px', borderRadius: 5,
         background: ui?.bg ?? '#eef2ff', color: ui?.color ?? '#3730a3',
         border: `1px solid ${ui?.border ?? '#c7d2fe'}`, whiteSpace: 'nowrap',
       }}
@@ -131,18 +131,18 @@ const LegacyDeclarationPanel = ({ demande, canDecide = false, onChanged }: Props
       </div>
 
       {status === 'pending' && (
-        <div style={{ fontSize: '0.82rem', color: '#78350f', marginTop: 8 }}>
+        <div style={{ fontSize: '0.875rem', color: '#78350f', marginTop: 8 }}>
           Vérifiez l'identité et le cursus dans les registres avant de valider.
           La transmission au comptable est bloquée tant que la déclaration n'est pas validée.
         </div>
       )}
       {status === 'rejected' && demande.legacy_rejection_reason && (
-        <div style={{ fontSize: '0.85rem', color: '#991b1b', marginTop: 8 }}>
+        <div style={{ fontSize: '0.875rem', color: '#991b1b', marginTop: 8 }}>
           Motif : {demande.legacy_rejection_reason}
         </div>
       )}
 
-      {error && <CAlert color="danger" className="mt-2 mb-0 py-2" style={{ fontSize: '0.85rem' }}>{error}</CAlert>}
+      {error && <CAlert color="danger" className="mt-2 mb-0 py-2" style={{ fontSize: '0.875rem' }}>{error}</CAlert>}
 
       <MotifModal
         visible={rejectOpen}

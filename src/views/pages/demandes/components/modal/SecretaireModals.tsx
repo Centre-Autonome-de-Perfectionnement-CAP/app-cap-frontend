@@ -91,11 +91,11 @@ export const ResendModal = ({ demande, visible, onClose, onConfirm }: ResendModa
         }} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 700, fontSize: '0.93rem', color: '#0f172a' }}>{title}</div>
-          {hint && <div style={{ fontSize: '0.83rem', color: '#64748b', marginTop: 2 }}>{hint}</div>}
+          {hint && <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: 2 }}>{hint}</div>}
         </div>
         {badge && (
           <span style={{
-            fontSize: '0.72rem', padding: '2px 9px', borderRadius: 999,
+            fontSize: '0.875rem', padding: '2px 9px', borderRadius: 999,
             background: '#f1f5f9', color: '#334155', fontWeight: 700, whiteSpace: 'nowrap',
           }}>
             {badge}
@@ -111,7 +111,7 @@ export const ResendModal = ({ demande, visible, onClose, onConfirm }: ResendModa
       <CModalHeader style={{ borderBottom: '1px solid #e2e8f0', padding: '16px 24px' }}>
         <CModalTitle>
           <div style={{ fontWeight: 800, fontSize: '1.02rem', color: '#0f172a' }}>Renvoyer le dossier</div>
-          <div style={{ fontWeight: 500, fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>
+          <div style={{ fontWeight: 500, fontSize: '0.875rem', color: '#64748b', marginTop: 2 }}>
             Réf. {demande.reference}
           </div>
         </CModalTitle>

@@ -49,7 +49,7 @@ const RadioCard = ({ value, selected, onSelect, label, description, color = '#3b
       <div>
         <div style={{
           fontWeight: 600,
-          fontSize: '0.87rem',
+          fontSize: '0.875rem',
           color: isSelected ? color : '#111827',
           display: 'flex',
           alignItems: 'center',
@@ -60,7 +60,7 @@ const RadioCard = ({ value, selected, onSelect, label, description, color = '#3b
           {label}
         </div>
         {description && (
-          <div style={{ fontSize: '0.78rem', color: '#6b7280', lineHeight: 1.5 }}>{description}</div>
+          <div style={{ fontSize: '0.875rem', color: '#6b7280', lineHeight: 1.5 }}>{description}</div>
         )}
       </div>
     </div>

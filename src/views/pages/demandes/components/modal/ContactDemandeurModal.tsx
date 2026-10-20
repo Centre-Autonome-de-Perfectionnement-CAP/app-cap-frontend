@@ -63,10 +63,10 @@ const ChannelRow = ({ label, result }: { label: string; result: ChannelResult })
         padding: '12px 14px', borderRadius: 10,
         background: '#f8fafc', border: '1.5px solid #e2e8f0',
       }}>
-        <CIcon icon={cilBan} style={{ width: 16, color: '#94a3b8', flexShrink: 0, marginTop: 2 }} />
+        <CIcon icon={cilBan} style={{ width: 16, color: '#64748b', flexShrink: 0, marginTop: 2 }} />
         <div>
           <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#64748b' }}>{label}</div>
-          <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: 2 }}>
+          <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: 2 }}>
             Non tenté — aucune coordonnée enregistrée pour ce dossier.
           </div>
         </div>
@@ -92,7 +92,7 @@ const ChannelRow = ({ label, result }: { label: string; result: ChannelResult })
           {label} — {ok ? (result.queued ? 'Pris en charge — envoi en cours' : 'Envoyé avec succès') : 'Échec de l\u2019envoi'}
         </div>
         {result.reason && (
-          <div style={{ fontSize: '0.8rem', color: ok ? '#92400e' : '#b91c1c', marginTop: 4, lineHeight: 1.5 }}>
+          <div style={{ fontSize: '0.875rem', color: ok ? '#92400e' : '#b91c1c', marginTop: 4, lineHeight: 1.5 }}>
             {result.reason}
           </div>
         )}
@@ -225,7 +225,7 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
             <div style={{ fontWeight: 800, fontSize: '1.15rem', color: '#111827', lineHeight: 1.2 }}>
               Contacter le demandeur
             </div>
-            <div style={{ fontWeight: 500, fontSize: '0.82rem', color: '#1e40af', marginTop: 3 }}>
+            <div style={{ fontWeight: 500, fontSize: '0.875rem', color: '#1e40af', marginTop: 3 }}>
               {demande.reference} — {nomDemandeur}
             </div>
           </div>
@@ -245,7 +245,7 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
                 borderRadius: 10, padding: '14px 16px', marginBottom: 20,
               }}>
                 <CIcon icon={cilWarning} style={{ width: 16, color: '#d97706', flexShrink: 0, marginTop: 2 }} />
-                <div style={{ fontSize: '0.85rem', color: '#92400e' }}>
+                <div style={{ fontSize: '0.875rem', color: '#92400e' }}>
                   Ce dossier n'a ni numéro WhatsApp ni email enregistré. L'envoi échouera.
                 </div>
               </div>
@@ -262,12 +262,12 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
               maxLength={3000}
               style={{ borderColor: '#cbd5e1', fontSize: '0.9rem' }}
             />
-            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#94a3b8', marginTop: 4 }}>
+            <div style={{ textAlign: 'right', fontSize: '0.875rem', color: '#64748b', marginTop: 4 }}>
               {message.length}/3000
             </div>
 
             <label style={{ display: 'block', fontWeight: 700, fontSize: '0.875rem', color: '#334155', margin: '18px 0 8px' }}>
-              Pièces jointes <span style={{ fontWeight: 500, color: '#94a3b8' }}>(optionnel, max {MAX_FILES}, 10 Mo chacune)</span>
+              Pièces jointes <span style={{ fontWeight: 500, color: '#64748b' }}>(optionnel, max {MAX_FILES}, 10 Mo chacune)</span>
             </label>
 
             <input
@@ -276,12 +276,12 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
               multiple
               accept={ACCEPTED_EXT.map(e => `.${e}`).join(',')}
               onChange={e => handleFilesSelected(e.target.files)}
-              style={{ fontSize: '0.85rem' }}
+              style={{ fontSize: '0.875rem' }}
               disabled={attachments.length >= MAX_FILES}
             />
 
             {fileError && (
-              <div style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: 6 }}>{fileError}</div>
+              <div style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: 6 }}>{fileError}</div>
             )}
 
             {attachments.length > 0 && (
@@ -292,8 +292,8 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
                     background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8,
                     padding: '8px 12px',
                   }}>
-                    <span style={{ fontSize: '0.82rem', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {file.name} <span style={{ color: '#94a3b8' }}>({(file.size / 1024).toFixed(0)} Ko)</span>
+                    <span style={{ fontSize: '0.875rem', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {file.name} <span style={{ color: '#64748b' }}>({(file.size / 1024).toFixed(0)} Ko)</span>
                     </span>
                     <button
                       onClick={() => removeAttachment(idx)}
@@ -318,7 +318,7 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
             <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#334155' }}>
               Envoi en cours...
             </div>
-            <div style={{ fontSize: '0.82rem', color: '#94a3b8', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.875rem', color: '#64748b', textAlign: 'center' }}>
               Préparation de l'envoi WhatsApp et email — merci de patienter.
             </div>
           </div>

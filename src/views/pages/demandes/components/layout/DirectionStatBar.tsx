@@ -61,7 +61,7 @@ const DirectionStatBar = ({ stats, loading = false }: Props) => (
         }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            fontSize: '0.72rem', color: def.color, fontWeight: 600,
+            fontSize: '0.875rem', color: def.color, fontWeight: 600,
             opacity: 0.85, marginBottom: 6,
           }}>
             <CIcon icon={def.icon} style={{ width: 14, flexShrink: 0 }} />

@@ -31,7 +31,7 @@ interface Props {
 // ─── Styles partagés ──────────────────────────────────────────────────────────
 
 const TH_BASE: React.CSSProperties = {
-  fontSize: '0.85rem',
+  fontSize: '0.875rem',
   fontWeight: 750,
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
@@ -77,10 +77,10 @@ const DemandeTable = ({
         margin: '0 auto 16px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
       }}>
-        <CIcon icon={cilInbox} style={{ width: 30, height: 30, color: '#94a3b8' }} />
+        <CIcon icon={cilInbox} style={{ width: 30, height: 30, color: '#64748b' }} />
       </div>
       <div style={{ fontWeight: 700, color: '#475569', fontSize: '1rem', letterSpacing: '-0.01em' }}>{emptyMessage}</div>
-      <div style={{ color: '#94a3b8', fontSize: '0.875rem', marginTop: 4 }}>Aucune action requise pour le moment.</div>
+      <div style={{ color: '#64748b', fontSize: '0.875rem', marginTop: 4 }}>Aucune action requise pour le moment.</div>
     </div>
   )
 

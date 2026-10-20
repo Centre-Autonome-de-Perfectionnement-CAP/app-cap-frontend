@@ -92,7 +92,7 @@ const DirectionHeader = ({ title, subtitle }: Props) => {
               EPAC
             </span>
             <span style={{
-              fontSize: '0.53rem', color: 'rgba(212,168,67,0.75)',
+              fontSize: '0.875rem', color: 'rgba(212,168,67,0.75)',
               letterSpacing: '0.05em', textTransform: 'uppercase',
               lineHeight: 1, textAlign: 'center',
             }}>
@@ -110,7 +110,7 @@ const DirectionHeader = ({ title, subtitle }: Props) => {
           }}>
             {title}
           </div>
-          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
+          <div style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
             {subtitle}
           </div>
         </div>
@@ -137,7 +137,7 @@ const DirectionHeader = ({ title, subtitle }: Props) => {
                 background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
                 border: '2px solid rgba(212,168,67,0.6)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.78rem', fontWeight: 800, color: '#fff',
+                fontSize: '0.875rem', fontWeight: 800, color: '#fff',
                 flexShrink: 0,
               }}>
                 {getInitials(fullName)}
@@ -145,13 +145,13 @@ const DirectionHeader = ({ title, subtitle }: Props) => {
             )}
             <div style={{ minWidth: 0 }}>
               <div style={{
-                fontSize: '0.82rem', fontWeight: 700, color: '#fff',
+                fontSize: '0.875rem', fontWeight: 700, color: '#fff',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                 maxWidth: 160,
               }}>
                 {fullName}
               </div>
-              <div style={{ fontSize: '0.67rem', color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>
+              <div style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>
                 {subtitle}
               </div>
             </div>
@@ -167,7 +167,7 @@ const DirectionHeader = ({ title, subtitle }: Props) => {
               color: 'rgba(255,255,255,0.75)',
               borderRadius: 7,
               padding: '6px 14px',
-              fontSize: '0.76rem',
+              fontSize: '0.875rem',
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.15s',

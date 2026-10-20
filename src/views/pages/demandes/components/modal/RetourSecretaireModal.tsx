@@ -47,7 +47,7 @@ const RetourSecretaireModal = ({ visible, demande, loading = false, onClose, onC
       <CModalHeader style={{ borderBottom: '1px solid #e2e8f0', padding: '16px 24px' }}>
         <CModalTitle>
           <div style={{ fontWeight: 800, fontSize: '1.02rem', color: '#0f172a' }}>Renvoyer à la Secrétaire</div>
-          <div style={{ fontWeight: 500, fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>
+          <div style={{ fontWeight: 500, fontSize: '0.875rem', color: '#64748b', marginTop: 2 }}>
             Réf. {demande?.reference ?? ''}
           </div>
         </CModalTitle>
@@ -61,7 +61,7 @@ const RetourSecretaireModal = ({ visible, demande, loading = false, onClose, onC
         }}>
           Qu'avez-vous vérifié ou corrigé ?
         </label>
-        <p style={{ fontSize: '0.83rem', color: '#64748b', margin: '0 0 10px' }}>
+        <p style={{ fontSize: '0.875rem', color: '#64748b', margin: '0 0 10px' }}>
           Quelques mots suffisent. La Secrétaire les verra dans l'historique du dossier.
         </p>
 
@@ -79,11 +79,11 @@ const RetourSecretaireModal = ({ visible, demande, loading = false, onClose, onC
           disabled={loading}
         />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: '0.8rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: '0.875rem' }}>
           <span style={{ color: hasStarted && !isValid ? '#b45309' : '#94a3b8' }}>
             {hasStarted && !isValid ? `Encore ${MIN_CHARS - charCount} caractère(s)` : 'Obligatoire'}
           </span>
-          <span style={{ color: '#94a3b8' }}>{comment.length} / 1000</span>
+          <span style={{ color: '#64748b' }}>{comment.length} / 1000</span>
         </div>
       </CModalBody>
 

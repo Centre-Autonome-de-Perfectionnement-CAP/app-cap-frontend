@@ -80,7 +80,7 @@ export const SecretaryFileUploader = ({ demandeId, onSuccess }: Props) => {
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={loading}
-              style={{ fontSize: '0.8rem', fontWeight: 600, color: '#4f46e5', border: '1px dashed #a5b4fc', background: '#e0e7ff' }}
+              style={{ fontSize: '0.875rem', fontWeight: 600, color: '#4f46e5', border: '1px dashed #a5b4fc', background: '#e0e7ff' }}
             >
               Sélectionner des fichiers
             </CButton>

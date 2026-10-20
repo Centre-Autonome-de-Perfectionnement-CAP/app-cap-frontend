@@ -34,7 +34,7 @@ const ActionButton = ({
   const isDisabled = disabled || loading
   const hex = customBg ?? COLOR_HEX[color] ?? '#2563eb'
   const pad = size === 'sm' ? '4px 10px' : '6px 14px'
-  const fs  = size === 'sm' ? '0.78rem'  : '0.88rem'
+  const fs  = size === 'sm' ? '0.875rem' : '0.88rem'
 
   const base: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 6,

@@ -28,7 +28,7 @@ const FinancialPanel = ({ demande }: { demande: DocumentRequest }) => {
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '12px 0' }}>
       <CSpinner size="sm" color="primary" />
-      <small style={{ color: '#9ca3af', marginLeft: 8 }}>Chargement situation financière…</small>
+      <small style={{ color: '#64748b', marginLeft: 8 }}>Chargement situation financière…</small>
     </div>
   )
 
@@ -55,11 +55,11 @@ const FinancialPanel = ({ demande }: { demande: DocumentRequest }) => {
       background: isSolde ? '#f0fdf4' : '#fff7ed',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#94a3b8' }}>
+        <span style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#64748b' }}>
           Situation financière
         </span>
         <span style={{
-          fontSize: '0.72rem', padding: '2px 10px', borderRadius: 20, fontWeight: 700,
+          fontSize: '0.875rem', padding: '2px 10px', borderRadius: 20, fontWeight: 700,
           background: isSolde ? '#dcfce7' : '#fef3c7',
           color: isSolde ? '#166534' : '#92400e',
         }}>
@@ -74,10 +74,10 @@ const FinancialPanel = ({ demande }: { demande: DocumentRequest }) => {
           { label: 'Restant',   value: Math.abs(balance), color: isSolde ? '#059669' : '#dc2626' },
         ].map(item => (
           <CCol xs={4} key={item.label} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginBottom: 3 }}>{item.label}</div>
+            <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: 3 }}>{item.label}</div>
             <div style={amountStyle(item.color)}>
               {Number(item.value).toLocaleString('fr-FR')}
-              <span style={{ fontSize: '0.68rem', fontWeight: 500, marginLeft: 3 }}>FCFA</span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 500, marginLeft: 3 }}>FCFA</span>
             </div>
           </CCol>
         ))}
@@ -85,7 +85,7 @@ const FinancialPanel = ({ demande }: { demande: DocumentRequest }) => {
 
       <CProgress value={pct} color={isSolde ? 'success' : pct > 50 ? 'warning' : 'danger'} style={{ height: 6, borderRadius: 4 }} />
       <div style={{ textAlign: 'right', marginTop: 4 }}>
-        <small style={{ color: '#9ca3af', fontSize: '0.72rem' }}>{pct}% réglé</small>
+        <small style={{ color: '#64748b', fontSize: '0.875rem' }}>{pct}% réglé</small>
       </div>
     </div>
   )

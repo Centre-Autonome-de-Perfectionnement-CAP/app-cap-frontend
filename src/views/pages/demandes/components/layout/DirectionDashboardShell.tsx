@@ -187,7 +187,7 @@ const DirHeader = ({
               color: accentColor, letterSpacing: '0.12em', lineHeight: 1,
             }}>EPAC</span>
             <span style={{
-              fontSize: '0.62rem', color: `${accentColor}99`,
+              fontSize: '0.875rem', color: `${accentColor}99`,
               letterSpacing: '0.05em', textTransform: 'uppercase',
               lineHeight: 1, textAlign: 'center',
             }}>École Polytechnique</span>
@@ -225,7 +225,7 @@ const DirHeader = ({
               background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
               border: `2px solid ${accentColor}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.82rem', fontWeight: 900, color: '#fff',
+              fontSize: '0.875rem', fontWeight: 900, color: '#fff',
               flexShrink: 0,
               boxShadow: `0 2px 8px ${accentColor}66`,
             }}>
@@ -235,7 +235,7 @@ const DirHeader = ({
             {/* Nom + rôle */}
             <div style={{ minWidth: 0 }}>
               <div style={{
-                fontSize: '0.85rem', fontWeight: 800, color: '#fff',
+                fontSize: '0.875rem', fontWeight: 800, color: '#fff',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                 maxWidth: 180,
               }}>

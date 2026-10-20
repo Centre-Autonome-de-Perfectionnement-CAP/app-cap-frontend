@@ -23,8 +23,8 @@ const InfoBlock = ({ title, children }: { title: string; children: React.ReactNo
     padding: '16px 18px', height: '100%', background: '#f8fafc',
   }}>
     <p style={{
-      fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase',
-      letterSpacing: '0.07em', color: '#94a3b8', marginBottom: 12,
+      fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase',
+      letterSpacing: '0.07em', color: '#64748b', marginBottom: 12,
     }}>
       {title}
     </p>
@@ -36,7 +36,7 @@ const InfoLine = ({ label, value }: { label: string; value?: string | null }) =>
   if (!value) return null
   return (
     <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: 6 }}>
-      <span style={{ color: '#9ca3af' }}>{label} : </span>
+      <span style={{ color: '#64748b' }}>{label} : </span>
       <span style={{ fontWeight: 500, color: '#374151' }}>{value}</span>
     </p>
   )
@@ -47,7 +47,7 @@ const ValidationBadge = ({
 }: { children: React.ReactNode; color: string; bg: string }) => (
   <span style={{
     display: 'inline-flex', alignItems: 'center', gap: 5,
-    fontSize: '0.8rem', padding: '3px 10px', borderRadius: 5,
+    fontSize: '0.875rem', padding: '3px 10px', borderRadius: 5,
     background: bg, color, fontWeight: 600,
   }}>
     {children}
@@ -91,7 +91,7 @@ const DemandeDetailBase = ({ demande, children, onRefresh }: Props) => {
             </p>
             {submittedAt && (
               <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: 10 }}>
-                <span style={{ color: '#9ca3af' }}>Soumis le : </span>
+                <span style={{ color: '#64748b' }}>Soumis le : </span>
                 <span style={{ fontWeight: 500, color: '#374151' }}>{submittedAt}</span>
               </p>
             )}
@@ -109,7 +109,7 @@ const DemandeDetailBase = ({ demande, children, onRefresh }: Props) => {
               )}
               {demande.responsable_division_type && (
                 <span style={{
-                  fontSize: '0.8rem', padding: '3px 10px', borderRadius: 5,
+                  fontSize: '0.875rem', padding: '3px 10px', borderRadius: 5,
                   background: '#e0f2fe', color: '#0369a1', fontWeight: 600,
                 }}>
                   {RESPONSABLE_DIVISION_LABELS[demande.responsable_division_type]}
@@ -117,7 +117,7 @@ const DemandeDetailBase = ({ demande, children, onRefresh }: Props) => {
               )}
               {demande.signature_type && (
                 <span style={{
-                  fontSize: '0.8rem', padding: '3px 10px', borderRadius: 5,
+                  fontSize: '0.875rem', padding: '3px 10px', borderRadius: 5,
                   background: demande.signature_type === 'paraphe' ? '#ede9fe' : '#dcfce7',
                   color: demande.signature_type === 'paraphe' ? '#5b21b6' : '#166534',
                   fontWeight: 600,

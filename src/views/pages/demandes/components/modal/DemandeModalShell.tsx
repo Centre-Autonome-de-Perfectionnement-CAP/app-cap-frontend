@@ -76,11 +76,11 @@ const WorkflowProgress = ({ status }: { status: string }) => {
           <div key={step.key} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
               <div style={{
-                width: 26, height: 26, borderRadius: '50%',
+                width: 28, height: 28, borderRadius: '50%',
                 background: bg,
                 border: `2px solid ${color}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.7rem', fontWeight: 800,
+                fontSize: '0.875rem', fontWeight: 800,
                 color,
                 boxShadow: current ? `0 0 0 3px ${color}22` : 'none',
                 transition: 'all 0.2s',
@@ -88,9 +88,9 @@ const WorkflowProgress = ({ status }: { status: string }) => {
                 {done ? '✓' : isRejected && current ? '✕' : idx + 1}
               </div>
               <span style={{
-                fontSize: '0.62rem', fontWeight: current ? 700 : 500,
+                fontSize: '0.875rem', fontWeight: current ? 700 : 500,
                 color: current ? color : future ? '#9ca3af' : '#6b7280',
-                whiteSpace: 'nowrap', maxWidth: 56, textAlign: 'center', lineHeight: 1.2,
+                whiteSpace: 'nowrap', textAlign: 'center', lineHeight: 1.2,
               }}>
                 {step.label}
               </span>
@@ -230,7 +230,7 @@ const DemandeModalShell = ({
                 {title ?? 'Dossier'}
               </span>
               <code style={{
-                fontSize: '0.82rem', color: '#64748b', fontWeight: 600,
+                fontSize: '0.875rem', color: '#64748b', fontWeight: 600,
                 background: '#f1f5f9', padding: '2px 8px', borderRadius: 5,
               }}>
                 #{demande.reference}
@@ -238,7 +238,7 @@ const DemandeModalShell = ({
               {showStatusBadge && <WorkflowBadge status={demande.status} size="sm" />}
               {demande.responsable_division_type && (
                 <span style={{
-                  fontSize: '0.75rem', padding: '2px 8px', borderRadius: 5,
+                  fontSize: '0.875rem', padding: '2px 8px', borderRadius: 5,
                   background: '#e0f2fe', color: '#0369a1', fontWeight: 600,
                 }}>
                   {RESPONSABLE_DIVISION_LABELS[demande.responsable_division_type]}
@@ -247,7 +247,7 @@ const DemandeModalShell = ({
               {hasFlag && (
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: 5,
-                  fontSize: '0.75rem', padding: '3px 8px', borderRadius: 5,
+                  fontSize: '0.875rem', padding: '3px 8px', borderRadius: 5,
                   background: '#fffbeb', color: '#d97706', fontWeight: 700,
                   border: '1px solid #fcd34d',
                 }}>
@@ -344,7 +344,7 @@ const DemandeModalShell = ({
               minWidth: 22, padding: '0 7px', borderRadius: 999,
               background: dossierFiles.length ? '#dbeafe' : '#f1f5f9',
               color: dossierFiles.length ? '#1d4ed8' : '#94a3b8',
-              fontSize: '0.75rem', fontWeight: 800, textAlign: 'center',
+              fontSize: '0.875rem', fontWeight: 800, textAlign: 'center',
             }}>
               {dossierFiles.length}
             </span>

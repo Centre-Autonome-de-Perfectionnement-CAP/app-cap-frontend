@@ -99,7 +99,7 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
 
   if (failed) return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 20, textAlign: 'center' }}>
-      <CIcon icon={cilFile} style={{ width: 40, color: '#94a3b8' }} />
+      <CIcon icon={cilFile} style={{ width: 40, color: '#64748b' }} />
       <span style={{ fontSize: '0.9rem', color: '#475569' }}>
         Ce PDF n'a pas pu s'afficher (fichier endommagé ou protégé).
       </span>
@@ -121,7 +121,7 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
         <CButton size="sm" color="light" onClick={() => setZoom(z => Math.max(0.5, +(z - 0.25).toFixed(2)))} title="Dézoomer">
           <CIcon icon={cilZoomOut} style={{ width: 14 }} />
         </CButton>
-        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#374151', minWidth: 42, textAlign: 'center' }}>
+        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151', minWidth: 42, textAlign: 'center' }}>
           {Math.round(zoom * 100)}%
         </span>
         <CButton size="sm" color="light" onClick={() => setZoom(z => Math.min(3, +(z + 0.25).toFixed(2)))} title="Zoomer">
@@ -131,7 +131,7 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
           <CIcon icon={cilFullscreen} style={{ width: 14 }} />
         </CButton>
         {pages > 1 && (
-          <span style={{ fontSize: '0.72rem', color: '#64748b', marginLeft: 4 }}>{pages} pages</span>
+          <span style={{ fontSize: '0.875rem', color: '#64748b', marginLeft: 4 }}>{pages} pages</span>
         )}
       </div>
 
@@ -139,7 +139,7 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: 40 }}>
             <CSpinner color="primary" />
-            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Affichage du document…</span>
+            <span style={{ fontSize: '0.875rem', color: '#64748b' }}>Affichage du document…</span>
           </div>
         )}
         <div ref={pagesRef} />

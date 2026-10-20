@@ -12,7 +12,7 @@ interface Props {
 const ConfirmCheckbox = ({ id, checked, onChange, label }: Props) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
     <CFormCheck id={id} checked={checked} onChange={e => onChange(e.target.checked)} />
-    <label htmlFor={id} style={{ marginBottom: 0, fontSize: '0.85rem', cursor: 'pointer' }}>{label}</label>
+    <label htmlFor={id} style={{ marginBottom: 0, fontSize: '0.875rem', cursor: 'pointer' }}>{label}</label>
   </div>
 )
 

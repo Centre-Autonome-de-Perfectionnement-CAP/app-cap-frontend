@@ -93,8 +93,8 @@ interface FileFormModalProps {
   onSubmit: (data: { file: File | null; name: string; comment: string }) => void
 }
 
-const fieldLabel: React.CSSProperties = { display: 'block', fontSize: '0.86rem', fontWeight: 700, color: '#1e293b', marginBottom: 6 }
-const optional: React.CSSProperties = { fontWeight: 400, color: '#94a3b8', marginLeft: 6 }
+const fieldLabel: React.CSSProperties = { display: 'block', fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', marginBottom: 6 }
+const optional: React.CSSProperties = { fontWeight: 400, color: '#64748b', marginLeft: 6 }
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', fontSize: '0.92rem',
   border: '1.5px solid #e2e8f0', borderRadius: 10, outline: 'none', color: '#1e293b',
@@ -184,7 +184,7 @@ const FileFormModal = ({
                   <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#14532d', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {file.name}
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#15803d' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#15803d' }}>
                     {isAdd ? 'Prêt à être ajouté' : 'Remplacera le fichier actuel'} · {formatSize(file.size)}
                   </div>
                 </div>
@@ -207,7 +207,7 @@ const FileFormModal = ({
                     padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: 10, background: '#f8fafc',
                   }}>
                     <CIcon icon={fileMetaFromName(initial.currentFile).icon} style={{ width: 16, color: fileMetaFromName(initial.currentFile).color }} />
-                    <span style={{ flex: 1, fontSize: '0.86rem', color: '#334155' }}>Fichier actuel conservé</span>
+                    <span style={{ flex: 1, fontSize: '0.875rem', color: '#334155' }}>Fichier actuel conservé</span>
                   </div>
                 )}
                 <div
@@ -231,7 +231,7 @@ const FileFormModal = ({
                   <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#1e293b' }}>
                     {isAdd ? 'Cliquez pour choisir le document' : 'Choisir un autre fichier'}
                   </span>
-                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  <span style={{ fontSize: '0.875rem', color: '#64748b' }}>
                     ou glissez-le ici · PDF, image, Word ou Excel · 10 Mo maximum
                   </span>
                 </div>
@@ -246,7 +246,7 @@ const FileFormModal = ({
               onChange={e => pick(e.target.files?.[0] ?? null)}
             />
             {fileErr && (
-              <p role="alert" style={{ fontSize: '0.82rem', color: '#b91c1c', marginTop: 6, marginBottom: 0 }}>{fileErr}</p>
+              <p role="alert" style={{ fontSize: '0.875rem', color: '#b91c1c', marginTop: 6, marginBottom: 0 }}>{fileErr}</p>
             )}
           </div>
 
@@ -353,7 +353,7 @@ const SecretaryFileRow = ({
   const actionBtn: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 5,
     border: '1px solid #e2e8f0', background: '#fff', color: '#334155',
-    borderRadius: 8, padding: '6px 11px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
+    borderRadius: 8, padding: '6px 11px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
   }
 
   return (
@@ -375,7 +375,7 @@ const SecretaryFileRow = ({
           <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {f.original_name}
           </div>
-          <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: 2 }}>
+          <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: 2 }}>
             {meta.label}
             {date && !Number.isNaN(date.getTime()) && (
               <> · ajouté le {date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })} à {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</>
@@ -404,7 +404,7 @@ const SecretaryFileRow = ({
       {f.comment && (
         <div style={{
           marginTop: 10, padding: '8px 12px', borderRadius: 8, background: '#f8fafc',
-          fontSize: '0.85rem', color: '#475569', lineHeight: 1.5, whiteSpace: 'pre-wrap',
+          fontSize: '0.875rem', color: '#475569', lineHeight: 1.5, whiteSpace: 'pre-wrap',
         }}>
           {f.comment}
         </div>
@@ -415,7 +415,7 @@ const SecretaryFileRow = ({
           marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
           padding: '10px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca',
         }}>
-          <span style={{ fontSize: '0.86rem', fontWeight: 600, color: '#991b1b', marginRight: 'auto' }}>
+          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#991b1b', marginRight: 'auto' }}>
             Supprimer ce document du dossier ?
           </span>
           <CButton size="sm" color="secondary" variant="outline" disabled={busy} onClick={() => setConfirm(false)}>
@@ -579,12 +579,12 @@ const DossierFilesSplit = ({
             <div style={{ fontWeight: 800, fontSize: '0.98rem', color: '#0f172a' }}>
               Pièces du secrétariat
               {hasSecretaryFiles && (
-                <span style={{ marginLeft: 8, fontSize: '0.78rem', fontWeight: 700, color: '#475569', background: '#f1f5f9', borderRadius: 999, padding: '1px 8px' }}>
+                <span style={{ marginLeft: 8, fontSize: '0.875rem', fontWeight: 700, color: '#475569', background: '#f1f5f9', borderRadius: 999, padding: '1px 8px' }}>
                   {secFiles.length}
                 </span>
               )}
             </div>
-            <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>
+            <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: 2 }}>
               {isEditable
                 ? 'Documents que vous joignez au dossier. Tous les acteurs du circuit les verront.'
                 : 'Documents joints au dossier par le secrétariat.'}
@@ -614,12 +614,12 @@ const DossierFilesSplit = ({
               <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#1e293b', marginTop: 6 }}>
                 Aucun document pour le moment
               </div>
-              <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 2 }}>
+              <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: 2 }}>
                 Cliquez ici ou glissez un fichier pour l'ajouter.
               </div>
             </div>
           ) : (
-            <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>Aucun document du secrétariat.</p>
+            <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Aucun document du secrétariat.</p>
           )
         )}
 

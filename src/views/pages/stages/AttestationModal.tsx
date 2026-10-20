@@ -33,7 +33,7 @@ export const EligibilityBox = ({ e, frozen }: { e: AttestationEligibility | null
         {ok ? 'Conditions remplies' : 'Conditions non remplies'}
         {frozen && <span className="stg-muted" style={{ fontWeight: 500 }}>(au moment de la validation)</span>}
       </div>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '.85rem', marginTop: 6 }}>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '.875rem', marginTop: 6 }}>
         <span>Assiduité : <strong style={{ color: e.attendance_ok ? '#047857' : '#b45309' }}>{e.taux !== null ? `${e.taux} %` : '—'}</strong> (minimum {e.seuil} %)</span>
         <span>Rapport final : <strong style={{ color: e.final_validated ? '#047857' : '#b45309' }}>{e.final_validated ? 'validé' : 'non validé'}</strong></span>
         <span className="stg-muted">{e.jours_ouvres} jour(s) ouvré(s), {e.absences} absence(s)</span>
@@ -246,7 +246,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
               </div>
             )}
 
-            <div className="stg-muted" style={{ fontSize: '.78rem', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div className="stg-muted" style={{ fontSize: '.875rem', display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span>Préparée le {frDateTime(a.created_at)}</span>
               {a.validated_at && <span>Validée le {frDateTime(a.validated_at)}{a.validated_by ? ` par ${a.validated_by}` : ''}</span>}
               {a.printed_at && <span>Imprimée le {frDateTime(a.printed_at)}{a.printed_by ? ` par ${a.printed_by}` : ''}</span>}

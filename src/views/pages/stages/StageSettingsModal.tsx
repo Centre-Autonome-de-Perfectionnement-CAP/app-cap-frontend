@@ -96,7 +96,7 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
               }}>
                 <div>
                   <strong>{form.requests_open ? 'Demandes ouvertes' : 'Demandes fermées'}</strong>
-                  <div style={{ fontSize: '.82rem', color: '#475569' }}>
+                  <div style={{ fontSize: '.875rem', color: '#475569' }}>
                     {form.requests_open
                       ? 'Le formulaire du site accepte de nouvelles demandes.'
                       : 'Le formulaire du site affiche le message ci-dessous à la place.'}
@@ -126,7 +126,7 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
               <CRow className="g-2">
                 {([['arrivee', 'Arrivée'], ['pause_debut', 'Début pause'], ['pause_fin', 'Fin pause'], ['sortie', 'Sortie']] as const).map(([k, l]) => (
                   <CCol xs={6} md={3} key={k}>
-                    <span style={{ fontSize: '.74rem', color: '#64748b', fontWeight: 600 }}>{l}</span>
+                    <span style={{ fontSize: '.875rem', color: '#64748b', fontWeight: 600 }}>{l}</span>
                     <CFormInput type="time" value={form.default_horaires[k]}
                       onChange={e => set('default_horaires', { ...form.default_horaires, [k]: e.target.value })} />
                   </CCol>
@@ -137,7 +137,7 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
             <CCol xs={12}>
               <div style={{ border: `1px solid ${form.lieu_position ? '#a7f3d0' : '#fde68a'}`, background: form.lieu_position ? '#ecfdf5' : '#fffbeb', borderRadius: 12, padding: '10px 12px' }}>
                 <div style={{ fontWeight: 700 }}>{form.lieu_position ? 'Position du lieu de stage enregistrée' : 'Position du lieu de stage non relevée'}</div>
-                <div style={{ fontSize: '.82rem', color: '#475569' }}>
+                <div style={{ fontSize: '.875rem', color: '#475569' }}>
                   {form.lieu_position
                     ? `${form.lieu_position.lat}, ${form.lieu_position.lng}${accuracy !== null ? ` (précision ±${accuracy} m)` : ''}. Les pointages doivent se faire à moins de ${form.lieu_rayon} m.`
                     : 'Tant qu\'elle n\'est pas relevée, les positions des stagiaires sont acceptées sans contrôle de distance. Relevez-la depuis le lieu de stage, avec votre téléphone.'}
@@ -188,7 +188,7 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
             <CCol xs={6} md={4}>
               <CFormLabel className="fw-semibold small">Après le numéro</CFormLabel>
               <CFormInput maxLength={40} value={form.numero_suffixe} onChange={e => set('numero_suffixe', e.target.value.replace(/[^A-Za-z0-9/\-_. ]/g, ''))} />
-              <div style={{ fontSize: '.74rem', color: '#64748b' }}>Ex. : N° 22-26/{form.numero_suffixe || '…'}</div>
+              <div style={{ fontSize: '.875rem', color: '#64748b' }}>Ex. : N° 22-26/{form.numero_suffixe || '…'}</div>
             </CCol>
             <CCol xs={6} md={4}>
               <CFormLabel className="fw-semibold small">Ville (« …, le »)</CFormLabel>
@@ -210,14 +210,14 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
             <CCol xs={12}>
               <CFormLabel className="fw-semibold small">Règlement intérieur (version {form.reglement_version})</CFormLabel>
               <CFormTextarea rows={8} maxLength={10000} value={form.reglement_text} onChange={e => set('reglement_text', e.target.value)} />
-              <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: 4 }}>
+              <div style={{ fontSize: '.875rem', color: '#64748b', marginTop: 4 }}>
                 Toute modification crée une nouvelle version : chaque stagiaire devra la relire et l'accepter.
                 Remplacés automatiquement à l'affichage : {'{horaires}'} (horaires du stagiaire), {'{tolerance}'} (minutes avant retard),
                 {' {delai_permission}'} (jours ouvrés), {'{rapports}'} (fréquence des rapports), {'{seuil}'} (assiduité minimale).
               </div>
             </CCol>
             <CCol xs={12}>
-              <div style={{ fontSize: '.8rem', color: '#64748b' }}>
+              <div style={{ fontSize: '.875rem', color: '#64748b' }}>
                 Une proposition sans réponse est relancée après {form.proposal_reminder_days} jours et expire après {form.proposal_expiry_days} jours.
               </div>
             </CCol>

@@ -38,7 +38,7 @@ const InternReportsPanel = ({ stageId }: { stageId: number }) => {
       </div>
       {rows.slice(0, 12).map(p => (
         <button key={p.key} type="button" disabled={!p.report} onClick={() => p.report && setOpenId(p.report.id)}
-          style={{ all: 'unset', display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '6px 0', borderBottom: '1px solid #f1f5f9', cursor: p.report ? 'pointer' : 'default', fontSize: '.85rem' }}>
+          style={{ all: 'unset', display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '6px 0', borderBottom: '1px solid #f1f5f9', cursor: p.report ? 'pointer' : 'default', fontSize: '.875rem' }}>
           <span style={{ flex: 1, fontWeight: p.kind === 'final' ? 800 : 600 }}>{p.label}</span>
           <span className="stg-muted">{p.report ? `v${p.report.current_version}` : p.closes ? `avant le ${frDate(p.closes)}` : ''}</span>
           <span className="stg-pill" style={{ color: STATE[p.state].color, background: STATE[p.state].bg }}>{STATE[p.state].label}</span>

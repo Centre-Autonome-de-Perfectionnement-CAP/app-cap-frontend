@@ -82,7 +82,7 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontWeight: 800, color: '#92400e' }}>
             <CIcon icon={cilWarning} style={{ width: 16 }} />Prise de service décalée
           </div>
-          <div style={{ fontSize: '.86rem', color: '#78350f', marginTop: 4 }}>
+          <div style={{ fontSize: '.875rem', color: '#78350f', marginTop: 4 }}>
             Prévue le {frDate(data.shift.planned, true)}, effective le {frDate(data.shift.real, true)}.
             Pour garder la même durée, la fin passerait au <strong>{frDate(data.shift.suggested_end, true)}</strong>.
           </div>
@@ -104,7 +104,7 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
           ].map(([l, v, c]) => (
             <div key={l} style={{ background: '#fff', border: '1px solid #e6ebf2', borderRadius: 10, padding: '8px 10px' }}>
               <div style={{ fontSize: '1.2rem', fontWeight: 800, color: c }}>{v}</div>
-              <div style={{ fontSize: '.72rem', fontWeight: 600, color: '#64748b' }}>{l}</div>
+              <div style={{ fontSize: '.875rem', fontWeight: 600, color: '#64748b' }}>{l}</div>
             </div>
           ))}
         </div>
@@ -117,7 +117,7 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
       )}
 
       {data.account && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: '.84rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: '.875rem' }}>
           <CIcon icon={cilFingerprint} style={{ width: 18, color: activeDevice ? '#059669' : '#d97706' }} />
           <span style={{ flex: 1, minWidth: 180 }}>
             {activeDevice
@@ -150,7 +150,7 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
 
       {data.days.length > 0 && (
         <div style={{ overflowX: 'auto' }}>
-          <table className="table table-sm" style={{ fontSize: '.82rem', marginBottom: 0 }}>
+          <table className="table table-sm" style={{ fontSize: '.875rem', marginBottom: 0 }}>
             <thead><tr><th>Jour</th><th>Arrivée</th><th>Pause</th><th>Retour</th><th>Sortie</th><th>État</th></tr></thead>
             <tbody>
               {days.map(d => (

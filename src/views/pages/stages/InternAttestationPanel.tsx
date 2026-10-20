@@ -50,7 +50,7 @@ const InternAttestationPanel = ({ stage, lead }: Props) => {
         )}
         {data.items.map(a => (
           <button key={a.id} type="button" onClick={() => setOpenId(a.id)}
-            style={{ all: 'unset', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '.85rem' }}>
+            style={{ all: 'unset', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '.875rem' }}>
             <span style={{ flex: 1, fontWeight: 600 }}>{a.numero ?? a.kind_label}</span>
             <span className="stg-pill" style={{ color: ATT_STATUS[a.status].color, background: ATT_STATUS[a.status].bg }}>{a.status_label}</span>
           </button>

@@ -141,7 +141,7 @@ const DemandesStagiairesPage = () => {
       </CModal>
 
       <StageDetailModal idOrRef={openStage} onClose={() => setOpenStage(null)} onChanged={load} />
-      <style>{`.stg-info { background: #fffbeb; border: 1px solid #fde68a; color: #78350f; border-radius: 10px; padding: 8px 12px; font-size: .85rem; }`}</style>
+      <style>{`.stg-info { background: #fffbeb; border: 1px solid #fde68a; color: #78350f; border-radius: 10px; padding: 8px 12px; font-size: .875rem; }`}</style>
     </div>
   )
 }

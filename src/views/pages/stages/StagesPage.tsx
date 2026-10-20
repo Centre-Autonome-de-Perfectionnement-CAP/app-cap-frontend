@@ -174,7 +174,7 @@ const StagesPage = () => {
           {list && list.meta.last_page > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: 14 }}>
               <CButton size="sm" color="secondary" variant="outline" disabled={page <= 1 || loading} onClick={() => setPage(p => p - 1)}>Précédent</CButton>
-              <span style={{ fontSize: '.85rem', color: '#475569' }}>Page {list.meta.current_page} / {list.meta.last_page}</span>
+              <span style={{ fontSize: '.875rem', color: '#475569' }}>Page {list.meta.current_page} / {list.meta.last_page}</span>
               <CButton size="sm" color="secondary" variant="outline" disabled={page >= list.meta.last_page || loading} onClick={() => setPage(p => p + 1)}>Suivant</CButton>
             </div>
           )}
@@ -199,11 +199,11 @@ const StagesPage = () => {
         .stg-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
         .stg-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
         .stg-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .stg-ref { font-family: monospace; font-weight: 800; color: #0f766e; font-size: .85rem; }
-        .stg-pill { font-size: .7rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; }
+        .stg-ref { font-family: monospace; font-weight: 800; color: #0f766e; font-size: .875rem; }
+        .stg-pill { font-size: .875rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; }
         .stg-name { color: #0f172a; font-size: .95rem; }
-        .stg-sub { color: #64748b; font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .stg-side { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; font-size: .84rem; font-weight: 600; color: #334155; flex-shrink: 0; }
+        .stg-sub { color: #64748b; font-size: .875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .stg-side { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; font-size: .875rem; font-weight: 600; color: #334155; flex-shrink: 0; }
         @media (max-width: 640px) {
           .stg-row { flex-direction: column; align-items: stretch; gap: 6px; }
           .stg-side { align-items: flex-start; }

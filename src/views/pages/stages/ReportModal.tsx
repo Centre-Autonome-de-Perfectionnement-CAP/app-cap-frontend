@@ -130,9 +130,9 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
               <div style={{ fontWeight: 800, marginBottom: 8 }}>Historique</div>
               <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {events.map((e, i) => (
-                  <li key={i} style={{ fontSize: '.85rem', background: '#f8fafc', borderRadius: 10, padding: '8px 10px' }}>
+                  <li key={i} style={{ fontSize: '.875rem', background: '#f8fafc', borderRadius: 10, padding: '8px 10px' }}>
                     {e.el}
-                    <div style={{ fontSize: '.72rem', color: '#94a3b8', marginTop: 2 }}>{frDateTime(e.at)}</div>
+                    <div style={{ fontSize: '.875rem', color: '#94a3b8', marginTop: 2 }}>{frDateTime(e.at)}</div>
                   </li>
                 ))}
               </ol>
@@ -149,7 +149,7 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
                     placeholder={mode === 'approved' ? 'Commentaire (facultatif)' : 'Ce qui doit être corrigé (obligatoire)'} />
                 </div>
               )}
-              {err && d && <div style={{ marginTop: 10, background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239', borderRadius: 10, padding: '8px 12px', fontSize: '.85rem' }}>{err}</div>}
+              {err && d && <div style={{ marginTop: 10, background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239', borderRadius: 10, padding: '8px 12px', fontSize: '.875rem' }}>{err}</div>}
             </aside>
           </div>
         )}
@@ -175,7 +175,7 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
         .rpt-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 360px; width: 100%; min-height: 0; }
         .rpt-doc { display: flex; flex-direction: column; min-height: 0; }
         .rpt-side { background: #fff; border-left: 1px solid #e2e8f0; padding: 14px; overflow: auto; }
-        .stg-pill { font-size: .7rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; }
+        .stg-pill { font-size: .875rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; }
         @media (max-width: 991px) { .rpt-wrap { grid-template-columns: minmax(0, 1fr); } .rpt-doc { min-height: 60vh; } .rpt-side { border-left: 0; border-top: 1px solid #e2e8f0; } }
       `}</style>
     </CModal>

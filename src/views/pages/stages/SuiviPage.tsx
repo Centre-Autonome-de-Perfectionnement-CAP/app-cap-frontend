@@ -102,7 +102,7 @@ const SuiviPage = () => {
                       <td style={{ whiteSpace: 'nowrap' }}>
                         {r.activated ? <>
                           {r.rapports.validated}/{r.rapports.deposited} validé(s)
-                          {r.rapports.missing > 0 && <div style={{ color: '#be123c', fontSize: '.8rem' }}>{r.rapports.missing} manquant(s)</div>}
+                          {r.rapports.missing > 0 && <div style={{ color: '#be123c', fontSize: '.875rem' }}>{r.rapports.missing} manquant(s)</div>}
                         </> : <span className="stg-muted">—</span>}
                       </td>
                       <td>{r.rapports.final_validated
@@ -123,7 +123,7 @@ const SuiviPage = () => {
       <StageDetailModal idOrRef={openId} onClose={() => setOpenId(null)} onChanged={load} />
       <style>{`
         .sv-table { width: 100%; border-collapse: collapse; font-size: .88rem; min-width: 900px; }
-        .sv-table th { text-align: left; font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; color: #64748b; background: #f8fafc; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+        .sv-table th { text-align: left; font-size: .875rem; text-transform: uppercase; letter-spacing: .03em; color: #64748b; background: #f8fafc; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
         .sv-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; color: #334155; }
         .sv-table tbody tr { cursor: pointer; }
         .sv-table tbody tr:hover { background: #f8fafc; }

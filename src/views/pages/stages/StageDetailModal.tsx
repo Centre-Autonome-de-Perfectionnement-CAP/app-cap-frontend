@@ -342,24 +342,24 @@ const StageDetailModal = ({ idOrRef, onClose, onChanged }: Props) => {
         )}
 
         <style>{`
-          .stg-pill { font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+          .stg-pill { font-size: .875rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
           .stg-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 14px; }
           .stg-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
           @media (max-width: 991px) { .stg-grid { grid-template-columns: minmax(0, 1fr); } }
           .stg-sec { background: #fff; border: 1px solid #e6ebf2; border-radius: 12px; padding: 14px 16px; }
-          .stg-sec h6 { display: flex; align-items: center; gap: 8px; font-size: .86rem; font-weight: 800; margin: 0 0 10px; color: #0f172a; }
+          .stg-sec h6 { display: flex; align-items: center; gap: 8px; font-size: .875rem; font-weight: 800; margin: 0 0 10px; color: #0f172a; }
           .stg-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 0; font-size: .88rem; }
           .stg-dl dt { color: #64748b; font-weight: 600; }
           .stg-dl dd { margin: 0; color: #0f172a; font-weight: 600; overflow-wrap: anywhere; }
-          .stg-muted { display: block; color: #64748b; font-size: .8rem; }
+          .stg-muted { display: block; color: #64748b; font-size: .875rem; }
           .stg-quote { margin: 8px 0 0; padding: 8px 12px; border-left: 3px solid #c4b5fd; background: #faf5ff; border-radius: 6px; white-space: pre-line; }
-          .stg-info { background: #fffbeb; border: 1px solid #fde68a; color: #78350f; border-radius: 12px; padding: 10px 14px; font-size: .86rem; }
-          .stg-file { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #dbe3ec; background: #fff; border-radius: 10px; padding: 7px 12px; font-size: .84rem; font-weight: 600; color: #1e293b; cursor: pointer; }
+          .stg-info { background: #fffbeb; border: 1px solid #fde68a; color: #78350f; border-radius: 12px; padding: 10px 14px; font-size: .875rem; }
+          .stg-file { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #dbe3ec; background: #fff; border-radius: 10px; padding: 7px 12px; font-size: .875rem; font-weight: 600; color: #1e293b; cursor: pointer; }
           .stg-file:hover { border-color: #0f766e; color: #0f766e; }
-          .stg-item, .stg-msg { display: flex; flex-direction: column; gap: 2px; padding: 9px 11px; border-radius: 10px; background: #f8fafc; margin-bottom: 8px; font-size: .86rem; }
+          .stg-item, .stg-msg { display: flex; flex-direction: column; gap: 2px; padding: 9px 11px; border-radius: 10px; background: #f8fafc; margin-bottom: 8px; font-size: .875rem; }
           .stg-msg[data-staff='1'] { background: #f0fdfa; }
           .stg-msg[data-staff='0'] { background: #f5f3ff; }
-          .stg-hist { display: flex; gap: 10px; font-size: .85rem; padding: 6px 0; }
+          .stg-hist { display: flex; gap: 10px; font-size: .875rem; padding: 6px 0; }
           .stg-hist > div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
           .stg-dot { width: 9px; height: 9px; border-radius: 50%; background: #0f766e; margin-top: 6px; flex-shrink: 0; }
           .stg-panel { background: #fff; border: 1px solid #e6ebf2; border-radius: 12px; padding: 16px; }

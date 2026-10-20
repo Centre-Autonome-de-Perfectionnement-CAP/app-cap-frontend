@@ -50,14 +50,14 @@ const TermsForm = ({ value, onChange, note, onNoteChange, noteLabel, noteRequire
         </CCol>
         <CCol xs={12}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: '.78rem', color: '#64748b', marginRight: 2 }}>Durée rapide :</span>
+            <span style={{ fontSize: '.875rem', color: '#64748b', marginRight: 2 }}>Durée rapide :</span>
             {QUICK_MONTHS.map(m => (
               <button key={m} type="button" className="stg-chip" disabled={!value.date_debut}
                 onClick={() => set('date_fin', endForMonths(value.date_debut, m))}>
                 {m} mois
               </button>
             ))}
-            <span style={{ marginLeft: 'auto', fontSize: '.82rem', fontWeight: 700, color: invalidDates ? '#e11d48' : '#0f766e' }}>
+            <span style={{ marginLeft: 'auto', fontSize: '.875rem', fontWeight: 700, color: invalidDates ? '#e11d48' : '#0f766e' }}>
               {invalidDates ? 'La fin doit être après le début' : duration ? `Durée : ${duration}` : ''}
             </span>
           </div>
@@ -88,15 +88,15 @@ const TermsForm = ({ value, onChange, note, onNoteChange, noteLabel, noteRequire
       </CRow>
 
       <style>{`
-        .stg-label { font-size: .8rem; font-weight: 700; color: #334155; margin-bottom: 4px; }
+        .stg-label { font-size: .875rem; font-weight: 700; color: #334155; margin-bottom: 4px; }
         .stg-chip {
           border: 1px solid #cbd5e1; background: #fff; color: #334155; border-radius: 999px;
-          padding: 3px 11px; font-size: .78rem; font-weight: 600; cursor: pointer;
+          padding: 3px 11px; font-size: .875rem; font-weight: 600; cursor: pointer;
         }
         .stg-chip:hover:not(:disabled) { border-color: #0f766e; color: #0f766e; }
         .stg-chip:disabled { opacity: .5; cursor: not-allowed; }
         .stg-hours { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-        .stg-hour { display: flex; flex-direction: column; gap: 3px; font-size: .74rem; color: #64748b; font-weight: 600; margin: 0; }
+        .stg-hour { display: flex; flex-direction: column; gap: 3px; font-size: .875rem; color: #64748b; font-weight: 600; margin: 0; }
         @media (max-width: 575px) { .stg-hours { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
       `}</style>
     </div>

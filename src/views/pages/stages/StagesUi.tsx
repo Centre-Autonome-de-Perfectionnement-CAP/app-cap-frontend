@@ -47,13 +47,13 @@ export const StagesStyles = () => (
     .stg-page { display: flex; flex-direction: column; gap: 14px; }
     .stg-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
     .stg-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-    .stg-pill { display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
-    .stg-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .74rem; font-weight: 600; padding: 2px 8px; border-radius: 8px; background: #f1f5f9; color: #334155; }
+    .stg-pill { display: inline-flex; align-items: center; gap: 4px; font-size: .875rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+    .stg-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .875rem; font-weight: 600; padding: 2px 8px; border-radius: 8px; background: #f1f5f9; color: #334155; }
     .stg-err { background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239; border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
     .stg-list { display: flex; flex-direction: column; gap: 8px; }
     .stg-card { background: #fff; border: 1px solid #e6ebf2; border-radius: 12px; padding: 12px 14px; }
     .stg-row2 { display: flex; align-items: center; gap: 12px; }
-    .stg-muted { color: #64748b; font-size: .8rem; }
+    .stg-muted { color: #64748b; font-size: .875rem; font-weight: 500; }
     .stg-bar-sel { position: sticky; bottom: 12px; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
       background: #0f766e; color: #fff; border-radius: 12px; padding: 10px 14px; box-shadow: 0 10px 24px rgba(15,118,110,.25); }
     .stg-bar-sel .btn { --cui-btn-color: #0f766e; }

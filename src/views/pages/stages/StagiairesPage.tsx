@@ -177,7 +177,7 @@ const InternRow = ({ r, checked, onToggle, onOpen, canSelf, busy, onSelf }: {
         </span>
         <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           {r.supervisors.length === 0
-            ? <span style={{ fontSize: '.78rem', color: '#d97706', fontWeight: 700 }}>Sans superviseur</span>
+            ? <span style={{ fontSize: '.875rem', color: '#d97706', fontWeight: 700 }}>Sans superviseur</span>
             : r.supervisors.map(s => <span key={s.id} className="stg-chip"><CIcon icon={cilUser} style={{ width: 12 }} />{s.name}</span>)}
         </span>
       </button>

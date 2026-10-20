@@ -50,7 +50,7 @@ const SupervisorInvitationPage = () => {
       <CCard className="border-0 shadow-sm" style={{ width: '100%', maxWidth: 460, borderRadius: 18, overflow: 'hidden' }}>
         <div style={{ height: 5, background: 'linear-gradient(90deg, #0f766e, #10b981, #0ea5e9)' }} />
         <CCardBody style={{ padding: 24 }}>
-          <p style={{ margin: 0, fontSize: '.75rem', fontWeight: 800, letterSpacing: 1.4, color: '#0f766e', textTransform: 'uppercase' }}>CAP-EPAC · Stages</p>
+          <p style={{ margin: 0, fontSize: '.875rem', fontWeight: 800, letterSpacing: 1.4, color: '#0f766e', textTransform: 'uppercase' }}>CAP-EPAC · Stages</p>
           <h4 style={{ margin: '6px 0 4px', fontWeight: 800 }}>Créer mon compte superviseur</h4>
 
           {!info && !invalid && <div style={{ padding: 24, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
@@ -92,7 +92,7 @@ const SupervisorInvitationPage = () => {
               <div className="mb-3">
                 <CFormLabel className="small fw-semibold">Mot de passe</CFormLabel>
                 <CFormInput type="password" value={form.password} onChange={set('password')} autoComplete="new-password" />
-                <span style={{ fontSize: '.75rem', color: '#64748b' }}>8 caractères minimum, avec des lettres et des chiffres.</span>
+                <span style={{ fontSize: '.875rem', color: '#64748b' }}>8 caractères minimum, avec des lettres et des chiffres.</span>
               </div>
               <div className="mb-3">
                 <CFormLabel className="small fw-semibold">Confirmer le mot de passe</CFormLabel>

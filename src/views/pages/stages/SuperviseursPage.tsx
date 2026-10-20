@@ -166,7 +166,7 @@ const InviteModal = ({ visible, onClose, onDone }: { visible: boolean; onClose: 
             <CFormInput value={name} maxLength={120} onChange={e => setName(e.target.value)} placeholder="Ex. : M. Dossou" />
           </>
         )}
-        <div style={{ marginTop: 12, background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: 10, padding: '10px 12px', fontSize: '.84rem', color: '#115e59' }}>
+        <div style={{ marginTop: 12, background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: 10, padding: '10px 12px', fontSize: '.875rem', color: '#115e59' }}>
           Chaque numéro reçoit sur WhatsApp un lien personnel, valable 72 heures et utilisable une seule fois, pour créer son compte superviseur.
         </div>
         {err && <div className="stg-err" style={{ marginTop: 12 }}>{err}</div>}

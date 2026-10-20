@@ -108,7 +108,7 @@ const GroupeWhatsAppPage = () => {
               )}
             </div>
 
-            <div style={{ marginTop: 16, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px', fontSize: '.84rem', color: '#475569' }}>
+            <div style={{ marginTop: 16, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px', fontSize: '.875rem', color: '#475569' }}>
               Chaque stagiaire est ajouté le jour où son stage commence ; si ses réglages WhatsApp l'empêchent, il reçoit le lien du groupe en privé.
               Il en est retiré une semaine après la fin de son stage. La mise à jour se fait automatiquement chaque jour.
             </div>

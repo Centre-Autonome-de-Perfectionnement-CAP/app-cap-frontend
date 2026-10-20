@@ -52,6 +52,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
   const [pdfView, setPdfView] = useState(false)
   const [printing, setPrinting] = useState(false)
   const [numero, setNumero] = useState('')
+  const [docDate, setDocDate] = useState(todayIso())
   const [date, setDate] = useState(todayIso())
   const [cancelMode, setCancelMode] = useState(false)
   const [cancelMotif, setCancelMotif] = useState('')
@@ -62,7 +63,8 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
   const apply = (x: Attestation) => {
     setA(x)
     setEdit({ pays_naissance: x.content?.pays_naissance ?? '', type_stage: x.content?.type_stage ?? 'académique', structure: x.content?.structure ?? '' })
-    setNumero(x.numero ?? x.suggested_numero ?? '')
+    setNumero(x.numero ?? '')
+    setDocDate(x.document_date ?? todayIso())
   }
 
   useEffect(() => {
@@ -99,7 +101,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
     if (!a) return
     setPrinting(true); setErr(null)
     try {
-      const f = await stageService.attestationPdf(a.id, a.status === 'a_imprimer' ? numero.trim() || undefined : undefined)
+      const f = await stageService.attestationPdf(a.id, ['a_valider', 'a_imprimer'].includes(a.status) ? docDate : undefined)
       const frame = document.createElement('iframe')
       frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'
       frame.src = f.url
@@ -172,15 +174,19 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
             {a.status === 'a_imprimer' && (
               <div className="stg-card">
                 <div style={{ fontWeight: 700 }}>Impression</div>
-                <p className="stg-muted" style={{ margin: '4px 0 8px' }}>Vérifiez le numéro, imprimez l'attestation, faites-la signer, puis marquez-la imprimée. Le stagiaire sera prévenu qu'il peut la retirer.</p>
-                <CFormLabel className="small fw-semibold mb-1">Numéro (proposé, modifiable) — imprimé « N° {numero || '…'}/CAP/EPAC/UAC »</CFormLabel>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <CFormInput maxLength={60} value={numero} onChange={e => setNumero(e.target.value)} style={{ maxWidth: 220 }} />
-                  <CButton color="primary" variant="outline" disabled={printing || numero.trim().length < 2} onClick={printPdf}>
+                <p className="stg-muted" style={{ margin: '4px 0 8px' }}>Choisissez la date du document, imprimez, inscrivez le numéro à la main et faites signer, puis marquez l'attestation imprimée. Le stagiaire sera prévenu qu'il peut la retirer.</p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                  <div>
+                    <CFormLabel className="small fw-semibold mb-1">Date du document</CFormLabel>
+                    <CFormInput type="date" value={docDate} onChange={e => setDocDate(e.target.value)} style={{ maxWidth: 180 }} />
+                  </div>
+                  <CButton color="primary" variant="outline" disabled={printing || !docDate} onClick={printPdf}>
                     {printing ? <CSpinner size="sm" className="me-1" /> : <CIcon icon={cilPrint} className="me-1" />}Imprimer
                   </CButton>
                   <CButton color="secondary" variant="ghost" onClick={() => setPdfView(true)}><CIcon icon={cilDescription} className="me-1" />Aperçu</CButton>
                 </div>
+                <CFormLabel className="small fw-semibold mb-1 mt-3">N° écrit à la main (facultatif, pour retrouver l'attestation dans le registre)</CFormLabel>
+                <CFormInput maxLength={60} value={numero} onChange={e => setNumero(e.target.value)} style={{ maxWidth: 220 }} placeholder="Ex. : 22-26" />
               </div>
             )}
 
@@ -211,11 +217,12 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
                   </CButton>
                 </div>
                 <details style={{ marginTop: 10 }}>
-                  <summary className="stg-muted" style={{ cursor: 'pointer' }}>Corriger le numéro</summary>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                    <CFormInput size="sm" maxLength={60} value={numero} onChange={e => setNumero(e.target.value)} />
-                    <CButton size="sm" color="secondary" variant="outline" disabled={busy || !numero.trim() || numero.trim() === a.numero}
-                      onClick={() => run(() => stageService.printedAttestation(a.id, numero.trim()), 'Numéro modifié')}>Enregistrer</CButton>
+                  <summary className="stg-muted" style={{ cursor: 'pointer' }}>Corriger le numéro noté ou la date du document</summary>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                    <CFormInput size="sm" maxLength={60} placeholder="N° écrit à la main" value={numero} onChange={e => setNumero(e.target.value)} style={{ maxWidth: 200 }} />
+                    <CFormInput size="sm" type="date" value={docDate} onChange={e => setDocDate(e.target.value)} style={{ maxWidth: 170 }} />
+                    <CButton size="sm" color="secondary" variant="outline" disabled={busy || !docDate || (numero.trim() === (a.numero ?? '') && docDate === a.document_date)}
+                      onClick={() => run(() => stageService.printedAttestation(a.id, numero.trim(), docDate), 'Modification enregistrée')}>Enregistrer</CButton>
                   </div>
                 </details>
               </div>
@@ -282,8 +289,8 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
                 </CButton>
               )}
               {a.status === 'a_imprimer' && (
-                <CButton color="primary" disabled={busy || numero.trim().length < 2}
-                  onClick={() => run(() => stageService.printedAttestation(a.id, numero.trim()), 'Attestation imprimée')}>
+                <CButton color="primary" disabled={busy || !docDate}
+                  onClick={() => run(() => stageService.printedAttestation(a.id, numero.trim(), docDate), 'Attestation imprimée')}>
                   {busy && <CSpinner size="sm" className="me-1" />}<CIcon icon={cilPrint} className="me-1" />Marquer imprimée
                 </CButton>
               )}
@@ -303,10 +310,10 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
         <StageFileViewer
           visible={pdfView}
           stageId={a.stage.id}
-          files={[{ key: 'pdf', label: a.status === 'a_valider' ? 'Aperçu (non validée)' : `Attestation ${a.numero ?? numero ?? ''}` }]}
+          files={[{ key: 'pdf', label: a.status === 'a_valider' ? 'Aperçu (non validée)' : `Attestation${a.numero ? ` N° ${a.numero}` : ''}` }]}
           initialKey="pdf"
           title="Attestation de stage"
-          loader={() => stageService.attestationPdf(a.id, a.status === 'a_imprimer' ? numero.trim() || undefined : undefined)}
+          loader={() => stageService.attestationPdf(a.id, ['a_valider', 'a_imprimer'].includes(a.status) ? docDate : undefined)}
           onClose={() => setPdfView(false)}
         />
       )}

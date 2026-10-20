@@ -132,7 +132,7 @@ export interface Attestation {
   status: AttestationStatus
   status_label: string
   numero: string | null
-  suggested_numero: string | null
+  document_date: string | null
   motif_type: string | null
   motif_type_label: string | null
   motif: string | null
@@ -473,7 +473,9 @@ class StageService {
 
   cancelAttestation = (id: number, motif: string) => HttpService.post(`${BASE}/attestations/${id}/annuler`, { motif })
 
-  printedAttestation = (id: number, numero: string) => HttpService.post(`${BASE}/attestations/${id}/imprimee`, { numero })
+  /** Numéro (écrit à la main, facultatif, pour le registre) et date portée sur l'attestation. */
+  printedAttestation = (id: number, numero: string, date: string) =>
+    HttpService.post(`${BASE}/attestations/${id}/imprimee`, { numero: numero || null, date })
 
   deliveredAttestation = (id: number, date: string) => HttpService.post(`${BASE}/attestations/${id}/remise`, { date })
 
@@ -492,8 +494,8 @@ class StageService {
     return { url: URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })), name: String(res.name || fallback), mime: 'application/pdf' }
   }
 
-  attestationPdf = async (id: number, numero?: string): Promise<{ url: string; name: string; mime: string }> =>
-    this.pdfFrom(await HttpService.get(`${BASE}/attestations/${id}/pdf${numero ? `?numero=${encodeURIComponent(numero)}` : ''}`), 'attestation.pdf')
+  attestationPdf = async (id: number, date?: string): Promise<{ url: string; name: string; mime: string }> =>
+    this.pdfFrom(await HttpService.get(`${BASE}/attestations/${id}/pdf${date ? `?date=${encodeURIComponent(date)}` : ''}`), 'attestation.pdf')
 
   notePdf = async (stageId: number, noteId: number): Promise<{ url: string; name: string; mime: string }> =>
     this.pdfFrom(await HttpService.get(`${BASE}/demandes/${stageId}/notes/${noteId}/pdf`), 'note-de-service.pdf')

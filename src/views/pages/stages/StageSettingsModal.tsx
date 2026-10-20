@@ -210,7 +210,11 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
             <CCol xs={12}>
               <CFormLabel className="fw-semibold small">Règlement intérieur (version {form.reglement_version})</CFormLabel>
               <CFormTextarea rows={8} maxLength={10000} value={form.reglement_text} onChange={e => set('reglement_text', e.target.value)} />
-              <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: 4 }}>Toute modification crée une nouvelle version : chaque stagiaire devra la relire et l'accepter.</div>
+              <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: 4 }}>
+                Toute modification crée une nouvelle version : chaque stagiaire devra la relire et l'accepter.
+                Remplacés automatiquement à l'affichage : {'{horaires}'} (horaires du stagiaire), {'{tolerance}'} (minutes avant retard),
+                {' {delai_permission}'} (jours ouvrés), {'{rapports}'} (fréquence des rapports), {'{seuil}'} (assiduité minimale).
+              </div>
             </CCol>
             <CCol xs={12}>
               <div style={{ fontSize: '.8rem', color: '#64748b' }}>

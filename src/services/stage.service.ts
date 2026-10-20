@@ -88,6 +88,47 @@ export interface StageSettings {
   reglement_text: string
   reglement_version: number
   permission_delay_days: number
+  report_frequency: 'journalier' | 'hebdomadaire' | 'mensuel'
+  report_grace_days: number
+  final_report_open_days: number
+}
+
+export interface ReportSummary {
+  id: number
+  kind: 'periodique' | 'final'
+  period_key: string
+  label: string
+  status: 'submitted' | 'supervisor_approved' | 'supervisor_rejected' | 'approved' | 'rejected'
+  status_label: string
+  validated: boolean
+  locked: boolean
+  current_version: number
+  late: boolean
+  submitted_at: string | null
+  stage?: { id: number; reference: string; nom_complet: string } | null
+}
+
+export interface ReportDetail extends ReportSummary {
+  versions: { version: number; name: string; size: number; note: string | null; late: boolean; at: string }[]
+  comments: { id: number; version: number | null; author: 'staff' | 'stagiaire'; name: string; body: string; at: string }[]
+  reviews: { id: number; version: number; role: 'superviseur' | 'responsable'; decision: 'approved' | 'rejected'; comment: string | null; name: string; at: string }[]
+}
+
+export interface ReportPeriod {
+  key: string
+  kind: 'periodique' | 'final'
+  label: string
+  opens: string | null
+  closes: string | null
+  state: 'upcoming' | 'open' | 'missing' | 'deposited' | 'validated' | 'to_fix'
+  report: ReportSummary | null
+}
+
+export interface ReportsOverview {
+  frequency: string
+  items: ReportPeriod[]
+  final: ReportPeriod | null
+  stats: { expected: number; deposited: number; validated: number; missing: number; final_validated: boolean }
 }
 
 export interface AttendanceSummary {
@@ -279,6 +320,29 @@ class StageService {
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
     const mime = String(res.mime || 'application/octet-stream')
     return { url: URL.createObjectURL(new Blob([bytes], { type: mime })), name: String(res.name || 'justificatif'), mime }
+  }
+
+  // ── Rapports (lot 4) ───────────────────────────────────────────────────
+
+  reports = (status: string, mine: boolean): Promise<{ data: ReportSummary[]; to_review: number }> =>
+    HttpService.get(`${BASE}/rapports?status=${status}${mine ? '&mine=1' : ''}`)
+
+  report = async (id: number): Promise<ReportDetail> => (await HttpService.get(`${BASE}/rapports/${id}`)).data
+
+  internReports = async (stageId: number): Promise<ReportsOverview> => (await HttpService.get(`${BASE}/stagiaires/${stageId}/rapports`)).data
+
+  commentReport = (id: number, body: string) => HttpService.post(`${BASE}/rapports/${id}/commentaires`, { body })
+
+  decideReport = (id: number, decision: 'approved' | 'rejected', comment?: string) =>
+    HttpService.post(`${BASE}/rapports/${id}/decision`, { decision, comment: comment || null })
+
+  reportFile = async (id: number, version: number): Promise<{ url: string; name: string; mime: string }> => {
+    const res: any = await HttpService.get(`${BASE}/rapports/${id}/versions/${version}`)
+    if (!res?.content) throw new Error("Ce document n'a pas pu être chargé.")
+    const bin = atob(res.content)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    return { url: URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })), name: String(res.name || 'rapport.pdf'), mime: 'application/pdf' }
   }
 
   // ── Invitation (page publique) ─────────────────────────────────────────

@@ -15,6 +15,7 @@ import { showSuccess, showError, friendlyError } from '@/components/common/Actio
 import TermsForm, { validateTerms } from './TermsForm'
 import StageFileViewer from './StageFileViewer'
 import PresencePanel from './PresencePanel'
+import InternReportsPanel from './InternReportsPanel'
 import { STATUS_STYLE, HISTORY_LABELS, frDate, frDateTime, horairesLabel, durationLabel } from './stageUtils'
 
 interface Props {
@@ -195,6 +196,11 @@ const StageDetailModal = ({ idOrRef, onClose, onChanged }: Props) => {
                         setMode('rectify')
                       }}
                     />
+                  </Section>
+                )}
+                {detail.status === 'accepted' && detail.activated_at && (
+                  <Section icon={cilFile} title="Rapports" tone="#7c3aed">
+                    <InternReportsPanel stageId={detail.id} />
                   </Section>
                 )}
                 {detail.notes.length > 0 && (

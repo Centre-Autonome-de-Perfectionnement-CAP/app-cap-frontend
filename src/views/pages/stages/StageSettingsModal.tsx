@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import {
   CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton, CSpinner,
-  CFormSwitch, CFormLabel, CFormInput, CFormTextarea, CRow, CCol,
+  CFormSwitch, CFormLabel, CFormInput, CFormTextarea, CFormSelect, CRow, CCol,
 } from '@coreui/react'
 import stageService, { type StageSettings } from '@/services/stage.service'
 import { showSuccess, friendlyError } from '@/components/common/ActionResult'
@@ -60,6 +60,9 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
         lieu_rayon: form.lieu_rayon,
         reglement_text: form.reglement_text,
         permission_delay_days: form.permission_delay_days,
+        report_frequency: form.report_frequency,
+        report_grace_days: form.report_grace_days,
+        final_report_open_days: form.final_report_open_days,
       })
       onSaved(saved)
       onClose()
@@ -148,6 +151,24 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
               <CFormLabel className="fw-semibold small">Permission après coup (jours ouvrés)</CFormLabel>
               <CFormInput type="number" min={0} max={15} value={form.permission_delay_days} onChange={e => set('permission_delay_days', Math.max(0, Math.min(15, Number(e.target.value) || 0)))} />
             </CCol>
+            <CCol xs={12}><hr className="my-1" /><strong>Rapports</strong></CCol>
+            <CCol xs={12} md={4}>
+              <CFormLabel className="fw-semibold small">Fréquence imposée</CFormLabel>
+              <CFormSelect value={form.report_frequency} onChange={e => set('report_frequency', e.target.value as StageSettings['report_frequency'])}>
+                <option value="journalier">Journalier</option>
+                <option value="hebdomadaire">Hebdomadaire</option>
+                <option value="mensuel">Mensuel</option>
+              </CFormSelect>
+            </CCol>
+            <CCol xs={6} md={4}>
+              <CFormLabel className="fw-semibold small">Délai après la période (jours ouvrés)</CFormLabel>
+              <CFormInput type="number" min={0} max={10} value={form.report_grace_days} onChange={e => set('report_grace_days', Math.max(0, Math.min(10, Number(e.target.value) || 0)))} />
+            </CCol>
+            <CCol xs={6} md={4}>
+              <CFormLabel className="fw-semibold small">Rapport final ouvert (jours avant la fin)</CFormLabel>
+              <CFormInput type="number" min={3} max={60} value={form.final_report_open_days} onChange={e => set('final_report_open_days', Math.max(3, Math.min(60, Number(e.target.value) || 14)))} />
+            </CCol>
+            <CCol xs={12}><hr className="my-1" /></CCol>
             <CCol xs={12}>
               <CFormLabel className="fw-semibold small">Règlement intérieur (version {form.reglement_version})</CFormLabel>
               <CFormTextarea rows={8} maxLength={10000} value={form.reglement_text} onChange={e => set('reglement_text', e.target.value)} />

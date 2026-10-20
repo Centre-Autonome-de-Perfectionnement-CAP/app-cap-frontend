@@ -91,4 +91,7 @@ export const HISTORY_LABELS: Record<string, string> = {
   whatsapp_group_invited: 'Lien du groupe WhatsApp envoyé',
   whatsapp_group_removed: 'Retiré du groupe WhatsApp',
   whatsapp_group_unreachable: 'Groupe WhatsApp : numéro injoignable',
+  report_submitted: 'Rapport déposé',
+  report_approved:  'Rapport validé',
+  report_rejected:  'Rapport à corriger',
 }

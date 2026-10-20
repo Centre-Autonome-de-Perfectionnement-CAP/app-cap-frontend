@@ -34,6 +34,7 @@ import {
   getDemandesNavigation,
   whatsappNavigation,
   getLegacyPrepaNavigation,
+  stagesNavigation,
 } from '../_nav/index.tsx'
 
 // Rôles qui n'ont pas accès au portail — pas de bouton "Retour au Portail"
@@ -53,6 +54,7 @@ const AppSidebar = () => {
     if (path.startsWith('/legacy-prepa'))    return getLegacyPrepaNavigation(role)
     if (path.startsWith('/inscription'))  return inscriptionNavigation
     if (path.startsWith('/demandes'))     return getDemandesNavigation(role)
+    if (path.startsWith('/stages'))       return stagesNavigation
     if (path.startsWith('/attestations')) return attestationNavigation
     if (path.startsWith('/notes'))        return getNoteNavigation(role)
     if (path.startsWith('/rh'))           return getRhNavigation(role)

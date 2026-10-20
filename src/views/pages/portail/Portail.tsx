@@ -150,6 +150,14 @@ const applications: Application[] = [
     hasBadge: false,
     rolesAllowed: ['admin', 'responsable-division'],
   },
+  {
+    title: 'CAP Stages',
+    description: 'Demandes de stage, propositions de dates et notes de service.',
+    image: getAssetUrl('images/cours.png'),
+    url: '/stages',
+    hasBadge: false,
+    rolesAllowed: ['admin', 'responsable-division', 'chef-division'],
+  },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────

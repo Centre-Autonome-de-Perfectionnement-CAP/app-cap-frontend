@@ -24,6 +24,7 @@ import getCahierNavigation    from './cahier.tsx'
 import getDemandesNavigation  from './demandes.tsx'   // ← remplace workflow.tsx
 import whatsappNavigation     from './whatsapp.tsx'
 import getLegacyPrepaNavigation from './legacy-prepa.tsx'
+import stagesNavigation     from './stages.tsx'
 
 const mainNavigationBase = [
   {
@@ -183,4 +184,5 @@ export {
   getDemandesNavigation,
   whatsappNavigation,
   getLegacyPrepaNavigation,
+  stagesNavigation,
 }

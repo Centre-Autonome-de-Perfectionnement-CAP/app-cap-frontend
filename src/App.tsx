@@ -33,6 +33,7 @@ const LegacyPrepaRoutes   = React.lazy(() => import('./views/pages/legacy-prepa/
 const DemandesRoutes     = React.lazy(() => import('./views/pages/demandes/DemandesRoutes.tsx'))
 const AdminDbRoutes      = React.lazy(() => import('./views/pages/admin-db/AdminDbRoutes.tsx'))
 const WhatsAppRoutes     = React.lazy(() => import('./views/pages/whatsapp/WhatsAppRoutes.tsx'))
+const StagesRoutes       = React.lazy(() => import('./views/pages/stages/StagesRoutes.tsx'))
 const Register           = React.lazy(() => import('./views/pages/register/Register.tsx'))
 const Page404            = React.lazy(() => import('./views/pages/page404/Page404.tsx'))
 const Page500            = React.lazy(() => import('./views/pages/page500/Page500.tsx'))
@@ -256,6 +257,8 @@ const App = () => {
             <Route path="/whatsapp/*" element={
               <WhatsAppRoutes />
             } />
+            {/* Module Stages — Responsable de division (formation continue) + admin, voir StagesGuard.tsx */}
+            <Route path="/stages/*" element={<StagesRoutes />} />
 
             <Route path="*" element={<Navigate to={FRONTEND_ROUTES.PORTAIL} replace />} />
           </Routes>

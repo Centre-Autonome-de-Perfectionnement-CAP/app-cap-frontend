@@ -63,6 +63,8 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
         report_frequency: form.report_frequency,
         report_grace_days: form.report_grace_days,
         final_report_open_days: form.final_report_open_days,
+        seuil_assiduite: form.seuil_assiduite,
+        attestation_prefix: form.attestation_prefix,
       })
       onSaved(saved)
       onClose()
@@ -167,6 +169,20 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
             <CCol xs={6} md={4}>
               <CFormLabel className="fw-semibold small">Rapport final ouvert (jours avant la fin)</CFormLabel>
               <CFormInput type="number" min={3} max={60} value={form.final_report_open_days} onChange={e => set('final_report_open_days', Math.max(3, Math.min(60, Number(e.target.value) || 14)))} />
+            </CCol>
+            <CCol xs={12}><hr className="my-1" /><strong>Attestations</strong></CCol>
+            <CCol xs={6} md={4}>
+              <CFormLabel className="fw-semibold small">Assiduité minimale (%)</CFormLabel>
+              <CFormInput type="number" min={50} max={100} value={form.seuil_assiduite} onChange={e => set('seuil_assiduite', Math.max(50, Math.min(100, Number(e.target.value) || 80)))} />
+            </CCol>
+            <CCol xs={6} md={4}>
+              <CFormLabel className="fw-semibold small">Préfixe des numéros</CFormLabel>
+              <CFormInput maxLength={30} value={form.attestation_prefix} onChange={e => set('attestation_prefix', e.target.value.replace(/[^A-Za-z0-9/\-_.]/g, ''))} />
+            </CCol>
+            <CCol xs={12} md={4}>
+              <div style={{ fontSize: '.78rem', color: '#64748b', marginTop: 4 }}>
+                Numéro proposé : {form.attestation_prefix || '…'}/{new Date().getFullYear()}/001. Il reste modifiable à l'impression.
+              </div>
             </CCol>
             <CCol xs={12}><hr className="my-1" /></CCol>
             <CCol xs={12}>

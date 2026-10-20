@@ -156,7 +156,7 @@ const applications: Application[] = [
     image: getAssetUrl('images/cours.png'),
     url: '/stages',
     hasBadge: false,
-    rolesAllowed: ['admin', 'responsable-division', 'chef-division'],
+    rolesAllowed: ['admin', 'responsable-division', 'chef-division', 'secretaire'],
   },
 ]
 

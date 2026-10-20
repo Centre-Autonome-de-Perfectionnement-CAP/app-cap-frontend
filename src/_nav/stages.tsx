@@ -1,11 +1,14 @@
 // src/_nav/stages.tsx
 // Navigation latérale du module Stages. Les superviseurs ne voient pas
-// les pages réservées au responsable (superviseurs, groupe WhatsApp).
+// les pages réservées au responsable (attestations, superviseurs, groupe
+// WhatsApp) ; le secrétariat ne voit que les attestations.
 import CIcon from '@coreui/icons-react'
-import { cilBriefcase, cilPeople, cilUserFollow, cilGroup, cilChatBubble, cilTask, cilDescription } from '@coreui/icons'
+import { cilBriefcase, cilPeople, cilUserFollow, cilGroup, cilChatBubble, cilTask, cilDescription, cilBadge } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
 const getStagesNavigation = (role: string | null) => {
+  const attestations = { component: CNavItem, name: 'Attestations', to: '/stages/attestations', icon: <CIcon icon={cilBadge} customClassName="nav-icon" /> }
+  if (role === 'secretaire') return [{ component: CNavTitle, name: 'CAP Stages' }, attestations]
   const lead = role !== 'superviseur'
   return [
     { component: CNavTitle, name: 'CAP Stages' },
@@ -15,6 +18,7 @@ const getStagesNavigation = (role: string | null) => {
     { component: CNavItem, name: 'Demandes des stagiaires', to: '/stages/demandes-stagiaires', icon: <CIcon icon={cilTask} customClassName="nav-icon" /> },
     { component: CNavItem, name: 'Binômes et groupes', to: '/stages/binomes', icon: <CIcon icon={cilGroup} customClassName="nav-icon" /> },
     ...(lead ? [
+      attestations,
       { component: CNavItem, name: 'Superviseurs', to: '/stages/superviseurs', icon: <CIcon icon={cilUserFollow} customClassName="nav-icon" /> },
       { component: CNavItem, name: 'Groupe WhatsApp', to: '/stages/groupe-whatsapp', icon: <CIcon icon={cilChatBubble} customClassName="nav-icon" /> },
     ] : []),

@@ -16,11 +16,14 @@ interface Props {
   files: { key: string; label: string }[]
   initialKey: string | null
   onClose: () => void
+  /** Autre source (ex. scan d'une attestation) ; par défaut : pièces de la demande. */
+  loader?: (key: string) => Promise<Loaded>
+  title?: string
 }
 
 type Loaded = { url: string; name: string; mime: string }
 
-const StageFileViewer = ({ visible, stageId, files, initialKey, onClose }: Props) => {
+const StageFileViewer = ({ visible, stageId, files, initialKey, onClose, loader, title }: Props) => {
   const [key, setKey] = useState<string | null>(initialKey)
   const [file, setFile] = useState<Loaded | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -42,11 +45,11 @@ const StageFileViewer = ({ visible, stageId, files, initialKey, onClose }: Props
     let alive = true
     let url: string | null = null
     setFile(null); setError(null)
-    stageService.fileContent(stageId, key)
+    ;(loader ? loader(key) : stageService.fileContent(stageId, key))
       .then(f => { url = f.url; if (alive) setFile(f); else URL.revokeObjectURL(f.url) })
       .catch(e => { if (alive) setError(friendlyError(e)) })
     return () => { alive = false; if (url) URL.revokeObjectURL(url) }
-  }, [visible, key, stageId])
+  }, [visible, key, stageId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const index = files.findIndex(f => f.key === key)
   const go = (d: number) => {
@@ -63,7 +66,7 @@ const StageFileViewer = ({ visible, stageId, files, initialKey, onClose }: Props
   return (
     <CModal visible={visible} onClose={onClose} fullscreen alignment="center" keyboard={false}>
       <CModalHeader>
-        <CModalTitle style={{ fontSize: '1rem' }}>Pièces de la demande</CModalTitle>
+        <CModalTitle style={{ fontSize: '1rem' }}>{title ?? 'Pièces de la demande'}</CModalTitle>
       </CModalHeader>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '8px 16px', borderBottom: '1px solid #e2e8f0', background: '#fff' }}>
         <CButton size="sm" color="light" onClick={() => go(-1)} disabled={files.length < 2} title="Précédent">

@@ -1,5 +1,6 @@
 // src/views/pages/stages/StagesGuard.tsx
-// Accès au module Stages : administrateur et Responsable de division.
+// Accès au module Stages : administrateur, Responsable de division,
+// superviseurs et secrétariat (attestations seulement).
 // Le serveur vérifie en plus que le responsable est celui de la formation
 // continue (celui qui ne s'occupe pas des licences).
 import React from 'react'
@@ -8,8 +9,10 @@ import { useAuth } from '@/contexts'
 import { FRONTEND_ROUTES } from '@/constants'
 import { LoadingSpinner } from '@/components'
 
-export const STAGES_ROLES = ['admin', 'responsable-division', 'chef-division', 'superviseur']
+export const STAGES_ROLES = ['admin', 'responsable-division', 'chef-division', 'superviseur', 'secretaire']
 export const isStagesLead = (role: string | null) => role === 'admin' || role === 'responsable-division' || role === 'chef-division'
+/** Le secrétariat n'accède qu'aux attestations (impression, remise). */
+export const isStagesSecretariat = (role: string | null) => role === 'secretaire'
 
 const StagesGuard = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, role } = useAuth()

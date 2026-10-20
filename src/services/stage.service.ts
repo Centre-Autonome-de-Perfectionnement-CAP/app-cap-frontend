@@ -91,6 +91,68 @@ export interface StageSettings {
   report_frequency: 'journalier' | 'hebdomadaire' | 'mensuel'
   report_grace_days: number
   final_report_open_days: number
+  seuil_assiduite: number
+  attestation_prefix: string
+}
+
+// ── Attestations (lot 5) ───────────────────────────────────────────────────
+
+export type AttestationStatus = 'a_valider' | 'a_imprimer' | 'imprimee' | 'remise' | 'annulee'
+
+export interface AttestationEligibility {
+  taux: number | null
+  seuil: number
+  attendance_ok: boolean
+  final_validated: boolean
+  eligible: boolean
+  jours_ouvres: number
+  absences: number
+  missing: string[]
+  computed_at: string
+}
+
+export interface AttestationContent {
+  civilite: string; nom: string; prenoms: string; nom_complet: string
+  date_naissance: string | null; lieu_naissance: string; nationalite: string
+  etablissement: string; filiere: string; service: string | null; lieu: string | null
+  date_debut: string | null; date_fin: string | null; duree: string | null
+  theme: string | null; observations: string | null
+}
+
+export interface Attestation {
+  id: number
+  kind: 'normale' | 'exceptionnelle' | 'demande'
+  kind_label: string
+  status: AttestationStatus
+  status_label: string
+  numero: string | null
+  suggested_numero: string | null
+  motif_type: string | null
+  motif_type_label: string | null
+  motif: string | null
+  created_at: string
+  updated_at: string
+  validated_at: string | null
+  validated_by: string | null
+  printed_at: string | null
+  printed_by: string | null
+  delivered_on: string | null
+  delivered_by: string | null
+  cancelled_at: string | null
+  cancelled_by: string | null
+  cancel_reason: string | null
+  has_scan: boolean
+  stage: { id: number; reference: string; nom_complet: string; date_fin: string | null; whatsapp: string } | null
+  content?: AttestationContent
+  overrides?: { theme?: string; service?: string; observations?: string }
+  eligibility?: AttestationEligibility | null
+}
+
+export interface StageAttestationOverview {
+  prepare_day: string | null
+  eligibility: AttestationEligibility
+  items: Attestation[]
+  has_open: boolean
 }
 
 export interface ReportSummary {
@@ -343,6 +405,48 @@ class StageService {
     const bytes = new Uint8Array(bin.length)
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
     return { url: URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })), name: String(res.name || 'rapport.pdf'), mime: 'application/pdf' }
+  }
+
+  // ── Attestations (lot 5) ───────────────────────────────────────────────
+
+  attestations = (status: string): Promise<{ data: Attestation[]; counts: Partial<Record<AttestationStatus, number>>; lead: boolean }> =>
+    HttpService.get(`${BASE}/attestations?status=${encodeURIComponent(status)}`)
+
+  attestation = async (id: number): Promise<Attestation> => (await HttpService.get(`${BASE}/attestations/${id}`)).data
+
+  stageAttestation = async (stageId: number): Promise<StageAttestationOverview> =>
+    (await HttpService.get(`${BASE}/stagiaires/${stageId}/attestation`)).data
+
+  prepareAttestation = (stageId: number) => HttpService.post(`${BASE}/stagiaires/${stageId}/attestation`)
+
+  exceptionalAttestation = (stageId: number, password: string, motif: string) =>
+    HttpService.post(`${BASE}/stagiaires/${stageId}/attestation-exceptionnelle`, { password, motif })
+
+  updateAttestation = (id: number, values: { theme?: string | null; service?: string | null; observations?: string | null }) =>
+    HttpService.put(`${BASE}/attestations/${id}`, values)
+
+  validateAttestation = (id: number) => HttpService.post(`${BASE}/attestations/${id}/valider`)
+
+  cancelAttestation = (id: number, motif: string) => HttpService.post(`${BASE}/attestations/${id}/annuler`, { motif })
+
+  printedAttestation = (id: number, numero: string) => HttpService.post(`${BASE}/attestations/${id}/imprimee`, { numero })
+
+  deliveredAttestation = (id: number, date: string) => HttpService.post(`${BASE}/attestations/${id}/remise`, { date })
+
+  uploadAttestationScan = (id: number, file: File) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    return HttpService.post(`${BASE}/attestations/${id}/scan`, fd)
+  }
+
+  attestationScan = async (id: number): Promise<{ url: string; name: string; mime: string }> => {
+    const res: any = await HttpService.get(`${BASE}/attestations/${id}/scan`)
+    if (!res?.content) throw new Error("Ce document n'a pas pu être chargé.")
+    const bin = atob(res.content)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    const mime = String(res.mime || 'application/octet-stream')
+    return { url: URL.createObjectURL(new Blob([bytes], { type: mime })), name: String(res.name || 'attestation'), mime }
   }
 
   // ── Invitation (page publique) ─────────────────────────────────────────

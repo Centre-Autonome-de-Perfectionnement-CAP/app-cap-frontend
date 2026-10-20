@@ -8,7 +8,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
-  cilSend, cilBan, cilCheckAlt, cilPencil, cilFile, cilHistory, cilCommentBubble, cilDescription, cilUser, cilCalendarCheck,
+  cilSend, cilBan, cilCheckAlt, cilPencil, cilFile, cilHistory, cilCommentBubble, cilDescription, cilUser, cilCalendarCheck, cilBadge,
 } from '@coreui/icons'
 import stageService, { type StageDetail, type StageTerms } from '@/services/stage.service'
 import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
@@ -16,6 +16,9 @@ import TermsForm, { validateTerms } from './TermsForm'
 import StageFileViewer from './StageFileViewer'
 import PresencePanel from './PresencePanel'
 import InternReportsPanel from './InternReportsPanel'
+import InternAttestationPanel from './InternAttestationPanel'
+import { isStagesLead } from './StagesGuard'
+import { useAuth } from '@/contexts'
 import { STATUS_STYLE, HISTORY_LABELS, frDate, frDateTime, horairesLabel, durationLabel } from './stageUtils'
 
 interface Props {
@@ -27,6 +30,7 @@ interface Props {
 type Mode = 'view' | 'propose' | 'reject' | 'rectify'
 
 const StageDetailModal = ({ idOrRef, onClose, onChanged }: Props) => {
+  const { role } = useAuth()
   const [detail, setDetail] = useState<StageDetail | null>(null)
   const [loading, setLoading] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -201,6 +205,11 @@ const StageDetailModal = ({ idOrRef, onClose, onChanged }: Props) => {
                 {detail.status === 'accepted' && detail.activated_at && (
                   <Section icon={cilFile} title="Rapports" tone="#7c3aed">
                     <InternReportsPanel stageId={detail.id} />
+                  </Section>
+                )}
+                {detail.status === 'accepted' && detail.activated_at && (
+                  <Section icon={cilBadge} title="Attestation" tone="#0f766e">
+                    <InternAttestationPanel stage={{ id: detail.id, nom_complet: detail.nom_complet }} lead={isStagesLead(role as string)} />
                   </Section>
                 )}
                 {detail.notes.length > 0 && (

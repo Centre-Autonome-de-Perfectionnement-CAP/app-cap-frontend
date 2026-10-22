@@ -18,6 +18,7 @@ import { showSuccess, showError, friendlyError } from '@/components/common/Actio
 import { useAuth } from '@/contexts'
 import { isStagesLead } from './StagesGuard'
 import StageDetailModal from './StageDetailModal'
+import { InternInvitations, InviteInternButton } from './InternInvitations'
 import { PageHead, Empty, Pill, StagesStyles } from './StagesUi'
 import { frDate, durationLabel } from './stageUtils'
 
@@ -36,6 +37,7 @@ const WA = {
 const StagiairesPage = () => {
   const { role } = useAuth()
   const lead = isStagesLead(role as string)
+  const [inviteOpen, setInviteOpen] = useState(false)
   const cards: { key: InternScope; label: string; icon: any; color: string; bg: string }[] = [
     ...(!lead ? [{ key: 'mine' as InternScope, label: 'Mes stagiaires', icon: cilUser, color: '#0f766e', bg: '#f0fdfa' }] : []),
     { key: 'current',      label: 'En cours',         icon: cilMediaPlay,   color: '#059669', bg: '#ecfdf5' },
@@ -102,7 +104,10 @@ const StagiairesPage = () => {
       <PageHead
         title="Stagiaires"
         subtitle={lead ? 'Suivi des stagiaires, de leurs superviseurs et de leurs binômes.' : 'Les stagiaires que vous suivez, et ceux que vous pouvez prendre en charge.'}
-        actions={<CButton color="secondary" variant="outline" size="sm" onClick={load} disabled={loading} title="Actualiser"><CIcon icon={cilReload} /></CButton>}
+        actions={<>
+          <CButton color="secondary" variant="outline" size="sm" onClick={load} disabled={loading} title="Actualiser"><CIcon icon={cilReload} /></CButton>
+          {lead && <InviteInternButton onClick={() => setInviteOpen(true)} />}
+        </>}
       />
 
       <div className="stg-cards">
@@ -149,6 +154,8 @@ const StagiairesPage = () => {
           <CButton color="link" size="sm" style={{ color: '#fff' }} onClick={() => setSelected([])}>Annuler</CButton>
         </div>
       )}
+
+      {lead && <InternInvitations open={inviteOpen} onOpenChange={setInviteOpen} onRegistered={load} />}
 
       <StageDetailModal idOrRef={openId} onClose={() => setOpenId(null)} onChanged={load} />
       {lead && <AssignModal visible={assignOpen} ids={selected} onClose={() => setAssignOpen(false)} onDone={() => { setAssignOpen(false); setSelected([]); load() }} />}

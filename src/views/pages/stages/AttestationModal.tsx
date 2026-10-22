@@ -64,7 +64,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
     setA(x)
     setEdit({ pays_naissance: x.content?.pays_naissance ?? '', type_stage: x.content?.type_stage ?? 'académique', structure: x.content?.structure ?? '' })
     setNumero(x.numero ?? '')
-    setDocDate(x.document_date ?? todayIso())
+    setDocDate(x.document_date ?? x.default_document_date ?? todayIso())
   }
 
   useEffect(() => {

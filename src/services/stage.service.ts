@@ -134,6 +134,8 @@ export interface Attestation {
   status_label: string
   numero: string | null
   document_date: string | null
+  /** Date proposée par défaut (fin de stage déclarée pour un stagiaire arrivé avant le système) */
+  default_document_date?: string
   motif_type: string | null
   motif_type_label: string | null
   motif: string | null
@@ -322,6 +324,21 @@ export interface InternListResponse {
 
 export interface Supervisor { id: number; name: string; email: string; phone: string | null; since: string; active_interns: number }
 
+export interface InternInvitation {
+  id: number
+  phone: string
+  status: 'pending' | 'used' | 'expired' | 'revoked'
+  expires_at: string
+  last_sent_at: string | null
+  send_count: number
+  used_at: string | null
+  stage_request_id: number | null
+  reference: string | null
+  intern_name: string | null
+  invited_by_name: string | null
+  created_at: string
+}
+
 export interface SupervisorInvitation {
   id: number
   phone: string
@@ -384,6 +401,12 @@ class StageService {
     HttpService.post(`${BASE}/stagiaires/superviseur`, { stage_ids: stageIds, supervisor_id: supervisorId, action })
 
   supervisors = async (): Promise<Supervisor[]> => (await HttpService.get(`${BASE}/superviseurs`)).data
+
+  // Stagiaires arrivés avant le système (invitation par numéro WhatsApp)
+  internInvitations = async (): Promise<InternInvitation[]> => (await HttpService.get(`${BASE}/invitations-stagiaires`)).data
+  inviteInterns = (numeros: string) => HttpService.post(`${BASE}/invitations-stagiaires`, { numeros })
+  resendInternInvitation = (id: number) => HttpService.post(`${BASE}/invitations-stagiaires/${id}/renvoyer`)
+  revokeInternInvitation = (id: number) => HttpService.delete(`${BASE}/invitations-stagiaires/${id}`)
 
   invitations = async (): Promise<SupervisorInvitation[]> => (await HttpService.get(`${BASE}/invitations`)).data
 

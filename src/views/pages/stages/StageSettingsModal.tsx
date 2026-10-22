@@ -140,7 +140,7 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
                 <div style={{ fontSize: '.875rem', color: '#475569' }}>
                   {form.lieu_position
                     ? `${form.lieu_position.lat}, ${form.lieu_position.lng}${accuracy !== null ? ` (précision ±${accuracy} m)` : ''}. Les pointages doivent se faire à moins de ${form.lieu_rayon} m.`
-                    : 'Tant qu\'elle n\'est pas relevée, les positions des stagiaires sont acceptées sans contrôle de distance. Relevez-la depuis le lieu de stage, avec votre téléphone.'}
+                    : 'Tant qu\'elle n\'est pas relevée, les stagiaires ne peuvent ni confirmer leur présence ni pointer. Relevez-la depuis le lieu de stage, avec votre téléphone.'}
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                   <CButton size="sm" color="primary" onClick={takePosition} disabled={locating}>

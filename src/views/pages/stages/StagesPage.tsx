@@ -45,6 +45,8 @@ const StagesPage = () => {
   const [openId, setOpenId] = useState<number | string | null>(() => params.get('ref'))
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [requestsOpen, setRequestsOpen] = useState<boolean | null>(null)
+  // Position du lieu non relevée : aucun stagiaire ne peut confirmer sa présence ni pointer.
+  const [placeMissing, setPlaceMissing] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true); setError(null)
@@ -61,7 +63,9 @@ const StagesPage = () => {
 
   useEffect(() => {
     if (!lead) return
-    stageService.getSettings().then(s => setRequestsOpen(s.requests_open)).catch(() => setRequestsOpen(null))
+    stageService.getSettings()
+      .then(s => { setRequestsOpen(s.requests_open); setPlaceMissing(!s.lieu_position) })
+      .catch(() => setRequestsOpen(null))
   }, [lead])
 
   // Recherche : déclenchée 400 ms après la frappe
@@ -106,6 +110,16 @@ const StagesPage = () => {
           )}
         </div>
       </div>
+
+      {lead && placeMissing && (
+        <div className="stg-warn" role="alert">
+          <div>
+            <strong>Position du lieu de stage non relevée</strong>
+            <div>Tant qu'elle ne l'est pas, les stagiaires ne peuvent ni confirmer leur présence ni pointer. Relevez-la depuis le lieu de stage, avec votre téléphone.</div>
+          </div>
+          <CButton color="warning" size="sm" onClick={() => setSettingsOpen(true)}>Relever la position</CButton>
+        </div>
+      )}
 
       <div className="stg-cards">
         {CARDS.map(c => (
@@ -182,12 +196,13 @@ const StagesPage = () => {
       </CCard>
 
       <StageDetailModal idOrRef={openId} onClose={closeDetail} onChanged={load} />
-      {lead && <StageSettingsModal visible={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={s => setRequestsOpen(s.requests_open)} />}
+      {lead && <StageSettingsModal visible={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={s => { setRequestsOpen(s.requests_open); setPlaceMissing(!s.lieu_position) }} />}
 
       <style>{`
         .stg-page { display: flex; flex-direction: column; gap: 14px; }
         .stg-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
         .stg-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .stg-warn { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: #fffbeb; border: 1px solid #fcd34d; color: #78350f; border-radius: 12px; padding: 12px 14px; font-size: .9rem; }
         .stg-err { background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239; border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; }
         .stg-list { display: flex; flex-direction: column; gap: 8px; }
         .stg-row {

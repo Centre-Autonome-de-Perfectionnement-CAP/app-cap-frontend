@@ -19,10 +19,15 @@ const SupervisorInvitationPage = () => {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+  // Lien rouvert après l'inscription : le compte existe déjà.
+  const [used, setUsed] = useState<string | null>(null)
 
   useEffect(() => {
     if (!/^[A-Za-z0-9]{48}$/.test(token)) { setInvalid("Ce lien d'invitation est incomplet. Ouvrez-le à nouveau depuis le message WhatsApp."); return }
-    stageService.invitationInfo(token).then(setInfo).catch(e => setInvalid(friendlyError(e)))
+    stageService.invitationInfo(token).then(setInfo).catch((e: any) => {
+      if ((e?.status ?? e?.response?.status) === 409) setUsed(friendlyError(e))
+      else setInvalid(friendlyError(e))
+    })
   }, [token])
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -53,7 +58,7 @@ const SupervisorInvitationPage = () => {
           <p style={{ margin: 0, fontSize: '.875rem', fontWeight: 800, letterSpacing: 1.4, color: '#0f766e', textTransform: 'uppercase' }}>CAP-EPAC · Stages</p>
           <h4 style={{ margin: '6px 0 4px', fontWeight: 800 }}>Créer mon compte superviseur</h4>
 
-          {!info && !invalid && <div style={{ padding: 24, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
+          {!info && !invalid && !used && <div style={{ padding: 24, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
 
           {invalid && (
             <div style={{ marginTop: 12, background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239', borderRadius: 12, padding: '12px 14px' }}>
@@ -61,10 +66,10 @@ const SupervisorInvitationPage = () => {
             </div>
           )}
 
-          {done && (
+          {(done || used) && (
             <div style={{ marginTop: 12 }}>
               <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', borderRadius: 12, padding: '12px 14px' }}>
-                Votre compte est créé. Connectez-vous avec votre email et votre mot de passe.
+                <span>{used ?? 'Votre compte est créé. Connectez-vous avec votre email et votre mot de passe.'}</span>
               </div>
               <CButton color="success" className="w-100 mt-3" style={{ color: '#fff', height: 46, fontWeight: 700 }} onClick={() => navigate(FRONTEND_ROUTES.LOGIN)}>
                 Se connecter
@@ -75,7 +80,7 @@ const SupervisorInvitationPage = () => {
           {info && !done && (
             <form onSubmit={submit} style={{ marginTop: 8 }}>
               <p style={{ color: '#475569', fontSize: '.9rem' }}>
-                {info.name ? `Bonjour ${info.name}, ` : ''}invitation reçue sur le numéro WhatsApp se terminant par <strong>{info.phone.slice(-4)}</strong>.
+                <span>{info.name ? `Bonjour ${info.name}, ` : ''}invitation reçue sur le numéro WhatsApp se terminant par </span><strong>{info.phone.slice(-4)}</strong><span>.</span>
               </p>
               <div className="mb-3">
                 <CFormLabel className="small fw-semibold">Prénom(s)</CFormLabel>
@@ -100,7 +105,7 @@ const SupervisorInvitationPage = () => {
               </div>
               {error && <div style={{ marginBottom: 12, background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239', borderRadius: 10, padding: '10px 12px', fontSize: '.88rem' }}>{error}</div>}
               <CButton type="submit" color="success" className="w-100" style={{ color: '#fff', height: 46, fontWeight: 700 }} disabled={busy}>
-                {busy && <CSpinner size="sm" className="me-2" />}Créer mon compte
+                {busy && <CSpinner size="sm" className="me-2" />}<span>Créer mon compte</span>
               </CButton>
             </form>
           )}

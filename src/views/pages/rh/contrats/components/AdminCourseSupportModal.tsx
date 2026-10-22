@@ -372,7 +372,7 @@ const AdminCourseSupportModal: React.FC<{
     return (
       <Modal
         title="Supports de cours"
-        subtitle={`Contrat N° ${contrat.contrat_number} — ${contrat.professor?.full_name ?? ''}`}
+        subtitle={`Contrat N° ${contrat.contrat_number} - ${contrat.professor?.full_name ?? ''}`}
         onClose={onClose}
         wide
         footer={<button className="ctr-btn ctr-btn-ghost" onClick={onClose}>Fermer</button>}
@@ -398,7 +398,7 @@ const AdminCourseSupportModal: React.FC<{
   return (
     <Modal
       title="Supports de cours"
-      subtitle={`Contrat N° ${contrat.contrat_number} — ${contrat.professor?.full_name ?? ''}`}
+      subtitle={`Contrat N° ${contrat.contrat_number} - ${contrat.professor?.full_name ?? ''}`}
       onClose={onClose}
       wide
       footer={<button className="ctr-btn ctr-btn-ghost" onClick={onClose}>Fermer</button>}
@@ -484,14 +484,29 @@ const AdminCourseSupportModal: React.FC<{
                         {s.title}
                       </span>
                       <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                        {s.url && (
-                          <a href={s.url} target="_blank" rel="noopener noreferrer"
-                            className="ctr-btn-icon"
-                            style={{ width: 28, height: 28, borderColor: '#bfdbfe', color: '#2563eb', background: '#eff6ff', textDecoration: 'none' }}
-                            title="Ouvrir">
-                            <IcoLink />
-                          </a>
-                        )}
+                        {/* CORRECTIF : on passe par la route API sécurisée au lieu
+                            de l'URL directe /storage/supports/... qui retournait
+                            une page blanche (PDF vide ou headers manquants). */}
+                        <button
+                          className="ctr-btn-icon"
+                          style={{ width: 28, height: 28, borderColor: '#bfdbfe', color: '#2563eb', background: '#eff6ff' }}
+                          title="Ouvrir"
+                          onClick={() => {
+                            const apiUrl = import.meta.env.VITE_API_URL || '';
+                            const token  = localStorage.getItem('token') ?? '';
+                            const url = `${apiUrl}/api/rh/contrats/${contrat.id}/programs/${currentProg?.id}/supports/${idx}/stream`;
+                            fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/pdf' } })
+                              .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.blob(); })
+                              .then(blob => {
+                                const blobUrl = URL.createObjectURL(blob);
+                                window.open(blobUrl, '_blank');
+                                setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                              })
+                              .catch(() => alert('Impossible d\'ouvrir le support.'));
+                          }}
+                        >
+                          <IcoLink />
+                        </button>
                         <button className="ctr-btn-icon"
                           style={{ width: 28, height: 28, borderColor: '#fecaca', color: '#dc2626' }}
                           disabled={deleting === idx}
@@ -523,7 +538,7 @@ const AdminCourseSupportModal: React.FC<{
 
               <div style={{ marginBottom: 10 }}>
                 <label className="ctr-label">Titre du support <span style={{ color: '#dc2626' }}>*</span></label>
-                <input className="ctr-input" placeholder="Ex : Cours Chapitre 1 — Introduction"
+                <input className="ctr-input" placeholder="Ex : Cours Chapitre 1 - Introduction"
                   value={newTitle} onChange={e => setNewTitle(e.target.value)} disabled={adding} />
               </div>
 
@@ -539,7 +554,7 @@ const AdminCourseSupportModal: React.FC<{
                         <IcoPdf />
                       </div>
                       <span style={{ fontSize: 12.5, fontWeight: 700, color: '#065f46' }}>{newFile.name}</span>
-                      <span style={{ fontSize: 11.5, color: '#6b7280' }}>{(newFile.size / 1024).toFixed(1)} Ko — Cliquer pour changer</span>
+                      <span style={{ fontSize: 11.5, color: '#6b7280' }}>{(newFile.size / 1024).toFixed(1)} Ko - Cliquer pour changer</span>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
@@ -569,7 +584,7 @@ const AdminCourseSupportModal: React.FC<{
 
             {/* En-tête avec badge */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <SectionHead icon={<IcoCoin />} label="Monographie — Programme courant" />
+              <SectionHead icon={<IcoCoin />} label="Monographie - Programme courant" />
               {mono.hasExisting && !mono.isEditing && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700, background: '#fef9c3', color: '#713f12', border: '1px solid #fde68a' }}>
                   <IcoLock /> Déjà définie
@@ -586,7 +601,7 @@ const AdminCourseSupportModal: React.FC<{
               <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 9, background: '#fffbeb', border: '1.5px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#78350f', fontWeight: 500 }}>
                   <IcoLock />
-                  Monographie déjà définie — souhaitez-vous modifier ces valeurs ?
+                  Monographie déjà définie - souhaitez-vous modifier ces valeurs ?
                 </div>
                 <button
                   className="ctr-btn"

@@ -2,7 +2,7 @@
 //
 // REFACTOR (découpage de maintenabilité, aucune régression fonctionnelle) :
 // ce fichier faisait 2573 lignes (17 composants/hooks empilés dans un seul
-// fichier). Toute la logique métier est inchangée — seule l'organisation en
+// fichier). Toute la logique métier est inchangée - seule l'organisation en
 // fichiers a changé. Le détail de chaque brique déplacée est dans
 // src/views/pages/rh/contrats/.
 import React, { useCallback, useEffect, useState } from 'react';
@@ -66,7 +66,7 @@ const Contrats: React.FC = () => {
           const u = res?.data ?? res ?? null;
           setCurrentUser(u);
         })
-        .catch(() => { /* silencieux — pas de restriction */ });
+        .catch(() => { /* silencieux - pas de restriction */ });
     });
   }, []);
 
@@ -172,9 +172,31 @@ const Contrats: React.FC = () => {
   };
 
   // ─── Ouvrir PDF stocké ───────────────────────────────────────────────────────
+  // CORRECTIF : on n'ouvre plus pdf_url (URL directe /storage/contrats/xxx.pdf
+  // qui retournait une page blanche), mais la route API sécurisée qui streame
+  // le fichier avec les bons headers Content-Type.
   const openPdf = useCallback((c: Contrat) => {
-    if (c.pdf_url) {
-      window.open(c.pdf_url, '_blank');
+    if (c.pdf_path || c.pdf_url) {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const token  = localStorage.getItem('token') ?? '';
+      // Ouvrir via la route stream (inline dans le navigateur)
+      const url = `${apiUrl}/api/rh/contrats/${c.id}/pdf`;
+      // Comme on ne peut pas passer le Bearer dans window.open, on crée un
+      // lien temporaire avec fetch + blob, ce qui contourne la limite CORS/auth.
+      fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/pdf' } })
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.blob();
+        })
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          const a = window.open(blobUrl, '_blank');
+          // Libérer le blob après ouverture
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        })
+        .catch(() => {
+          addToast('error', 'Impossible d\'ouvrir le PDF', 'Le fichier est introuvable ou inaccessible.');
+        });
     } else {
       addToast('info', 'Aucun PDF stocké',
         'Le PDF sera disponible après validation du contrat par le professeur. Vous pouvez aussi l\'uploader via le bouton "Autoriser".');
@@ -591,7 +613,7 @@ const Contrats: React.FC = () => {
                       <td>
                         <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
 
-                          {/* PDF — visible pour tous */}
+                          {/* PDF - visible pour tous */}
                           <button
                             className="ctr-btn-icon"
                             title={hasPdf ? 'Voir le PDF stocké' : 'Aperçu du contrat (PDF non encore disponible)'}
@@ -601,7 +623,7 @@ const Contrats: React.FC = () => {
                             {hasPdf ? <Icon.FilePdf /> : <Icon.FileText />}
                           </button>
 
-                          {/* Relancer / Transférer — visible mais désactivé si restreint */}
+                          {/* Relancer / Transférer - visible mais désactivé si restreint */}
                           {isCancelled ? (
                             <button
                               className="ctr-btn-icon"
@@ -634,12 +656,12 @@ const Contrats: React.FC = () => {
                             </button>
                           )}
 
-                          {/* Autoriser / Upload — visible mais désactivé si restreint */}
+                          {/* Autoriser / Upload - visible mais désactivé si restreint */}
                           <button
                             className="ctr-btn-icon"
                             title={
                               isRestricted ? "Droit d'accès non requis"
-                                : isAuthorized ? 'Contrat déjà autorisé — uploader un nouveau PDF'
+                                : isAuthorized ? 'Contrat déjà autorisé - uploader un nouveau PDF'
                                 : isValidated ? 'Autoriser le contrat / Uploader le PDF final'
                                 : "Le contrat doit d'abord être signé par le professeur"
                             }
@@ -658,7 +680,7 @@ const Contrats: React.FC = () => {
                           {/* Supports de cours & Monographies */}
                           <button
                             className="ctr-btn-icon"
-                            title="Supports de cours & Monographies — voir et gérer les PDFs et monographies"
+                            title="Supports de cours & Monographies - voir et gérer les PDFs et monographies"
                             onClick={() => {
                               setSupportContrat(c);
                               setModalOpenKey(k => k + 1);
@@ -668,12 +690,12 @@ const Contrats: React.FC = () => {
                             <Icon.BookOpen />
                           </button>
 
-                          {/* Modifier — visible mais désactivé si restreint */}
+                          {/* Modifier - visible mais désactivé si restreint */}
                           <button
                             className="ctr-btn-icon"
                             title={
                               isRestricted ? "Droit d'accès non requis"
-                                : isLocked ? 'Contrat verrouillé — modification impossible'
+                                : isLocked ? 'Contrat verrouillé - modification impossible'
                                 : 'Modifier'
                             }
                             disabled={isLocked || isRestricted}
@@ -683,12 +705,12 @@ const Contrats: React.FC = () => {
                             <Icon.Edit />
                           </button>
 
-                          {/* Supprimer — visible mais désactivé si restreint */}
+                          {/* Supprimer - visible mais désactivé si restreint */}
                           <button
                             className="ctr-btn-icon"
                             title={
                               isRestricted ? "Droit d'accès non requis"
-                                : isLocked ? 'Contrat verrouillé — suppression impossible'
+                                : isLocked ? 'Contrat verrouillé - suppression impossible'
                                 : 'Supprimer'
                             }
                             disabled={isLocked || isRestricted}
@@ -769,7 +791,7 @@ const Contrats: React.FC = () => {
         />
       )}
 
-      {/* Modal accès refusé — role_id = 3 sur bouton supports */}
+      {/* Modal accès refusé - role_id = 3 sur bouton supports */}
       {showAccessDenied && (
         <div className="ctr-modal-backdrop" onClick={() => setShowAccessDenied(false)}>
           <div className="ctr-modal" style={{ width: 'min(90vw, 420px)' }} onClick={e => e.stopPropagation()}>

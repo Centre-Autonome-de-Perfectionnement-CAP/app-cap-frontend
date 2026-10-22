@@ -69,6 +69,34 @@ const formatDate = (date?: string) =>
 const formatAmount = (amount: number) =>
   new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
 
+// ─── Composant SignatureImage (charge via API sécurisée) ──────────────────────
+// Évite le 403 sur /storage/contrats/.../signature.png (Nginx refuse ce chemin)
+
+const SignatureImage = ({ contratId }: { contratId: number }) => {
+  const [src, setSrc] = useState<string | null>(null)
+
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL || ''
+    const token  = localStorage.getItem('token') ?? ''
+    fetch(`${apiUrl}/api/rh/contrats/${contratId}/signature`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.blob() })
+      .then(blob => setSrc(URL.createObjectURL(blob)))
+      .catch(() => setSrc(null))
+    return () => { if (src) URL.revokeObjectURL(src) }
+  }, [contratId])
+
+  if (!src) return null
+  return (
+    <img
+      src={src}
+      alt="Votre signature"
+      style={{ maxWidth: '280px', maxHeight: '120px', objectFit: 'contain', border: '1px solid #d0e8d0', borderRadius: '8px', background: '#f8fff8', padding: '12px' }}
+    />
+  )
+}
+
 // ─── Composant SignatureCanvas ─────────────────────────────────────────────────
 
 interface SignatureCanvasProps {
@@ -223,7 +251,7 @@ const SignatureUpload = ({ onFileChange, previewUrl }: SignatureUploadProps) => 
           <>
             <CIcon icon={cilImage} size="3xl" className="text-muted mb-2" />
             <p className="mb-1 fw-semibold" style={{ color: '#1a3a8f' }}>Cliquez ou glissez votre image ici</p>
-            <p className="text-muted mb-0" style={{ fontSize: '0.82rem' }}>PNG, JPG, JPEG — maximum <strong>100 Ko</strong></p>
+            <p className="text-muted mb-0" style={{ fontSize: '0.82rem' }}>PNG, JPG, JPEG - maximum <strong>100 Ko</strong></p>
           </>
         )}
       </div>
@@ -344,7 +372,7 @@ const SignatureModal = ({ visible, contratNumber, onClose, onConfirm, loading }:
               <div className="mt-3 text-center">
                 <small className="text-success fw-semibold">
                   <CIcon icon={cilCheckCircle} size="sm" className="me-1" />
-                  Signature capturée — aperçu :
+                  Signature capturée - aperçu :
                 </small>
                 <div className="mt-2">
                   <img src={drawnData} alt="Aperçu signature"
@@ -423,7 +451,7 @@ const ProfessorContratDetail = () => {
   const [rejectionError, setRejectionError]   = useState<string | null>(null);
 
   // ── Modal supports : 'closed' | 'prompt' (choix) | 'form' (ajout)
-  // Un seul CModal, deux étapes — évite les conflits de transition CoreUI
+  // Un seul CModal, deux étapes - évite les conflits de transition CoreUI
   const [courseSupportStep, setCourseSupportStep] = useState<'closed' | 'prompt' | 'form'>('closed');
 
   // ─── Chargement du contrat ─────────────────────────────────────────────────
@@ -560,11 +588,9 @@ const ProfessorContratDetail = () => {
   const handleDownload = async () => {
     if (!uuid || !contrat) return;
 
-    if ((contrat as any).pdf_url) {
-      window.open((contrat as any).pdf_url, '_blank');
-      return;
-    }
-
+    // CORRECTIF : on ne passe plus par pdf_url (URL directe /storage/...
+    // qui retournait une page blanche). On utilise toujours la route
+    // by-token/download qui streame le fichier avec les bons headers.
     setDownloadLoading(true);
     setError(null);
     try {
@@ -773,7 +799,7 @@ const ProfessorContratDetail = () => {
                         <tr><th>N° IFU</th><td>{contrat.professor.ifu_number ?? '—'}</td></tr>
                         <tr>
                           <th>N° RIB / Banque</th>
-                          <td>{contrat.professor.rib_number ? `${contrat.professor.rib_number} — ${contrat.professor.bank ?? ''}` : '—'}</td>
+                          <td>{contrat.professor.rib_number ? `${contrat.professor.rib_number} - ${contrat.professor.bank ?? ''}` : '—'}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -786,18 +812,16 @@ const ProfessorContratDetail = () => {
           </CRow>
 
           {/* Signature existante */}
-          {contrat.is_validated && (contrat as any).professor_signature_url && (
+          {contrat.is_validated && (contrat as any).professor_signature_path && (
             <CCard className="mb-3 border-success">
               <CCardHeader className="bg-success bg-opacity-10 text-success fw-semibold">
                 <CIcon icon={cilCheckCircle} className="me-2" />
                 Signature électronique enregistrée
               </CCardHeader>
               <CCardBody className="text-center py-3">
-                <img
-                  src={(contrat as any).professor_signature_url}
-                  alt="Votre signature"
-                  style={{ maxWidth: '280px', maxHeight: '120px', objectFit: 'contain', border: '1px solid #d0e8d0', borderRadius: '8px', background: '#f8fff8', padding: '12px' }}
-                />
+                {/* CORRECTIF : professor_signature_url est une URL directe /storage/...
+                    qui retourne 403. On charge via la route API sécurisée. */}
+                <SignatureImage contratId={contrat.id} />
                 {(contrat as any).professor_signed_at && (
                   <p className="text-muted mt-2 mb-0" style={{ fontSize: '0.82rem' }}>
                     Signé le {formatDate((contrat as any).professor_signed_at)}
@@ -817,7 +841,7 @@ const ProfessorContratDetail = () => {
             <CCard className="mb-3 border-warning">
               <CCardHeader className="bg-warning bg-opacity-10 text-warning fw-semibold">
                 <CIcon icon={cilPrint} className="me-2" />
-                Validation acceptée — signature manuelle requise
+                Validation acceptée - signature manuelle requise
               </CCardHeader>
               <CCardBody>
                 <p className="mb-0 text-muted" style={{ fontSize: '0.88rem' }}>
@@ -949,7 +973,7 @@ const ProfessorContratDetail = () => {
       </CModal>
 
       {/* ───────────────────────────────────────────────────────────────────────
-           Modal supports de cours — deux étapes dans UN SEUL CModal
+           Modal supports de cours - deux étapes dans UN SEUL CModal
            Étape 'prompt' : demande si le prof veut ajouter maintenant ou plus tard
            Étape 'form'   : formulaire d'ajout (CourseSupportModal inline)
            → Aucune fermeture/réouverture : évite les conflits de transition CoreUI
@@ -997,7 +1021,7 @@ const ProfessorContratDetail = () => {
                       <li key={i}>
                         <span className="fw-medium">{p.course_element?.name ?? p.label}</span>
                         {p.class_group?.group_name
-                          ? <span className="text-muted"> — {p.class_group.group_name}</span>
+                          ? <span className="text-muted"> - {p.class_group.group_name}</span>
                           : null}
                       </li>
                     ))}
@@ -1016,7 +1040,7 @@ const ProfessorContratDetail = () => {
               </CButton>
               <CButton color="primary" onClick={handleCourseSupportContinue} style={{ minWidth: 220 }}>
                 <CIcon icon={cilBook} className="me-2" />
-                Continuer — Ajouter les supports
+                Continuer - Ajouter les supports
               </CButton>
             </CModalFooter>
           </>

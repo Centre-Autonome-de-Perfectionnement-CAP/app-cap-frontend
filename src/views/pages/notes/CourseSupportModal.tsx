@@ -211,7 +211,7 @@ const CourseSupportModal = ({ visible, onClose, contrat, inlineMode = false }: P
       <CModalHeader>
         <CModalTitle>
           <CIcon icon={cilFile} className="me-2" />
-          Supports de cours — Contrat N° {contrat.contrat_number}
+          Supports de cours - Contrat N° {contrat.contrat_number}
         </CModalTitle>
       </CModalHeader>
 
@@ -296,20 +296,31 @@ const CourseSupportModal = ({ visible, onClose, contrat, inlineMode = false }: P
                         <span className="text-truncate fw-medium">{support.title}</span>
                       </div>
                       <div className="d-flex gap-1 flex-shrink-0">
-                        {support.url && (
-                          <CButton
-                            size="sm"
-                            color="primary"
-                            variant="outline"
-                            href={support.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Ouvrir le PDF"
-                          >
-                            <CIcon icon={cilExternalLink} className="me-1" />
-                            Ouvrir
-                          </CButton>
-                        )}
+                        {/* CORRECTIF : fetch+blob via route stream sécurisée
+                            au lieu de href={support.url} (URL directe /storage/
+                            qui retournait une page blanche) */}
+                        <CButton
+                          size="sm"
+                          color="primary"
+                          variant="outline"
+                          title="Ouvrir le PDF"
+                          onClick={() => {
+                            const apiUrl = import.meta.env.VITE_API_URL || ''
+                            const token  = localStorage.getItem('token') ?? ''
+                            const url    = `${apiUrl}/api/rh/contrats/${contrat.id}/programs/${currentProgram?.id}/supports/${idx}/stream`
+                            fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/pdf' } })
+                              .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.blob() })
+                              .then(blob => {
+                                const blobUrl = URL.createObjectURL(blob)
+                                window.open(blobUrl, '_blank')
+                                setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
+                              })
+                              .catch(() => alert('Impossible d\'ouvrir le support.'))
+                          }}
+                        >
+                          <CIcon icon={cilExternalLink} className="me-1" />
+                          Ouvrir
+                        </CButton>
                         <CButton
                           size="sm"
                           color="danger"
@@ -350,7 +361,7 @@ const CourseSupportModal = ({ visible, onClose, contrat, inlineMode = false }: P
               <div className="mb-3">
                 <CFormLabel>Titre du support <span className="text-danger">*</span></CFormLabel>
                 <CFormInput
-                  placeholder="Ex : Cours Chapitre 1 — Introduction"
+                  placeholder="Ex : Cours Chapitre 1 - Introduction"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   disabled={adding}
@@ -425,7 +436,7 @@ const CourseSupportModal = ({ visible, onClose, contrat, inlineMode = false }: P
     </>
   )
 
-  // En mode inline, on est déjà dans un CModal parent — on rend juste le contenu
+  // En mode inline, on est déjà dans un CModal parent - on rend juste le contenu
   if (inlineMode) return modalContent
 
   return (

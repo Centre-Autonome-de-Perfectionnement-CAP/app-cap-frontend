@@ -50,13 +50,30 @@ const formatDate = (d?: string) =>
 
 // ─── Composant fichier ────────────────────────────────────────────────────────
 
-const FichierBadge: React.FC<{ fichier: FactureFile }> = ({ fichier }) => {
+const FichierBadge: React.FC<{ fichier: FactureFile; contratId: number; index: number }> = ({ fichier, contratId, index }) => {
   const cfg = TYPE_CONFIG[fichier.type] ?? TYPE_CONFIG.autre
+
+  // CORRECTIF : on n'ouvre plus fichier.url (URL directe /storage/...
+  // qui retourne une page blanche). On passe par la route API stream
+  // avec le token Bearer via fetch+blob.
+  const handleOpen = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || ''
+    const token  = localStorage.getItem('token') ?? ''
+    const url    = `${apiUrl}/api/rh/contrats/${contratId}/factures/${index}/stream`
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.blob() })
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob)
+        window.open(blobUrl, '_blank')
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
+      })
+      .catch(() => alert('Impossible d\'ouvrir le fichier.'))
+  }
+
   return (
-    <a
-      href={fichier.url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <button
+      type="button"
+      onClick={handleOpen}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -68,8 +85,7 @@ const FichierBadge: React.FC<{ fichier: FactureFile }> = ({ fichier }) => {
         color: cfg.color,
         fontSize: 12,
         fontWeight: 600,
-        textDecoration: 'none',
-        transition: 'all .15s',
+        cursor: 'pointer',
         marginRight: 6,
         marginBottom: 4,
       }}
@@ -78,7 +94,7 @@ const FichierBadge: React.FC<{ fichier: FactureFile }> = ({ fichier }) => {
       <CIcon icon={cfg.icon} style={{ width: 13, height: 13 }} />
       {cfg.label}
       <CIcon icon={cilExternalLink} style={{ width: 11, height: 11, opacity: 0.7 }} />
-    </a>
+    </button>
   )
 }
 
@@ -127,7 +143,7 @@ const MesFactures: React.FC = () => {
             Mes Factures Normalisées
           </h4>
           <p style={{ color: '#718096', margin: '4px 0 0', fontSize: 14 }}>
-            {loading ? '…' : `${entries.length} contrat${entries.length > 1 ? 's' : ''} — ${totalFichiers} fichier${totalFichiers > 1 ? 's' : ''} déposé${totalFichiers > 1 ? 's' : ''}`}
+            {loading ? '…' : `${entries.length} contrat${entries.length > 1 ? 's' : ''} - ${totalFichiers} fichier${totalFichiers > 1 ? 's' : ''} déposé${totalFichiers > 1 ? 's' : ''}`}
           </p>
         </div>
         <CButton
@@ -259,7 +275,7 @@ const MesFactures: React.FC = () => {
                       <CTableDataCell style={{ maxWidth: 280 }}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0 }}>
                           {entry.factures.map((f, i) => (
-                            <FichierBadge key={i} fichier={f} />
+                            <FichierBadge key={i} fichier={f} contratId={entry.id} index={i} />
                           ))}
                         </div>
                       </CTableDataCell>

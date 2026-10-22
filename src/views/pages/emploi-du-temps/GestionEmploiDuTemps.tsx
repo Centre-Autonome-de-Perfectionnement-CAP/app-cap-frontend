@@ -30,7 +30,7 @@ axios.interceptors.request.use(
 )
 
 // ─── URLs centralisées ────────────────────────────────────────────────────────
-// Respecte VITE_API_URL comme http.service.ts — évite le hardcode localhost
+// Respecte VITE_API_URL comme http.service.ts - évite le hardcode localhost
 // qui cassait ce module hors environnement de dev local.
 const API_BASE = (import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:8001') + '/api'
 const API_ROOT = `${API_BASE}/emploi-du-temps`          // bâtiments, salles, selects…
@@ -291,7 +291,12 @@ const GestionEmploiDuTemps: React.FC = () => {
 
   const openCreate = () => {
     setEditRecord(null)
-    setForm({ ...EMPTY_FORM })
+    const currentAy = academicYears.find(ay => ay.is_current) ?? academicYears[0]
+    const initialAyId = currentAy ? String(currentAy.id) : ''
+    setForm({
+      ...EMPTY_FORM,
+      academic_year_id: initialAyId,
+    })
     setFormClassGroups([]); setFormPrograms([])
     setFormErrors({}); setConflicts([])
     setShowModal(true)
@@ -496,7 +501,7 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={6} md={4}>
                 <CFormSelect size="sm" value={filters.academic_year_id}
                   onChange={e => setFilters(f => ({ ...f, academic_year_id: e.target.value, class_group_id: '' }))}>
-                  <option value="">— Année académique —</option>
+                  <option value="">- Année académique -</option>
                   {academicYears.map(ay => (
                     <option key={ay.id} value={ay.id}>{ay.libelle ?? ay.academic_year}{ay.is_current ? ' ★' : ''}</option>
                   ))}
@@ -507,7 +512,7 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={6} md={4}>
                 <CFormSelect size="sm" value={filters.department_id}
                   onChange={e => setFilters(f => ({ ...f, department_id: e.target.value, class_group_id: '' }))}>
-                  <option value="">— Département —</option>
+                  <option value="">- Département -</option>
                   {departments.map(d => <option key={d.id} value={d.id}>{d.name} ({d.abbreviation})</option>)}
                 </CFormSelect>
               </CCol>
@@ -516,9 +521,9 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={6} md={3}>
                 <CFormSelect size="sm" value={filters.class_group_id}
                   onChange={e => setFilters(f => ({ ...f, class_group_id: e.target.value }))}>
-                  <option value="">— Classe —</option>
+                  <option value="">- Classe -</option>
                   {filterClassGroups.map(c => (
-                    <option key={c.id} value={c.id}>{c.group_name} — {c.study_level}</option>
+                    <option key={c.id} value={c.id}>{c.group_name} - {c.study_level}</option>
                   ))}
                 </CFormSelect>
               </CCol>
@@ -527,7 +532,7 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={6} md={2}>
                 <CFormSelect size="sm" value={filters.day_of_week}
                   onChange={e => setFilters(f => ({ ...f, day_of_week: e.target.value }))}>
-                  <option value="">— Jour —</option>
+                  <option value="">- Jour -</option>
                   {DAYS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                 </CFormSelect>
               </CCol>
@@ -548,7 +553,7 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={6} md={3}>
                 <CFormSelect size="sm" value={filters.building_id}
                   onChange={e => setFilters(f => ({ ...f, building_id: e.target.value, room_id: '' }))}>
-                  <option value="">— Bâtiment —</option>
+                  <option value="">- Bâtiment -</option>
                   {buildings.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
                 </CFormSelect>
               </CCol>
@@ -557,7 +562,7 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={6} md={3}>
                 <CFormSelect size="sm" value={filters.room_id}
                   onChange={e => setFilters(f => ({ ...f, room_id: e.target.value }))}>
-                  <option value="">— Salle —</option>
+                  <option value="">- Salle -</option>
                   {filterRoomsList.map(r => <option key={r.id} value={r.id}>{r.name} ({r.code})</option>)}
                 </CFormSelect>
               </CCol>
@@ -566,7 +571,7 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={6} md={3}>
                 <CFormSelect size="sm" value={filters.professor_id}
                   onChange={e => setFilters(f => ({ ...f, professor_id: e.target.value }))}>
-                  <option value="">— Professeur —</option>
+                  <option value="">- Professeur -</option>
                   {professors.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
                 </CFormSelect>
               </CCol>
@@ -575,7 +580,7 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={6} md={3}>
                 <CFormSelect size="sm" value={filters.course_element_id}
                   onChange={e => setFilters(f => ({ ...f, course_element_id: e.target.value }))}>
-                  <option value="">— Élément de cours —</option>
+                  <option value="">- Élément de cours -</option>
                   {courseElements.map(c => <option key={c.id} value={c.id}>{c.name} ({c.code})</option>)}
                 </CFormSelect>
               </CCol>
@@ -584,7 +589,7 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={4} md={2}>
                 <CFormSelect size="sm" value={filters.is_active}
                   onChange={e => setFilters(f => ({ ...f, is_active: e.target.value }))}>
-                  <option value="">— Statut —</option>
+                  <option value="">- Statut -</option>
                   <option value="true">Actif</option>
                   <option value="false">Inactif</option>
                 </CFormSelect>
@@ -594,7 +599,7 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={4} md={2}>
                 <CFormSelect size="sm" value={filters.is_cancelled}
                   onChange={e => setFilters(f => ({ ...f, is_cancelled: e.target.value }))}>
-                  <option value="">— Annulation —</option>
+                  <option value="">- Annulation -</option>
                   <option value="false">Non annulé</option>
                   <option value="true">Annulé</option>
                 </CFormSelect>
@@ -604,7 +609,7 @@ const GestionEmploiDuTemps: React.FC = () => {
               <CCol xs={12} sm={4} md={2}>
                 <CFormSelect size="sm" value={filters.is_recurring}
                   onChange={e => setFilters(f => ({ ...f, is_recurring: e.target.value }))}>
-                  <option value="">— Récurrence —</option>
+                  <option value="">- Récurrence -</option>
                   <option value="true">Récurrent</option>
                   <option value="false">Ponctuel</option>
                 </CFormSelect>
@@ -803,7 +808,7 @@ const GestionEmploiDuTemps: React.FC = () => {
                 <CFormSelect value={form.academic_year_id}
                   onChange={e => handleFormChange('academic_year_id', e.target.value)}
                   invalid={!!formErrors.academic_year_id}>
-                  <option value="">— Sélectionner —</option>
+                  <option value="">- Sélectionner -</option>
                   {academicYears.map(ay => (
                     <option key={ay.id} value={ay.id}>
                       {ay.libelle ?? ay.academic_year}{ay.is_current ? ' ★' : ''}
@@ -821,7 +826,7 @@ const GestionEmploiDuTemps: React.FC = () => {
                 <CFormSelect value={form.department_id}
                   onChange={e => handleFormChange('department_id', e.target.value)}
                   invalid={!!formErrors.department_id}>
-                  <option value="">— Sélectionner —</option>
+                  <option value="">- Sélectionner -</option>
                   {departments.map(d => (
                     <option key={d.id} value={d.id}>{d.name} ({d.abbreviation})</option>
                   ))}
@@ -841,13 +846,13 @@ const GestionEmploiDuTemps: React.FC = () => {
                   invalid={!!formErrors.class_group_id}>
                   <option value="">
                     {!form.academic_year_id || !form.department_id
-                      ? "— Sélectionnez d'abord l'année et le département —"
+                      ? "- Sélectionnez d'abord l'année et le département -"
                       : classGroupsLoading ? 'Chargement…'
-                      : formClassGroups.length === 0 ? '— Aucune classe disponible —'
-                      : '— Sélectionner une classe —'}
+                      : formClassGroups.length === 0 ? '- Aucune classe disponible -'
+                      : '- Sélectionner une classe -'}
                   </option>
                   {formClassGroups.map(c => (
-                    <option key={c.id} value={c.id}>{c.group_name} — {c.study_level}</option>
+                    <option key={c.id} value={c.id}>{c.group_name} - {c.study_level}</option>
                   ))}
                 </CFormSelect>
                 {formErrors.class_group_id && <div className="invalid-feedback d-block">{formErrors.class_group_id}</div>}
@@ -864,15 +869,15 @@ const GestionEmploiDuTemps: React.FC = () => {
                   disabled={!form.class_group_id || programsLoading}
                   invalid={!!formErrors.program_id}>
                   <option value="">
-                    {!form.class_group_id ? "— Sélectionnez d'abord une classe —"
+                    {!form.class_group_id ? "- Sélectionnez d'abord une classe -"
                       : programsLoading ? 'Chargement…'
-                      : formPrograms.length === 0 ? '— Aucun programme pour cette classe —'
-                      : '— Sélectionner —'}
+                      : formPrograms.length === 0 ? '- Aucun programme pour cette classe -'
+                      : '- Sélectionner -'}
                   </option>
                   {formPrograms.map(p => (
                     <option key={p.id} value={p.id}>
                       {p.course_element?.name ?? `Programme #${p.id}`}
-                      {p.professor ? ` — ${p.professor.first_name} ${p.professor.last_name}` : ''}
+                      {p.professor ? ` - ${p.professor.first_name} ${p.professor.last_name}` : ''}
                       {p.semester ? ` (S${p.semester})` : ''}
                     </option>
                   ))}
@@ -887,7 +892,7 @@ const GestionEmploiDuTemps: React.FC = () => {
                 </CFormLabel>
                 <CFormSelect value={form.building_id}
                   onChange={e => handleFormChange('building_id', e.target.value)}>
-                  <option value="">— Sélectionner —</option>
+                  <option value="">- Sélectionner -</option>
                   {buildings.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
                 </CFormSelect>
               </CCol>
@@ -902,12 +907,12 @@ const GestionEmploiDuTemps: React.FC = () => {
                   disabled={!form.building_id}
                   invalid={!!formErrors.room_id}>
                   <option value="">
-                    {!form.building_id ? "— Sélectionnez d'abord un bâtiment —"
-                      : filteredRooms.length === 0 ? '— Aucune salle dans ce bâtiment —'
-                      : '— Sélectionner une salle —'}
+                    {!form.building_id ? "- Sélectionnez d'abord un bâtiment -"
+                      : filteredRooms.length === 0 ? '- Aucune salle dans ce bâtiment -'
+                      : '- Sélectionner une salle -'}
                   </option>
                   {filteredRooms.map(r => (
-                    <option key={r.id} value={r.id}>{r.name} ({r.code}) — {r.capacity} places</option>
+                    <option key={r.id} value={r.id}>{r.name} ({r.code}) - {r.capacity} places</option>
                   ))}
                 </CFormSelect>
                 {formErrors.room_id && <div className="invalid-feedback d-block">{formErrors.room_id}</div>}
@@ -921,7 +926,7 @@ const GestionEmploiDuTemps: React.FC = () => {
                 <CFormSelect value={form.day_of_week}
                   onChange={e => handleFormChange('day_of_week', e.target.value)}
                   invalid={!!formErrors.day_of_week}>
-                  <option value="">— Sélectionner —</option>
+                  <option value="">- Sélectionner -</option>
                   {DAYS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                 </CFormSelect>
                 {formErrors.day_of_week && <div className="invalid-feedback d-block">{formErrors.day_of_week}</div>}
@@ -1008,7 +1013,7 @@ const GestionEmploiDuTemps: React.FC = () => {
             <div className="p-2 rounded bg-light small text-muted">
               <strong>{deleteTarget.program?.course_element?.name ?? 'Ce cours'}</strong>
               <br />
-              {DAY_LABEL[deleteTarget.day_of_week]} — {deleteTarget.start_time} → {deleteTarget.end_time}
+              {DAY_LABEL[deleteTarget.day_of_week]} - {deleteTarget.start_time} → {deleteTarget.end_time}
               {deleteTarget.class_group && <><br />{deleteTarget.class_group.group_name}</>}
             </div>
           )}

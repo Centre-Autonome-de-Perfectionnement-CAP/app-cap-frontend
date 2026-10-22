@@ -18,3 +18,10 @@ export const localFileFrom = (res: any, fallbackName: string, forcedMime?: strin
   const mime = forcedMime ?? String(res.mime || 'application/octet-stream')
   return { url: base64ToBlobUrl(res.content, mime), name: String(res.name || fallbackName), mime }
 }
+
+/** Enregistre un fichier local (URL blob) sous le nom donné. */
+export const saveLocalFile = (url: string, name: string): void => {
+  const a = document.createElement('a')
+  a.href = url; a.download = name
+  document.body.appendChild(a); a.click(); a.remove()
+}

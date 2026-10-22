@@ -1,17 +1,18 @@
 // src/views/pages/stages/ReportModal.tsx
-// Lecture d'un rapport : PDF affiché dans la page, versions, échanges,
-// décisions ; commenter, valider ou demander une correction.
+// Lecture d'un rapport dans le visualiseur commun (ViewerFrame) : versions,
+// échanges et décisions dans le panneau latéral ; commenter, valider ou
+// demander une correction.
 
 import { useCallback, useEffect, useState } from 'react'
-import {
-  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton, CSpinner, CFormTextarea, CFormSelect,
-} from '@coreui/react'
+import { CButton, CSpinner, CFormTextarea } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilCheckAlt, cilPencil, cilCommentBubble } from '@coreui/icons'
-import PdfViewer from '@/components/document-request/PdfViewer'
+import ViewerFrame from '@/components/document-request/ViewerFrame'
+import { saveLocalFile } from '@/utils/base64File'
 import stageService, { type ReportDetail } from '@/services/stage.service'
 import { showSuccess, friendlyError } from '@/components/common/ActionResult'
 import { frDateTime } from './stageUtils'
+import { Pill } from './StagesUi'
 
 const STATUS_COLOR: Record<string, { color: string; bg: string }> = {
   submitted:           { color: '#2563eb', bg: '#eff6ff' },
@@ -51,19 +52,7 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
     return () => { alive = false; if (url) URL.revokeObjectURL(url) }
   }, [d?.id, version]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Échap ferme seulement ce rapport (pas la fiche ouverte dessous).
-  useEffect(() => {
-    if (reportId === null) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); onClose() } }
-    window.addEventListener('keydown', onKey, true)
-    return () => window.removeEventListener('keydown', onKey, true)
-  }, [reportId, onClose])
-
-  const download = useCallback(() => {
-    if (!file) return
-    const a = document.createElement('a'); a.href = file.url; a.download = file.name
-    document.body.appendChild(a); a.click(); a.remove()
-  }, [file])
+  const download = useCallback(() => { if (file) saveLocalFile(file.url, file.name) }, [file])
 
   const decide = async () => {
     if (!d || mode === 'view') return
@@ -101,92 +90,75 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
     ...d.reviews.map(r => ({ at: r.at, el: <><strong style={{ color: r.decision === 'approved' ? '#059669' : '#ea580c' }}>{r.decision === 'approved' ? 'Validé' : 'À corriger'}</strong> par {r.name} ({r.role}, v{r.version}){r.comment ? <div style={{ whiteSpace: 'pre-line' }}>{r.comment}</div> : null}</> })),
   ].sort((a, b) => a.at.localeCompare(b.at)) : []
 
+  if (reportId === null) return null
+
+  // Versions, de la plus récente à la plus ancienne
+  const versions = d ? [...d.versions].reverse() : []
+  const vIndex = Math.max(0, versions.findIndex(v => v.version === version))
+
   return (
-    <CModal visible={reportId !== null} onClose={onClose} fullscreen alignment="center" keyboard={false}>
-      <CModalHeader>
-        <CModalTitle style={{ fontSize: '1rem', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {d ? <>{d.label}<span style={{ color: '#64748b', fontWeight: 600 }}>- {d.stage?.nom_complet}</span>
-            {st && <span className="stg-pill" style={{ color: st.color, background: st.bg }}>{d.status_label}</span>}
-            {d.late && <span className="stg-pill" style={{ color: '#b45309', background: '#fef3c7' }}>En retard</span>}
-            {d.correction_status === 'pending' && <span className="stg-pill" style={{ color: '#1d4ed8', background: '#dbeafe' }}>Version corrigée après soutenance à relire</span>}</> : 'Rapport'}
-        </CModalTitle>
-      </CModalHeader>
-      <CModalBody style={{ padding: 0, display: 'flex', minHeight: 0, background: '#f1f5f9' }}>
-        {!d && !err && <div style={{ margin: 'auto' }}><CSpinner color="primary" /></div>}
-        {err && !d && <div style={{ margin: 'auto', color: '#be123c' }}>{err}</div>}
-        {d && (
-          <div className="rpt-wrap">
-            <div className="rpt-doc">
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 12px', background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
-                <CFormSelect size="sm" style={{ maxWidth: 220 }} value={version} onChange={e => setVersion(Number(e.target.value))}>
-                  {[...d.versions].reverse().map(v => <option key={v.version} value={v.version}>Version {v.version}{v.post_defense ? ' - après soutenance' : ''}{v.version === d.official_version ? ' (officielle)' : v.version === d.current_version ? ' (actuelle)' : ''}</option>)}
-                </CFormSelect>
-                <CButton size="sm" color="primary" variant="outline" className="ms-auto" disabled={!file} onClick={download}>Télécharger</CButton>
-              </div>
-              {fileErr && <div style={{ padding: 24, color: '#be123c' }}>{fileErr}</div>}
-              {!file && !fileErr && <div style={{ padding: 40, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
-              {file && <PdfViewer src={file.url} title={file.name} onDownload={download} />}
-            </div>
-            <aside className="rpt-side">
-              <div style={{ fontWeight: 800, marginBottom: 8 }}>Historique</div>
-              <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {events.map((e, i) => (
-                  <li key={i} style={{ fontSize: '.875rem', background: '#f8fafc', borderRadius: 10, padding: '8px 10px' }}>
-                    {e.el}
-                    <div style={{ fontSize: '.875rem', color: '#94a3b8', marginTop: 2 }}>{frDateTime(e.at)}</div>
-                  </li>
-                ))}
-              </ol>
-              <div style={{ marginTop: 12 }}>
-                <CFormTextarea rows={2} maxLength={2000} placeholder="Commenter (le stagiaire est prévenu)…" value={comment} onChange={e => setComment(e.target.value)} />
-                <CButton size="sm" color="secondary" variant="outline" className="mt-2" disabled={busy || !comment.trim()} onClick={sendComment}>
-                  <CIcon icon={cilCommentBubble} className="me-1" />Envoyer
-                </CButton>
-              </div>
-              {mode !== 'view' && (
-                <div style={{ marginTop: 14, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
-                  <div style={{ fontWeight: 700 }}>{d.correction_status === 'pending'
-                    ? (mode === 'approved' ? 'Valider la version corrigée' : 'Ne pas retenir la version corrigée')
-                    : (mode === 'approved' ? 'Valider ce rapport' : 'Demander une correction')}</div>
-                  {d.correction_status === 'pending' && (
-                    <div style={{ fontSize: '.875rem', color: '#475569', marginTop: 4 }}>
-                      Le rapport reste validé dans tous les cas (attestation comprise). Validée, cette version devient la version officielle.
-                    </div>
-                  )}
-                  <CFormTextarea className="mt-2" rows={3} maxLength={2000} value={text} onChange={e => setText(e.target.value)}
-                    placeholder={mode === 'approved' ? 'Commentaire (facultatif)' : 'Ce qui doit être corrigé (obligatoire)'} />
+    <ViewerFrame
+      title={d ? `${d.label} - ${d.stage?.nom_complet ?? ''}` : 'Rapport'}
+      badge={d && <>
+        {st && <Pill color={st.color} bg={st.bg}>{d.status_label}</Pill>}
+        {d.late && <Pill color="#b45309" bg="#fef3c7">En retard</Pill>}
+        {d.correction_status === 'pending' && <Pill color="#1d4ed8" bg="#dbeafe">Version corrigée après soutenance à relire</Pill>}
+      </>}
+      items={versions.map(v => ({
+        id: String(v.version),
+        label: `Version ${v.version}${v.post_defense ? ' - après soutenance' : ''}${v.version === d?.official_version ? ' (officielle)' : v.version === d?.current_version ? ' (actuelle)' : ''}`,
+      }))}
+      index={vIndex}
+      onIndex={i => setVersion(versions[i]?.version ?? version)}
+      loading={(!d && !err) || (!!d && !file && !fileErr)}
+      error={d ? fileErr : err}
+      file={file ? { url: file.url, kind: 'pdf' } : null}
+      onDownload={download}
+      onClose={onClose}
+      sidebar={d && (
+        <div style={{ paddingRight: 16, paddingTop: 4 }}>
+          <div style={{ fontWeight: 800, marginBottom: 8 }}>Historique</div>
+          <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {events.map((e, i) => (
+              <li key={i} style={{ fontSize: '.875rem', background: '#f8fafc', borderRadius: 10, padding: '8px 10px' }}>
+                {e.el}
+                <div style={{ fontSize: '.875rem', color: '#64748b', marginTop: 2 }}>{frDateTime(e.at)}</div>
+              </li>
+            ))}
+          </ol>
+          <div style={{ marginTop: 12 }}>
+            <CFormTextarea rows={2} maxLength={2000} placeholder="Commenter (le stagiaire est prévenu)…" value={comment} onChange={e => setComment(e.target.value)} />
+            <CButton size="sm" color="secondary" variant="outline" className="mt-2" disabled={busy || !comment.trim()} onClick={sendComment}>
+              <CIcon icon={cilCommentBubble} className="me-1" />Envoyer
+            </CButton>
+          </div>
+          {mode !== 'view' && (
+            <div style={{ marginTop: 14, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
+              <div style={{ fontWeight: 700 }}>{d.correction_status === 'pending'
+                ? (mode === 'approved' ? 'Valider la version corrigée' : 'Ne pas retenir la version corrigée')
+                : (mode === 'approved' ? 'Valider ce rapport' : 'Demander une correction')}</div>
+              {d.correction_status === 'pending' && (
+                <div style={{ fontSize: '.875rem', color: '#475569', marginTop: 4 }}>
+                  Le rapport reste validé dans tous les cas (attestation comprise). Validée, cette version devient la version officielle.
                 </div>
               )}
-              {err && d && <div style={{ marginTop: 10, background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239', borderRadius: 10, padding: '8px 12px', fontSize: '.875rem' }}>{err}</div>}
-            </aside>
-          </div>
-        )}
-      </CModalBody>
-      {d && (
-        <CModalFooter style={{ justifyContent: 'space-between' }}>
-          <CButton color="secondary" variant="ghost" onClick={mode === 'view' ? onClose : () => { setMode('view'); setErr(null) }}>
-            {mode === 'view' ? 'Fermer' : 'Retour'}
-          </CButton>
-          {mode === 'view' ? (
-            <div style={{ display: 'flex', gap: 8 }}>
-              <CButton color="warning" variant="outline" onClick={() => { setText(''); setMode('rejected') }}><CIcon icon={cilPencil} className="me-1" />À corriger</CButton>
-              <CButton color="success" style={{ color: '#fff' }} onClick={() => { setText(''); setMode('approved') }}><CIcon icon={cilCheckAlt} className="me-1" />Valider</CButton>
+              <CFormTextarea className="mt-2" rows={3} maxLength={2000} value={text} onChange={e => setText(e.target.value)} autoFocus
+                placeholder={mode === 'approved' ? 'Commentaire (facultatif)' : 'Ce qui doit être corrigé (obligatoire)'} />
             </div>
-          ) : (
-            <CButton color={mode === 'approved' ? 'success' : 'warning'} style={{ color: '#fff' }} disabled={busy} onClick={decide}>
-              {busy && <CSpinner size="sm" className="me-1" />}{mode === 'approved' ? 'Confirmer la validation' : 'Envoyer la demande de correction'}
-            </CButton>
           )}
-        </CModalFooter>
+          {err && <div style={{ marginTop: 10, background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239', borderRadius: 10, padding: '8px 12px', fontSize: '.875rem' }}>{err}</div>}
+        </div>
       )}
-      <style>{`
-        .rpt-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 360px; width: 100%; min-height: 0; }
-        .rpt-doc { display: flex; flex-direction: column; min-height: 0; }
-        .rpt-side { background: #fff; border-left: 1px solid #e2e8f0; padding: 14px; overflow: auto; }
-        .stg-pill { font-size: .875rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; }
-        @media (max-width: 991px) { .rpt-wrap { grid-template-columns: minmax(0, 1fr); } .rpt-doc { min-height: 60vh; } .rpt-side { border-left: 0; border-top: 1px solid #e2e8f0; } }
-      `}</style>
-    </CModal>
+      footer={d && (mode === 'view' ? <>
+        <CButton color="warning" variant="outline" onClick={() => { setText(''); setMode('rejected') }}><CIcon icon={cilPencil} className="me-1" />À corriger</CButton>
+        <CButton color="success" style={{ color: '#fff' }} onClick={() => { setText(''); setMode('approved') }}><CIcon icon={cilCheckAlt} className="me-1" />Valider</CButton>
+      </> : <>
+        <CButton color="secondary" variant="outline" onClick={() => { setMode('view'); setErr(null) }}>Retour</CButton>
+        <CButton color={mode === 'approved' ? 'success' : 'warning'} style={{ color: '#fff' }} disabled={busy} onClick={decide}>
+          {busy && <CSpinner size="sm" className="me-1" />}{mode === 'approved' ? 'Confirmer la validation' : 'Envoyer la demande de correction'}
+        </CButton>
+      </>)}
+    />
   )
 }
 

@@ -2,7 +2,7 @@
 // Module Stages (Lot 1) - Responsable de division (formation continue) et admin.
 
 import HttpService from './http.service'
-import { localFileFrom, type LocalFile } from '@/utils/base64File'
+import { localFileFrom, saveLocalFile, type LocalFile } from '@/utils/base64File'
 
 const BASE = 'stages/admin'
 
@@ -541,9 +541,7 @@ class StageService {
    */
   exportFile = async (path: string): Promise<void> => {
     const { url, name } = localFileFrom(await HttpService.get(`${BASE}/exports/${path}`), 'export.xlsx')
-    const a = document.createElement('a')
-    a.href = url; a.download = name
-    document.body.appendChild(a); a.click(); a.remove()
+    saveLocalFile(url, name)
     setTimeout(() => URL.revokeObjectURL(url), 10000)
   }
 

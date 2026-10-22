@@ -38,28 +38,57 @@ interface Props {
   onDownload: () => void
 }
 
+// pdf.js refuse d'ouvrir un document pendant qu'il en libère un autre sur le
+// même worker : chaque libération est attendue avant l'ouverture suivante.
+let releasing: Promise<unknown> = Promise.resolve()
+
 const PdfViewer = ({ src, title, onDownload }: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const pagesRef  = useRef<HTMLDivElement>(null)
+  const [doc,     setDoc]     = useState<any>(null)
   const [zoom,    setZoom]    = useState(1)
   const [loading, setLoading] = useState(true)
   const [failed,  setFailed]  = useState(false)
   const [pages,   setPages]   = useState(0)
 
+  // 1) Ouverture du document : une seule fois par fichier.
   useEffect(() => {
     let cancelled = false
-    let doc: any = null
-    const container = pagesRef.current
-    if (!container) return
-    container.innerHTML = ''
-    setLoading(true); setFailed(false)
+    let task: any = null
+    setDoc(null); setLoading(true); setFailed(false); setPages(0)
 
     ;(async () => {
       try {
         const pdfjs = await loadPdfJs()
-        doc = await pdfjs.getDocument({ url: src }).promise
+        await releasing
         if (cancelled) return
-        setPages(doc.numPages)
+        task = pdfjs.getDocument({ url: src })
+        const opened = await task.promise
+        if (cancelled) return
+        setPages(opened.numPages)
+        setDoc(opened)
+      } catch {
+        if (!cancelled) { setFailed(true); setLoading(false) }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+      if (task) releasing = releasing.then(() => task.destroy()).catch(() => undefined)
+    }
+  }, [src])
+
+  // 2) Dessin des pages : à chaque zoom, sans recharger le document.
+  useEffect(() => {
+    const container = pagesRef.current
+    if (!doc || !container) return
+    let cancelled = false
+    const renders: any[] = []
+    container.innerHTML = ''
+    setLoading(true)
+
+    ;(async () => {
+      try {
         const available = Math.max(320, (scrollRef.current?.clientWidth ?? 900) - 48)
         const ratio = Math.min(window.devicePixelRatio || 1, 2)
 
@@ -82,20 +111,23 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
           canvas.setAttribute('aria-label', `${title} - page ${n}`)
           container.appendChild(canvas)
 
-          await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise
+          const render = page.render({ canvasContext: canvas.getContext('2d')!, viewport })
+          renders.push(render)
+          await render.promise
           if (n === 1 && !cancelled) setLoading(false)
         }
         if (!cancelled) setLoading(false)
       } catch {
+        // Dessin interrompu par un nouveau zoom : rien à signaler.
         if (!cancelled) { setFailed(true); setLoading(false) }
       }
     })()
 
     return () => {
       cancelled = true
-      try { doc?.destroy() } catch { /* déjà libéré */ }
+      renders.forEach(r => { try { r.cancel() } catch { /* déjà terminé */ } })
     }
-  }, [src, zoom, title])
+  }, [doc, zoom, title])
 
   if (failed) return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 20, textAlign: 'center' }}>

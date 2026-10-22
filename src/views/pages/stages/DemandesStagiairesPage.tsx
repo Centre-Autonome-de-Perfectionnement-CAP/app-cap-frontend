@@ -10,11 +10,12 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilReload, cilPaperclip } from '@coreui/icons'
 import stageService, { type InternRequestRow } from '@/services/stage.service'
-import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
+import { showSuccess, friendlyError } from '@/components/common/ActionResult'
 import { useAuth } from '@/contexts'
 import { PageHead, Empty, Pill, StagesStyles } from './StagesUi'
 import { frDate, frDateTime } from './stageUtils'
 import StageDetailModal from './StageDetailModal'
+import StageFileViewer from './StageFileViewer'
 
 const STATUS = {
   pending:   { label: 'En attente', color: '#d97706', bg: '#fffbeb' },
@@ -47,14 +48,8 @@ const DemandesStagiairesPage = () => {
   }, [status, mine])
   useEffect(() => { load() }, [load])
 
-  const openFile = async (id: number) => {
-    try {
-      const f = await stageService.internRequestFile(id)
-      window.open(f.url, '_blank', 'noopener')
-    } catch (e) {
-      await showError('Justificatif indisponible', friendlyError(e))
-    }
-  }
+  // Justificatif ouvert dans le visualiseur commun
+  const [fileOf, setFileOf] = useState<InternRequestRow | null>(null)
 
   const decide = async () => {
     if (!deciding) return
@@ -109,7 +104,7 @@ const DemandesStagiairesPage = () => {
             <div style={{ marginTop: 4, whiteSpace: 'pre-line' }}>{r.motif}</div>
             {r.decision_comment && <div className="stg-muted" style={{ marginTop: 4 }}>Réponse : {r.decision_comment}</div>}
             <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-              {r.has_file && <CButton size="sm" color="secondary" variant="outline" onClick={() => openFile(r.id)}><CIcon icon={cilPaperclip} className="me-1" />Justificatif</CButton>}
+              {r.has_file && <CButton size="sm" color="secondary" variant="outline" onClick={() => setFileOf(r)}><CIcon icon={cilPaperclip} className="me-1" />Justificatif</CButton>}
               {r.status === 'pending' && (
                 <>
                   <CButton size="sm" color="danger" variant="outline" className="ms-auto" onClick={() => { setComment(''); setModalErr(null); setDeciding({ row: r, decision: 'rejected' }) }}>Refuser</CButton>
@@ -141,6 +136,13 @@ const DemandesStagiairesPage = () => {
       </CModal>
 
       <StageDetailModal idOrRef={openStage} onClose={() => setOpenStage(null)} onChanged={load} />
+      <StageFileViewer
+        visible={fileOf !== null}
+        files={fileOf ? [{ key: String(fileOf.id), label: `Justificatif - ${fileOf.stage.nom_complet}` }] : []}
+        initialKey={fileOf ? String(fileOf.id) : null}
+        loader={k => stageService.internRequestFile(Number(k))}
+        onClose={() => setFileOf(null)}
+      />
       <style>{`.stg-info { background: #fffbeb; border: 1px solid #fde68a; color: #78350f; border-radius: 10px; padding: 8px 12px; font-size: .875rem; }`}</style>
     </div>
   )

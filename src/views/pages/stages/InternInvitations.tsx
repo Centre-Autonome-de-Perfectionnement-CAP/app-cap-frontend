@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import {
-  CButton, CCard, CCardBody, CCardHeader, CFormTextarea, CSpinner,
+  CButton, CCard, CCardBody, CCardHeader, CSpinner,
   CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
@@ -14,6 +14,7 @@ import stageService, { type InternInvitation } from '@/services/stage.service'
 import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
 import { Empty, Pill } from './StagesUi'
 import { frDateTime } from './stageUtils'
+import { PhoneListField, filledPhones } from './PhoneListField'
 
 const STATUS = {
   pending: { label: 'En attente', color: '#d97706', bg: '#fffbeb' },
@@ -115,19 +116,19 @@ export const InternInvitations = ({ open, onOpenChange, onRegistered }: {
 }
 
 const InviteModal = ({ visible, onClose, onDone }: { visible: boolean; onClose: () => void; onDone: () => void }) => {
-  const [numbers, setNumbers] = useState('')
+  const [phones, setPhones] = useState<string[]>([''])
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
-  useEffect(() => { if (visible) { setNumbers(''); setErr(null) } }, [visible])
+  useEffect(() => { if (visible) { setPhones(['']); setErr(null) } }, [visible])
 
-  const count = numbers.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean).length
+  const count = filledPhones(phones).length
 
   const send = async () => {
     if (count === 0) { setErr('Indiquez au moins un numéro WhatsApp.'); return }
     setBusy(true); setErr(null)
     try {
-      const res: any = await stageService.inviteInterns(numbers)
+      const res: any = await stageService.inviteInterns(filledPhones(phones).join('\n'))
       onDone()
       await showSuccess('Invitations', res?.message)
     } catch (e) {
@@ -145,9 +146,7 @@ const InviteModal = ({ visible, onClose, onDone }: { visible: boolean; onClose: 
           Pour un stagiaire arrivé avant le système, ou en dehors : son stage est en cours, ou déjà terminé.
         </div>
         <label className="fw-semibold small mb-1">Numéro(s) WhatsApp</label>
-        <CFormTextarea rows={4} value={numbers} maxLength={2000} onChange={e => setNumbers(e.target.value)}
-          placeholder={'Exemple : 01 97 00 00 00\n01 96 00 00 00'} />
-        <div className="stg-muted" style={{ marginTop: 4 }}>Un numéro par ligne (ou séparés par des virgules). {count > 0 && `${count} numéro(s).`}</div>
+        <PhoneListField value={phones} onChange={v => { setPhones(v); setErr(null) }} disabled={busy} />
         <div style={{ marginTop: 12, background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: 10, padding: '10px 12px', fontSize: '.875rem', color: '#115e59' }}>
           Chaque numéro reçoit sur WhatsApp un lien personnel (7 jours, une seule utilisation). Le stagiaire remplit lui-même
           son dossier : identité, formation, dates réelles du stage. Sa note de service lui est envoyée aux dates déclarées.
@@ -157,7 +156,7 @@ const InviteModal = ({ visible, onClose, onDone }: { visible: boolean; onClose: 
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" variant="ghost" onClick={onClose}>Annuler</CButton>
-        <CButton color="primary" onClick={send} disabled={busy}>{busy && <CSpinner size="sm" className="me-1" />}Envoyer les invitations</CButton>
+        <CButton color="primary" onClick={send} disabled={busy}>{busy && <CSpinner size="sm" className="me-1" />}{count > 1 ? `Envoyer les ${count} invitations` : "Envoyer l'invitation"}</CButton>
       </CModalFooter>
     </CModal>
   )

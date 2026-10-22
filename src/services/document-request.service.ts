@@ -2,6 +2,7 @@
 
 import HttpService from './http.service'
 import type { WorkflowAction } from '@/types/document-request.types'
+import { localFileFrom } from '@/utils/base64File'
 
 const BASE = 'attestations/document-requests'
 
@@ -62,12 +63,8 @@ class DocumentRequestService {
       `${BASE}/${id}/files/${source}/${encodeURIComponent(key)}?format=json`,
     )
     const data = res?.data
-    if (!data?.content) throw new Error("Ce document n'a pas pu être chargé.")
-    const bin = atob(data.content)
-    const bytes = new Uint8Array(bin.length)
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-    const mime = String(data.mime || 'application/octet-stream')
-    return { url: URL.createObjectURL(new Blob([bytes], { type: mime })), filename: data.name, mime }
+    const { url, mime } = localFileFrom(data, key)
+    return { url, filename: data.name, mime }
   }
 
   /**

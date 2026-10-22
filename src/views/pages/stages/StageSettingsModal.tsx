@@ -1,7 +1,7 @@
 // src/views/pages/stages/StageSettingsModal.tsx
 // Réglages du module : ouverture des demandes et valeurs par défaut.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton, CSpinner,
   CFormSwitch, CFormLabel, CFormInput, CFormTextarea, CFormSelect, CRow, CCol,
@@ -71,6 +71,8 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
         signataire_titre: form.signataire_titre,
         signataire_nom: form.signataire_nom,
         pdf_pied_de_page: form.pdf_pied_de_page,
+        note_signataire_titre: form.note_signataire_titre,
+        note_signataire_nom: form.note_signataire_nom,
       })
       onSaved(saved)
       onClose()
@@ -200,16 +202,29 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
               <CFormInput maxLength={60} value={form.pdf_ville} onChange={e => set('pdf_ville', e.target.value)} />
             </CCol>
             <CCol xs={12} md={4}>
+              <CFormLabel className="fw-semibold small">Pied de page</CFormLabel>
+              <CFormInput maxLength={150} value={form.pdf_pied_de_page} onChange={e => set('pdf_pied_de_page', e.target.value)} />
+            </CCol>
+            <CCol xs={12}><strong style={{ fontSize: '.9rem' }}>Notes de service : signature numérique</strong></CCol>
+            <CCol xs={12} md={7}>
+              <CFormLabel className="fw-semibold small">Titre du signataire</CFormLabel>
+              <CFormInput maxLength={150} value={form.note_signataire_titre} onChange={e => set('note_signataire_titre', e.target.value)} />
+            </CCol>
+            <CCol xs={12} md={5}>
+              <CFormLabel className="fw-semibold small">Nom du signataire</CFormLabel>
+              <CFormInput maxLength={100} value={form.note_signataire_nom} onChange={e => set('note_signataire_nom', e.target.value)} placeholder="Exemple : Dr Jean DOSSOU" />
+            </CCol>
+            <CCol xs={12}>
+              <NoteSignatureField meta={form.note_signature} onChange={next => set('note_signature', next.note_signature)} onError={setError} />
+            </CCol>
+            <CCol xs={12}><strong style={{ fontSize: '.9rem' }}>Attestations : signature à la main</strong></CCol>
+            <CCol xs={12} md={5}>
               <CFormLabel className="fw-semibold small">Titre du signataire</CFormLabel>
               <CFormInput maxLength={80} value={form.signataire_titre} onChange={e => set('signataire_titre', e.target.value)} />
             </CCol>
-            <CCol xs={12} md={6}>
+            <CCol xs={12} md={7}>
               <CFormLabel className="fw-semibold small">Nom du signataire</CFormLabel>
               <CFormInput maxLength={100} value={form.signataire_nom} onChange={e => set('signataire_nom', e.target.value)} />
-            </CCol>
-            <CCol xs={12} md={6}>
-              <CFormLabel className="fw-semibold small">Pied de page</CFormLabel>
-              <CFormInput maxLength={150} value={form.pdf_pied_de_page} onChange={e => set('pdf_pied_de_page', e.target.value)} />
             </CCol>
             <CCol xs={12}><hr className="my-1" /></CCol>
             <CCol xs={12}>
@@ -237,6 +252,75 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
         </CButton>
       </CModalFooter>
     </CModal>
+  )
+}
+
+const MAX_SIGNATURE_BYTES = 2 * 1024 * 1024
+
+/**
+ * Image de la signature des notes de service. Le serveur retire le fond et
+ * coupe les marges ; l'aperçu reprend le cadre du PDF (60 × 24 mm).
+ */
+const NoteSignatureField = ({ meta, onChange, onError }: {
+  meta: StageSettings['note_signature']
+  onChange: (s: StageSettings) => void
+  onError: (msg: string | null) => void
+}) => {
+  const input = useRef<HTMLInputElement>(null)
+  const [preview, setPreview] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!meta) { setPreview(null); return }
+    let url: string | null = null
+    let alive = true
+    stageService.noteSignatureImage()
+      .then(f => { url = f.url; if (alive) setPreview(f.url); else URL.revokeObjectURL(f.url) })
+      .catch(() => alive && setPreview(null))
+    return () => { alive = false; if (url) URL.revokeObjectURL(url) }
+  }, [meta?.updated_at]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const run = async (action: () => Promise<StageSettings>) => {
+    setBusy(true); onError(null)
+    try { onChange(await action()) } catch (e) { onError(friendlyError(e)) } finally { setBusy(false) }
+  }
+
+  const pick = (file: File | undefined) => {
+    if (input.current) input.current.value = ''
+    if (!file) return
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { onError('Choisissez une image PNG, JPG ou WEBP.'); return }
+    if (file.size > MAX_SIGNATURE_BYTES) { onError("L'image ne doit pas dépasser 2 Mo."); return }
+    run(() => stageService.uploadNoteSignature(file))
+  }
+
+  return (
+    <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', border: '1px solid #e2e8f0', borderRadius: 12, padding: 12 }}>
+      <div style={{
+        width: 240, height: 96, border: '1px dashed #cbd5e1', borderRadius: 8, background: '#fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
+        {busy ? <CSpinner size="sm" color="primary" />
+          : preview ? <img src={preview} alt="Signature" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+          : <span style={{ fontSize: '.875rem', color: '#64748b' }}>Aucune signature</span>}
+      </div>
+      <div style={{ flex: 1, minWidth: 220 }}>
+        <div style={{ fontSize: '.875rem', color: '#475569', marginBottom: 8 }}>
+          PNG sans fond de préférence (2 Mo maximum). Une photo nette sur papier blanc convient aussi : le fond est retiré
+          et les marges coupées automatiquement. La signature apparaît sur toutes les notes de service et notes rectificatives.
+        </div>
+        <input ref={input} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={e => pick(e.target.files?.[0])} />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <CButton size="sm" color="primary" variant="outline" disabled={busy} onClick={() => input.current?.click()}>
+            {meta ? 'Remplacer la signature' : 'Choisir une image'}
+          </CButton>
+          {meta && (
+            <CButton size="sm" color="danger" variant="ghost" disabled={busy} onClick={() => run(stageService.deleteNoteSignature)}>
+              Retirer
+            </CButton>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 

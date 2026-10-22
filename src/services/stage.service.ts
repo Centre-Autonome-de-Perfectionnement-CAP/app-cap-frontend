@@ -2,6 +2,7 @@
 // Module Stages (Lot 1) - Responsable de division (formation continue) et admin.
 
 import HttpService from './http.service'
+import { localFileFrom, type LocalFile } from '@/utils/base64File'
 
 const BASE = 'stages/admin'
 
@@ -99,6 +100,10 @@ export interface StageSettings {
   signataire_titre: string
   signataire_nom: string
   pdf_pied_de_page: string
+  /** Notes de service : signature numérique du RD / FC-P */
+  note_signataire_titre: string
+  note_signataire_nom: string
+  note_signature: { width: number; height: number; updated_at: string } | null
 }
 
 // ── Attestations (lot 5) ───────────────────────────────────────────────────
@@ -389,6 +394,18 @@ class StageService {
   updateSettings = async (values: Partial<StageSettings>): Promise<StageSettings> =>
     (await HttpService.put(`${BASE}/reglages`, values)).data
 
+  /** Signature des notes de service : fond retiré et marges coupées par le serveur. */
+  uploadNoteSignature = async (file: File): Promise<StageSettings> => {
+    const fd = new FormData()
+    fd.append('image', file)
+    return (await HttpService.post(`${BASE}/reglages/signature`, fd)).data
+  }
+
+  deleteNoteSignature = async (): Promise<StageSettings> => (await HttpService.delete(`${BASE}/reglages/signature`)).data
+
+  noteSignatureImage = async (): Promise<LocalFile> =>
+    localFileFrom(await HttpService.get(`${BASE}/reglages/signature`), 'signature.png')
+
   // ── Stagiaires, superviseurs, binômes, groupe WhatsApp (lot 2) ─────────
 
   interns = (scope: InternScope, q?: string): Promise<InternListResponse> => {
@@ -446,15 +463,8 @@ class StageService {
   decideInternRequest = (id: number, decision: 'approved' | 'rejected', comment?: string) =>
     HttpService.post(`${BASE}/demandes-stagiaires/${id}/decision`, { decision, comment: comment || null })
 
-  internRequestFile = async (id: number): Promise<{ url: string; name: string; mime: string }> => {
-    const res: any = await HttpService.get(`${BASE}/demandes-stagiaires/${id}/piece`)
-    if (!res?.content) throw new Error("Ce document n'a pas pu être chargé.")
-    const bin = atob(res.content)
-    const bytes = new Uint8Array(bin.length)
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-    const mime = String(res.mime || 'application/octet-stream')
-    return { url: URL.createObjectURL(new Blob([bytes], { type: mime })), name: String(res.name || 'justificatif'), mime }
-  }
+  internRequestFile = async (id: number): Promise<LocalFile> =>
+    localFileFrom(await HttpService.get(`${BASE}/demandes-stagiaires/${id}/piece`), 'justificatif')
 
   // ── Rapports (lot 4) ───────────────────────────────────────────────────
 
@@ -470,14 +480,8 @@ class StageService {
   decideReport = (id: number, decision: 'approved' | 'rejected', comment?: string) =>
     HttpService.post(`${BASE}/rapports/${id}/decision`, { decision, comment: comment || null })
 
-  reportFile = async (id: number, version: number): Promise<{ url: string; name: string; mime: string }> => {
-    const res: any = await HttpService.get(`${BASE}/rapports/${id}/versions/${version}`)
-    if (!res?.content) throw new Error("Ce document n'a pas pu être chargé.")
-    const bin = atob(res.content)
-    const bytes = new Uint8Array(bin.length)
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-    return { url: URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })), name: String(res.name || 'rapport.pdf'), mime: 'application/pdf' }
-  }
+  reportFile = async (id: number, version: number): Promise<LocalFile> =>
+    localFileFrom(await HttpService.get(`${BASE}/rapports/${id}/versions/${version}`), 'rapport.pdf', 'application/pdf')
 
   // ── Attestations (lot 5) ───────────────────────────────────────────────
 
@@ -513,30 +517,16 @@ class StageService {
     return HttpService.post(`${BASE}/attestations/${id}/scan`, fd)
   }
 
-  /** PDF reçu en JSON (base64) → URL locale. */
-  private pdfFrom = (res: any, fallback: string) => {
-    if (!res?.content) throw new Error("Ce document n'a pas pu être préparé.")
-    const bin = atob(res.content)
-    const bytes = new Uint8Array(bin.length)
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-    return { url: URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })), name: String(res.name || fallback), mime: 'application/pdf' }
-  }
+  private pdfFrom = (res: any, fallbackName: string) => localFileFrom(res, fallbackName, 'application/pdf')
 
-  attestationPdf = async (id: number, date?: string): Promise<{ url: string; name: string; mime: string }> =>
+  attestationPdf = async (id: number, date?: string): Promise<LocalFile> =>
     this.pdfFrom(await HttpService.get(`${BASE}/attestations/${id}/pdf${date ? `?date=${encodeURIComponent(date)}` : ''}`), 'attestation.pdf')
 
-  notePdf = async (stageId: number, noteId: number): Promise<{ url: string; name: string; mime: string }> =>
+  notePdf = async (stageId: number, noteId: number): Promise<LocalFile> =>
     this.pdfFrom(await HttpService.get(`${BASE}/demandes/${stageId}/notes/${noteId}/pdf`), 'note-de-service.pdf')
 
-  attestationScan = async (id: number): Promise<{ url: string; name: string; mime: string }> => {
-    const res: any = await HttpService.get(`${BASE}/attestations/${id}/scan`)
-    if (!res?.content) throw new Error("Ce document n'a pas pu être chargé.")
-    const bin = atob(res.content)
-    const bytes = new Uint8Array(bin.length)
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-    const mime = String(res.mime || 'application/octet-stream')
-    return { url: URL.createObjectURL(new Blob([bytes], { type: mime })), name: String(res.name || 'attestation'), mime }
-  }
+  attestationScan = async (id: number): Promise<LocalFile> =>
+    localFileFrom(await HttpService.get(`${BASE}/attestations/${id}/scan`), 'attestation')
 
   // ── Tableau de bord, suivi, exports (lot 6) ────────────────────────────
 
@@ -550,14 +540,9 @@ class StageService {
    * jamais intercepté par un gestionnaire de téléchargement.
    */
   exportFile = async (path: string): Promise<void> => {
-    const res: any = await HttpService.get(`${BASE}/exports/${path}`)
-    if (!res?.content) throw new Error("Le fichier n'a pas pu être préparé.")
-    const bin = atob(res.content)
-    const bytes = new Uint8Array(bin.length)
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-    const url = URL.createObjectURL(new Blob([bytes], { type: String(res.mime || 'application/octet-stream') }))
+    const { url, name } = localFileFrom(await HttpService.get(`${BASE}/exports/${path}`), 'export.xlsx')
     const a = document.createElement('a')
-    a.href = url; a.download = String(res.name || 'export.xlsx')
+    a.href = url; a.download = name
     document.body.appendChild(a); a.click(); a.remove()
     setTimeout(() => URL.revokeObjectURL(url), 10000)
   }
@@ -570,16 +555,9 @@ class StageService {
   acceptInvitation = (payload: { token: string; prenom: string; nom: string; email: string; password: string; password_confirmation: string }) =>
     HttpService.post('stages/invitation/accepter', payload)
 
-  /** Pièce reçue en JSON (base64) : jamais interceptée par un gestionnaire de téléchargement. */
-  fileContent = async (id: number, key: string): Promise<{ url: string; name: string; mime: string }> => {
-    const res: any = await HttpService.get(`${BASE}/demandes/${id}/pieces/${encodeURIComponent(key)}?format=json`)
-    if (!res?.content) throw new Error("Ce document n'a pas pu être chargé.")
-    const bin = atob(res.content)
-    const bytes = new Uint8Array(bin.length)
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-    const mime = String(res.mime || 'application/octet-stream')
-    return { url: URL.createObjectURL(new Blob([bytes], { type: mime })), name: String(res.name || key), mime }
-  }
+  /** Pièce d'une demande. */
+  fileContent = async (id: number, key: string): Promise<LocalFile> =>
+    localFileFrom(await HttpService.get(`${BASE}/demandes/${id}/pieces/${encodeURIComponent(key)}?format=json`), key)
 }
 
 export default new StageService()

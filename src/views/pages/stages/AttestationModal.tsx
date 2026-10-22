@@ -156,7 +156,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
               <div className="stg-card">
                 <div style={{ fontWeight: 700, marginBottom: 8 }}>À vérifier avant validation</div>
                 <CFormLabel className="small fw-semibold mb-1">Pays de naissance (imprimé entre parenthèses)</CFormLabel>
-                <CFormInput maxLength={60} placeholder="Ex. : Rép. du BENIN" value={edit.pays_naissance} onChange={e => setEdit({ ...edit, pays_naissance: e.target.value })} />
+                <CFormInput maxLength={60} placeholder="Exemple : Rép. du BENIN" value={edit.pays_naissance} onChange={e => setEdit({ ...edit, pays_naissance: e.target.value })} />
                 <CFormLabel className="small fw-semibold mb-1 mt-2">Type de stage</CFormLabel>
                 <CFormSelect value={edit.type_stage} onChange={e => setEdit({ ...edit, type_stage: e.target.value })}>
                   <option value="académique">académique</option>
@@ -186,7 +186,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
                   <CButton color="secondary" variant="ghost" onClick={() => setPdfView(true)}><CIcon icon={cilDescription} className="me-1" />Aperçu</CButton>
                 </div>
                 <CFormLabel className="small fw-semibold mb-1 mt-3">N° écrit à la main (facultatif, pour retrouver l'attestation dans le registre)</CFormLabel>
-                <CFormInput maxLength={60} value={numero} onChange={e => setNumero(e.target.value)} style={{ maxWidth: 220 }} placeholder="Ex. : 22-26" />
+                <CFormInput maxLength={60} value={numero} onChange={e => setNumero(e.target.value)} style={{ maxWidth: 220 }} placeholder="Exemple : 22-26" />
               </div>
             )}
 

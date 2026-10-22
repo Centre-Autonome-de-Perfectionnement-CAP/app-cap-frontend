@@ -245,7 +245,7 @@ const FileCommentsPanel = ({ demandeId, source, fileKey, comments, historyVisibl
           value={draft}
           onChange={e => setDraft(e.target.value.slice(0, MAX))}
           onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); void publish() } }}
-          placeholder="Ex : la date de naissance est peu lisible."
+          placeholder="Exemple : la date de naissance est peu lisible."
           rows={3}
           style={textareaStyle}
           disabled={busy}

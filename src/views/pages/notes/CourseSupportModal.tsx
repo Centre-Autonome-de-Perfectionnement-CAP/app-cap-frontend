@@ -361,7 +361,7 @@ const CourseSupportModal = ({ visible, onClose, contrat, inlineMode = false }: P
               <div className="mb-3">
                 <CFormLabel>Titre du support <span className="text-danger">*</span></CFormLabel>
                 <CFormInput
-                  placeholder="Ex : Cours Chapitre 1 - Introduction"
+                  placeholder="Exemple : Cours Chapitre 1 - Introduction"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   disabled={adding}

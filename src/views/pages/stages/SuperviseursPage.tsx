@@ -158,12 +158,12 @@ const InviteModal = ({ visible, onClose, onDone }: { visible: boolean; onClose: 
       <CModalBody>
         <label className="fw-semibold small mb-1">Numéro(s) WhatsApp</label>
         <CFormTextarea rows={4} value={numbers} maxLength={2000} onChange={e => setNumbers(e.target.value)}
-          placeholder={'01 97 00 00 00\n01 96 00 00 00'} />
+          placeholder={'Exemple : 01 97 00 00 00\n01 96 00 00 00'} />
         <div className="stg-muted" style={{ marginTop: 4 }}>Un numéro par ligne (ou séparés par des virgules). {count > 0 && `${count} numéro(s).`}</div>
         {count === 1 && (
           <>
             <label className="fw-semibold small mb-1 mt-3">Nom <span className="stg-muted">(facultatif, pour le message)</span></label>
-            <CFormInput value={name} maxLength={120} onChange={e => setName(e.target.value)} placeholder="Ex. : M. Dossou" />
+            <CFormInput value={name} maxLength={120} onChange={e => setName(e.target.value)} placeholder="Exemple : M. Dossou" />
           </>
         )}
         <div style={{ marginTop: 12, background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: 10, padding: '10px 12px', fontSize: '.875rem', color: '#115e59' }}>

@@ -261,7 +261,7 @@ const FileFormModal = ({
               value={name}
               maxLength={200}
               onChange={e => { setName(e.target.value); setNameTouched(true) }}
-              placeholder="Ex : Relevé de notes vérifié"
+              placeholder="Exemple : Relevé de notes vérifié"
               style={inputStyle}
               onFocus={e => { e.target.style.borderColor = '#2563eb' }}
               onBlur={e  => { e.target.style.borderColor = '#e2e8f0' }}
@@ -279,7 +279,7 @@ const FileFormModal = ({
               value={comment}
               maxLength={1000}
               onChange={e => setComment(e.target.value)}
-              placeholder="Ex : copie certifiée conforme reçue au guichet."
+              placeholder="Exemple : copie certifiée conforme reçue au guichet."
               rows={3}
               style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
               onFocus={e => { e.target.style.borderColor = '#2563eb' }}

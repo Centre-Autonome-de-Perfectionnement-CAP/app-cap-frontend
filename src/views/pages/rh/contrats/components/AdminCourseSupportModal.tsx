@@ -538,7 +538,7 @@ const AdminCourseSupportModal: React.FC<{
 
               <div style={{ marginBottom: 10 }}>
                 <label className="ctr-label">Titre du support <span style={{ color: '#dc2626' }}>*</span></label>
-                <input className="ctr-input" placeholder="Ex : Cours Chapitre 1 - Introduction"
+                <input className="ctr-input" placeholder="Exemple : Cours Chapitre 1 - Introduction"
                   value={newTitle} onChange={e => setNewTitle(e.target.value)} disabled={adding} />
               </div>
 
@@ -642,7 +642,7 @@ const AdminCourseSupportModal: React.FC<{
                       type="number"
                       min="0"
                       step="1"
-                      placeholder="Ex : 3"
+                      placeholder="Exemple : 3"
                       value={mono.number_monographie}
                       onChange={e => setMono('number_monographie', e.target.value)}
                       disabled={mono.saving}
@@ -658,7 +658,7 @@ const AdminCourseSupportModal: React.FC<{
                       type="number"
                       min="0"
                       step="any"
-                      placeholder="Ex : 15000"
+                      placeholder="Exemple : 15000"
                       value={mono.amount_monographie}
                       onChange={e => setMono('amount_monographie', e.target.value)}
                       disabled={mono.saving}

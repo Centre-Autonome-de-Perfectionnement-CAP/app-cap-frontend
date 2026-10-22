@@ -125,7 +125,7 @@ const TeamEditor = ({ team, onClose, onSaved }: { team: StageTeam | 'new' | null
     <CModal visible={!!team} onClose={onClose} alignment="center" scrollable fullscreen="sm">
       <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>{team === 'new' ? 'Nouveau binôme / groupe' : 'Modifier le binôme'}</CModalTitle></CModalHeader>
       <CModalBody>
-        <CFormInput value={name} maxLength={80} onChange={e => setName(e.target.value)} placeholder="Nom (ex. : Binôme Réseaux 1)" />
+        <CFormInput value={name} maxLength={80} onChange={e => setName(e.target.value)} placeholder="Exemple : Binôme Réseaux 1" />
         <CFormInput className="mt-2" size="sm" value={filter} onChange={e => setFilter(e.target.value)} placeholder="Filtrer les stagiaires…" />
         <div style={{ marginTop: 10, maxHeight: 320, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
           {!interns && !err && <CSpinner size="sm" color="primary" />}

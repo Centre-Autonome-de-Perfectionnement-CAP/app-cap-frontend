@@ -274,7 +274,7 @@ const TeamQuickModal = ({ visible, rows, onClose, onDone }: { visible: boolean; 
     <CModal visible={visible} onClose={onClose} alignment="center">
       <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Former un binôme / groupe</CModalTitle></CModalHeader>
       <CModalBody>
-        <CFormInput value={name} maxLength={80} onChange={e => setName(e.target.value)} placeholder="Ex. : Binôme Réseaux 1" />
+        <CFormInput value={name} maxLength={80} onChange={e => setName(e.target.value)} placeholder="Exemple : Binôme Réseaux 1" />
         <ul style={{ margin: '12px 0 0', paddingLeft: 18, fontSize: '.88rem' }}>
           {rows.map(r => <li key={r.id}>{r.nom_complet}{r.team?.name ? <span className="stg-muted"> (quitte « {r.team.name} »)</span> : null}</li>)}
         </ul>

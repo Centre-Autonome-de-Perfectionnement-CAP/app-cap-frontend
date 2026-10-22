@@ -281,7 +281,7 @@ const StageDetailModal = ({ idOrRef, onClose, onChanged }: Props) => {
                 onNoteChange={setNote}
                 noteLabel={mode === 'propose' ? 'Message au demandeur' : 'Motif de la modification'}
                 noteRequired={mode === 'rectify'}
-                notePlaceholder={mode === 'propose' ? 'Ex. : Bienvenue ! Merci de confirmer ces dates.' : 'Ex. : prolongation demandée par le service.'}
+                notePlaceholder={mode === 'propose' ? 'Exemple : Bienvenue ! Merci de confirmer ces dates.' : 'Exemple : prolongation demandée par le service.'}
                 allowPastStart={mode === 'rectify'}
               />
             </div>

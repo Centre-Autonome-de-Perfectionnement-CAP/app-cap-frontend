@@ -170,7 +170,7 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
                 rows={4}
                 value={comment}
                 onChange={e => setComment(e.target.value.slice(0, 500))}
-                placeholder="Ex : Reçu de paiement vérifié et conforme. Dossier complet."
+                placeholder="Exemple : Reçu de paiement vérifié et conforme. Dossier complet."
                 disabled={clearing}
                 style={{
                   fontSize: '0.875rem', lineHeight: 1.6,

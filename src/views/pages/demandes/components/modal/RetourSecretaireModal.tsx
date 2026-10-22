@@ -70,7 +70,7 @@ const RetourSecretaireModal = ({ visible, demande, loading = false, onClose, onC
           rows={4}
           value={comment}
           onChange={e => setComment(e.target.value.slice(0, 1000))}
-          placeholder="Ex : reçu de paiement vérifié, le dossier est complet."
+          placeholder="Exemple : reçu de paiement vérifié, le dossier est complet."
           style={{
             fontSize: '0.95rem', lineHeight: 1.6, borderRadius: 10,
             border: `1.5px solid ${borderColor}`, padding: '12px 14px',

@@ -146,7 +146,7 @@ const InviteModal = ({ visible, onClose, onDone }: { visible: boolean; onClose: 
         </div>
         <label className="fw-semibold small mb-1">Numéro(s) WhatsApp</label>
         <CFormTextarea rows={4} value={numbers} maxLength={2000} onChange={e => setNumbers(e.target.value)}
-          placeholder={'01 97 00 00 00\n01 96 00 00 00'} />
+          placeholder={'Exemple : 01 97 00 00 00\n01 96 00 00 00'} />
         <div className="stg-muted" style={{ marginTop: 4 }}>Un numéro par ligne (ou séparés par des virgules). {count > 0 && `${count} numéro(s).`}</div>
         <div style={{ marginTop: 12, background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: 10, padding: '10px 12px', fontSize: '.875rem', color: '#115e59' }}>
           Chaque numéro reçoit sur WhatsApp un lien personnel (7 jours, une seule utilisation). Le stagiaire remplit lui-même

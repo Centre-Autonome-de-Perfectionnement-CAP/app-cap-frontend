@@ -1,11 +1,11 @@
 // src/services/whatsapp.service.ts
 //
 // Service HTTP pour le module WhatsApp admin.
-// Réservé au rôle 'admin' — le contrôle d'accès réel est fait côté backend
+// Réservé au rôle 'admin' - le contrôle d'accès réel est fait côté backend
 // (WhatsAppAdminController::assertAdmin) ; ce service ne fait qu'appeler l'API.
 //
 // Types alignés EXACTEMENT sur les réponses réelles de WhatsAppAdminController.php
-// (pas d'enveloppe {success,data} — Laravel renvoie du JSON plat sur ces endpoints).
+// (pas d'enveloppe {success,data} - Laravel renvoie du JSON plat sur ces endpoints).
 
 import HttpService from './http.service'
 

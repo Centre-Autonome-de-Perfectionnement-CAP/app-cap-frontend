@@ -22,7 +22,7 @@ interface ResponsableLayoutProps {
 
 /**
  * Layout minimal réservé au responsable de classe.
- * Pas de sidebar admin — juste un header propre + contenu + footer.
+ * Pas de sidebar admin - juste un header propre + contenu + footer.
  */
 const ResponsableLayout: React.FC<ResponsableLayoutProps> = ({ children }) => {
   const { nom, prenoms, logout } = useAuth()
@@ -87,7 +87,7 @@ const ResponsableLayout: React.FC<ResponsableLayoutProps> = ({ children }) => {
 
       {/* ── Footer ── */}
       <footer className="footer py-3 border-top text-center text-muted small">
-        © {new Date().getFullYear()} Centre Autonome de Perfectionnement — École Polytechnique d'Abomey-Calavi
+        © {new Date().getFullYear()} Centre Autonome de Perfectionnement - École Polytechnique d'Abomey-Calavi
       </footer>
     </div>
   )

@@ -67,7 +67,7 @@ const MessagesTable: React.FC<Props> = ({ status }) => {
     try {
       const res = await whatsappService.retryMessage(id)
       if (res.success) success('Message renvoyé avec succès.')
-      else error('Le renvoi a échoué — vérifiez le motif.')
+      else error('Le renvoi a échoué - vérifiez le motif.')
       load(page)
     } catch (e: any) {
       error(e?.message ?? 'Erreur lors du renvoi.')

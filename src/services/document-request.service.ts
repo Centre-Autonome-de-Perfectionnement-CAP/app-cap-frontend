@@ -72,7 +72,7 @@ class DocumentRequestService {
 
   /**
    * Historique d'une demande
-   * (✔️ AJOUTÉ — manquait dans ton service)
+   * (✔️ AJOUTÉ - manquait dans ton service)
    */
   getHistory = async (id: number) => {
     return HttpService.get(`${BASE}/${id}/history`)

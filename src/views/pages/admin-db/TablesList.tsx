@@ -46,7 +46,7 @@ const TablesList = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
           <div>
             <h1 style={{ fontSize: '2.1rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
-              Base de Données — Gestion Totale
+              Base de Données - Gestion Totale
             </h1>
             <p style={{ fontSize: '1.05rem', color: '#64748b', marginTop: 6, marginBottom: 0 }}>
               Accès CRUD complet à toutes les tables ({tables.length} tables disponibles).

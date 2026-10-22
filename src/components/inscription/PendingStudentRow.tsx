@@ -145,7 +145,7 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
               </CBadge>
             )}
           </div>
-          {/* Ligne 2 : Bouton de transfert — toujours visible */}
+          {/* Ligne 2 : Bouton de transfert - toujours visible */}
           {onTransferWave && (
             <div className="mt-1">
               <CButton

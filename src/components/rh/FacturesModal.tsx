@@ -265,12 +265,12 @@ const FacturesModal: React.FC<FacturesModalProps> = ({ visible, onClose }) => {
               </CFormLabel>
               <CFormSelect value={selectedId} onChange={(e) => handleSelectContrat(e.target.value)}
                 style={{ borderRadius: 9, padding: '10px 14px', fontSize: 14 }}>
-                <option value="">— Sélectionner un contrat —</option>
+                <option value="">- Sélectionner un contrat -</option>
                 {contrats.map((c) => (
                   <option key={c.id} value={String(c.id)}>
-                    N° {c.contrat_number} — {c.professor?.full_name ?? ''}
+                    N° {c.contrat_number} - {c.professor?.full_name ?? ''}
                     {c.academicYear?.academic_year ? ` (${c.academicYear.academic_year})` : ''}
-                    {' '}— {formatAmount(c.amount)}
+                    {' '}- {formatAmount(c.amount)}
                   </option>
                 ))}
               </CFormSelect>
@@ -305,7 +305,7 @@ const FacturesModal: React.FC<FacturesModalProps> = ({ visible, onClose }) => {
 
             <div style={{ borderTop: '1px solid #f0f0f0', marginBottom: 20 }} />
 
-            {/* Warning remplacement — affiché par-dessus les dropzones */}
+            {/* Warning remplacement - affiché par-dessus les dropzones */}
             {replaceWarning && (
               <ReplaceWarning
                 existingName={replaceWarning}
@@ -315,7 +315,7 @@ const FacturesModal: React.FC<FacturesModalProps> = ({ visible, onClose }) => {
               />
             )}
 
-            {/* Dropzones — masquées pendant le warning */}
+            {/* Dropzones - masquées pendant le warning */}
             {!replaceWarning && (
               <>
                 <CFormLabel style={{ fontWeight: 600, fontSize: 13, marginBottom: 12, display: 'block' }}>
@@ -327,7 +327,7 @@ const FacturesModal: React.FC<FacturesModalProps> = ({ visible, onClose }) => {
                       file={factureFile} onFile={setFactureFile} onClear={() => setFactureFile(null)}
                       icon={<CIcon icon={cilFile} size="lg" style={{ color: factureFile ? '#2eb85c' : '#321fdb' }} />}
                       required />
-                    <div style={{ fontSize: 11, color: '#a0aec0', marginTop: 4 }}>Formats : PDF, JPG, PNG — Max 5 Mo</div>
+                    <div style={{ fontSize: 11, color: '#a0aec0', marginTop: 4 }}>Formats : PDF, JPG, PNG - Max 5 Mo</div>
                   </div>
                 </div>
                 <div style={{ marginTop: 20, padding: '12px 16px', background: '#f0f4ff', borderRadius: 9, borderLeft: '4px solid #321fdb', fontSize: 12, color: '#4a5568', lineHeight: 1.6 }}>

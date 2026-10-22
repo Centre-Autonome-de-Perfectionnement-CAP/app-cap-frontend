@@ -36,7 +36,7 @@ export function generateLegacyStudentPdf(
   doc.setFontSize(10);
   doc.setTextColor(40, 40, 40);
   doc.text('MINISTÈRE DE L’ENSEIGNEMENT SUPÉRIEUR ET DE LA RECHERCHE SCIENTIFIQUE', pageWidth / 2, 23, { align: 'center' });
-  doc.text('UNIVERSITÉ D’ABOMEY-CALAVI (UAC) — ÉCOLE POLYTECHNIQUE (EPAC)', pageWidth / 2, 28, { align: 'center' });
+  doc.text('UNIVERSITÉ D’ABOMEY-CALAVI (UAC) - ÉCOLE POLYTECHNIQUE (EPAC)', pageWidth / 2, 28, { align: 'center' });
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
@@ -58,7 +58,7 @@ export function generateLegacyStudentPdf(
     doc.setFontSize(9);
     doc.setFont('helvetica', 'italic');
     doc.setTextColor(100, 100, 100);
-    doc.text(`Régularisation Archives — Promotion ${student.enrollment_year}`, pageWidth / 2, 53, { align: 'center' });
+    doc.text(`Régularisation Archives - Promotion ${student.enrollment_year}`, pageWidth / 2, 53, { align: 'center' });
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10.5);

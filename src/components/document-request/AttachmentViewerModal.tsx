@@ -1,6 +1,6 @@
 // src/components/document-request/AttachmentViewerModal.tsx
 //
-// Visualiseur plein écran — style original conservé, agrandi à tout l'écran
+// Visualiseur plein écran - style original conservé, agrandi à tout l'écran
 // (comme un document ouvert dans un autre onglet).
 // Panneau latéral rétractable via bouton toggle, avec les commentaires des
 // acteurs sur le document. Précédent / Suivant (ou flèches du clavier) et

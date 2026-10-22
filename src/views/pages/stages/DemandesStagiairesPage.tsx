@@ -73,8 +73,8 @@ const DemandesStagiairesPage = () => {
   }
 
   const describe = (r: InternRequestRow) => r.kind === 'permission'
-    ? `${r.type_label} — ${r.date_from === r.date_to ? frDate(r.date_from, true) : `du ${frDate(r.date_from)} au ${frDate(r.date_to)}`}${r.time_from ? ` à ${r.time_from.replace(':', 'h')}` : ''}`
-    : `${r.kind_label} — fin actuelle ${frDate(r.stage.date_fin)}, demandée ${frDate(r.new_date_fin)}`
+    ? `${r.type_label} - ${r.date_from === r.date_to ? frDate(r.date_from, true) : `du ${frDate(r.date_from)} au ${frDate(r.date_to)}`}${r.time_from ? ` à ${r.time_from.replace(':', 'h')}` : ''}`
+    : `${r.kind_label} - fin actuelle ${frDate(r.stage.date_fin)}, demandée ${frDate(r.new_date_fin)}`
 
   return (
     <div className="stg-page">
@@ -124,7 +124,7 @@ const DemandesStagiairesPage = () => {
       <CModal visible={!!deciding} onClose={() => setDeciding(null)} alignment="center">
         <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>{deciding?.decision === 'approved' ? 'Accepter la demande' : 'Refuser la demande'}</CModalTitle></CModalHeader>
         <CModalBody>
-          {deciding && <p style={{ fontWeight: 600 }}>{deciding.row.stage.nom_complet} — {describe(deciding.row)}</p>}
+          {deciding && <p style={{ fontWeight: 600 }}>{deciding.row.stage.nom_complet} - {describe(deciding.row)}</p>}
           {deciding?.decision === 'approved' && deciding.row.kind !== 'permission' && (
             <div className="stg-info" style={{ marginBottom: 10 }}>La date de fin sera modifiée et une note de service rectificative sera émise et envoyée.</div>
           )}

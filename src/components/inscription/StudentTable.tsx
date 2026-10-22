@@ -38,7 +38,7 @@ interface StudentTableProps {
   students: Student[]
   loading: boolean
   onRowClick: (studentId: number) => void
-  // Callback responsable — reçoit personal_information_id et l'état actuel
+  // Callback responsable - reçoit personal_information_id et l'état actuel
   onAssignResponsible?: (personalInfoId: number, isCurrently: boolean) => Promise<void>
   // Map groupName → personal_information_id du responsable actuel
   groupResponsibleMap?: Record<string, number>

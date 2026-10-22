@@ -25,7 +25,7 @@ export interface HistoryEntry {
 
 interface HistoriquePanelProps {
   demandeId: number
-  // Props conservées pour compatibilité — flag géré dans SousReservePanel
+  // Props conservées pour compatibilité - flag géré dans SousReservePanel
   hasFlag?: boolean
   canClearFlag?: boolean
   onFlagCleared?: () => void
@@ -72,7 +72,7 @@ const ACTION_META: Record<string, { color: string; bg: string; borderColor: stri
 const formatDate = (iso: string) => {
   const d = new Date(iso)
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
-    + ' — '
+    + ' - '
     + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 

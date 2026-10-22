@@ -1,5 +1,5 @@
 // src/views/pages/rh/contrats/Contrats.icons.tsx
-// Extrait tel quel de Contrats.tsx (aucune modification) — jeu d'icônes SVG inline
+// Extrait tel quel de Contrats.tsx (aucune modification) - jeu d'icônes SVG inline
 // partagé par tous les sous-composants du module Contrats.
 import React from 'react'
 

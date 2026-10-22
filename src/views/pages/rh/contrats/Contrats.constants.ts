@@ -1,10 +1,10 @@
 // src/views/pages/rh/contrats/Contrats.constants.ts
-// Extrait tel quel de Contrats.tsx — constantes UI partagées.
+// Extrait tel quel de Contrats.tsx - constantes UI partagées.
 import type { ContratStatus } from '@/types/rh.types'
 
 export const DIVISIONS = [
-  { value: 'RD-FAD', label: 'RD-FAD — Responsable Division-Formation à Distance' },
-  { value: 'RD-FC',  label: 'RD-FC — Responsable Division-Formation Continue' },
+  { value: 'RD-FAD', label: 'RD-FAD - Responsable Division-Formation à Distance' },
+  { value: 'RD-FC',  label: 'RD-FC - Responsable Division-Formation Continue' },
 ];
 export const REGROUPEMENTS = [
   { value: '1', label: 'Regroupement I' },

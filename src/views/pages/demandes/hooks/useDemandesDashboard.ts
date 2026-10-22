@@ -57,7 +57,7 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
     load(false)
   }, [load])
 
-  // Polling silencieux (voir POLLING_INTERVAL_MS) — suspendu si l'onglet est masqué
+  // Polling silencieux (voir POLLING_INTERVAL_MS) - suspendu si l'onglet est masqué
   useEffect(() => {
     let isMounted = true
     let isFetching = false

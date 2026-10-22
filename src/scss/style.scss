@@ -132,7 +132,7 @@ body {
 }
 
 
-// ─── Correctifs Modaux — Responsivité & Scrollbar ───────────────────────────
+// ─── Correctifs Modaux - Responsivité & Scrollbar ───────────────────────────
 //
 // Problème : quand DevTools s'ouvre en bas dans Firefox, la hauteur de la
 // fenêtre diminue et les modals CoreUI se retrouvent coupées sans scrollbar.
@@ -164,7 +164,7 @@ body {
   flex-direction: column;
 }
 
-// Le body du modal est scrollable — CoreUI le gère avec [scrollable],
+// Le body du modal est scrollable - CoreUI le gère avec [scrollable],
 // mais on force quand même pour les cas sans scrollable.
 .modal-body {
   overflow-y: auto;
@@ -195,7 +195,7 @@ body {
   flex-shrink: 0;
 }
 
-// ─── Correctifs Responsivité Mobile — Module Demandes ───────────────────────
+// ─── Correctifs Responsivité Mobile - Module Demandes ───────────────────────
 
 // Sur petit écran, les tableaux peuvent défiler horizontalement
 @media (max-width: 767px) {
@@ -222,7 +222,7 @@ body {
     }
   }
 
-  // Tableaux du module demandes — scroll horizontal
+  // Tableaux du module demandes - scroll horizontal
   .table-responsive {
     -webkit-overflow-scrolling: touch;
   }

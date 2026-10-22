@@ -47,7 +47,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
         <ActionButton label="Rejeter" icon={cilX} color="danger" variant="outline"
           disabled={loading} onClick={() => setRejectModal(true)} />
         <ActionButton
-          label="Signer — Transmettre au Sec. Directeur" icon={cilCheck}
+          label="Signer - Transmettre au Sec. Directeur" icon={cilCheck}
           customBg={!loading ? palette.color : undefined}
           loading={loading}
           onClick={() => run('directrice_adjointe_sign')}
@@ -60,7 +60,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
 
   return (<>
     <DemandeModalShell demande={demande} visible={visible} onClose={onClose}
-      title="Signature — Directrice Adjointe" footer={footer}>
+      title="Signature - Directrice Adjointe" footer={footer}>
       <DemandeDetailBase demande={demande}>
         {inCircuit ? (
           <ActorCorrectionNote />
@@ -78,7 +78,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
       onConfirm={async comment => { setRetourModal(false); await run('return_to_secretaire', { comment }) }}
     />
 
-    <MotifModal visible={rejectModal} title="Rejeter — retour à la secrétaire"
+    <MotifModal visible={rejectModal} title="Rejeter - retour à la secrétaire"
       confirmLabel="Rejeter" confirmColor="danger"
       onClose={() => setRejectModal(false)}
       onConfirm={async motif => { setRejectModal(false); await run('directrice_adjointe_reject', { motif }) }} />

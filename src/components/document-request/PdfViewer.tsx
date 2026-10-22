@@ -79,7 +79,7 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
           canvas.style.margin = '0 auto 16px'
           canvas.style.background = '#fff'
           canvas.style.boxShadow = '0 2px 10px rgba(15,23,42,0.12)'
-          canvas.setAttribute('aria-label', `${title} — page ${n}`)
+          canvas.setAttribute('aria-label', `${title} - page ${n}`)
           container.appendChild(canvas)
 
           await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise

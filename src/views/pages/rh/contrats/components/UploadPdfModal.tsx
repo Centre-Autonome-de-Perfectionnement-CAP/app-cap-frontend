@@ -40,7 +40,7 @@ const UploadPdfModal: React.FC<{
   return (
     <Modal
       title="Uploader le PDF final"
-      subtitle={`Contrat N° ${contrat.contrat_number} — remplace le PDF actuel`}
+      subtitle={`Contrat N° ${contrat.contrat_number} - remplace le PDF actuel`}
       onClose={onClose}
       footer={
         <>
@@ -64,7 +64,7 @@ const UploadPdfModal: React.FC<{
               <Icon.FilePdf />
             </div>
             <div style={{ fontWeight: 700, color: '#065f46', fontSize: 14 }}>{file.name}</div>
-            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{(file.size / 1024).toFixed(1)} Ko — Cliquez pour changer</div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{(file.size / 1024).toFixed(1)} Ko - Cliquez pour changer</div>
           </div>
         ) : (
           <div>
@@ -72,7 +72,7 @@ const UploadPdfModal: React.FC<{
               <Icon.FileUpload />
             </div>
             <div style={{ fontWeight: 600, color: '#ea580c', fontSize: 14 }}>Cliquez ou glissez le PDF ici</div>
-            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Format PDF uniquement — max 10 Mo</div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Format PDF uniquement - max 10 Mo</div>
           </div>
         )}
       </div>

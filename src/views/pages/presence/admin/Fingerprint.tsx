@@ -32,7 +32,7 @@ type EnrollPhase =
   | 'error'       // erreur technique
 
 // ════════════════════════════════════════════════════════════════════════════
-//  PAGE D'ENRÔLEMENT — UX simplifiée
+//  PAGE D'ENRÔLEMENT - UX simplifiée
 //
 //  Flux :
 //  1. Clic "Lancer" → GET /api/reenroll?student_id=X (ESP32 démarre)
@@ -113,7 +113,7 @@ const EnrollPage = ({
           return
         }
 
-        // ESP32 prêt — démarrer le countdown et le polling
+        // ESP32 prêt - démarrer le countdown et le polling
         setPhase('waiting')
         startCountdown()
 
@@ -208,7 +208,7 @@ const EnrollPage = ({
     waiting: {
       icon: cilFingerprint, iconColor: '#1d4ed8',
       bg: '#eff6ff', border: '#bfdbfe',
-      title: 'En attente — posez le doigt',
+      title: 'En attente - posez le doigt',
       sub: "Placez le doigt de l'étudiant sur le capteur",
     },
     capturing: {
@@ -220,7 +220,7 @@ const EnrollPage = ({
     saving: {
       icon: cilCheckCircle, iconColor: '#15803d',
       bg: '#f0fdf4', border: '#86efac',
-      title: 'Empreinte capturée — sauvegarde...',
+      title: 'Empreinte capturée - sauvegarde...',
       sub: 'Enregistrement dans la base de données',
     },
     done: {
@@ -232,7 +232,7 @@ const EnrollPage = ({
     timeout: {
       icon: cilXCircle, iconColor: '#dc2626',
       bg: '#fef2f2', border: '#fecaca',
-      title: 'Délai dépassé — aucune empreinte détectée',
+      title: 'Délai dépassé - aucune empreinte détectée',
       sub: 'Redirection automatique...',
     },
     cancelled: {
@@ -425,7 +425,7 @@ const EnrollPage = ({
             )}
           </div>
 
-          {/* ── Bouton Annuler — toujours disponible sauf si done/timeout ── */}
+          {/* ── Bouton Annuler - toujours disponible sauf si done/timeout ── */}
           {!isDone && !isTimeout && (
             <CButton
               color={isError ? 'primary' : 'light'}
@@ -782,7 +782,7 @@ const Fingerprint = () => {
           {totalPages > 1 && (
             <div className="d-flex justify-content-between align-items-center mt-3">
               <span className="text-muted" style={{ fontSize: '13px' }}>
-                Page {currentPage} / {totalPages} — {filteredStudents.length} étudiant(s)
+                Page {currentPage} / {totalPages} - {filteredStudents.length} étudiant(s)
               </span>
               <div className="d-flex gap-2">
                 <CButton size="sm" color="light" disabled={currentPage === 1}

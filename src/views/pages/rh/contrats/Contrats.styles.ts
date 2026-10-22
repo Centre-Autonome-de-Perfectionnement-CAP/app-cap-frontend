@@ -1,5 +1,5 @@
 // src/views/pages/rh/contrats/Contrats.styles.ts
-// Extrait tel quel de Contrats.tsx (aucune modification de contenu) — CSS injecté globalement
+// Extrait tel quel de Contrats.tsx (aucune modification de contenu) - CSS injecté globalement
 // par le composant racine Contrats.tsx via <style>{GLOBAL_STYLE}</style>.
 
 const GLOBAL_STYLE = `

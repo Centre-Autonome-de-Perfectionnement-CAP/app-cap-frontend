@@ -474,7 +474,7 @@ class InscriptionService {
   };
 
   /**
-   * Récupère les étudiants d'une classe — CORRIGÉ : route responsable
+   * Récupère les étudiants d'une classe - CORRIGÉ : route responsable
    */
   getStudentsByClass = async (classId: number): Promise<{ students: StudentRow[] }> => {
     const response = await HttpService.get<{ students: StudentRow[] }>(

@@ -88,7 +88,7 @@ export const SecretaryFileUploader = ({ demandeId, onSuccess }: Props) => {
         </div>
       </div>
 
-      {/* Modal de confirmation de succès — nécessite un OK explicite */}
+      {/* Modal de confirmation de succès - nécessite un OK explicite */}
       <CModal
         visible={successModal}
         onClose={() => setSuccessModal(false)}

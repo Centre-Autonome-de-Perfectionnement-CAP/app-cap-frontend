@@ -1,7 +1,7 @@
 // src/components/demandes/DemandesBadge.tsx
 //
-// Tâche 11.2 — Badge numérique style notification mobile sur la carte du portail.
-// Tâche 11.4 — Rendu nul si count est null (0 dossiers en attente).
+// Tâche 11.2 - Badge numérique style notification mobile sur la carte du portail.
+// Tâche 11.4 - Rendu nul si count est null (0 dossiers en attente).
 
 import React from 'react'
 
@@ -41,7 +41,7 @@ export const DemandesBadge: React.FC<DemandesBadgeProps> = ({ count }) => {
         padding: '0 6px',
         borderRadius: '11px',
 
-        // Couleurs : rouge vif — signal d'attention clair
+        // Couleurs : rouge vif - signal d'attention clair
         backgroundColor: '#dc3545',
         color: '#ffffff',
         fontSize: '0.72rem',
@@ -58,7 +58,7 @@ export const DemandesBadge: React.FC<DemandesBadgeProps> = ({ count }) => {
     >
       {label}
 
-      {/* Keyframe inline — évite d'avoir besoin d'un fichier CSS global */}
+      {/* Keyframe inline - évite d'avoir besoin d'un fichier CSS global */}
       <style>{`
         @keyframes demandeBadgePop {
           from { transform: scale(0.5); opacity: 0; }

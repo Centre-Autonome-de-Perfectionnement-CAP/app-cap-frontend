@@ -78,7 +78,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
         await run('comptable_validate_flagged', { motif })
       }} />
 
-    <MotifModal visible={rejectModal} title="Rejeter — retour à la secrétaire"
+    <MotifModal visible={rejectModal} title="Rejeter - retour à la secrétaire"
       confirmLabel="Rejeter" confirmColor="danger" placeholder="Décrire le problème financier…"
       onClose={() => setRejectModal(false)}
       onConfirm={async motif => { setRejectModal(false); await run('comptable_reject', { motif }) }} />

@@ -37,7 +37,7 @@ import {
   getStagesNavigation,
 } from '../_nav/index.tsx'
 
-// Rôles qui n'ont pas accès au portail — pas de bouton "Retour au Portail"
+// Rôles qui n'ont pas accès au portail - pas de bouton "Retour au Portail"
 const DIRECTION_ROLES_NO_PORTAL = ['sec-da', 'directrice-adjointe', 'sec-dir', 'directeur', 'superviseur']
 
 const AppSidebar = () => {

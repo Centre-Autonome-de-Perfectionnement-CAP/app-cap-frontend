@@ -462,7 +462,7 @@ const ProfessorContratsList = () => {
           </CButton>
           <CButton color="primary" onClick={handlePostValidationContinue}>
             <CIcon icon={cilBook} className="me-2" />
-            Continuer — Ajouter les supports
+            Continuer - Ajouter les supports
           </CButton>
         </CModalFooter>
       </CModal>

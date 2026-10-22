@@ -78,7 +78,7 @@ const Dashboard = () => {
           <div style={{ flex: 1 }}>
             <span style={{ fontWeight: 600, fontSize: '13px', color: sensor.active ? '#15803d' : '#64748b' }}>
               Capteur {sensor.active ? 'actif' : 'inactif'}
-              {sensor.active && sensor.matiere && ` — ${sensor.matiere} · ${sensor.start_time}–${sensor.end_time}`}
+              {sensor.active && sensor.matiere && ` - ${sensor.matiere} · ${sensor.start_time}–${sensor.end_time}`}
             </span>
             <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '1px' }}>{sensor.message}</div>
           </div>
@@ -97,7 +97,7 @@ const Dashboard = () => {
       <CCard className="shadow-sm border-0">
         <CCardBody>
 
-          {/* ── KPI cards — 3 cards style photo ──────────────────────── */}
+          {/* ── KPI cards - 3 cards style photo ──────────────────────── */}
           <CRow className="mb-4 g-3">
             {kpiCards.map(({ label, value, sub, bg, icon }) => (
               <CCol md={4} key={label}>
@@ -179,10 +179,10 @@ const Dashboard = () => {
 
           {!loading && (
             <>
-              {/* ── Bar chart — 3 datasets, style photo ───────────────── */}
+              {/* ── Bar chart - 3 datasets, style photo ───────────────── */}
               <CCard className="mb-4 border-0 shadow-sm" style={{ borderRadius: '8px' }}>
                 <div style={{ padding: '16px 20px', fontWeight: 600, fontSize: '14px', color: '#212529' }}>
-                  Tendance mensuelle — Présences, Retards &amp; Absences
+                  Tendance mensuelle - Présences, Retards &amp; Absences
                 </div>
                 <CCardBody style={{ paddingTop: 0 }}>
                   <CChartBar

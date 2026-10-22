@@ -26,7 +26,7 @@ class RhService {
     return HttpService.get<ApiResponse<Professor[]>>(url)
   }
 
-  // Liste complète non paginée — à utiliser uniquement dans les selects/dropdowns
+  // Liste complète non paginée - à utiliser uniquement dans les selects/dropdowns
   // pour garantir que TOUS les professeurs de la base sont disponibles.
   getProfessorsForSelect = async (status?: string): Promise<ApiResponse<Professor[]>> => {
     const url = status ? `rh/professors-select?status=${status}` : 'rh/professors-select'

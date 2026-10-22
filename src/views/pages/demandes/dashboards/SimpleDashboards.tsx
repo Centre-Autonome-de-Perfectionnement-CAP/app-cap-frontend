@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// FICHIER GROUPÉ : tous les dashboards simples (non-secrétaire) — VERSION 2
+// FICHIER GROUPÉ : tous les dashboards simples (non-secrétaire) - VERSION 2
 // Chaque section est un fichier à part à créer (voir guide d'intégration)
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -35,12 +35,12 @@ const ComptableDetailModal = ({ demande, visible, onClose, onAction }: any) => {
   </>)
   return (<>
     <DemandeModalShell demande={demande} visible={visible} onClose={onClose}
-      title="Vérification financière — Comptabilité" footer={footer}>
+      title="Vérification financière - Comptabilité" footer={footer}>
       <DemandeDetailBase demande={demande}>
         {null}
       </DemandeDetailBase>
     </DemandeModalShell>
-    <MotifModal visible={showReject} title="Rejeter — retour secrétaire"
+    <MotifModal visible={showReject} title="Rejeter - retour secrétaire"
       confirmLabel="Rejeter" confirmColor="danger"
       placeholder="Décrire le problème financier…"
       onClose={() => setShowReject(false)}
@@ -129,7 +129,7 @@ export const SimpleTransmitDashboard = ({
         </DemandeModalShell>
       )}
       {selected && (
-        <MotifModal visible={showReject} title="Rejeter — retour secrétaire"
+        <MotifModal visible={showReject} title="Rejeter - retour secrétaire"
           confirmLabel="Rejeter" confirmColor="danger"
           onClose={() => setShowReject(false)}
           onConfirm={async motif => { setShowReject(false); await run(rejectAction, { motif }) }} />
@@ -139,7 +139,7 @@ export const SimpleTransmitDashboard = ({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ResponsableDivisionDashboard.tsx — utilise SimpleTransmitDashboard
+// ResponsableDivisionDashboard.tsx - utilise SimpleTransmitDashboard
 // ─────────────────────────────────────────────────────────────────────────────
 export const ResponsableDivisionDashboard = () => (
   <SimpleTransmitDashboard
@@ -157,7 +157,7 @@ export const ResponsableDivisionDashboard = () => (
 // ─────────────────────────────────────────────────────────────────────────────
 export const SecretaireDaDashboard = () => (
   <SimpleTransmitDashboard
-    title="Transmission — Direction Adjointe"
+    title="Transmission - Direction Adjointe"
     subtitle="Secrétariat de la Direction Adjointe"
     statusKey="deputy_director_secretary_review"
     validateAction="secretaire_da_transmit"
@@ -172,7 +172,7 @@ export const SecretaireDaDashboard = () => (
 // ─────────────────────────────────────────────────────────────────────────────
 export const SecretaireDirecteurDashboard = () => (
   <SimpleTransmitDashboard
-    title="Transmission — Directeur"
+    title="Transmission - Directeur"
     subtitle="Secrétariat du Directeur"
     statusKey="director_secretary_review"
     validateAction="secretaire_directeur_transmit"

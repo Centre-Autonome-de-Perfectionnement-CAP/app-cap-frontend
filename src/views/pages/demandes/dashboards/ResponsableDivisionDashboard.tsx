@@ -54,7 +54,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
 
   return (<>
     <DemandeModalShell demande={demande} visible={visible} onClose={onClose}
-      title="Validation — Responsable Division" footer={footer}>
+      title="Validation - Responsable Division" footer={footer}>
       <DemandeDetailBase demande={demande}>
         {inCircuit ? (
           <ActorCorrectionNote />
@@ -75,7 +75,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
       onConfirm={async comment => { setRetourModal(false); await run('return_to_secretaire', { comment }) }}
     />
 
-    <MotifModal visible={rejectModal} title="Rejeter — retour à la secrétaire"
+    <MotifModal visible={rejectModal} title="Rejeter - retour à la secrétaire"
       confirmLabel="Rejeter" confirmColor="danger" placeholder="Motif du rejet…"
       onClose={() => setRejectModal(false)}
       onConfirm={async motif => { setRejectModal(false); await run('responsable_division_reject', { motif }) }} />

@@ -58,7 +58,7 @@ interface FactureRow {
   professor_id?: number
   factures: FactureFile[]
   uploaded_at: string
-  // Champs pour les filtres — récupérés via contrats enrichis
+  // Champs pour les filtres - récupérés via contrats enrichis
   department?: string
   filiere?: string
   class_name?: string

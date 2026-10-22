@@ -105,7 +105,7 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
     <CModal visible={reportId !== null} onClose={onClose} fullscreen alignment="center" keyboard={false}>
       <CModalHeader>
         <CModalTitle style={{ fontSize: '1rem', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {d ? <>{d.label}<span style={{ color: '#64748b', fontWeight: 600 }}>— {d.stage?.nom_complet}</span>
+          {d ? <>{d.label}<span style={{ color: '#64748b', fontWeight: 600 }}>- {d.stage?.nom_complet}</span>
             {st && <span className="stg-pill" style={{ color: st.color, background: st.bg }}>{d.status_label}</span>}
             {d.late && <span className="stg-pill" style={{ color: '#b45309', background: '#fef3c7' }}>En retard</span>}</> : 'Rapport'}
         </CModalTitle>

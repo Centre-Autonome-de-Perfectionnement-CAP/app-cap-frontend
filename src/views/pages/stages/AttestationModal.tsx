@@ -126,7 +126,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
     <CModal visible={attestationId !== null} onClose={onClose} size="lg" fullscreen="md" scrollable keyboard={false}>
       <CModalHeader>
         <CModalTitle style={{ fontSize: '1rem', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {a ? <>Attestation — {a.stage?.nom_complet}
+          {a ? <>Attestation - {a.stage?.nom_complet}
             {st && <span className="stg-pill" style={{ color: st.color, background: st.bg }}>{a.status_label}</span>}
             {a.kind !== 'normale' && <span className="stg-pill" style={{ color: '#9a3412', background: '#fff7ed' }}>{a.kind_label}</span>}</> : 'Attestation'}
         </CModalTitle>
@@ -145,7 +145,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
             <dl className="att-dl">
               <dt>Stagiaire</dt><dd>{c.nom_complet}</dd>
               <dt>Né(e) le</dt><dd>{frDate(c.date_naissance, true)} à {c.lieu_naissance}{!editing && c.pays_naissance ? ` (${c.pays_naissance})` : ''}</dd>
-              <dt>Établissement</dt><dd>{c.etablissement} — {c.filiere}</dd>
+              <dt>Établissement</dt><dd>{c.etablissement} - {c.filiere}</dd>
               <dt>Période</dt><dd>Du {frDate(c.date_debut, true)} au {frDate(c.date_fin, true)}{c.duree ? ` (${c.duree})` : ''}</dd>
               <dt>Lieu</dt><dd>{c.lieu ?? '—'}</dd>
               {!editing && <><dt>Stage</dt><dd>Stage {c.type_stage} au sein {c.structure}</dd></>}
@@ -231,7 +231,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
             {(a.status === 'imprimee' || a.status === 'remise') && (
               <div className="stg-card" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ flex: 1, minWidth: 180 }}>
-                  <strong>Scan pour l'archive</strong> <span className="stg-muted">(facultatif — PDF, JPG ou PNG, 10 Mo max.)</span>
+                  <strong>Scan pour l'archive</strong> <span className="stg-muted">(facultatif - PDF, JPG ou PNG, 10 Mo max.)</span>
                 </span>
                 {a.has_scan && <CButton size="sm" color="secondary" variant="outline" onClick={() => setScanView(true)}><CIcon icon={cilFile} className="me-1" />Voir</CButton>}
                 <CButton size="sm" color="primary" variant="outline" disabled={busy} onClick={() => fileRef.current?.click()}>

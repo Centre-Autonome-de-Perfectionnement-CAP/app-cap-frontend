@@ -51,7 +51,7 @@ const getNoteNavigation = (role: string | null) => {
   // ── Administrateurs ────────────────────────────────────────────────────────
   // FUSION main : section visible pour tout le personnel administratif
   // (admin, chef-division, responsable-division, scolarité, direction…),
-  // pas pour les professeurs ni les étudiants — même règle que NoteRoutes.
+  // pas pour les professeurs ni les étudiants - même règle que NoteRoutes.
   if (role && role !== 'professeur' && role !== 'etudiant') {
     navigation.push(
       { component: CNavTitle, name: 'Notes et Évaluations' },

@@ -1,6 +1,6 @@
 // src/constants/routes.constants.ts
-// — Ajout de FRONTEND_ROUTES.DEMANDES = '/demandes'
-// — Ajout de FRONTEND_ROUTES.DEMANDES_CAP_LOGIN et FRONTEND_ROUTES.DEMANDES_CAP
+// - Ajout de FRONTEND_ROUTES.DEMANDES = '/demandes'
+// - Ajout de FRONTEND_ROUTES.DEMANDES_CAP_LOGIN et FRONTEND_ROUTES.DEMANDES_CAP
 
 export const AUTH_ROUTES = {
   LOGIN: 'auth/login', LOGOUT: 'auth/logout',
@@ -231,6 +231,6 @@ export const FRONTEND_ROUTES = {
   PAGE_404: '/404',
   PAGE_500: '/500',
 
-  // Espace "responsable" (responsable de division) — voir ResponsableOnlyRoute dans App.tsx
+  // Espace "responsable" (responsable de division) - voir ResponsableOnlyRoute dans App.tsx
   RESPONSABLE_DASHBOARD: '/responsable/dashboard',
 } as const

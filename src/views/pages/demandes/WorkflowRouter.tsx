@@ -27,7 +27,7 @@ const WorkflowRouter = () => {
     case 'comptable':
       return <ComptableDashboard />
     case 'responsable-division':
-    case 'chef-division': // alias historique — même rôle côté backend (WorkflowConstants::ROLE_SLUG_ALIASES)
+    case 'chef-division': // alias historique - même rôle côté backend (WorkflowConstants::ROLE_SLUG_ALIASES)
       return <ResponsableDivisionDashboard />
     case 'chef-cap':
       return <ChefCapDashboard />

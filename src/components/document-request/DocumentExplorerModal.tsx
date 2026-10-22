@@ -216,7 +216,7 @@ const DocumentExplorerModal = ({ demande, visible, onClose }: Props) => {
                   Documents du dossier
                 </div>
                 <div style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 500, marginTop: 2 }}>
-                  {allFiles.length} fichier{allFiles.length > 1 ? 's' : ''} — cliquez pour visualiser
+                  {allFiles.length} fichier{allFiles.length > 1 ? 's' : ''} - cliquez pour visualiser
                 </div>
               </div>
             </div>
@@ -274,7 +274,7 @@ const DocumentExplorerModal = ({ demande, visible, onClose }: Props) => {
         </CModalBody>
       </CModal>
 
-      {/* ── Visualiseur — monté via portal directement sur document.body
+      {/* ── Visualiseur - monté via portal directement sur document.body
            pour éviter l'empilement de backdrops CoreUI ── */}
       {createPortal(
         <AttachmentViewerModal

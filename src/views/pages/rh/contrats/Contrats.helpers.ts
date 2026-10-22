@@ -1,5 +1,5 @@
 // src/views/pages/rh/contrats/Contrats.helpers.ts
-// Extrait tel quel de Contrats.tsx — fonctions utilitaires pures.
+// Extrait tel quel de Contrats.tsx - fonctions utilitaires pures.
 import type { Contrat } from '@/types/rh.types'
 import type { FilterState } from './Contrats.types'
 

@@ -233,7 +233,7 @@ const Management = () => {
           {totalPages > 1 && (
             <div className="d-flex justify-content-between align-items-center mt-3">
               <span className="text-muted" style={{ fontSize: '13px' }}>
-                Page {currentPage} / {totalPages} — {filteredStudents.length} résultat(s)
+                Page {currentPage} / {totalPages} - {filteredStudents.length} résultat(s)
               </span>
               <div className="d-flex gap-2">
                 <CButton size="sm" color="light" disabled={currentPage === 1}

@@ -253,7 +253,7 @@ const ProfessorDashboard = () => {
       {programs.length > 0 && (
         <CCard className="mt-4 border-0 shadow-sm">
           <CCardHeader className="bg-transparent">
-            <strong>Programmes — {programs[0]?.class_group_name || 'Classe sélectionnée'}</strong>
+            <strong>Programmes - {programs[0]?.class_group_name || 'Classe sélectionnée'}</strong>
             <CBadge color="info" className="ms-2">{programs.length} cours</CBadge>
           </CCardHeader>
           <CCardBody>

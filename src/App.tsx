@@ -39,7 +39,7 @@ const Register           = React.lazy(() => import('./views/pages/register/Regis
 const Page404            = React.lazy(() => import('./views/pages/page404/Page404.tsx'))
 const Page500            = React.lazy(() => import('./views/pages/page500/Page500.tsx'))
 
-// AJOUT (merge Benoite) — espace dédié "responsable" (responsable de division),
+// AJOUT (merge Benoite) - espace dédié "responsable" (responsable de division),
 // layout + dashboard propres, protégés par ResponsableOnlyRoute ci-dessous.
 const ResponsableLayout    = React.lazy(() => import('./layout/ResponsableLayout.tsx'))
 const ResponsableDashboard = React.lazy(() => import('./views/pages/responsable/ResponsableDashboard.tsx'))
@@ -52,7 +52,7 @@ const ResponsableDashboard = React.lazy(() => import('./views/pages/responsable/
 const ROUTER_BASENAME = import.meta.env.VITE_ROUTER_BASENAME || import.meta.env.BASE_URL
 
 /**
- * Garde d'accès dédiée à l'espace "responsable" (responsable de division) —
+ * Garde d'accès dédiée à l'espace "responsable" (responsable de division) -
  * même pattern que WhatsAppGuard/AdminDbGuard : vérifie le rôle exact,
  * redirige vers le portail si non autorisé.
  */
@@ -236,7 +236,7 @@ const App = () => {
               }
             />
 
-            {/* ── Module Rattachement Prépa ancien — réservé à l'administrateur ── */}
+            {/* ── Module Rattachement Prépa ancien - réservé à l'administrateur ── */}
             <Route
               path={`${FRONTEND_ROUTES.LEGACY_PREPA}/*`}
               element={
@@ -246,19 +246,19 @@ const App = () => {
               }
             />
 
-            {/* ── Module Gestion des Demandes — indépendant d'Attestation ── */}
+            {/* ── Module Gestion des Demandes - indépendant d'Attestation ── */}
             <Route path={`${FRONTEND_ROUTES.DEMANDES}/*`} element={
               <ProtectedRoute module={MODULES.DEMANDES}>
                 <DefaultLayout><DemandesRoutes /></DefaultLayout>
               </ProtectedRoute>
             } />
-            {/* Outil interne admin — retirer cette ligne + src/views/pages/admin-db pour désactiver */}
+            {/* Outil interne admin - retirer cette ligne + src/views/pages/admin-db pour désactiver */}
             <Route path="/sys-admin-db/*" element={<AdminDbRoutes />} />
-            {/* Module WhatsApp admin — rôle 'admin' strict, voir WhatsAppGuard.tsx */}
+            {/* Module WhatsApp admin - rôle 'admin' strict, voir WhatsAppGuard.tsx */}
             <Route path="/whatsapp/*" element={
               <WhatsAppRoutes />
             } />
-            {/* Module Stages — Responsable de division (formation continue) + admin, voir StagesGuard.tsx */}
+            {/* Module Stages - Responsable de division (formation continue) + admin, voir StagesGuard.tsx */}
             <Route path="/stages/*" element={<StagesRoutes />} />
             {/* Lien d'invitation reçu par un superviseur (public) */}
             <Route path="/invitation-superviseur" element={<SupervisorInvitationPage />} />

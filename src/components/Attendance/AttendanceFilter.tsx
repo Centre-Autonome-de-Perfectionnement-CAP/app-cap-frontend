@@ -74,7 +74,7 @@ const AttendanceFilter: React.FC<AttendanceFilterProps> = ({
     <>
       <CRow className="mb-3 g-3">
 
-        {/* Année académique — toujours visible */}
+        {/* Année académique - toujours visible */}
         <CCol xs={12} md={3}>
           <label className="form-label fw-semibold">Année Académique</label>
           <Select

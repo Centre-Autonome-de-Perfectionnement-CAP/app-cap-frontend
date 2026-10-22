@@ -6,10 +6,10 @@
 // il suffit de supprimer ce dossier + la route dans App.tsx.
 //
 // MISE À JOUR : 'responsable-division' ajouté après constat qu'aucun
-// compte 'admin' n'était réellement utilisé — le rôle 'responsable-division'
+// compte 'admin' n'était réellement utilisé - le rôle 'responsable-division'
 // porte désormais aussi cette responsabilité. Pour changer les rôles
 // autorisés, modifier uniquement ALLOWED_ROLES ci-dessous ET la même
-// constante côté backend (AdminTableController::ALLOWED_ROLES) — les deux
+// constante côté backend (AdminTableController::ALLOWED_ROLES) - les deux
 // doivent rester synchronisées.
 
 import React from 'react'

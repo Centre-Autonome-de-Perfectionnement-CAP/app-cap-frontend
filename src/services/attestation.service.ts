@@ -1,5 +1,5 @@
 // src/services/attestation.service.ts
-// Service complet — toutes les méthodes de génération et d'éligibilité
+// Service complet - toutes les méthodes de génération et d'éligibilité
 
 import HttpService from './http.service'
 
@@ -9,7 +9,7 @@ class AttestationService {
 
   // ── Éligibilité ─────────────────────────────────────────────────────────────
 
-  /** Étudiants éligibles — attestation de passage (décision favorable, pas dernière année) */
+  /** Étudiants éligibles - attestation de passage (décision favorable, pas dernière année) */
   getEligibleForSuccess = async (filters: {
     academic_year_id?: number
     department_id?: number
@@ -26,10 +26,10 @@ class AttestationService {
     return HttpService.get(qs ? `${BASE_URL}/eligible/passage?${qs}` : `${BASE_URL}/eligible/passage`)
   }
 
-  /** Alias — cohérence de nommage (passage = success dans proj2) */
+  /** Alias - cohérence de nommage (passage = success dans proj2) */
   getEligibleForPassage = this.getEligibleForSuccess
 
-  /** Étudiants éligibles — attestation définitive (dernière année du cycle) */
+  /** Étudiants éligibles - attestation définitive (dernière année du cycle) */
   getEligibleForDefinitive = async (filters: {
     academic_year_id?: number
     department_id?: number
@@ -46,7 +46,7 @@ class AttestationService {
     return HttpService.get(qs ? `${BASE_URL}/eligible/definitive?${qs}` : `${BASE_URL}/eligible/definitive`)
   }
 
-  /** Étudiants éligibles — attestation d'inscription (inscription approuvée) */
+  /** Étudiants éligibles - attestation d'inscription (inscription approuvée) */
   getEligibleForInscription = async (filters: {
     academic_year_id?: number
     department_id?: number
@@ -62,7 +62,7 @@ class AttestationService {
     return HttpService.get(qs ? `${BASE_URL}/eligible/inscription?${qs}` : `${BASE_URL}/eligible/inscription`)
   }
 
-  /** Étudiants éligibles — certificat de classes préparatoires */
+  /** Étudiants éligibles - certificat de classes préparatoires */
   getEligibleForPreparatory = async (filters: {
     academic_year_id?: number
     department_id?: number
@@ -78,7 +78,7 @@ class AttestationService {
     return HttpService.get(qs ? `${BASE_URL}/eligible/preparatory?${qs}` : `${BASE_URL}/eligible/preparatory`)
   }
 
-  /** Étudiants éligibles — bulletins (avec notes pour l'année sélectionnée) */
+  /** Étudiants éligibles - bulletins (avec notes pour l'année sélectionnée) */
   getEligibleForBulletins = async (filters: {
     academic_year_id?: number
     department_id?: number

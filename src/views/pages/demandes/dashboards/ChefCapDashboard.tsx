@@ -95,7 +95,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
         demande={demande}
         visible={visible}
         onClose={onClose}
-        title="Validation — Chef CAP"
+        title="Validation - Chef CAP"
         footer={footer}
       >
         <DemandeDetailBase demande={demande}>
@@ -132,7 +132,7 @@ const DetailModal = ({ demande, visible, onClose, onAction }: {
 
       <MotifModal
         visible={rejectModal}
-        title="Rejeter — retour à la secrétaire"
+        title="Rejeter - retour à la secrétaire"
         confirmLabel="Rejeter"
         confirmColor="danger"
         placeholder="Indiquer le motif…"

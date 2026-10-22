@@ -226,7 +226,7 @@ const AssignModal = ({ visible, ids, onClose, onDone }: { visible: boolean; ids:
         {sups && sups.length > 0 && (
           <CFormSelect value={supId} onChange={e => setSupId(e.target.value)}>
             <option value="">Choisir un superviseur…</option>
-            {sups.map(s => <option key={s.id} value={s.id}>{s.name} — {s.active_interns} stagiaire(s) en cours</option>)}
+            {sups.map(s => <option key={s.id} value={s.id}>{s.name} - {s.active_interns} stagiaire(s) en cours</option>)}
           </CFormSelect>
         )}
         {err && <div className="stg-err" style={{ marginTop: 12 }}>{err}</div>}

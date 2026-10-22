@@ -1,7 +1,7 @@
 // src/views/pages/whatsapp/WhatsAppPage.tsx
 //
 // Shell commun à toutes les vues WhatsApp.
-// Reçoit la vue active en prop depuis WhatsAppRoutes — c'est la sidebar
+// Reçoit la vue active en prop depuis WhatsAppRoutes - c'est la sidebar
 // qui gère la navigation, pas des boutons internes.
 
 import React, { Suspense } from 'react'
@@ -29,7 +29,7 @@ const VIEW_LABELS: Record<View, string> = {
 const VIEW_DESCRIPTIONS: Record<View, string> = {
   connexion:    'Gérez la connexion du compte WhatsApp et scannez le QR code.',
   envoyes:      'Historique de tous les messages envoyés avec succès, filtrables par module.',
-  echoues:      'Messages non délivrés — consultez les erreurs et relancez les envois.',
+  echoues:      'Messages non délivrés - consultez les erreurs et relancez les envois.',
   statistiques: 'Vue d\'ensemble des envois par statut et par module.',
 }
 

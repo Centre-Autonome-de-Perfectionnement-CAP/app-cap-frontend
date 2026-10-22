@@ -1,9 +1,9 @@
 // src/views/pages/portail/Portail.tsx
 //
-// Tâche 11.2 — Badge numérique sur la carte "CAP Demandes" uniquement.
+// Tâche 11.2 - Badge numérique sur la carte "CAP Demandes" uniquement.
 //              Les autres modules n'ont pas (encore) de badge.
-// Tâche 11.3 — Polling via useDemandesBadge (60 s).
-// Tâche 11.4 — Badge absent si count === 0.
+// Tâche 11.3 - Polling via useDemandesBadge (60 s).
+// Tâche 11.4 - Badge absent si count === 0.
 
 import {
   CCard,
@@ -25,7 +25,7 @@ import { useAuth } from '@/contexts'
 import { useStagesAccess } from '@/views/pages/stages/useStagesAccess'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Liste des modules — ordre alphabétique maintenu, "CAP Demandes" marqué
+// Liste des modules - ordre alphabétique maintenu, "CAP Demandes" marqué
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Application {
@@ -192,7 +192,7 @@ const Portail = () => {
                   className="h-200 shadow-sm hover-shadow"
                   style={{ position: 'relative' }}
                 >
-                  {/* Tâche 11.2 — Badge uniquement sur CAP Demandes */}
+                  {/* Tâche 11.2 - Badge uniquement sur CAP Demandes */}
                   {app.hasBadge && <DemandesBadge count={count} />}
 
                   <CCardImage orientation="top" src={app.image} height={300} className="p-3" />

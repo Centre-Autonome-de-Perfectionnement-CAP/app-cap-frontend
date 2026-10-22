@@ -1,5 +1,5 @@
 // src/views/pages/rh/contrats/components/Modal.tsx
-// Extrait tel quel de Contrats.tsx — modale générique réutilisée par tous les sous-modules.
+// Extrait tel quel de Contrats.tsx - modale générique réutilisée par tous les sous-modules.
 import React from 'react'
 import Icon from '../Contrats.icons'
 

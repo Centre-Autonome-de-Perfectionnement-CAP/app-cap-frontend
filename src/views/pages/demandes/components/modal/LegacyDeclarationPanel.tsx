@@ -97,7 +97,7 @@ const LegacyDeclarationPanel = ({ demande, canDecide = false, onChanged }: Props
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ fontWeight: 700, color: ui.color, fontSize: '0.95rem' }}>
-          Ancien étudiant — {ui.label}
+          Ancien étudiant - {ui.label}
         </div>
         {canDecide && status === 'pending' && (
           <div style={{ display: 'flex', gap: 8 }}>

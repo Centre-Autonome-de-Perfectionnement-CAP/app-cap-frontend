@@ -12,7 +12,7 @@ import axios from 'axios'
 
 // ─── URLs ────────────────────────────────────────────────────────────────────
 // Respecte VITE_API_URL comme http.service.ts, et corrige le chemin
-// (c'était "emploi-temps" au lieu de "emploi-du-temps" — 404 garanti côté API,
+// (c'était "emploi-temps" au lieu de "emploi-du-temps" - 404 garanti côté API,
 // voir EMPLOI_DU_TEMPS_ROUTES dans constants/routes.constants.ts).
 const API_BASE = (import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:8001') + '/api'
 const API     = `${API_BASE}/emploi-du-temps`
@@ -262,7 +262,7 @@ const DownloadEdtModal: React.FC<Props> = ({ visible, onClose }) => {
                 value={academicYearId}
                 onChange={e => setAcademicYearId(e.target.value)}
               >
-                <option value="">— Toutes les années —</option>
+                <option value="">- Toutes les années -</option>
                 {academicYears.map(ay => (
                   <option key={ay.id} value={ay.id}>
                     {ay.libelle ?? ay.academic_year}{ay.is_current ? ' ★' : ''}
@@ -278,7 +278,7 @@ const DownloadEdtModal: React.FC<Props> = ({ visible, onClose }) => {
                 value={departmentId}
                 onChange={e => setDepartmentId(e.target.value)}
               >
-                <option value="">— Tous les départements —</option>
+                <option value="">- Tous les départements -</option>
                 {departments.map(d => (
                   <option key={d.id} value={d.id}>{d.name} ({d.abbreviation})</option>
                 ))}
@@ -296,10 +296,10 @@ const DownloadEdtModal: React.FC<Props> = ({ visible, onClose }) => {
                 onChange={e => setClassGroupId(e.target.value)}
                 disabled={cgLoading}
               >
-                <option value="">— Toutes les classes —</option>
+                <option value="">- Toutes les classes -</option>
                 {classGroups.map(c => (
                   <option key={c.id} value={c.id}>
-                    {c.group_name} — {c.study_level}
+                    {c.group_name} - {c.study_level}
                   </option>
                 ))}
               </CFormSelect>

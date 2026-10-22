@@ -84,7 +84,7 @@ export type ContratStatus =
   | 'completed'
   | 'cancelled'
   | 'transfered'
-  | 'resiliated'   // Lien expiré — 72 h dépassées sans signature du professeur
+  | 'resiliated'   // Lien expiré - 72 h dépassées sans signature du professeur
 
 export interface ProfessorProgram {
   id: number

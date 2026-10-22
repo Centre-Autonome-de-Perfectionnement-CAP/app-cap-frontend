@@ -1,5 +1,5 @@
 // src/views/pages/rh/contrats/Contrats.types.ts
-// Extrait tel quel de Contrats.tsx — types locaux partagés entre les sous-composants.
+// Extrait tel quel de Contrats.tsx - types locaux partagés entre les sous-composants.
 
 export type Professor = {
   id: number;

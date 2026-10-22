@@ -133,7 +133,7 @@ const DemandeDetailBase = ({ demande, children, onRefresh }: Props) => {
       {/* Contenu additionnel (ex. SecretaryFileUploader) */}
       {children && <div style={{ marginTop: 16 }}>{children}</div>}
 
-      {/* Fichiers du dossier — liste avec actions pour la secrétaire */}
+      {/* Fichiers du dossier - liste avec actions pour la secrétaire */}
       <div style={{ marginTop: 16 }}>
         <DossierFilesSplit
           demandeId={demande.id}

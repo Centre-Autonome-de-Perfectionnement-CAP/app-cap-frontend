@@ -1,7 +1,7 @@
 // src/views/pages/whatsapp/components/ConnectionPanel.tsx
 //
-// Statut + QR + déconnexion — polling adaptatif (3s si déconnecté, 10s si connecté).
-// Pas de sous-cartes — layout simple en lignes, conforme au style du projet.
+// Statut + QR + déconnexion - polling adaptatif (3s si déconnecté, 10s si connecté).
+// Pas de sous-cartes - layout simple en lignes, conforme au style du projet.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
@@ -100,7 +100,7 @@ const ConnectionPanel: React.FC = () => {
       )}
 
       <CRow className="g-4">
-        {/* Colonne gauche — statut et infos */}
+        {/* Colonne gauche - statut et infos */}
         <CCol xs={12} md={isConnected ? 5 : 12} lg={isConnected ? 4 : 12}>
 
           {/* Statut */}
@@ -178,12 +178,12 @@ const ConnectionPanel: React.FC = () => {
           </div>
         </CCol>
 
-        {/* Colonne droite — QR code */}
+        {/* Colonne droite - QR code */}
         {!isConnected && status?.qr && (
           <CCol xs={12} md={7} lg={8}>
             <div className="text-center">
               <small className="text-muted text-uppercase fw-semibold d-block mb-3">
-                QR Code — à scanner avec WhatsApp
+                QR Code - à scanner avec WhatsApp
               </small>
               <img
                 src={status.qr}

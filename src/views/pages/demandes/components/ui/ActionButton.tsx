@@ -68,7 +68,7 @@ const ActionButton = ({
     if (isDisabled || !ref.current) return
     if (variant === 'outline') {
       ref.current.style.background = hex
-      ref.current.style.color = '#ffffff'  // blanc — jamais noir sur fond coloré
+      ref.current.style.color = '#ffffff'  // blanc - jamais noir sur fond coloré
     } else if (variant === 'solid') {
       ref.current.style.opacity = '0.85'
     }

@@ -156,7 +156,7 @@ private request<T = any>(options: RequestOptions): Promise<T> {
       delete options.headers?.['Content-Type'];
       delete options.headers?.['content-type'];
 
-      // Injection explicite du token — garantit que le header Authorization
+      // Injection explicite du token - garantit que le header Authorization
       // est présent même quand l'intercepteur async ne s'applique pas
       // correctement sur les requêtes multipart.
       const token = localStorage.getItem('token');

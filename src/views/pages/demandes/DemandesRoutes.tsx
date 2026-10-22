@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { LoadingSpinner } from '@/components'
 import { FRONTEND_ROUTES } from '@/constants'
 
-// Import LOCAL — plus aucune dépendance vers /attestation/
+// Import LOCAL - plus aucune dépendance vers /attestation/
 const WorkflowRouter = React.lazy(() => import('./WorkflowRouter'))
 
 const DemandesRoutes = () => (

@@ -2,7 +2,7 @@
 // Extrait tel quel de Contrats.tsx
 //
 // CORRECTIF (16/08/2026) : le bouton "Transférer une copie via WhatsApp"
-// (whatsapp://, repli wa.me) a été retiré — il obligeait l'admin à envoyer
+// (whatsapp://, repli wa.me) a été retiré - il obligeait l'admin à envoyer
 // lui-même, depuis son propre numéro personnel, sans aucune trace. L'envoi
 // WhatsApp (texte + PDF) est maintenant automatique côté serveur, dans
 // ContratController::sendTransferEmail(), via notre module WhatsApp.

@@ -64,7 +64,7 @@ const EntryForm: React.FC = () => {
     }
   }, [id])
 
-  // AJOUT — charge les créneaux d'emploi du temps (nouveau système,
+  // AJOUT - charge les créneaux d'emploi du temps (nouveau système,
   // "Gestion emploi du temps") liés au programme sélectionné. Une entrée
   // de cahier de texte doit obligatoirement être rattachée à un créneau.
   useEffect(() => {

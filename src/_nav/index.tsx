@@ -143,7 +143,7 @@ const mainNavigationBase = [
 // casser côté AppSidebar si jamais réutilisé ailleurs.
 const mainNavigation = mainNavigationBase
 
-// AJOUT (15/08/2026) — entrée WhatsApp admin, visible pour les rôles
+// AJOUT (15/08/2026) - entrée WhatsApp admin, visible pour les rôles
 // 'admin' et 'responsable-division' (décision utilisateur). Suit le même
 // pattern que getDemandesNavigation/getNoteNavigation : une fonction du
 // rôle plutôt qu'un tableau statique, pour permettre le filtrage conditionnel.

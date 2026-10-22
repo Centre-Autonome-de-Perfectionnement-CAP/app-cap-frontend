@@ -52,7 +52,7 @@ const SecDaDetailModal = ({ demande, visible, onClose, onAction }: {
 
   return (<>
     <DemandeModalShell demande={demande} visible={visible} onClose={onClose}
-      title="Transmission — Sec. Directrice Adjointe" footer={footer}>
+      title="Transmission - Sec. Directrice Adjointe" footer={footer}>
       <DemandeDetailBase demande={demande}>
         {inCircuit ? (
           <ActorCorrectionNote />
@@ -73,7 +73,7 @@ const SecDaDetailModal = ({ demande, visible, onClose, onAction }: {
       onConfirm={async comment => { setRetourModal(false); await run('return_to_secretaire', { comment }) }}
     />
 
-    <MotifModal visible={rejectModal} title="Rejeter — retour à la secrétaire"
+    <MotifModal visible={rejectModal} title="Rejeter - retour à la secrétaire"
       confirmLabel="Rejeter" confirmColor="danger"
       onClose={() => setRejectModal(false)}
       onConfirm={async motif => { setRejectModal(false); await run('sec_da_reject', { motif }) }} />
@@ -100,7 +100,7 @@ export const SecDirAdjointeDashboard = () => {
   return (
     <DashboardShell
       title="Documents à transmettre"
-      subtitle="Secrétaire — Directrice Adjointe"
+      subtitle="Secrétaire - Directrice Adjointe"
       search={filters.search ?? ''}
       onSearchChange={v => setFilters({ ...filters, search: v })}
       stats={[{ key: 'deputy_director_secretary_review', label: 'Dossiers à transmettre' }]}

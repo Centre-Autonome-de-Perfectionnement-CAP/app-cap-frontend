@@ -5,12 +5,12 @@
 //
 // Comportement :
 //   - Envoi ASYNCHRONE côté serveur (13/10/2026) : WhatsApp et email sont mis
-//     en file d'envoi indépendamment, avec retry automatique — la réponse est
+//     en file d'envoi indépendamment, avec retry automatique - la réponse est
 //     immédiate (plus d'erreur de délai alors que le message part bien)
 //   - À la fin : modal de résultat avec succès/échec PAR CANAL, motif exact
 //     affiché en cas d'échec (pas de message générique)
 //   - En cas d'échec : bouton "Réessayer"
-//   - Le modal de résultat NE SE FERME PAS tout seul — il faut cliquer sur OK
+//   - Le modal de résultat NE SE FERME PAS tout seul - il faut cliquer sur OK
 //   - Modal centré, bien visible (alignment="center", backdrop="static")
 
 import { useState, useEffect, useRef } from 'react'
@@ -49,8 +49,8 @@ interface Props {
 }
 
 const MAX_FILES     = 5
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 Mo — doit rester aligné avec la limite backend
-// Formats acceptés — alignés sur la validation backend (contactDemandeur)
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 Mo - doit rester aligné avec la limite backend
+// Formats acceptés - alignés sur la validation backend (contactDemandeur)
 const ACCEPTED_EXT  = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx']
 
 // ─── Ligne de résultat par canal ─────────────────────────────────────────────
@@ -67,7 +67,7 @@ const ChannelRow = ({ label, result }: { label: string; result: ChannelResult })
         <div>
           <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#64748b' }}>{label}</div>
           <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: 2 }}>
-            Non tenté — aucune coordonnée enregistrée pour ce dossier.
+            Non tenté - aucune coordonnée enregistrée pour ce dossier.
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@ const ChannelRow = ({ label, result }: { label: string; result: ChannelResult })
       />
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 700, fontSize: '0.875rem', color: ok ? '#166534' : '#991b1b' }}>
-          {label} — {ok ? (result.queued ? 'Pris en charge — envoi en cours' : 'Envoyé avec succès') : 'Échec de l\u2019envoi'}
+          {label} - {ok ? (result.queued ? 'Pris en charge - envoi en cours' : 'Envoyé avec succès') : 'Échec de l\u2019envoi'}
         </div>
         {result.reason && (
           <div style={{ fontSize: '0.875rem', color: ok ? '#92400e' : '#b91c1c', marginTop: 4, lineHeight: 1.5 }}>
@@ -139,16 +139,16 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
     const badType  = incoming.find(f => !extOk(f))
     const tooLarge = incoming.find(f => f.size > MAX_FILE_SIZE)
     if (badType) {
-      setFileError(`"${badType.name}" : format non accepté (PDF, images, Word, Excel) — fichier ignoré.`)
+      setFileError(`"${badType.name}" : format non accepté (PDF, images, Word, Excel) - fichier ignoré.`)
     } else if (tooLarge) {
-      setFileError(`"${tooLarge.name}" dépasse 10 Mo — fichier ignoré.`)
+      setFileError(`"${tooLarge.name}" dépasse 10 Mo - fichier ignoré.`)
     }
 
     const valid = incoming.filter(f => f.size <= MAX_FILE_SIZE && extOk(f))
     const merged = [...attachments, ...valid].slice(0, MAX_FILES)
 
     if (attachments.length + valid.length > MAX_FILES) {
-      setFileError(`Maximum ${MAX_FILES} pièces jointes — le reste a été ignoré.`)
+      setFileError(`Maximum ${MAX_FILES} pièces jointes - le reste a été ignoré.`)
     }
 
     setAttachments(merged)
@@ -226,7 +226,7 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
               Contacter le demandeur
             </div>
             <div style={{ fontWeight: 500, fontSize: '0.875rem', color: '#1e40af', marginTop: 3 }}>
-              {demande.reference} — {nomDemandeur}
+              {demande.reference} - {nomDemandeur}
             </div>
           </div>
         </CModalTitle>
@@ -319,7 +319,7 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
               Envoi en cours...
             </div>
             <div style={{ fontSize: '0.875rem', color: '#64748b', textAlign: 'center' }}>
-              Préparation de l'envoi WhatsApp et email — merci de patienter.
+              Préparation de l'envoi WhatsApp et email - merci de patienter.
             </div>
           </div>
         )}

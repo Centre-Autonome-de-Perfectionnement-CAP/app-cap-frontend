@@ -2,7 +2,7 @@
 //
 // Hook partagé par les 4 rôles direction.
 // Calcule les compteurs affichés dans les StatCards à partir des demandes déjà chargées
-// (pas d'appel API supplémentaire — les demandes viennent de useDemandesDashboard).
+// (pas d'appel API supplémentaire - les demandes viennent de useDemandesDashboard).
 //
 // RÈGLE : les acteurs direction ne voient QUE leur statut propre dans le listing.
 // Donc :
@@ -35,7 +35,7 @@ export const useDirectionStats = (demandes: DocumentRequest[]) => {
   const fetchStats = useCallback(async () => {
     setStatsLoading(true)
     try {
-      // @ts-ignore — getStats existe sur le service mais pas encore typé
+      // @ts-ignore - getStats existe sur le service mais pas encore typé
       const res = await documentRequestService.getStats?.()
       setApiStats(res?.data ?? null)
     } catch {

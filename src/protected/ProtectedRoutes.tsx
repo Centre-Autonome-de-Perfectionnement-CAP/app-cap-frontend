@@ -1,6 +1,6 @@
 // src/protected/ProtectedRoutes.tsx
 // Les 4 rôles direction sont redirigés vers /demandes s'ils tentent
-// d'accéder à /portail (ou toute autre route interdite) — ils ignorent
+// d'accéder à /portail (ou toute autre route interdite) - ils ignorent
 // l'existence du portail.
 // Le rôle 'responsable' (responsable de classe, distinct de
 // 'responsable-division') n'a accès qu'à son propre espace /responsable/*.
@@ -19,7 +19,7 @@ const DIRECTION_ROLES = ['sec-da', 'directrice-adjointe', 'sec-dir', 'directeur'
 
 // Permissions par rôle : false = module interdit, absent = autorisé par défaut
 // IMPORTANT : ces clés doivent être EXACTEMENT celles de MODULES
-// (src/constants/modules.constants.ts) et des props module={...} de App.tsx —
+// (src/constants/modules.constants.ts) et des props module={...} de App.tsx -
 // 'cahier-texte', 'emploi-du-temps', 'attestations', 'soutenances' (pas
 // 'cahier', 'emploi', 'attestation', 'soutenance' : une clé qui ne
 // correspond à aucun module réel ne bloque RIEN silencieusement).
@@ -36,7 +36,7 @@ const rolePermissions: Record<string, Record<string, boolean>> = {
     presence: false,
     finance: false,
   },
-  // Alias legacy de 'responsable-division' (workflow Demandes) — non restreint
+  // Alias legacy de 'responsable-division' (workflow Demandes) - non restreint
   'chef-division': {},
   'comptable': {
     attestations: false,
@@ -107,7 +107,7 @@ const rolePermissions: Record<string, Record<string, boolean>> = {
   },
 };
 
-// Modules autorisés au professeur (pour la redirection) —
+// Modules autorisés au professeur (pour la redirection) -
 // mêmes clés réelles que rolePermissions/MODULES ci-dessus.
 const PROFESSEUR_ALLOWED_MODULES = ['notes', 'emploi-du-temps']
 
@@ -163,7 +163,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, module }) => 
 
   // Vérification des permissions par module pour les autres rôles admin
   if (module && !isAllowed(r, module)) {
-    // Rôles direction : pas de modal "portail" — redirect directe vers demandes
+    // Rôles direction : pas de modal "portail" - redirect directe vers demandes
     if (DIRECTION_ROLES.includes(r)) {
       return <Navigate to={FRONTEND_ROUTES.DEMANDES} replace />;
     }

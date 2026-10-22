@@ -445,7 +445,7 @@ const TextbookList = () => {
       </CRow>
 
       {/* ════════════════════════════════════════════════════════════════════
-          MODAL — Détail d'une entrée
+          MODAL - Détail d'une entrée
       ════════════════════════════════════════════════════════════════════ */}
       <CModal
         visible={detailModal}
@@ -456,7 +456,7 @@ const TextbookList = () => {
       >
         <CModalHeader>
           <CModalTitle>
-            Détail de l'entrée —{' '}
+            Détail de l'entrée -{' '}
             <span className="text-muted fw-normal">
               {selectedEntry?.session_date}
             </span>
@@ -479,7 +479,7 @@ const TextbookList = () => {
                     </CBadge>
                     {selectedEntry.start_time && selectedEntry.end_time && (
                       <CBadge color="light" textColor="dark">
-                        {selectedEntry.start_time} — {selectedEntry.end_time}
+                        {selectedEntry.start_time} - {selectedEntry.end_time}
                       </CBadge>
                     )}
                     <CBadge color="primary">{selectedEntry.hours_taught}h dispensées</CBadge>
@@ -577,7 +577,7 @@ const TextbookList = () => {
       </CModal>
 
       {/* ════════════════════════════════════════════════════════════════════
-          MODAL — Confirmation (suppression / validation)
+          MODAL - Confirmation (suppression / validation)
       ════════════════════════════════════════════════════════════════════ */}
       {confirmConfig && (
         <CModal
@@ -613,7 +613,7 @@ const TextbookList = () => {
       )}
 
       {/* ════════════════════════════════════════════════════════════════════
-          MODAL — Télécharger l'état de paiement (Excel)
+          MODAL - Télécharger l'état de paiement (Excel)
       ════════════════════════════════════════════════════════════════════ */}
       <CModal
         visible={downloadModal}
@@ -653,7 +653,7 @@ const TextbookList = () => {
                   onChange={(e) => setSelectedAcademicYearId(e.target.value)}
                   disabled={downloadLoading}
                 >
-                  <option value="">— Sélectionner une année —</option>
+                  <option value="">- Sélectionner une année -</option>
                   {academicYears.map((year) => (
                     <option key={year.id} value={String(year.id)}>
                       {year.academic_year ?? year.libelle}

@@ -424,7 +424,7 @@ const ProfessorTextbookPage = () => {
               Historique des séances
               {selectedProgram && (
                 <span className="ms-2 text-muted fw-normal" style={{ fontSize: '0.9rem' }}>
-                  — {selectedProgram.course_name}
+                  - {selectedProgram.course_name}
                 </span>
               )}
             </h5>
@@ -589,7 +589,7 @@ const ProfessorTextbookPage = () => {
 
                           
 
-                          {/* Validé — non modifiable */}
+                          {/* Validé - non modifiable */}
                           {entry.status === 'validated' && (
                             <CBadge color="info">Validé</CBadge>
                           )}
@@ -759,7 +759,7 @@ const ProfessorTextbookPage = () => {
             )}
             {detailEntry?.status === 'validated' && (
               <CBadge color="info" className="px-3 py-2">
-                ✓ Entrée validée — non modifiable
+                ✓ Entrée validée - non modifiable
               </CBadge>
             )}
           </div>

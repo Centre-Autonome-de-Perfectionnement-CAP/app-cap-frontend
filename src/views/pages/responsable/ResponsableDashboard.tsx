@@ -239,7 +239,7 @@ const ResponsableDashboard: React.FC = () => {
         <CCardHeader className="bg-light">
           <div className="d-flex align-items-center gap-2">
             <CIcon icon={cilGroup} size="lg" className="text-primary" />
-            <h5 className="mb-0">Mes classes — cliquez sur une classe pour voir ses programmes</h5>
+            <h5 className="mb-0">Mes classes - cliquez sur une classe pour voir ses programmes</h5>
           </div>
         </CCardHeader>
         <CCardBody>
@@ -332,7 +332,7 @@ const ResponsableDashboard: React.FC = () => {
               </CButton>
               <CIcon icon={cilClipboard} className="text-primary" />
               <h5 className="mb-0">
-                Programmes — {selectedClass.filiere} · Niveau {selectedClass.study_level}
+                Programmes - {selectedClass.filiere} · Niveau {selectedClass.study_level}
                 {selectedClass.group_name && ` · Gr.${selectedClass.group_name}`}
               </h5>
             </div>
@@ -436,8 +436,8 @@ const ResponsableDashboard: React.FC = () => {
                             <CTooltip
                               content={
                                 program.contract_status
-                                  ? `Saisie bloquée — ${CONTRACT_BADGE[program.contract_status]?.label}`
-                                  : 'Saisie bloquée — Aucun contrat'
+                                  ? `Saisie bloquée - ${CONTRACT_BADGE[program.contract_status]?.label}`
+                                  : 'Saisie bloquée - Aucun contrat'
                               }
                             >
                               <span>
@@ -499,8 +499,8 @@ const ResponsableDashboard: React.FC = () => {
                 </CButton>
                 <CIcon icon={cilPeople} className="text-primary" />
                 <h5 className="mb-0">
-                  {selectedClass.filiere} — Niveau {selectedClass.study_level}
-                  {selectedClass.group_name && ` — Groupe ${selectedClass.group_name}`}
+                  {selectedClass.filiere} - Niveau {selectedClass.study_level}
+                  {selectedClass.group_name && ` - Groupe ${selectedClass.group_name}`}
                 </h5>
                 <CBadge color="primary">{filteredStudents.length} étudiant(s)</CBadge>
               </div>

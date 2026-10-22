@@ -34,7 +34,7 @@ export interface ColumnConfig {
 }
 
 interface Props {
-  /** Type d'attestation — détermine les appels API */
+  /** Type d'attestation - détermine les appels API */
   attestationType: AttestationType
   /** Titre affiché dans le header */
   title: string

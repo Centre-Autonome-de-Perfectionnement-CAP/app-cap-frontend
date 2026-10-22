@@ -53,7 +53,7 @@ const Dashboard = () => {
       <CRow className="mb-4">
         <CCol>
           <h4 className="fw-bold">
-            {isProfesseur ? `Mon Cahier de Texte` : 'Tableau de bord — Cahier de Texte'}
+            {isProfesseur ? `Mon Cahier de Texte` : 'Tableau de bord - Cahier de Texte'}
           </h4>
           {isProfesseur && (nom || prenoms) && (
             <p className="text-muted mb-0">{prenoms} {nom}</p>

@@ -1,6 +1,6 @@
 // src/views/pages/demandes/DemandesCAPRoutes.tsx
 // Routes dédiées à l'espace CAP Demandes direction.
-// Pas de DefaultLayout — CAPLayout est géré directement dans WorkflowRouter.
+// Pas de DefaultLayout - CAPLayout est géré directement dans WorkflowRouter.
 // Accessible sur /demandes/cap/*
 
 import React, { Suspense } from 'react'

@@ -97,7 +97,7 @@ const DetailModal = ({ demande, visible, onClose, onAction, onReload }: {
     <>
       <ActionButton label="Fermer" color="secondary" variant="ghost" onClick={onClose} disabled={!!loadingAction} />
 
-      {/* Contacter le demandeur — visible quel que soit le statut, secrétaire uniquement */}
+      {/* Contacter le demandeur - visible quel que soit le statut, secrétaire uniquement */}
       <ActionButton
         label="Contacter le demandeur"
         icon={cilCommentBubble}
@@ -320,7 +320,7 @@ const SecretaireDashboard = () => {
                 Gestion des demandes
               </div>
               <div style={{ fontSize: '1rem', color: '#64748b', marginTop: 2, fontWeight: 500 }}>
-                Tableau de bord — Secrétariat
+                Tableau de bord - Secrétariat
               </div>
             </div>
             <DemandeSearchBar

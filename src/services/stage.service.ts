@@ -1,5 +1,5 @@
 // src/services/stage.service.ts
-// Module Stages (Lot 1) — Responsable de division (formation continue) et admin.
+// Module Stages (Lot 1) - Responsable de division (formation continue) et admin.
 
 import HttpService from './http.service'
 

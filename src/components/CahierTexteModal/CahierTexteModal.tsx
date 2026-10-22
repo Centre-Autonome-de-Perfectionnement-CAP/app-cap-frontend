@@ -257,8 +257,8 @@ const CahierTexteModal: React.FC<CahierTexteModalProps> = ({ visible, onClose, p
           <CIcon icon={cilWarning} />
           <div>
             <strong>Saisie désactivée</strong>
-            {info && <> — {info.label}</>}
-            {!cs && <> — Aucun contrat enregistré pour cet enseignant.</>}
+            {info && <> - {info.label}</>}
+            {!cs && <> - Aucun contrat enregistré pour cet enseignant.</>}
           </div>
         </CAlert>
       );
@@ -568,7 +568,7 @@ const CahierTexteModal: React.FC<CahierTexteModalProps> = ({ visible, onClose, p
       <CModalHeader>
         <CModalTitle>
           <CIcon icon={cilDescription} className="me-2 text-primary" />
-          Cahier de texte —{' '}
+          Cahier de texte -{' '}
           <span className="text-primary">{program.course_element_name || 'Programme'}</span>
           {program.course_element_code && (
             <CBadge color="light" textColor="dark" className="ms-2">

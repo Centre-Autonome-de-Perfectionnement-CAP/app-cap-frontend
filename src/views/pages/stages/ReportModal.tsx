@@ -96,7 +96,7 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
 
   const st = d ? STATUS_COLOR[d.status] : null
   const events = d ? [
-    ...d.versions.map(v => ({ at: v.at, el: <><strong>Version {v.version}</strong> déposée{v.late ? ' (en retard)' : ''}{v.note ? <div style={{ whiteSpace: 'pre-line' }}>{v.note}</div> : null}</> })),
+    ...d.versions.map(v => ({ at: v.at, el: <><strong>Version {v.version}</strong> déposée{v.late ? ' (en retard)' : ''}{v.post_defense ? ' - corrigée après soutenance' : ''}{v.note ? <div style={{ whiteSpace: 'pre-line' }}>{v.note}</div> : null}</> })),
     ...d.comments.map(c => ({ at: c.at, el: <><strong>{c.author === 'staff' ? c.name : 'Stagiaire'}</strong> <span className="text-muted">(v{c.version})</span><div style={{ whiteSpace: 'pre-line' }}>{c.body}</div></> })),
     ...d.reviews.map(r => ({ at: r.at, el: <><strong style={{ color: r.decision === 'approved' ? '#059669' : '#ea580c' }}>{r.decision === 'approved' ? 'Validé' : 'À corriger'}</strong> par {r.name} ({r.role}, v{r.version}){r.comment ? <div style={{ whiteSpace: 'pre-line' }}>{r.comment}</div> : null}</> })),
   ].sort((a, b) => a.at.localeCompare(b.at)) : []
@@ -107,7 +107,8 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
         <CModalTitle style={{ fontSize: '1rem', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           {d ? <>{d.label}<span style={{ color: '#64748b', fontWeight: 600 }}>- {d.stage?.nom_complet}</span>
             {st && <span className="stg-pill" style={{ color: st.color, background: st.bg }}>{d.status_label}</span>}
-            {d.late && <span className="stg-pill" style={{ color: '#b45309', background: '#fef3c7' }}>En retard</span>}</> : 'Rapport'}
+            {d.late && <span className="stg-pill" style={{ color: '#b45309', background: '#fef3c7' }}>En retard</span>}
+            {d.correction_status === 'pending' && <span className="stg-pill" style={{ color: '#1d4ed8', background: '#dbeafe' }}>Version corrigée après soutenance à relire</span>}</> : 'Rapport'}
         </CModalTitle>
       </CModalHeader>
       <CModalBody style={{ padding: 0, display: 'flex', minHeight: 0, background: '#f1f5f9' }}>
@@ -118,7 +119,7 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
             <div className="rpt-doc">
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 12px', background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
                 <CFormSelect size="sm" style={{ maxWidth: 220 }} value={version} onChange={e => setVersion(Number(e.target.value))}>
-                  {[...d.versions].reverse().map(v => <option key={v.version} value={v.version}>Version {v.version}{v.version === d.current_version ? ' (actuelle)' : ''}</option>)}
+                  {[...d.versions].reverse().map(v => <option key={v.version} value={v.version}>Version {v.version}{v.post_defense ? ' - après soutenance' : ''}{v.version === d.official_version ? ' (officielle)' : v.version === d.current_version ? ' (actuelle)' : ''}</option>)}
                 </CFormSelect>
                 <CButton size="sm" color="primary" variant="outline" className="ms-auto" disabled={!file} onClick={download}>Télécharger</CButton>
               </div>
@@ -144,7 +145,14 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
               </div>
               {mode !== 'view' && (
                 <div style={{ marginTop: 14, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
-                  <div style={{ fontWeight: 700 }}>{mode === 'approved' ? 'Valider ce rapport' : 'Demander une correction'}</div>
+                  <div style={{ fontWeight: 700 }}>{d.correction_status === 'pending'
+                    ? (mode === 'approved' ? 'Valider la version corrigée' : 'Ne pas retenir la version corrigée')
+                    : (mode === 'approved' ? 'Valider ce rapport' : 'Demander une correction')}</div>
+                  {d.correction_status === 'pending' && (
+                    <div style={{ fontSize: '.875rem', color: '#475569', marginTop: 4 }}>
+                      Le rapport reste validé dans tous les cas (attestation comprise). Validée, cette version devient la version officielle.
+                    </div>
+                  )}
                   <CFormTextarea className="mt-2" rows={3} maxLength={2000} value={text} onChange={e => setText(e.target.value)}
                     placeholder={mode === 'approved' ? 'Commentaire (facultatif)' : 'Ce qui doit être corrigé (obligatoire)'} />
                 </div>

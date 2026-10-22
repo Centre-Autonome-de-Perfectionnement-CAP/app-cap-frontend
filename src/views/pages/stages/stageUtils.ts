@@ -94,6 +94,8 @@ export const HISTORY_LABELS: Record<string, string> = {
   report_submitted: 'Rapport déposé',
   report_approved:  'Rapport validé',
   report_rejected:  'Rapport à corriger',
+  report_correction_approved: 'Version corrigée après soutenance validée',
+  report_correction_rejected: 'Version corrigée après soutenance non retenue',
   attestation_prepared:  'Attestation pré-remplie',
   attestation_edited:    'Attestation corrigée',
   attestation_validated: 'Attestation validée',

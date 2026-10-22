@@ -63,6 +63,7 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
         report_frequency: form.report_frequency,
         report_grace_days: form.report_grace_days,
         final_report_open_days: form.final_report_open_days,
+        final_correction_days: form.final_correction_days,
         seuil_assiduite: form.seuil_assiduite,
         attestation_structure: form.attestation_structure,
         numero_suffixe: form.numero_suffixe,
@@ -174,6 +175,10 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
             <CCol xs={6} md={4}>
               <CFormLabel className="fw-semibold small">Rapport final ouvert (jours avant la fin)</CFormLabel>
               <CFormInput type="number" min={3} max={60} value={form.final_report_open_days} onChange={e => set('final_report_open_days', Math.max(3, Math.min(60, Number(e.target.value) || 14)))} />
+            </CCol>
+            <CCol xs={6} md={4}>
+              <CFormLabel className="fw-semibold small">Version corrigée après soutenance (jours après la fin)</CFormLabel>
+              <CFormInput type="number" min={0} max={365} value={form.final_correction_days ?? 90} onChange={e => set('final_correction_days', Math.max(0, Math.min(365, Number(e.target.value) || 0)))} />
             </CCol>
             <CCol xs={12}><hr className="my-1" /><strong>Attestations</strong></CCol>
             <CCol xs={6} md={4}>

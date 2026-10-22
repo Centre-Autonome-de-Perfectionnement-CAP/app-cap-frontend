@@ -91,6 +91,7 @@ export interface StageSettings {
   report_frequency: 'journalier' | 'hebdomadaire' | 'mensuel'
   report_grace_days: number
   final_report_open_days: number
+  final_correction_days?: number
   seuil_assiduite: number
   attestation_structure: string
   numero_suffixe: string
@@ -208,13 +209,17 @@ export interface ReportSummary {
   validated: boolean
   locked: boolean
   current_version: number
+  /** Version validée qui fait foi */
+  official_version?: number | null
+  /** Version corrigée après soutenance (le rapport reste validé) */
+  correction_status?: 'pending' | 'approved' | 'rejected' | null
   late: boolean
   submitted_at: string | null
   stage?: { id: number; reference: string; nom_complet: string } | null
 }
 
 export interface ReportDetail extends ReportSummary {
-  versions: { version: number; name: string; size: number; note: string | null; late: boolean; at: string }[]
+  versions: { version: number; name: string; size: number; note: string | null; late: boolean; post_defense?: boolean; at: string }[]
   comments: { id: number; version: number | null; author: 'staff' | 'stagiaire'; name: string; body: string; at: string }[]
   reviews: { id: number; version: number; role: 'superviseur' | 'responsable'; decision: 'approved' | 'rejected'; comment: string | null; name: string; at: string }[]
 }

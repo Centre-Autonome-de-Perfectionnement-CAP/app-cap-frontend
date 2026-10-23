@@ -14,21 +14,12 @@ import {
   cilWarning, cilChevronRight,
 } from '@coreui/icons'
 import StatCard from '@/views/pages/demandes/components/ui/StatCard'
-import stageService, { type StagesDashboard, type DashboardAlert } from '@/services/stage.service'
+import stageService, { type StagesDashboard } from '@/services/stage.service'
 import { friendlyError } from '@/components/common/ActionResult'
-import StageDetailModal from './StageDetailModal'
-import { PageHead, Empty, Pill, StagesStyles } from './StagesUi'
+import { PageHead, Empty, Pill, StagesStyles, CodeBadges, CodesLegend, useOpenDossier } from './StagesUi'
 import { frDate } from './stageUtils'
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
-
-const ALERT: Record<DashboardAlert['type'], { label: string; color: string; bg: string }> = {
-  non_active:       { label: 'Non présenté',     color: '#be123c', bg: '#fff1f2' },
-  assiduite:        { label: 'Assiduité',        color: '#c2410c', bg: '#fff7ed' },
-  fin_proche:       { label: 'Fin proche',       color: '#7c3aed', bg: '#f5f3ff' },
-  rapports:         { label: 'Rapports',         color: '#b45309', bg: '#fffbeb' },
-  sans_superviseur: { label: 'Sans superviseur', color: '#475569', bg: '#f1f5f9' },
-}
 
 const MONTHS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
 
@@ -37,7 +28,7 @@ const DashboardPage = () => {
   const [d, setD] = useState<StagesDashboard | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [openId, setOpenId] = useState<number | null>(null)
+  const openDossier = useOpenDossier('Tableau de bord')
 
   const load = useCallback(async () => {
     setLoading(true); setError(null)
@@ -76,13 +67,13 @@ const DashboardPage = () => {
           {d.lead && <StatCard label="Demandes à traiter" count={d.demandes.a_traiter} color="#2563eb" bg="#eff6ff"
             icon={<CIcon icon={cilBriefcase} style={{ width: 17 }} />} onClick={() => navigate('/stages/demandes')} />}
           <StatCard label="Stagiaires en cours" count={d.stagiaires.en_cours} color="#059669" bg="#ecfdf5"
-            icon={<CIcon icon={cilMediaPlay} style={{ width: 17 }} />} onClick={() => navigate('/stages/suivi')} />
+            icon={<CIcon icon={cilMediaPlay} style={{ width: 17 }} />} onClick={() => navigate('/stages/stagiaires?filtre=current')} />
           <StatCard label="Fin dans 14 jours" count={d.stagiaires.fin_proche} color="#7c3aed" bg="#f5f3ff"
-            icon={<CIcon icon={cilClock} style={{ width: 17 }} />} onClick={() => navigate('/stages/suivi')} />
+            icon={<CIcon icon={cilClock} style={{ width: 17 }} />} onClick={() => navigate('/stages/stagiaires?filtre=current')} />
           <StatCard label="À venir" count={d.stagiaires.a_venir} color="#0284c7" bg="#f0f9ff"
-            icon={<CIcon icon={cilCalendar} style={{ width: 17 }} />} onClick={() => navigate('/stages/suivi?scope=upcoming')} />
+            icon={<CIcon icon={cilCalendar} style={{ width: 17 }} />} onClick={() => navigate('/stages/stagiaires?filtre=upcoming')} />
           {d.stagiaires.sans_superviseur !== null && <StatCard label="Sans superviseur" count={d.stagiaires.sans_superviseur} color="#d97706" bg="#fffbeb"
-            icon={<CIcon icon={cilUserX} style={{ width: 17 }} />} onClick={() => navigate('/stages/stagiaires')} />}
+            icon={<CIcon icon={cilUserX} style={{ width: 17 }} />} onClick={() => navigate('/stages/stagiaires?filtre=unsupervised')} />}
         </div>
 
         <div className="dash-grid">
@@ -133,15 +124,17 @@ const DashboardPage = () => {
             </div>
             {d.alertes.length === 0 && <Empty text="Rien à signaler pour les stagiaires en cours." />}
             <div className="stg-list">
-              {d.alertes.map((a, i) => (
-                <button key={`${a.type}-${a.stage_id}-${i}`} type="button" className="dash-alert" onClick={() => setOpenId(a.stage_id)}>
-                  <Pill color={ALERT[a.type].color} bg={ALERT[a.type].bg}>{ALERT[a.type].label}</Pill>
+              {d.alertes.map(a => (
+                <button key={a.stage_id} type="button" className="dash-alert" onClick={() => openDossier(a.reference)}>
+                  <span className="stg-ref">{a.reference}</span>
                   <strong style={{ color: '#0f172a' }}>{a.nom}</strong>
-                  <span className="stg-muted" style={{ flex: 1, minWidth: 180 }}>{a.detail}</span>
+                  <span style={{ flex: 1, minWidth: 180 }}><CodeBadges codes={a.codes} /></span>
+                  <span className="stg-muted">Détails</span>
                   <CIcon icon={cilChevronRight} style={{ width: 14, color: '#94a3b8' }} />
                 </button>
               ))}
             </div>
+            {d.alertes.length > 0 && <div style={{ marginTop: 12 }}><CodesLegend /></div>}
           </CCardBody>
         </CCard>
 
@@ -169,7 +162,6 @@ const DashboardPage = () => {
         )}
       </>}
 
-      <StageDetailModal idOrRef={openId} onClose={() => setOpenId(null)} onChanged={load} />
       <style>{`
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
         .dash-h { font-weight: 800; margin-bottom: 10px; color: #0f172a; }

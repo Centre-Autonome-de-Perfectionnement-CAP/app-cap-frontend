@@ -1,5 +1,6 @@
-// src/views/pages/stages/GroupeWhatsAppPage.tsx
-// Groupe WhatsApp des stagiaires : un seul par année.
+// src/views/pages/stages/WhatsAppGroupPanel.tsx
+// Groupe WhatsApp des stagiaires (page Réglages) : un seul par année ; les
+// responsables de division en sont administrateurs.
 
 import { useCallback, useEffect, useState } from 'react'
 import {
@@ -10,10 +11,10 @@ import CIcon from '@coreui/icons-react'
 import { cilChatBubble, cilLink, cilSync, cilTrash, cilPlus } from '@coreui/icons'
 import stageService, { type WhatsAppGroupOverview } from '@/services/stage.service'
 import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
-import { PageHead, Pill, StagesStyles } from './StagesUi'
+import { Pill } from './StagesUi'
 import { frDate } from './stageUtils'
 
-const GroupeWhatsAppPage = () => {
+const WhatsAppGroupPanel = () => {
   const [data, setData] = useState<WhatsAppGroupOverview | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
@@ -45,8 +46,6 @@ const GroupeWhatsAppPage = () => {
 
   return (
     <div className="stg-page">
-      <StagesStyles />
-      <PageHead title="Groupe WhatsApp des stagiaires" subtitle="Un seul groupe par année. Les responsables de division en sont administrateurs." />
       {error && <div className="stg-err">{error}</div>}
       {!data && !error && <div style={{ padding: 40, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
 
@@ -166,4 +165,4 @@ const GroupeWhatsAppPage = () => {
   )
 }
 
-export default GroupeWhatsAppPage
+export default WhatsAppGroupPanel

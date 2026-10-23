@@ -12,9 +12,8 @@ import { cilReload, cilPaperclip } from '@coreui/icons'
 import stageService, { type InternRequestRow } from '@/services/stage.service'
 import { showSuccess, friendlyError } from '@/components/common/ActionResult'
 import { useAuth } from '@/contexts'
-import { PageHead, Empty, Pill, StagesStyles } from './StagesUi'
+import { PageHead, Empty, Pill, StagesStyles, useOpenDossier } from './StagesUi'
 import { frDate, frDateTime } from './stageUtils'
-import StageDetailModal from './StageDetailModal'
 import StageFileViewer from './StageFileViewer'
 
 const STATUS = {
@@ -37,7 +36,7 @@ const DemandesStagiairesPage = () => {
   const [comment, setComment] = useState('')
   const [busy, setBusy] = useState(false)
   const [modalErr, setModalErr] = useState<string | null>(null)
-  const [openStage, setOpenStage] = useState<number | null>(null)
+  const openDossier = useOpenDossier('Demandes des stagiaires')
 
   const load = useCallback(async () => {
     setError(null)
@@ -95,7 +94,7 @@ const DemandesStagiairesPage = () => {
         {rows?.map(r => (
           <div key={r.id} className="stg-card">
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => setOpenStage(r.stage.id)} style={{ all: 'unset', cursor: 'pointer', fontWeight: 800, color: '#0f172a' }}>{r.stage.nom_complet}</button>
+              <button type="button" onClick={() => openDossier(r.stage.reference)} style={{ all: 'unset', cursor: 'pointer', fontWeight: 800, color: '#0f172a' }}>{r.stage.nom_complet}</button>
               <span className="stg-muted">{r.stage.reference}</span>
               <Pill color={STATUS[r.status].color} bg={STATUS[r.status].bg}>{STATUS[r.status].label}</Pill>
               <span className="stg-muted" style={{ marginLeft: 'auto' }}>reçue le {frDateTime(r.created_at)}</span>
@@ -135,7 +134,6 @@ const DemandesStagiairesPage = () => {
         </CModalFooter>
       </CModal>
 
-      <StageDetailModal idOrRef={openStage} onClose={() => setOpenStage(null)} onChanged={load} />
       <StageFileViewer
         visible={fileOf !== null}
         files={fileOf ? [{ key: String(fileOf.id), label: `Justificatif - ${fileOf.stage.nom_complet}` }] : []}

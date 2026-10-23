@@ -1,5 +1,5 @@
 // src/views/pages/stages/stageUtils.ts
-import type { StageHoraires, StageStatus } from '@/services/stage.service'
+import type { AttentionCodeKey, InternScope, StageHoraires, StageStatus } from '@/services/stage.service'
 
 export const STATUS_STYLE: Record<StageStatus, { color: string; bg: string }> = {
   submitted:        { color: '#2563eb', bg: '#eff6ff' },
@@ -108,3 +108,41 @@ export const HISTORY_LABELS: Record<string, string> = {
   attestation_cancelled: 'Attestation annulée',
   attestation_reset:     'Attestation à valider de nouveau (date de fin modifiée)',
 }
+
+/** Phase d'un stage accepté. */
+export const PHASE = {
+  current:  { label: 'En cours', color: '#059669', bg: '#ecfdf5' },
+  upcoming: { label: 'À venir',  color: '#2563eb', bg: '#eff6ff' },
+  finished: { label: 'Terminé',  color: '#64748b', bg: '#f1f5f9' },
+} as const
+
+/** Place du stagiaire dans le groupe WhatsApp de l'année. */
+export const WA_GROUP = {
+  added:   { label: 'Dans le groupe WhatsApp', color: '#15803d', bg: '#dcfce7' },
+  invited: { label: 'Lien du groupe envoyé',    color: '#b45309', bg: '#fef3c7' },
+  removed: { label: 'Sorti du groupe',          color: '#64748b', bg: '#f1f5f9' },
+} as const
+
+/**
+ * Codes d'attention : un code court par situation, la même légende partout
+ * (liste des stagiaires, tableau de bord, dossier).
+ */
+export const ATTENTION: Record<AttentionCodeKey, { short: string; label: string; color: string; bg: string }> = {
+  non_active:       { short: 'NP', label: 'Non présenté',      color: '#be123c', bg: '#ffe4e6' },
+  assiduite:        { short: 'AS', label: 'Assiduité faible',  color: '#c2410c', bg: '#ffedd5' },
+  fin_proche:       { short: 'FP', label: 'Fin proche',        color: '#7c3aed', bg: '#ede9fe' },
+  rapports:         { short: 'RM', label: 'Rapports manquants', color: '#b45309', bg: '#fef3c7' },
+  sans_superviseur: { short: 'SS', label: 'Sans superviseur',  color: '#475569', bg: '#e2e8f0' },
+}
+
+/** Filtres de la liste des stagiaires (le titre de la page reprend le libellé). */
+export const INTERN_SCOPES: Record<InternScope, string> = {
+  active:       'Actifs',
+  current:      'En cours',
+  upcoming:     'À venir',
+  unsupervised: 'Sans superviseur',
+  finished:     'Terminés',
+  mine:         'Mes stagiaires',
+  all:          'Tous',
+}
+

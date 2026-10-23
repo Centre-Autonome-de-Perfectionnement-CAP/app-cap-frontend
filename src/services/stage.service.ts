@@ -73,6 +73,9 @@ export interface StageDetail extends StageListRow {
   suggested_terms: StageTerms | null
   default_rejection_reason: string
   can: { propose: boolean; reject: boolean; accept_counter: boolean; rectify: boolean }
+  /** Stagiaire (demande acceptée) : encadrement, assiduité, rapports, codes d'attention. */
+  suivi: FollowRow | null
+  me: InternViewer
 }
 
 export interface StageSettings {
@@ -175,14 +178,25 @@ export interface FollowRow extends Intern {
   justifies: number
   rapports: { deposited: number; validated: number; missing: number; final_validated: boolean }
   attestation: { id: number; status: AttestationStatus; label: string; numero: string | null } | null
+  codes: AttentionCode[]
 }
 
+export type AttentionCodeKey = 'non_active' | 'assiduite' | 'fin_proche' | 'rapports' | 'sans_superviseur'
+export interface AttentionCode { code: AttentionCodeKey; detail: string }
+
+export interface FollowResponse {
+  data: FollowRow[]
+  counts: Record<InternScope, number>
+  me: InternViewer
+  seuil: number
+}
+
+/** Une ligne par stagiaire, ses codes du plus urgent au moins urgent. */
 export interface DashboardAlert {
-  type: 'non_active' | 'assiduite' | 'fin_proche' | 'rapports' | 'sans_superviseur'
   stage_id: number
   reference: string
   nom: string
-  detail: string
+  codes: AttentionCode[]
 }
 
 export interface StagesDashboard {
@@ -301,7 +315,7 @@ export interface StageListResponse {
   labels: Record<StageStatus, string>
 }
 
-export type InternScope = 'current' | 'upcoming' | 'finished' | 'all' | 'mine' | 'unsupervised'
+export type InternScope = 'active' | 'current' | 'upcoming' | 'finished' | 'all' | 'mine' | 'unsupervised'
 
 export interface Intern {
   id: number
@@ -321,10 +335,12 @@ export interface Intern {
   whatsapp_group: 'added' | 'invited' | 'removed' | null
 }
 
+export interface InternViewer { id: number; is_lead: boolean; is_supervisor: boolean }
+
 export interface InternListResponse {
   data: Intern[]
   counts: Record<InternScope, number>
-  me: { id: number; is_lead: boolean; is_supervisor: boolean }
+  me: InternViewer
 }
 
 export interface Supervisor { id: number; name: string; email: string; phone: string | null; since: string; active_interns: number }
@@ -532,7 +548,7 @@ class StageService {
 
   dashboard = async (): Promise<StagesDashboard> => (await HttpService.get(`${BASE}/tableau-de-bord`)).data
 
-  follow = (scope: InternScope, q = ''): Promise<{ data: FollowRow[]; seuil: number }> =>
+  follow = (scope: InternScope, q = ''): Promise<FollowResponse> =>
     HttpService.get(`${BASE}/suivi?scope=${scope}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ''}`)
 
   /**

@@ -1,30 +1,23 @@
-// src/views/pages/stages/StageSettingsModal.tsx
-// Réglages du module : ouverture des demandes et valeurs par défaut.
+// src/views/pages/stages/StageSettingsForm.tsx
+// Réglages du module (page Réglages) : ouverture des demandes, valeurs par
+// défaut, pointage, rapports, attestations, documents PDF et règlement.
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton, CSpinner,
+  CButton, CCard, CCardBody, CSpinner,
   CFormSwitch, CFormLabel, CFormInput, CFormTextarea, CFormSelect, CRow, CCol,
 } from '@coreui/react'
 import stageService, { type StageSettings } from '@/services/stage.service'
 import { showSuccess, friendlyError } from '@/components/common/ActionResult'
 
-interface Props {
-  visible: boolean
-  onClose: () => void
-  onSaved: (s: StageSettings) => void
-}
-
-const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
+const StageSettingsForm = () => {
   const [form, setForm] = useState<StageSettings | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!visible) return
-    setForm(null); setError(null)
     stageService.getSettings().then(setForm).catch(e => setError(friendlyError(e)))
-  }, [visible])
+  }, [])
 
   const [locating, setLocating] = useState(false)
   const [accuracy, setAccuracy] = useState<number | null>(null)
@@ -74,8 +67,7 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
         note_signataire_titre: form.note_signataire_titre,
         note_signataire_nom: form.note_signataire_nom,
       })
-      onSaved(saved)
-      onClose()
+      setForm(saved)
       await showSuccess('Réglages enregistrés')
     } catch (e) {
       setError(friendlyError(e))
@@ -85,9 +77,8 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
   }
 
   return (
-    <CModal visible={visible} onClose={onClose} size="lg" fullscreen="sm" scrollable>
-      <CModalHeader><CModalTitle style={{ fontSize: '1.05rem' }}>Réglages des stages</CModalTitle></CModalHeader>
-      <CModalBody>
+    <CCard className="border-0 shadow-sm" style={{ borderRadius: 14 }}>
+      <CCardBody>
         {!form && !error && <div style={{ padding: 32, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
         {form && (
           <CRow className="g-3">
@@ -243,15 +234,19 @@ const StageSettingsModal = ({ visible, onClose, onSaved }: Props) => {
             </CCol>
           </CRow>
         )}
-        {error && <div style={{ marginTop: 12, background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239', borderRadius: 10, padding: '10px 14px' }}>{error}</div>}
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="secondary" variant="ghost" onClick={onClose} disabled={busy}>Annuler</CButton>
-        <CButton color="primary" onClick={save} disabled={busy || !form}>
-          {busy && <CSpinner size="sm" className="me-1" />}Enregistrer
-        </CButton>
-      </CModalFooter>
-    </CModal>
+        {error && !form && <div className="stg-err">{error}</div>}
+      </CCardBody>
+      {form && (
+        <div className="set-save">
+          {error && <div className="stg-err" role="alert" style={{ margin: 0, flex: 1 }}>{error}</div>}
+          <CButton color="primary" onClick={save} disabled={busy}>
+            {busy && <CSpinner size="sm" className="me-1" />}Enregistrer les réglages
+          </CButton>
+        </div>
+      )}
+      <style>{`.set-save { position: sticky; bottom: 0; z-index: 3; display: flex; align-items: center; gap: 12px; justify-content: flex-end; padding: 12px 16px;
+        background: rgba(255,255,255,.96); border-top: 1px solid #e2e8f0; border-radius: 0 0 14px 14px; }`}</style>
+    </CCard>
   )
 }
 
@@ -324,4 +319,4 @@ const NoteSignatureField = ({ meta, onChange, onError }: {
   )
 }
 
-export default StageSettingsModal
+export default StageSettingsForm

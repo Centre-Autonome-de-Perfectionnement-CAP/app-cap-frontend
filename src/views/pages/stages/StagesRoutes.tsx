@@ -10,21 +10,27 @@ const StagesPage        = React.lazy(() => import('./StagesPage'))
 const StagiairesPage    = React.lazy(() => import('./StagiairesPage'))
 const BinomesPage       = React.lazy(() => import('./BinomesPage'))
 const SuperviseursPage  = React.lazy(() => import('./SuperviseursPage'))
-const GroupeWhatsAppPage = React.lazy(() => import('./GroupeWhatsAppPage'))
 const DemandesStagiairesPage = React.lazy(() => import('./DemandesStagiairesPage'))
 const RapportsPage = React.lazy(() => import('./RapportsPage'))
 const AttestationsPage = React.lazy(() => import('./AttestationsPage'))
 const DashboardPage = React.lazy(() => import('./DashboardPage'))
-const SuiviPage = React.lazy(() => import('./SuiviPage'))
+const StageDossierPage = React.lazy(() => import('./StageDossierPage'))
+const ReglagesPage = React.lazy(() => import('./ReglagesPage'))
 
-/** Accueil du module : on garde ?ref=… (liens reçus par WhatsApp / email). */
+/** Accueil du module : un lien reçu (?ref=…) ouvre le dossier ; sinon le tableau de bord. */
 const Home = () => {
   const { search } = useLocation()
   const { role } = useAuth()
   if (isStagesSecretariat(role as string)) return <Navigate to="/stages/attestations" replace />
-  // Liens reçus (?ref=…) : la fiche dans « Demandes » ; sinon le tableau de bord.
-  const target = search ? `/stages/demandes${search}` : '/stages/tableau-de-bord'
-  return <Navigate to={target} replace />
+  const ref = new URLSearchParams(search).get('ref')
+  return <Navigate to={ref ? `/stages/dossier/${encodeURIComponent(ref)}` : '/stages/tableau-de-bord'} replace />
+}
+
+/** Anciennes adresses : la page qui les remplace, filtre compris. */
+const Moved = ({ to }: { to: string }) => {
+  const { search } = useLocation()
+  const scope = new URLSearchParams(search).get('scope')
+  return <Navigate to={scope ? `${to}${to.includes('?') ? '&' : '?'}filtre=${encodeURIComponent(scope)}` : to} replace />
 }
 
 /** Pages du suivi : pas pour le secrétariat (attestations seulement). */
@@ -51,15 +57,17 @@ const StagesRoutes = () => (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/tableau-de-bord" element={<Staff><DashboardPage /></Staff>} />
-          <Route path="/suivi" element={<Staff><SuiviPage /></Staff>} />
           <Route path="/demandes" element={<Staff><StagesPage /></Staff>} />
           <Route path="/stagiaires" element={<Staff><StagiairesPage /></Staff>} />
+          <Route path="/dossier/:ref" element={<Staff><StageDossierPage /></Staff>} />
+          <Route path="/suivi" element={<Moved to="/stages/stagiaires" />} />
           <Route path="/binomes" element={<Staff><BinomesPage /></Staff>} />
           <Route path="/demandes-stagiaires" element={<Staff><DemandesStagiairesPage /></Staff>} />
           <Route path="/rapports" element={<Staff><RapportsPage /></Staff>} />
           <Route path="/attestations" element={<SecretariatOrLead><AttestationsPage /></SecretariatOrLead>} />
           <Route path="/superviseurs" element={<LeadOnly><SuperviseursPage /></LeadOnly>} />
-          <Route path="/groupe-whatsapp" element={<LeadOnly><GroupeWhatsAppPage /></LeadOnly>} />
+          <Route path="/reglages" element={<LeadOnly><ReglagesPage /></LeadOnly>} />
+          <Route path="/groupe-whatsapp" element={<Navigate to="/stages/reglages?onglet=whatsapp" replace />} />
           <Route path="*" element={<Navigate to="/stages" replace />} />
         </Routes>
       </Suspense>

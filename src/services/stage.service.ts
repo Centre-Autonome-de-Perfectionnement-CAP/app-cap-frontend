@@ -76,6 +76,8 @@ export interface StageDetail extends StageListRow {
   /** Stagiaire (demande acceptée) : encadrement, assiduité, rapports, codes d'attention. */
   suivi: FollowRow | null
   me: InternViewer
+  /** Demande en binôme : l'autre demande, décidée en même temps. */
+  pair: { team_id: number; reference: string; nom_complet: string; status: StageStatus; status_label: string } | null
 }
 
 export interface StageSettings {

@@ -21,7 +21,7 @@ import PresencePanel from './PresencePanel'
 import InternReportsPanel from './InternReportsPanel'
 import InternAttestationPanel from './InternAttestationPanel'
 import SupervisorAssignModal from './SupervisorAssignModal'
-import { Breadcrumb, CodeBadges, FilterTabs, Pill, StagesStyles } from './StagesUi'
+import { Breadcrumb, CodeBadges, FilterTabs, Pill, StagesStyles, useOpenDossier } from './StagesUi'
 import {
   STATUS_STYLE, HISTORY_LABELS, PHASE, WA_GROUP, frDate, frDateTime, horairesLabel, durationLabel,
 } from './stageUtils'
@@ -106,6 +106,22 @@ const StageDossierPage = () => {
     if (mode === 'reject') {
       if (!note.trim()) { setFormError('Le motif est obligatoire.'); return }
       return run(() => stageService.reject(detail.id, note.trim()), 'Demande non retenue')
+    }
+  }
+
+  const openPartner = useOpenDossier(detail?.reference ?? 'Dossier')
+
+  const splitPair = async () => {
+    if (!detail?.pair) return
+    setBusy(true)
+    try {
+      const res: any = await stageService.dissolveBinome(detail.pair.team_id)
+      await load()
+      await showSuccess('Binôme séparé', res?.message)
+    } catch (e) {
+      await showError('Action impossible', friendlyError(e))
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -202,6 +218,16 @@ const StageDossierPage = () => {
       <Section icon={cilCheckAlt} title="Conditions retenues" tone="#059669">
         <Terms t={detail.terms} />
       </Section>
+    ),
+    pair: detail.pair && !accepted && (
+      <div className="dos-info" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: '#f0fdfa', borderColor: '#99f6e4', color: '#134e4a' }}>
+        <CIcon icon={cilGroup} style={{ width: 18 }} />
+        <span style={{ flex: 1, minWidth: 220 }}>
+          Demande en binôme avec <button type="button" className="dos-link" onClick={() => openPartner(detail.pair!.reference)}>{detail.pair.nom_complet} ({detail.pair.reference})</button>
+          {' - '}{detail.pair.status_label}. Proposition et décision valent pour les deux : mêmes service et dates.
+        </span>
+        {lead && <CButton size="sm" color="secondary" variant="outline" disabled={busy} onClick={splitPair}>Séparer le binôme</CButton>}
+      </div>
     ),
     rejection: detail.status === 'rejected' && detail.rejection_reason && (
       <Section icon={cilBan} title="Motif du rejet" tone="#e11d48">
@@ -408,7 +434,7 @@ const StageDossierPage = () => {
 
       {mode === 'view' && !accepted && (
         <div className="dos-grid">
-          <div className="dos-col">{blocks.counter}{blocks.waiting}{blocks.terms}{blocks.rejection}{blocks.person}{blocks.files}</div>
+          <div className="dos-col">{blocks.pair}{blocks.counter}{blocks.waiting}{blocks.terms}{blocks.rejection}{blocks.person}{blocks.files}</div>
           <div className="dos-col">{blocks.notes}{blocks.exchanges}{blocks.history}</div>
         </div>
       )}
@@ -447,6 +473,7 @@ const StageDossierPage = () => {
         .dos-info { background: #fffbeb; border: 1px solid #fde68a; color: #78350f; border-radius: 12px; padding: 10px 14px; font-size: .875rem; }
         .dos-file { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #dbe3ec; background: #fff; border-radius: 10px; padding: 7px 12px; font-size: .875rem; font-weight: 600; color: #1e293b; cursor: pointer; }
         .dos-file:hover { border-color: #0f766e; color: #0f766e; }
+        .dos-link { all: unset; cursor: pointer; font-weight: 700; color: #0f766e; text-decoration: underline; }
         .dos-item, .dos-msg { display: flex; flex-direction: column; gap: 2px; padding: 9px 11px; border-radius: 10px; background: #f8fafc; margin-bottom: 8px; font-size: .875rem; }
         .dos-msg[data-staff='1'] { background: #f0fdfa; }
         .dos-msg[data-staff='0'] { background: #f5f3ff; }

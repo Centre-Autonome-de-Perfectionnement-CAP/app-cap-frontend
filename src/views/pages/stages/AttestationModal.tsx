@@ -14,6 +14,7 @@ import { showSuccess, friendlyError } from '@/components/common/ActionResult'
 import StageFileViewer from './StageFileViewer'
 import ExceptionalAttestationModal from './ExceptionalAttestationModal'
 import { frDate, frDateTime, todayIso } from './stageUtils'
+import { UPLOAD_LIMIT_MB, isTooHeavy } from '@/constants/validation.constants'
 
 export const ATT_STATUS: Record<Attestation['status'], { color: string; bg: string }> = {
   a_valider:  { color: '#d97706', bg: '#fffbeb' },
@@ -231,7 +232,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
             {(a.status === 'imprimee' || a.status === 'remise') && (
               <div className="stg-card" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ flex: 1, minWidth: 180 }}>
-                  <strong>Scan pour l'archive</strong> <span className="stg-muted">(facultatif - PDF, JPG ou PNG, 10 Mo max.)</span>
+                  <strong>Scan pour l'archive</strong> <span className="stg-muted">(facultatif - PDF, JPG ou PNG, {UPLOAD_LIMIT_MB.DEFAULT} Mo max.)</span>
                 </span>
                 {a.has_scan && <CButton size="sm" color="secondary" variant="outline" onClick={() => setScanView(true)}><CIcon icon={cilFile} className="me-1" />Voir</CButton>}
                 <CButton size="sm" color="primary" variant="outline" disabled={busy} onClick={() => fileRef.current?.click()}>
@@ -240,7 +241,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
                 <input ref={fileRef} type="file" accept="application/pdf,image/jpeg,image/png" hidden onChange={e => {
                   const f = e.target.files?.[0]; e.target.value = ''
                   if (!f) return
-                  if (f.size > 10 * 1024 * 1024) { setErr('Le fichier ne doit pas dépasser 10 Mo.'); return }
+                  if (isTooHeavy(f)) { setErr(`Le fichier ne doit pas dépasser ${UPLOAD_LIMIT_MB.DEFAULT} Mo.`); return }
                   run(() => stageService.uploadAttestationScan(a.id, f), 'Scan enregistré')
                 }} />
               </div>

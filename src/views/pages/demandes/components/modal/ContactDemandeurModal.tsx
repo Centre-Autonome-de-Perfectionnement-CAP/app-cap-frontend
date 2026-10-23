@@ -25,6 +25,7 @@ import {
 } from '@coreui/icons'
 import documentRequestService from '@/services/document-request.service'
 import type { DocumentRequest } from '@/types/document-request.types'
+import { UPLOAD_LIMIT_MB, isTooHeavy } from '@/constants/validation.constants'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -49,7 +50,6 @@ interface Props {
 }
 
 const MAX_FILES     = 5
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 Mo - doit rester aligné avec la limite backend
 // Formats acceptés - alignés sur la validation backend (contactDemandeur)
 const ACCEPTED_EXT  = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx']
 
@@ -137,14 +137,14 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
     const incoming = Array.from(files)
     const extOk    = (f: File) => ACCEPTED_EXT.includes((f.name.split('.').pop() || '').toLowerCase())
     const badType  = incoming.find(f => !extOk(f))
-    const tooLarge = incoming.find(f => f.size > MAX_FILE_SIZE)
+    const tooLarge = incoming.find(f => isTooHeavy(f))
     if (badType) {
       setFileError(`"${badType.name}" : format non accepté (PDF, images, Word, Excel) - fichier ignoré.`)
     } else if (tooLarge) {
-      setFileError(`"${tooLarge.name}" dépasse 10 Mo - fichier ignoré.`)
+      setFileError(`"${tooLarge.name}" dépasse ${UPLOAD_LIMIT_MB.DEFAULT} Mo - fichier ignoré.`)
     }
 
-    const valid = incoming.filter(f => f.size <= MAX_FILE_SIZE && extOk(f))
+    const valid = incoming.filter(f => !isTooHeavy(f) && extOk(f))
     const merged = [...attachments, ...valid].slice(0, MAX_FILES)
 
     if (attachments.length + valid.length > MAX_FILES) {
@@ -267,7 +267,7 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
             </div>
 
             <label style={{ display: 'block', fontWeight: 700, fontSize: '0.875rem', color: '#334155', margin: '18px 0 8px' }}>
-              Pièces jointes <span style={{ fontWeight: 500, color: '#64748b' }}>(optionnel, max {MAX_FILES}, 10 Mo chacune)</span>
+              Pièces jointes <span style={{ fontWeight: 500, color: '#64748b' }}>(optionnel, max {MAX_FILES}, {UPLOAD_LIMIT_MB.DEFAULT} Mo chacune)</span>
             </label>
 
             <input

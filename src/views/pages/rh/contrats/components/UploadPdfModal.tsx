@@ -6,6 +6,7 @@ import type { Contrat } from '@/types/rh.types'
 import Icon from '../Contrats.icons'
 import { formatDate } from '../Contrats.helpers'
 import Modal from './Modal'
+import { UPLOAD_LIMIT_MB, isTooHeavy } from '@/constants/validation.constants'
 
 const UploadPdfModal: React.FC<{
   contrat: Contrat;
@@ -22,7 +23,7 @@ const UploadPdfModal: React.FC<{
     setError('');
     if (!f) { setFile(null); return; }
     if (f.type !== 'application/pdf') { setError('Veuillez sélectionner un fichier PDF.'); return; }
-    if (f.size > 10 * 1024 * 1024) { setError('Le fichier est trop volumineux (max 10 Mo).'); return; }
+    if (isTooHeavy(f)) { setError(`Le fichier est trop volumineux (max ${UPLOAD_LIMIT_MB.DEFAULT} Mo).`); return; }
     setFile(f);
   };
 
@@ -72,7 +73,7 @@ const UploadPdfModal: React.FC<{
               <Icon.FileUpload />
             </div>
             <div style={{ fontWeight: 600, color: '#ea580c', fontSize: 14 }}>Cliquez ou glissez le PDF ici</div>
-            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Format PDF uniquement - max 10 Mo</div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Format PDF uniquement - max {UPLOAD_LIMIT_MB.DEFAULT} Mo</div>
           </div>
         )}
       </div>

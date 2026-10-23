@@ -9,6 +9,7 @@ import {
 } from '@coreui/icons'
 import RhService from '@/services/rh.service'
 import type { Contrat } from '@/types/rh.types'
+import { UPLOAD_LIMIT_MB } from '@/constants/validation.constants'
 
 interface FacturesModalProps {
   visible: boolean
@@ -327,7 +328,7 @@ const FacturesModal: React.FC<FacturesModalProps> = ({ visible, onClose }) => {
                       file={factureFile} onFile={setFactureFile} onClear={() => setFactureFile(null)}
                       icon={<CIcon icon={cilFile} size="lg" style={{ color: factureFile ? '#2eb85c' : '#321fdb' }} />}
                       required />
-                    <div style={{ fontSize: 11, color: '#a0aec0', marginTop: 4 }}>Formats : PDF, JPG, PNG - Max 5 Mo</div>
+                    <div style={{ fontSize: 11, color: '#a0aec0', marginTop: 4 }}>Formats : PDF, JPG, PNG - Max {UPLOAD_LIMIT_MB.DEFAULT} Mo</div>
                   </div>
                 </div>
                 <div style={{ marginTop: 20, padding: '12px 16px', background: '#f0f4ff', borderRadius: 9, borderLeft: '4px solid #321fdb', fontSize: 12, color: '#4a5568', lineHeight: 1.6 }}>

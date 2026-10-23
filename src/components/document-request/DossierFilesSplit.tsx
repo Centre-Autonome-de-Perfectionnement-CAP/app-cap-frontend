@@ -25,6 +25,7 @@ import AttachmentViewerModal, {
   type AttachmentSource,
 } from './AttachmentViewerModal'
 import type { DocumentRequest } from '@/types/document-request.types'
+import { UPLOAD_LIMIT_MB, isTooHeavy } from '@/constants/validation.constants'
 
 // ─── Libellés clés → noms lisibles ───────────────────────────────────────────
 
@@ -70,14 +71,13 @@ function fileMetaFromName(name: string): FileMeta {
 // n'en choisit pas un autre.
 
 const ACCEPT_EXT = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx']
-const MAX_BYTES  = 10 * 1024 * 1024
 
 const baseName = (n: string) => n.replace(/\.[^.]+$/, '')
 
 const checkFile = (f: File): string | null => {
   const ext = (f.name.split('.').pop() ?? '').toLowerCase()
   if (!ACCEPT_EXT.includes(ext)) return 'Ce type de fichier n\'est pas accepté. Utilisez un PDF, une image (JPG, PNG), un fichier Word ou Excel.'
-  if (f.size > MAX_BYTES) return 'Ce fichier dépasse 10 Mo. Choisissez un fichier plus léger.'
+  if (isTooHeavy(f)) return `Ce fichier dépasse ${UPLOAD_LIMIT_MB.DEFAULT} Mo. Choisissez un fichier plus léger.`
   return null
 }
 
@@ -232,7 +232,7 @@ const FileFormModal = ({
                     {isAdd ? 'Cliquez pour choisir le document' : 'Choisir un autre fichier'}
                   </span>
                   <span style={{ fontSize: '0.875rem', color: '#64748b' }}>
-                    ou glissez-le ici · PDF, image, Word ou Excel · 10 Mo maximum
+                    ou glissez-le ici · PDF, image, Word ou Excel · {UPLOAD_LIMIT_MB.DEFAULT} Mo maximum
                   </span>
                 </div>
               </>

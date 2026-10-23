@@ -9,6 +9,7 @@ import {
 } from '@coreui/react'
 import stageService, { type StageSettings } from '@/services/stage.service'
 import { showSuccess, friendlyError } from '@/components/common/ActionResult'
+import { UPLOAD_LIMIT_MB, isTooHeavy } from '@/constants/validation.constants'
 
 const StageSettingsForm = () => {
   const [form, setForm] = useState<StageSettings | null>(null)
@@ -250,7 +251,6 @@ const StageSettingsForm = () => {
   )
 }
 
-const MAX_SIGNATURE_BYTES = 2 * 1024 * 1024
 
 /**
  * Image de la signature des notes de service. Le serveur retire le fond et
@@ -284,7 +284,7 @@ const NoteSignatureField = ({ meta, onChange, onError }: {
     if (input.current) input.current.value = ''
     if (!file) return
     if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { onError('Choisissez une image PNG, JPG ou WEBP.'); return }
-    if (file.size > MAX_SIGNATURE_BYTES) { onError("L'image ne doit pas dépasser 2 Mo."); return }
+    if (isTooHeavy(file)) { onError(`L'image ne doit pas dépasser ${UPLOAD_LIMIT_MB.DEFAULT} Mo.`); return }
     run(() => stageService.uploadNoteSignature(file))
   }
 
@@ -300,7 +300,7 @@ const NoteSignatureField = ({ meta, onChange, onError }: {
       </div>
       <div style={{ flex: 1, minWidth: 220 }}>
         <div style={{ fontSize: '.875rem', color: '#475569', marginBottom: 8 }}>
-          PNG sans fond de préférence (2 Mo maximum). Une photo nette sur papier blanc convient aussi : le fond est retiré
+          PNG sans fond de préférence ({UPLOAD_LIMIT_MB.DEFAULT} Mo maximum). Une photo nette sur papier blanc convient aussi : le fond est retiré
           et les marges coupées automatiquement. La signature apparaît sur toutes les notes de service et notes rectificatives.
         </div>
         <input ref={input} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={e => pick(e.target.files?.[0])} />

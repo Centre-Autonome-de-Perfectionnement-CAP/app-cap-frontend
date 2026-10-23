@@ -194,7 +194,7 @@ export function friendlyError(err: any): string {
   if (usable) return raw
   if (status === 403) return "Vous n'avez pas l'autorisation de faire cette action sur ce dossier."
   if (status === 404) return "Cet élément n'existe plus. Actualisez la page puis réessayez."
-  if (status === 413) return 'Le fichier est trop volumineux (10 Mo au maximum).'
+  if (status === 413) return 'Le fichier est trop volumineux. Réduisez sa taille et réessayez.'
   if (status === 422) return 'Certaines informations sont incomplètes ou incorrectes. Vérifiez puis réessayez.'
   if (status === 429) return 'Trop de tentatives en peu de temps. Patientez une minute puis réessayez.'
   return "L'opération n'a pas pu aboutir. Réessayez dans un instant ; si le problème persiste, prévenez l'administrateur."

@@ -62,12 +62,13 @@ export const ACCEPTED_FILE_TYPES = {
   EXCEL: ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
 } as const
 
-// Tailles maximales de fichiers (en octets)
-export const MAX_FILE_SIZE = {
-  IMAGE: 5 * 1024 * 1024, // 5MB
-  DOCUMENT: 10 * 1024 * 1024, // 10MB
-  EXCEL: 5 * 1024 * 1024, // 5MB
-} as const
+// Taille maximale d'un fichier envoyé, en Mo (même valeurs que le serveur,
+// App\Support\UploadLimit) : 2 Mo partout, 10 Mo pour un rapport ou un
+// mémoire, 20 Mo pour un support de cours.
+export const UPLOAD_LIMIT_MB = { DEFAULT: 2, REPORT: 10, COURSE: 20 } as const
+
+/** Vrai si le fichier dépasse la limite (en Mo). */
+export const isTooHeavy = (file: File, maxMb: number = UPLOAD_LIMIT_MB.DEFAULT) => file.size > maxMb * 1024 * 1024
 
 // Messages d'erreur par défaut
 export const DEFAULT_ERROR_MESSAGES = {

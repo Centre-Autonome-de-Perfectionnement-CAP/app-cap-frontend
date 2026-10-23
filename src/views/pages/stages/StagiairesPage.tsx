@@ -6,10 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import {
-  CButton, CCard, CCardBody, CFormInput, CFormCheck, CInputGroup, CInputGroupText, CSpinner,
-  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
-} from '@coreui/react'
+import { CButton, CCard, CCardBody, CFormInput, CFormCheck, CInputGroup, CInputGroupText, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSearch, cilReload, cilGroup, cilX } from '@coreui/icons'
 import stageService, { type FollowResponse, type FollowRow, type InternScope } from '@/services/stage.service'
@@ -18,6 +15,7 @@ import { useAuth } from '@/contexts'
 import { isStagesLead } from './StagesGuard'
 import { InternInvitations, InviteInternButton } from './InternInvitations'
 import SupervisorAssignModal from './SupervisorAssignModal'
+import { FormBinomeModal } from './BinomesPage'
 import {
   PageHead, Empty, Pill, StagesStyles, ExportButton, FilterTabs, CodeBadges, CodesLegend, useOpenDossier,
 } from './StagesUi'
@@ -59,7 +57,7 @@ const StagiairesPage = () => {
   const rows = list?.data ?? []
   const allChecked = rows.length > 0 && rows.every(r => selected.includes(r.id))
   const toggle = (id: number) => setSelected(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]))
-  const selectedRows = useMemo(() => rows.filter(r => selected.includes(r.id)), [rows, selected])
+  const pair = useMemo<[number, number] | undefined>(() => (selected.length === 2 ? [selected[0], selected[1]] : undefined), [selected])
 
   const selfAssign = async (action: 'add' | 'remove', ids: number[]) => {
     if (!list) return
@@ -146,7 +144,8 @@ const StagiairesPage = () => {
           {lead && <CButton color="light" size="sm" onClick={() => setAssignIds(selected)}>Attribuer un superviseur</CButton>}
           {!lead && <CButton color="light" size="sm" disabled={busy} onClick={() => selfAssign('add', selected)}>Les suivre</CButton>}
           {!lead && <CButton color="light" size="sm" variant="outline" style={{ color: '#fff', borderColor: '#fff' }} disabled={busy} onClick={() => selfAssign('remove', selected)}>Ne plus les suivre</CButton>}
-          <CButton color="light" size="sm" disabled={selected.length < 2} onClick={() => setTeamOpen(true)}>
+          <CButton color="light" size="sm" disabled={selected.length !== 2} title={selected.length !== 2 ? 'Un binôme compte exactement deux stagiaires' : undefined}
+            onClick={() => setTeamOpen(true)}>
             <CIcon icon={cilGroup} className="me-1" />Former un binôme
           </CButton>
           <CButton color="link" size="sm" style={{ color: '#fff' }} onClick={() => setSelected([])}>Annuler</CButton>
@@ -159,7 +158,7 @@ const StagiairesPage = () => {
         <SupervisorAssignModal visible={assignIds !== null} ids={assignIds ?? []}
           onClose={() => setAssignIds(null)} onDone={() => { setAssignIds(null); setSelected([]); load() }} />
       )}
-      <TeamQuickModal visible={teamOpen} rows={selectedRows} onClose={() => setTeamOpen(false)} onDone={() => { setTeamOpen(false); setSelected([]); load() }} />
+      <FormBinomeModal visible={teamOpen} preset={pair} onClose={() => setTeamOpen(false)} onDone={() => { setTeamOpen(false); setSelected([]); load() }} />
     </div>
   )
 }
@@ -209,46 +208,6 @@ const InternLine = ({ r, seuil, lead, busy, checked, onToggle, onOpen, onAssign,
       <td>{r.codes.length ? <CodeBadges codes={r.codes} /> : <span className="stg-muted">—</span>}</td>
       <td style={{ textAlign: 'right' }}><CButton size="sm" color="primary" onClick={onOpen}>Détails</CButton></td>
     </tr>
-  )
-}
-
-/** Former un binôme / groupe avec les stagiaires sélectionnés. */
-const TeamQuickModal = ({ visible, rows, onClose, onDone }: { visible: boolean; rows: FollowRow[]; onClose: () => void; onDone: () => void }) => {
-  const [name, setName] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
-
-  useEffect(() => { if (visible) { setName(''); setErr(null) } }, [visible])
-
-  const save = async () => {
-    if (!name.trim()) { setErr('Donnez un nom au binôme.'); return }
-    setBusy(true); setErr(null)
-    try {
-      await stageService.saveTeam(null, name.trim(), rows.map(r => r.id))
-      onDone()
-      await showSuccess('Binôme enregistré')
-    } catch (e) {
-      setErr(friendlyError(e))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <CModal visible={visible} onClose={onClose} alignment="center">
-      <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Former un binôme / groupe</CModalTitle></CModalHeader>
-      <CModalBody>
-        <CFormInput value={name} maxLength={80} onChange={e => setName(e.target.value)} placeholder="Exemple : Binôme Réseaux 1" />
-        <ul style={{ margin: '12px 0 0', paddingLeft: 18, fontSize: '.88rem' }}>
-          {rows.map(r => <li key={r.id}>{r.nom_complet}{r.team?.name ? <span className="stg-muted"> (quitte « {r.team.name} »)</span> : null}</li>)}
-        </ul>
-        {err && <div className="stg-err" style={{ marginTop: 12 }}>{err}</div>}
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="secondary" variant="ghost" onClick={onClose}>Annuler</CButton>
-        <CButton color="primary" onClick={save} disabled={busy}>{busy && <CSpinner size="sm" className="me-1" />}Enregistrer</CButton>
-      </CModalFooter>
-    </CModal>
   )
 }
 

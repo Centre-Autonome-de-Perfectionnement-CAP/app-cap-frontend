@@ -17,7 +17,7 @@ const getStagesNavigation = (role: string | null) => {
     { component: CNavItem, name: 'Stagiaires', to: '/stages/stagiaires', icon: <CIcon icon={cilPeople} customClassName="nav-icon" /> },
     { component: CNavItem, name: 'Rapports', to: '/stages/rapports', icon: <CIcon icon={cilDescription} customClassName="nav-icon" /> },
     { component: CNavItem, name: 'Demandes des stagiaires', to: '/stages/demandes-stagiaires', icon: <CIcon icon={cilTask} customClassName="nav-icon" /> },
-    { component: CNavItem, name: 'Binômes et groupes', to: '/stages/binomes', icon: <CIcon icon={cilGroup} customClassName="nav-icon" /> },
+    { component: CNavItem, name: 'Binômes', to: '/stages/binomes', icon: <CIcon icon={cilGroup} customClassName="nav-icon" /> },
     ...(lead ? [
       attestations,
       { component: CNavItem, name: 'Superviseurs', to: '/stages/superviseurs', icon: <CIcon icon={cilUserFollow} customClassName="nav-icon" /> },

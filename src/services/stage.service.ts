@@ -337,11 +337,6 @@ export interface Intern {
 
 export interface InternViewer { id: number; is_lead: boolean; is_supervisor: boolean }
 
-export interface InternListResponse {
-  data: Intern[]
-  counts: Record<InternScope, number>
-  me: InternViewer
-}
 
 export interface Supervisor { id: number; name: string; email: string; phone: string | null; since: string; active_interns: number }
 
@@ -374,7 +369,10 @@ export interface SupervisorInvitation {
   created_at: string
 }
 
-export interface StageTeam { id: number; name: string; members: { id: number; reference: string; nom_complet: string }[] }
+/** Stagiaire d'un binôme, ou libre pour en former un. */
+export interface BinomeMember { id: number; reference: string; nom_complet: string; etablissement: string; date_debut: string; date_fin: string }
+export interface StageTeam { id: number; name: string; members: BinomeMember[] }
+export interface BinomesOverview { teams: StageTeam[]; candidates: BinomeMember[] }
 
 export interface WhatsAppGroupOverview {
   year: number
@@ -424,12 +422,6 @@ class StageService {
 
   // ── Stagiaires, superviseurs, binômes, groupe WhatsApp (lot 2) ─────────
 
-  interns = (scope: InternScope, q?: string): Promise<InternListResponse> => {
-    const qs = new URLSearchParams({ scope })
-    if (q) qs.append('q', q)
-    return HttpService.get(`${BASE}/stagiaires?${qs}`)
-  }
-
   setSupervisor = (stageIds: number[], supervisorId: number, action: 'add' | 'remove') =>
     HttpService.post(`${BASE}/stagiaires/superviseur`, { stage_ids: stageIds, supervisor_id: supervisorId, action })
 
@@ -449,13 +441,14 @@ class StageService {
 
   revokeInvitation = (id: number) => HttpService.delete(`${BASE}/invitations/${id}`)
 
-  teams = async (): Promise<StageTeam[]> => (await HttpService.get(`${BASE}/equipes`)).data
+  /** Binômes formés et stagiaires encore libres (en cours ou à venir). */
+  binomes = async (): Promise<BinomesOverview> => (await HttpService.get(`${BASE}/equipes`)).data
 
-  saveTeam = (id: number | null, nom: string, stageIds: number[]) =>
-    id ? HttpService.put(`${BASE}/equipes/${id}`, { nom, stage_ids: stageIds })
-       : HttpService.post(`${BASE}/equipes`, { nom, stage_ids: stageIds })
+  /** Toujours deux stagiaires ; nom facultatif (sinon « Binôme NOM / NOM »). */
+  formBinome = (stageIds: [number, number], nom?: string) =>
+    HttpService.post(`${BASE}/equipes`, { stage_ids: stageIds, nom: nom?.trim() || null })
 
-  deleteTeam = (id: number) => HttpService.delete(`${BASE}/equipes/${id}`)
+  dissolveBinome = (id: number) => HttpService.delete(`${BASE}/equipes/${id}`)
 
   whatsappGroup = async (): Promise<WhatsAppGroupOverview> => (await HttpService.get(`${BASE}/groupe-whatsapp`)).data
 

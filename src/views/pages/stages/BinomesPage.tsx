@@ -1,33 +1,72 @@
 // src/views/pages/stages/BinomesPage.tsx
-// Binômes : toujours deux stagiaires. On forme un binôme avec deux stagiaires
-// encore libres (en cours ou à venir) ; un stagiaire déjà en binôme n'est plus
-// proposé. Les stagiaires peuvent aussi se choisir depuis leur espace.
+// Binômes : toujours deux stagiaires. Quatre listes, comme la page des
+// stagiaires : binômes formés (avec leur origine), demandes de stage faites en
+// binôme et encore à l'étude, propositions entre stagiaires en attente de
+// réponse, et stagiaires sans binôme (en cocher deux pour les réunir).
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
-  CButton, CCard, CCardBody, CFormInput, CFormLabel, CFormSelect, CSpinner,
+  CButton, CCard, CCardBody, CFormCheck, CFormInput, CFormLabel, CFormSelect, CInputGroup, CInputGroupText, CSpinner,
   CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPlus, cilGroup, cilReload } from '@coreui/icons'
+import { cilPlus, cilReload, cilSearch, cilX } from '@coreui/icons'
 import stageService, { type BinomesOverview, type BinomeMember, type StageTeam } from '@/services/stage.service'
 import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
-import { PageHead, Empty, StagesStyles, useOpenDossier } from './StagesUi'
+import { PageHead, Empty, Pill, StagesStyles, FilterTabs, useOpenDossier } from './StagesUi'
 import { frDate } from './stageUtils'
 
+type Tab = 'binomes' | 'demandes' | 'propositions' | 'libres'
+const TABS: Record<Tab, string> = {
+  binomes: 'Binômes', demandes: 'Demandes en binôme', propositions: 'Propositions en attente', libres: 'Sans binôme',
+}
+const ORIGIN: Record<StageTeam['origin'], { label: string; color: string; bg: string }> = {
+  responsable: { label: 'Formé par le responsable', color: '#0f766e', bg: '#f0fdfa' },
+  stagiaires: { label: 'Choisi par les stagiaires', color: '#1d4ed8', bg: '#eff6ff' },
+  demande: { label: 'Demandé en binôme', color: '#7c3aed', bg: '#f5f3ff' },
+}
+
+const matches = (q: string, people: BinomeMember[]) =>
+  !q || people.some(m => `${m.nom_complet} ${m.reference} ${m.etablissement ?? ''}`.toLowerCase().includes(q))
+
+/** Référence et nom ; ouvre le dossier. */
+const PersonLink = ({ m, onOpen }: { m: BinomeMember; onOpen: (ref: string) => void }) => (
+  <button type="button" className="bin-person" onClick={() => onOpen(m.reference)} title="Ouvrir le dossier">
+    <span className="stg-ref">{m.reference}</span><span className="bin-name">{m.nom_complet}</span>
+  </button>
+)
+
 const BinomesPage = () => {
+  const [params, setParams] = useSearchParams()
+  const asked = params.get('onglet') as Tab | null
+  const tab: Tab = asked && asked in TABS ? asked : 'binomes'
+  const setTab = (t: Tab) => setParams(p => { const n = new URLSearchParams(p); n.set('onglet', t); return n }, { replace: true })
+
   const [data, setData] = useState<BinomesOverview | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [q, setQ] = useState('')
+  const [selected, setSelected] = useState<number[]>([])
   const [forming, setForming] = useState(false)
   const [dissolving, setDissolving] = useState<StageTeam | null>(null)
   const [busy, setBusy] = useState(false)
-  const openDossier = useOpenDossier('Binômes')
+  const openDossier = useOpenDossier(`Binômes · ${TABS[tab]}`)
 
   const load = useCallback(async () => {
-    setError(null)
-    try { setData(await stageService.binomes()) } catch (e) { setError(friendlyError(e)) }
+    setLoading(true); setError(null)
+    try { setData(await stageService.binomes()) } catch (e) { setError(friendlyError(e)) } finally { setLoading(false) }
   }, [])
   useEffect(() => { load() }, [load])
+  useEffect(() => { setSelected([]) }, [tab])
+
+  const needle = q.trim().toLowerCase()
+  const lists = useMemo(() => data && {
+    binomes: data.teams.filter(t => matches(needle, t.members) || t.name.toLowerCase().includes(needle)),
+    demandes: data.requests.filter(t => matches(needle, t.members)),
+    propositions: data.invites.filter(i => matches(needle, [i.from, i.to])),
+    libres: data.candidates.filter(m => matches(needle, [m])),
+  }, [data, needle])
 
   const dissolve = async () => {
     if (!dissolving) return
@@ -44,49 +83,137 @@ const BinomesPage = () => {
     }
   }
 
+  const toggle = (id: number) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : s.length < 2 ? [...s, id] : [s[1], id])
+  const pair = selected.length === 2 ? [selected[0], selected[1]] as [number, number] : undefined
+
   return (
     <div className="stg-page">
       <StagesStyles />
       <PageHead
-        title="Binômes"
-        subtitle={data ? `${data.teams.length} binôme(s) · ${data.candidates.length} stagiaire(s) sans binôme` : 'Deux stagiaires qui travaillent ensemble.'}
+        title={tab === 'binomes' ? 'Binômes' : `Binômes · ${TABS[tab]}`}
+        subtitle="Toujours deux stagiaires. Un clic sur un nom ouvre son dossier."
         actions={<>
-          <CButton color="secondary" variant="outline" size="sm" onClick={load} title="Actualiser"><CIcon icon={cilReload} /></CButton>
-          <CButton color="primary" size="sm" disabled={!data || data.candidates.length < 2} onClick={() => setForming(true)}>
+          <CButton color="secondary" variant="outline" size="sm" onClick={load} disabled={loading} title="Actualiser"><CIcon icon={cilReload} /></CButton>
+          <CButton color="primary" size="sm" disabled={!data || data.candidates.length < 2} onClick={() => { setSelected([]); setForming(true) }}>
             <CIcon icon={cilPlus} className="me-1" />Former un binôme
           </CButton>
         </>}
       />
-      {error && <div className="stg-err">{error}</div>}
-      {!data && !error && <div style={{ padding: 40, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
-      {data && data.teams.length === 0 && (
-        <CCard className="border-0 shadow-sm"><CCardBody><Empty text="Aucun binôme pour l'instant. Les stagiaires peuvent aussi en proposer un depuis leur espace." /></CCardBody></CCard>
+
+      <FilterTabs
+        options={(Object.keys(TABS) as Tab[]).map(k => ({ key: k, label: TABS[k], count: lists?.[k].length }))}
+        value={tab}
+        onChange={setTab}
+      />
+
+      <CCard className="border-0 shadow-sm" style={{ borderRadius: 14 }}>
+        <CCardBody>
+          <CInputGroup style={{ marginBottom: 12 }}>
+            <CInputGroupText style={{ background: '#fff' }}><CIcon icon={cilSearch} style={{ width: 16, color: '#94a3b8' }} /></CInputGroupText>
+            <CFormInput value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher : nom, référence, établissement…" maxLength={100} />
+            {q && <CButton color="secondary" variant="outline" onClick={() => setQ('')} title="Effacer"><CIcon icon={cilX} /></CButton>}
+          </CInputGroup>
+
+          {error && <div className="stg-err">{error}</div>}
+          {!data && !error && <div style={{ padding: 40, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
+
+          {lists && tab === 'binomes' && (lists.binomes.length === 0
+            ? <Empty text={needle ? 'Aucun binôme ne correspond à la recherche.' : 'Aucun binôme pour l\'instant. Les stagiaires peuvent aussi en proposer un depuis leur espace.'} />
+            : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="stg-table" style={{ minWidth: 760 }}>
+                  <thead><tr><th>Binôme</th><th>Stagiaires</th><th>Fin de stage</th><th>Formé le</th><th /></tr></thead>
+                  <tbody>
+                    {lists.binomes.map(t => (
+                      <tr key={t.id}>
+                        <td>
+                          <div style={{ fontWeight: 700, color: '#0f172a' }}>{t.name}</div>
+                          <Pill color={ORIGIN[t.origin].color} bg={ORIGIN[t.origin].bg}>{ORIGIN[t.origin].label}</Pill>
+                        </td>
+                        <td>{t.members.map(m => <PersonLink key={m.id} m={m} onOpen={openDossier} />)}</td>
+                        <td>{t.members.map(m => <div key={m.id} className="bin-line">{frDate(m.date_fin)}</div>)}</td>
+                        <td className="stg-muted">{frDate(t.created_at)}</td>
+                        <td style={{ textAlign: 'right' }}><CButton size="sm" color="danger" variant="ghost" onClick={() => setDissolving(t)}>Défaire</CButton></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+
+          {lists && tab === 'demandes' && (lists.demandes.length === 0
+            ? <Empty text="Aucune demande de stage en binôme à l'étude." />
+            : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="stg-table" style={{ minWidth: 640 }}>
+                  <thead><tr><th>Demandeurs</th><th>Reçue le</th><th>À savoir</th></tr></thead>
+                  <tbody>
+                    {lists.demandes.map(t => (
+                      <tr key={t.id}>
+                        <td>{t.members.map(m => <PersonLink key={m.id} m={m} onOpen={openDossier} />)}</td>
+                        <td className="stg-muted">{frDate(t.created_at)}</td>
+                        <td className="stg-muted">Les deux demandes sont décidées ensemble, aux mêmes service et dates.</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+
+          {lists && tab === 'propositions' && (lists.propositions.length === 0
+            ? <Empty text="Aucune proposition de binôme en attente de réponse." />
+            : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="stg-table" style={{ minWidth: 700 }}>
+                  <thead><tr><th>Proposé par</th><th>À</th><th>Étape</th><th>Sans réponse, expire le</th></tr></thead>
+                  <tbody>
+                    {lists.propositions.map(i => (
+                      <tr key={i.id}>
+                        <td><PersonLink m={i.from} onOpen={openDossier} /></td>
+                        <td><PersonLink m={i.to} onOpen={openDossier} /></td>
+                        <td>{i.phase === 'demande' ? 'Demande de stage' : 'En stage'}</td>
+                        <td className="stg-muted">{frDate(i.expires_at)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+
+          {lists && tab === 'libres' && (lists.libres.length === 0
+            ? <Empty text="Tous les stagiaires en cours ou à venir sont en binôme." />
+            : (
+              <>
+                <div className="stg-muted" style={{ marginBottom: 8 }}>Cochez deux stagiaires pour les réunir en binôme.</div>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="stg-table" style={{ minWidth: 640 }}>
+                    <thead><tr><th style={{ width: 34 }} /><th>Stagiaire</th><th>Établissement</th><th>Période</th></tr></thead>
+                    <tbody>
+                      {lists.libres.map(m => (
+                        <tr key={m.id}>
+                          <td><CFormCheck checked={selected.includes(m.id)} onChange={() => toggle(m.id)} aria-label={`Choisir ${m.nom_complet}`} /></td>
+                          <td><PersonLink m={m} onOpen={openDossier} /></td>
+                          <td className="stg-muted">{m.etablissement}</td>
+                          <td className="stg-muted">{frDate(m.date_debut)} → {frDate(m.date_fin)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ))}
+        </CCardBody>
+      </CCard>
+
+      {selected.length > 0 && (
+        <div className="stg-bar-sel">
+          <strong style={{ marginRight: 'auto' }}>{selected.length} / 2 sélectionné(s)</strong>
+          <CButton color="light" size="sm" disabled={selected.length !== 2} onClick={() => setForming(true)}>Former ce binôme</CButton>
+          <CButton color="link" size="sm" style={{ color: '#fff' }} onClick={() => setSelected([])}>Annuler</CButton>
+        </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
-        {data?.teams.map(t => (
-          <div key={t.id} className="stg-card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 32, height: 32, borderRadius: 9, background: '#f0fdfa', color: '#0f766e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CIcon icon={cilGroup} style={{ width: 16 }} />
-              </span>
-              <strong style={{ flex: 1, minWidth: 0 }}>{t.name}</strong>
-              <CButton size="sm" color="danger" variant="ghost" onClick={() => setDissolving(t)}>Défaire</CButton>
-            </div>
-            <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {t.members.map(m => (
-                <button key={m.id} type="button" onClick={() => openDossier(m.reference)} className="bin-member">
-                  <span className="stg-ref">{m.reference}</span>
-                  <span style={{ flex: 1, minWidth: 0, fontWeight: 600, color: '#0f172a' }}>{m.nom_complet}</span>
-                  <span className="stg-muted">jusqu'au {frDate(m.date_fin)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <FormBinomeModal visible={forming} onClose={() => setForming(false)} onDone={() => { setForming(false); load() }} />
+      <FormBinomeModal visible={forming} preset={pair} onClose={() => setForming(false)} onDone={() => { setForming(false); setSelected([]); load() }} />
 
       <CModal visible={!!dissolving} onClose={() => setDissolving(null)} alignment="center">
         <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Défaire « {dissolving?.name} » ?</CModalTitle></CModalHeader>
@@ -98,10 +225,11 @@ const BinomesPage = () => {
       </CModal>
 
       <style>{`
-        .bin-member { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px;
-          border: 1px solid #eef2f7; border-radius: 10px; cursor: pointer; font-size: .9rem; }
-        .bin-member:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .bin-member:focus-visible { outline: 2px solid #0f766e; outline-offset: 2px; }
+        .bin-person { all: unset; box-sizing: border-box; display: flex; align-items: baseline; gap: 8px; padding: 2px 0; cursor: pointer; }
+        .bin-person:hover .bin-name { text-decoration: underline; }
+        .bin-person:focus-visible { outline: 2px solid #0f766e; outline-offset: 2px; border-radius: 4px; }
+        .bin-name { font-weight: 600; color: #0f172a; }
+        .bin-line { padding: 2px 0; white-space: nowrap; }
       `}</style>
     </div>
   )

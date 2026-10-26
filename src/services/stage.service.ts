@@ -374,8 +374,15 @@ export interface SupervisorInvitation {
 
 /** Stagiaire d'un binôme, ou libre pour en former un. */
 export interface BinomeMember { id: number; reference: string; nom_complet: string; etablissement: string; date_debut: string; date_fin: string }
-export interface StageTeam { id: number; name: string; members: BinomeMember[] }
-export interface BinomesOverview { teams: StageTeam[]; candidates: BinomeMember[] }
+export interface StageTeam {
+  id: number; name: string; members: BinomeMember[]; created_at: string
+  /** responsable : formé dans le progiciel ; stagiaires : choisi depuis leur espace ; demande : demande de stage en binôme */
+  origin: 'responsable' | 'stagiaires' | 'demande'
+}
+export interface BinomeInvite {
+  id: number; from: BinomeMember; to: BinomeMember; phase: 'stage' | 'demande'; created_at: string; expires_at: string
+}
+export interface BinomesOverview { teams: StageTeam[]; requests: StageTeam[]; invites: BinomeInvite[]; candidates: BinomeMember[] }
 
 export interface WhatsAppGroupOverview {
   year: number

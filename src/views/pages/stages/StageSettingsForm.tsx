@@ -230,6 +230,7 @@ const StageSettingsForm = () => {
               <CFormTextarea rows={8} maxLength={10000} value={form.reglement_text} onChange={e => set('reglement_text', e.target.value)} />
               <div style={{ fontSize: '.875rem', color: '#64748b', marginTop: 4 }}>
                 Toute modification crée une nouvelle version : chaque stagiaire devra la relire et l'accepter.
+                Mise en forme : <b>**texte**</b> en gras, <b style={{ color: '#be123c' }}>!!texte!!</b> en gras rouge ; un paragraphe qui commence par !!…!! est encadré.
                 Remplacés automatiquement à l'affichage : {'{horaires}'} (horaires du stagiaire), {'{tolerance}'} (minutes avant retard),
                 {' {delai_permission}'} (jours ouvrés), {'{rapports}'} (fréquence des rapports), {'{seuil}'} (assiduité minimale).
               </div>

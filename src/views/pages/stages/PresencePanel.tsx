@@ -1,6 +1,6 @@
 // src/views/pages/stages/PresencePanel.tsx
 // Fiche d'un stagiaire accepté : activation de l'espace, décalage de prise
-// de service, assiduité, appareil (empreinte), journées.
+// de service, assiduité, téléphone de stage, journées.
 
 import { useCallback, useEffect, useState } from 'react'
 import { CButton, CSpinner } from '@coreui/react'
@@ -20,7 +20,7 @@ const DAY = {
 } as const
 
 const FAIL: Record<string, string> = {
-  out_of_zone: 'hors zone', imprecise: 'position imprécise', webauthn: 'empreinte refusée', not_allowed: 'hors horaire',
+  out_of_zone: 'hors zone', imprecise: 'position imprécise', webauthn: 'empreinte ou téléphone refusé', not_allowed: 'hors horaire',
 }
 
 const time = (iso?: string) => iso
@@ -50,7 +50,7 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
     try {
       const res: any = await stageService.resetDevice(stageId)
       await load()
-      await showSuccess('Empreinte réinitialisée', res?.message)
+      await showSuccess('Téléphone de stage réinitialisé', res?.message)
     } catch (e) {
       await showError('Action impossible', friendlyError(e))
     } finally {
@@ -121,8 +121,8 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
           <CIcon icon={cilFingerprint} style={{ width: 18, color: activeDevice ? '#059669' : '#d97706' }} />
           <span style={{ flex: 1, minWidth: 180 }}>
             {activeDevice
-              ? <>Empreinte enregistrée {activeDevice.device_label ? `(${activeDevice.device_label})` : ''} le {frDate(activeDevice.created_at)}{activeDevice.last_used_at ? `, dernier usage le ${frDateTime(activeDevice.last_used_at)}` : ''}</>
-              : 'Aucune empreinte enregistrée : le stagiaire doit l\'enregistrer depuis son espace.'}
+              ? <>Téléphone de stage {activeDevice.device_label ? `(${activeDevice.device_label})` : ''} enregistré le {frDate(activeDevice.created_at)}{activeDevice.last_used_at ? `, dernier pointage le ${frDateTime(activeDevice.last_used_at)}` : ''}</>
+              : 'Aucun téléphone de stage : le stagiaire l\'enregistre à sa prochaine connexion, sur son propre téléphone.'}
             <span className="stg-muted">
               Activé le {frDateTime(data.account.activated_at)} · règlement {data.account.reglement_accepted_at ? `accepté le ${frDate(data.account.reglement_accepted_at)}` : 'non accepté'}
             </span>
@@ -134,7 +134,7 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
           )}
           {activeDevice && confirmReset && (
             <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-              <span style={{ fontWeight: 700, color: '#9f1239' }}>Désactiver cette empreinte ?</span>
+              <span style={{ fontWeight: 700, color: '#9f1239' }}>Désactiver ce téléphone ? Le stagiaire enregistrera le nouveau.</span>
               <CButton size="sm" color="secondary" variant="ghost" onClick={() => setConfirmReset(false)}>Non</CButton>
               <CButton size="sm" color="danger" style={{ color: '#fff' }} onClick={reset}>Oui</CButton>
             </span>

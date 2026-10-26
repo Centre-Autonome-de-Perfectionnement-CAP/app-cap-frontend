@@ -61,6 +61,7 @@ const StageSettingsForm = () => {
         seuil_assiduite: form.seuil_assiduite,
         attestation_structure: form.attestation_structure,
         numero_suffixe: form.numero_suffixe,
+        note_numero_suffixe: form.note_numero_suffixe,
         pdf_ville: form.pdf_ville,
         signataire_titre: form.signataire_titre,
         signataire_nom: form.signataire_nom,
@@ -185,15 +186,20 @@ const StageSettingsForm = () => {
             </CCol>
             <CCol xs={12}><hr className="my-1" /><strong>Documents PDF (attestation, note de service)</strong></CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Après le numéro</CFormLabel>
+              <CFormLabel className="fw-semibold small">Après le numéro (attestations)</CFormLabel>
               <CFormInput maxLength={40} value={form.numero_suffixe} onChange={e => set('numero_suffixe', e.target.value.replace(/[^A-Za-z0-9/\-_. ]/g, ''))} />
-              <div style={{ fontSize: '.875rem', color: '#64748b' }}>Ex. : N° 22-26/{form.numero_suffixe || '…'}</div>
+              <div style={{ fontSize: '.875rem', color: '#64748b' }}>N° 001-26/{form.numero_suffixe || '…'}</div>
+            </CCol>
+            <CCol xs={6} md={4}>
+              <CFormLabel className="fw-semibold small">Après le numéro (notes de service)</CFormLabel>
+              <CFormInput maxLength={40} value={form.note_numero_suffixe} onChange={e => set('note_numero_suffixe', e.target.value.replace(/[^A-Za-z0-9/\-_. ]/g, ''))} />
+              <div style={{ fontSize: '.875rem', color: '#64748b' }}>N° 001-26/{form.note_numero_suffixe || '…'}, numérotées automatiquement</div>
             </CCol>
             <CCol xs={6} md={4}>
               <CFormLabel className="fw-semibold small">Ville (« …, le »)</CFormLabel>
               <CFormInput maxLength={60} value={form.pdf_ville} onChange={e => set('pdf_ville', e.target.value)} />
             </CCol>
-            <CCol xs={12} md={4}>
+            <CCol xs={12}>
               <CFormLabel className="fw-semibold small">Pied de page</CFormLabel>
               <CFormInput maxLength={150} value={form.pdf_pied_de_page} onChange={e => set('pdf_pied_de_page', e.target.value)} />
             </CCol>

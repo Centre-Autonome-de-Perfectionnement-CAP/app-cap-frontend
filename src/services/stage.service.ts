@@ -101,6 +101,7 @@ export interface StageSettings {
   seuil_assiduite: number
   attestation_structure: string
   numero_suffixe: string
+  note_numero_suffixe: string
   pdf_ville: string
   signataire_titre: string
   signataire_nom: string

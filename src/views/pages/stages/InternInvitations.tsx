@@ -145,7 +145,7 @@ const InviteModal = ({ visible, onClose, onDone }: { visible: boolean; onClose: 
         <div style={{ fontSize: '.9rem', color: '#334155', marginBottom: 10 }}>
           Pour un stagiaire arrivé avant le système, ou en dehors : son stage est en cours, ou déjà terminé.
         </div>
-        <label className="fw-semibold small mb-1">Numéro(s) WhatsApp</label>
+        <label className="fw-semibold small mb-1">Numéro(s) WhatsApp <span className="text-danger">*</span></label>
         <PhoneListField value={phones} onChange={v => { setPhones(v); setErr(null) }} disabled={busy} />
         <div style={{ marginTop: 12, background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: 10, padding: '10px 12px', fontSize: '.875rem', color: '#115e59' }}>
           Chaque numéro reçoit sur WhatsApp un lien personnel (7 jours, une seule utilisation). Le stagiaire remplit lui-même

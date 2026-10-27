@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   CButton, CCard, CCardBody, CFormCheck, CFormTextarea, CSpinner,
-  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
+  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CFormLabel,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilReload, cilPaperclip } from '@coreui/icons'
@@ -122,8 +122,10 @@ const DemandesStagiairesPage = () => {
           {deciding?.decision === 'approved' && deciding.row.kind !== 'permission' && (
             <div className="stg-info" style={{ marginBottom: 10 }}>La date de fin sera modifiée et une note de service rectificative sera émise et envoyée.</div>
           )}
-          <CFormTextarea rows={3} maxLength={1000} value={comment} onChange={e => setComment(e.target.value)}
-            placeholder={deciding?.decision === 'rejected' ? 'Motif du refus (obligatoire)' : 'Commentaire (facultatif)'} />
+          <CFormLabel className="fw-semibold small">
+            {deciding?.decision === 'rejected' ? <>Motif du refus <span className="text-danger">*</span></> : <>Commentaire <span style={{ color: '#94a3b8', fontWeight: 400 }}>(facultatif)</span></>}
+          </CFormLabel>
+          <CFormTextarea rows={3} maxLength={1000} value={comment} onChange={e => setComment(e.target.value)} />
           {modalErr && <div className="stg-err" style={{ marginTop: 10 }}>{modalErr}</div>}
         </CModalBody>
         <CModalFooter>

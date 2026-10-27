@@ -102,23 +102,23 @@ const StageSettingsForm = () => {
               </div>
             </CCol>
             <CCol xs={12}>
-              <CFormLabel className="fw-semibold small">Message affiché quand les demandes sont fermées</CFormLabel>
+              <CFormLabel className="fw-semibold small">Message affiché quand les demandes sont fermées <span className="text-danger">*</span></CFormLabel>
               <CFormTextarea rows={2} maxLength={500} value={form.closed_message} onChange={e => set('closed_message', e.target.value)} />
             </CCol>
             <CCol xs={12}>
-              <CFormLabel className="fw-semibold small">Motif de rejet proposé par défaut</CFormLabel>
+              <CFormLabel className="fw-semibold small">Motif de rejet proposé par défaut <span className="text-danger">*</span></CFormLabel>
               <CFormTextarea rows={3} maxLength={1000} value={form.default_rejection_reason} onChange={e => set('default_rejection_reason', e.target.value)} />
             </CCol>
             <CCol xs={12} md={6}>
-              <CFormLabel className="fw-semibold small">Service par défaut</CFormLabel>
+              <CFormLabel className="fw-semibold small">Service par défaut <span className="text-danger">*</span></CFormLabel>
               <CFormInput maxLength={150} value={form.default_service} onChange={e => set('default_service', e.target.value)} />
             </CCol>
             <CCol xs={12} md={6}>
-              <CFormLabel className="fw-semibold small">Lieu par défaut</CFormLabel>
+              <CFormLabel className="fw-semibold small">Lieu par défaut <span className="text-danger">*</span></CFormLabel>
               <CFormInput maxLength={150} value={form.default_lieu} onChange={e => set('default_lieu', e.target.value)} />
             </CCol>
             <CCol xs={12}>
-              <CFormLabel className="fw-semibold small mb-1">Horaires par défaut</CFormLabel>
+              <CFormLabel className="fw-semibold small mb-1">Horaires par défaut <span className="text-danger">*</span></CFormLabel>
               <CRow className="g-2">
                 {([['arrivee', 'Arrivée'], ['pause_debut', 'Début pause'], ['pause_fin', 'Fin pause'], ['sortie', 'Sortie']] as const).map(([k, l]) => (
                   <CCol xs={6} md={3} key={k}>
@@ -147,16 +147,16 @@ const StageSettingsForm = () => {
               </div>
             </CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Rayon autorisé (m)</CFormLabel>
+              <CFormLabel className="fw-semibold small">Rayon autorisé (m) <span className="text-danger">*</span></CFormLabel>
               <CFormInput type="number" min={20} max={500} value={form.lieu_rayon} onChange={e => set('lieu_rayon', Math.max(20, Math.min(500, Number(e.target.value) || 50)))} />
             </CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Permission après coup (jours ouvrés)</CFormLabel>
+              <CFormLabel className="fw-semibold small">Permission après coup (jours ouvrés) <span className="text-danger">*</span></CFormLabel>
               <CFormInput type="number" min={0} max={15} value={form.permission_delay_days} onChange={e => set('permission_delay_days', Math.max(0, Math.min(15, Number(e.target.value) || 0)))} />
             </CCol>
             <CCol xs={12}><hr className="my-1" /><strong>Rapports</strong></CCol>
             <CCol xs={12} md={4}>
-              <CFormLabel className="fw-semibold small">Fréquence imposée</CFormLabel>
+              <CFormLabel className="fw-semibold small">Fréquence imposée <span className="text-danger">*</span></CFormLabel>
               <CFormSelect value={form.report_frequency} onChange={e => set('report_frequency', e.target.value as StageSettings['report_frequency'])}>
                 <option value="journalier">Journalier</option>
                 <option value="hebdomadaire">Hebdomadaire</option>
@@ -164,52 +164,52 @@ const StageSettingsForm = () => {
               </CFormSelect>
             </CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Délai après la période (jours ouvrés)</CFormLabel>
+              <CFormLabel className="fw-semibold small">Délai après la période (jours ouvrés) <span className="text-danger">*</span></CFormLabel>
               <CFormInput type="number" min={0} max={10} value={form.report_grace_days} onChange={e => set('report_grace_days', Math.max(0, Math.min(10, Number(e.target.value) || 0)))} />
             </CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Rapport final ouvert (jours avant la fin)</CFormLabel>
+              <CFormLabel className="fw-semibold small">Rapport final ouvert (jours avant la fin) <span className="text-danger">*</span></CFormLabel>
               <CFormInput type="number" min={3} max={60} value={form.final_report_open_days} onChange={e => set('final_report_open_days', Math.max(3, Math.min(60, Number(e.target.value) || 14)))} />
             </CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Version corrigée après soutenance (jours après la fin)</CFormLabel>
+              <CFormLabel className="fw-semibold small">Version corrigée après soutenance (jours après la fin) <span className="text-danger">*</span></CFormLabel>
               <CFormInput type="number" min={0} max={365} value={form.final_correction_days ?? 90} onChange={e => set('final_correction_days', Math.max(0, Math.min(365, Number(e.target.value) || 0)))} />
             </CCol>
             <CCol xs={12}><hr className="my-1" /><strong>Attestations</strong></CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Assiduité minimale (%)</CFormLabel>
+              <CFormLabel className="fw-semibold small">Assiduité minimale (%) <span className="text-danger">*</span></CFormLabel>
               <CFormInput type="number" min={50} max={100} value={form.seuil_assiduite} onChange={e => set('seuil_assiduite', Math.max(50, Math.min(100, Number(e.target.value) || 80)))} />
             </CCol>
             <CCol xs={12} md={8}>
-              <CFormLabel className="fw-semibold small">Structure d'accueil (« … un stage académique au sein … »)</CFormLabel>
+              <CFormLabel className="fw-semibold small">Structure d'accueil (« … un stage académique au sein … ») <span className="text-danger">*</span></CFormLabel>
               <CFormInput maxLength={200} value={form.attestation_structure} onChange={e => set('attestation_structure', e.target.value)} />
             </CCol>
             <CCol xs={12}><hr className="my-1" /><strong>Documents PDF (attestation, note de service)</strong></CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Après le numéro (attestations)</CFormLabel>
+              <CFormLabel className="fw-semibold small">Après le numéro (attestations) <span className="text-danger">*</span></CFormLabel>
               <CFormInput maxLength={40} value={form.numero_suffixe} onChange={e => set('numero_suffixe', e.target.value.replace(/[^A-Za-z0-9/\-_. ]/g, ''))} />
               <div style={{ fontSize: '.875rem', color: '#64748b' }}>N° 001-26/{form.numero_suffixe || '…'}</div>
             </CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Après le numéro (notes de service)</CFormLabel>
+              <CFormLabel className="fw-semibold small">Après le numéro (notes de service) <span className="text-danger">*</span></CFormLabel>
               <CFormInput maxLength={40} value={form.note_numero_suffixe} onChange={e => set('note_numero_suffixe', e.target.value.replace(/[^A-Za-z0-9/\-_. ]/g, ''))} />
               <div style={{ fontSize: '.875rem', color: '#64748b' }}>N° 001-26/{form.note_numero_suffixe || '…'}, numérotées automatiquement</div>
             </CCol>
             <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Ville (« …, le »)</CFormLabel>
+              <CFormLabel className="fw-semibold small">Ville (« …, le ») <span className="text-danger">*</span></CFormLabel>
               <CFormInput maxLength={60} value={form.pdf_ville} onChange={e => set('pdf_ville', e.target.value)} />
             </CCol>
             <CCol xs={12}>
-              <CFormLabel className="fw-semibold small">Pied de page</CFormLabel>
+              <CFormLabel className="fw-semibold small">Pied de page <span className="text-danger">*</span></CFormLabel>
               <CFormInput maxLength={150} value={form.pdf_pied_de_page} onChange={e => set('pdf_pied_de_page', e.target.value)} />
             </CCol>
             <CCol xs={12}><strong style={{ fontSize: '.9rem' }}>Notes de service : signature numérique</strong></CCol>
             <CCol xs={12} md={7}>
-              <CFormLabel className="fw-semibold small">Titre du signataire</CFormLabel>
+              <CFormLabel className="fw-semibold small">Titre du signataire <span className="text-danger">*</span></CFormLabel>
               <CFormInput maxLength={150} value={form.note_signataire_titre} onChange={e => set('note_signataire_titre', e.target.value)} />
             </CCol>
             <CCol xs={12} md={5}>
-              <CFormLabel className="fw-semibold small">Nom du signataire</CFormLabel>
+              <CFormLabel className="fw-semibold small">Nom du signataire <span style={{ color: '#94a3b8', fontWeight: 400 }}>(facultatif)</span></CFormLabel>
               <CFormInput maxLength={100} value={form.note_signataire_nom} onChange={e => set('note_signataire_nom', e.target.value)} placeholder="Exemple : Dr Jean DOSSOU" />
             </CCol>
             <CCol xs={12}>
@@ -217,16 +217,16 @@ const StageSettingsForm = () => {
             </CCol>
             <CCol xs={12}><strong style={{ fontSize: '.9rem' }}>Attestations : signature à la main</strong></CCol>
             <CCol xs={12} md={5}>
-              <CFormLabel className="fw-semibold small">Titre du signataire</CFormLabel>
+              <CFormLabel className="fw-semibold small">Titre du signataire <span className="text-danger">*</span></CFormLabel>
               <CFormInput maxLength={80} value={form.signataire_titre} onChange={e => set('signataire_titre', e.target.value)} />
             </CCol>
             <CCol xs={12} md={7}>
-              <CFormLabel className="fw-semibold small">Nom du signataire</CFormLabel>
+              <CFormLabel className="fw-semibold small">Nom du signataire <span className="text-danger">*</span></CFormLabel>
               <CFormInput maxLength={100} value={form.signataire_nom} onChange={e => set('signataire_nom', e.target.value)} />
             </CCol>
             <CCol xs={12}><hr className="my-1" /></CCol>
             <CCol xs={12}>
-              <CFormLabel className="fw-semibold small">Règlement intérieur (version {form.reglement_version})</CFormLabel>
+              <CFormLabel className="fw-semibold small">Règlement intérieur (version {form.reglement_version}) <span className="text-danger">*</span></CFormLabel>
               <CFormTextarea rows={8} maxLength={10000} value={form.reglement_text} onChange={e => set('reglement_text', e.target.value)} />
               <div style={{ fontSize: '.875rem', color: '#64748b', marginTop: 4 }}>
                 Toute modification crée une nouvelle version : chaque stagiaire devra la relire et l'accepter.

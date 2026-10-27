@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import AuthService from '@/services/auth.service'
 import type { LoginCredentials } from '@/types'
 import { getAssetUrl } from '@/utils/assets'
+import PasswordInput from '@/components/forms/PasswordInput'
 
 const Login = () => {
   const { login } = useAuth()
@@ -170,20 +171,16 @@ const Login = () => {
                       <div className="text-danger small mb-3">{validationErrors.email}</div>
                     )}
 
-                    <CInputGroup className="mb-4">
-                      <CInputGroupText>
-                        <CIcon icon={cilLockLocked} />
-                      </CInputGroupText>
-                      <CFormInput
-                        type="password"
-                        placeholder="Mot de passe"
-                        autoComplete="current-password"
-                        value={credentials.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
-                        invalid={!!validationErrors.password}
-                        disabled={loading}
-                      />
-                    </CInputGroup>
+                    <PasswordInput
+                      groupClassName="mb-4"
+                      startIcon={<CIcon icon={cilLockLocked} />}
+                      placeholder="Mot de passe"
+                      autoComplete="current-password"
+                      value={credentials.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      invalid={!!validationErrors.password}
+                      disabled={loading}
+                    />
                     {validationErrors.password && (
                       <div className="text-danger small mb-3">{validationErrors.password}</div>
                     )}

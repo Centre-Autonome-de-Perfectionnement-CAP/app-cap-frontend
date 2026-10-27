@@ -9,7 +9,7 @@ import { cilFingerprint, cilWarning, cilCalendarCheck } from '@coreui/icons'
 import stageService, { type InternPresence } from '@/services/stage.service'
 import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
 import { ExportButton } from './StagesUi'
-import { frDate, frDateTime } from './stageUtils'
+import { frDate, frDateTime, minutesLabel } from './stageUtils'
 
 const DAY = {
   present:     { label: 'Présent',      color: '#059669', bg: '#ecfdf5' },
@@ -19,13 +19,31 @@ const DAY = {
   in_progress: { label: 'En cours',     color: '#64748b', bg: '#f1f5f9' },
 } as const
 
+/** Retards et sortie anticipée du jour ; ceux couverts par une permission ne comptent pas. */
+const Gaps = ({ day }: { day: InternPresence['days'][number] }) => {
+  const items = [
+    ...day.retards.map(r => ({ label: `${r.pointage === 'arrivee' ? 'Retard' : 'Retour de pause'} ${minutesLabel(r.minutes)}`, ok: r.justified })),
+    ...(day.sortie_anticipee ? [{ label: `Sortie ${minutesLabel(day.sortie_anticipee.minutes)} avant`, ok: day.sortie_anticipee.justified }] : []),
+  ]
+  if (!items.length) return <span className="stg-muted">-</span>
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {items.map(i => (
+        <span key={i.label} style={{ whiteSpace: 'nowrap', fontWeight: 600, color: i.ok ? '#7c3aed' : '#c2410c' }}>
+          {i.label}{i.ok ? ' (permis)' : ''}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 const FAIL: Record<string, string> = {
   out_of_zone: 'hors zone', imprecise: 'position imprécise', webauthn: 'empreinte ou téléphone refusé', not_allowed: 'hors horaire',
 }
 
 const time = (iso?: string) => iso
   ? new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Porto-Novo' }).replace(':', 'h')
-  : '—'
+  : '-'
 
 interface Props {
   stageId: number
@@ -96,15 +114,19 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
       {data.account && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8 }}>
           {[
-            ['Assiduité', s.taux !== null ? `${s.taux} %` : '—', s.taux !== null && s.taux < (data.seuil ?? 80) ? '#d97706' : '#059669'],
-            ['Jours ouvrés', String(s.jours_ouvres), '#0f172a'],
-            ['Absences', String(s.absences), s.absences ? '#e11d48' : '#0f172a'],
-            ['Retards', String(s.retards), s.retards ? '#d97706' : '#0f172a'],
-            ['Justifiés', String(s.justifies), '#7c3aed'],
-          ].map(([l, v, c]) => (
+            ['Assiduité', s.taux !== null ? `${s.taux} %` : '-', s.taux !== null && s.taux < (data.seuil ?? 80) ? '#d97706' : '#059669',
+              s.heures_dues ? `${s.heures_presence} h sur ${s.heures_dues} h` : null],
+            ['Absences', String(s.absences), s.absences ? '#e11d48' : '#0f172a', `${s.jours_ouvres} jour(s) ouvré(s)`],
+            ['Retards', String(s.retards), s.retards ? '#d97706' : '#0f172a',
+              [s.minutes_retard ? minutesLabel(s.minutes_retard) : null, s.retards_justifies ? `${s.retards_justifies} permis` : null].filter(Boolean).join(' · ') || null],
+            ['Sorties anticipées', String(s.sorties_anticipees), s.sorties_anticipees ? '#d97706' : '#0f172a',
+              [s.minutes_sortie_anticipee ? minutesLabel(s.minutes_sortie_anticipee) : null, s.sorties_justifiees ? `${s.sorties_justifiees} permise(s)` : null].filter(Boolean).join(' · ') || null],
+            ['Jours justifiés', String(s.justifies), '#7c3aed', null],
+          ].map(([l, v, c, sub]) => (
             <div key={l} style={{ background: '#fff', border: '1px solid #e6ebf2', borderRadius: 10, padding: '8px 10px' }}>
-              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: c }}>{v}</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: c ?? undefined }}>{v}</div>
               <div style={{ fontSize: '.875rem', fontWeight: 600, color: '#64748b' }}>{l}</div>
+              {sub && <div style={{ fontSize: '.875rem', color: '#64748b' }}>{sub}</div>}
             </div>
           ))}
         </div>
@@ -151,22 +173,20 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
       {data.days.length > 0 && (
         <div style={{ overflowX: 'auto' }}>
           <table className="table table-sm" style={{ fontSize: '.875rem', marginBottom: 0 }}>
-            <thead><tr><th>Jour</th><th>Arrivée</th><th>Pause</th><th>Retour</th><th>Sortie</th><th>État</th></tr></thead>
+            <thead><tr><th>Jour</th><th>Arrivée</th><th>Pause</th><th>Retour</th><th>Sortie</th><th>État</th><th>Retards et sorties</th></tr></thead>
             <tbody>
               {days.map(d => (
                 <tr key={d.day}>
                   <td style={{ whiteSpace: 'nowrap' }}>{frDate(d.day)}</td>
                   {(['arrivee', 'pause_debut', 'pause_fin', 'sortie'] as const).map(k => {
                     const p = d.punches[k]
-                    return (
-                      <td key={k} style={{ whiteSpace: 'nowrap' }}>
-                        {time(p?.at)}
-                        {p && p.late_minutes > 0 && <span style={{ color: '#d97706', fontWeight: 700 }}> +{p.late_minutes}′</span>}
-                        {p?.early && <span style={{ color: '#7c3aed', fontWeight: 700 }}> ↑</span>}
-                      </td>
-                    )
+                    return <td key={k} style={{ whiteSpace: 'nowrap' }}>{time(p?.at)}</td>
                   })}
-                  <td><span className="stg-pill" style={{ color: DAY[d.status].color, background: DAY[d.status].bg }}>{DAY[d.status].label}</span></td>
+                  <td>
+                    <span className="stg-pill" style={{ color: DAY[d.status].color, background: DAY[d.status].bg }}>{DAY[d.status].label}</span>
+                    {d.justification_label && <div className="stg-muted">{d.justification_label}</div>}
+                  </td>
+                  <td><Gaps day={d} /></td>
                 </tr>
               ))}
             </tbody>

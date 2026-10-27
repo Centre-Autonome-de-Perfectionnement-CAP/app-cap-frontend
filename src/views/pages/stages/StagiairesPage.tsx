@@ -189,23 +189,23 @@ const InternLine = ({ r, seuil, lead, busy, checked, onToggle, onOpen, onAssign,
         {!lead && r.phase !== 'finished' && (r.supervised_by_me
           ? <CButton size="sm" color="secondary" variant="ghost" className="px-0" disabled={busy} onClick={() => onSelf('remove')}>Ne plus suivre</CButton>
           : <CButton size="sm" color="success" style={{ color: '#fff' }} disabled={busy} onClick={() => onSelf('add')}>Suivre</CButton>)}
-        {r.supervisors.length === 0 && r.phase === 'finished' && <span className="stg-muted">—</span>}
+        {r.supervisors.length === 0 && r.phase === 'finished' && <span className="stg-muted">-</span>}
       </td>
       <td style={{ whiteSpace: 'nowrap' }}>
         {!r.activated ? <span className="stg-muted">{r.phase === 'upcoming' ? 'Pas commencé' : 'Non activé'}</span>
-          : r.taux === null ? <span className="stg-muted">—</span>
+          : r.taux === null ? <span className="stg-muted">-</span>
             : <>
               <strong style={{ color: r.jours_ouvres >= 5 && r.taux < seuil ? '#c2410c' : '#047857' }}>{r.taux} %</strong>
-              <div className="stg-muted">{r.absences} abs. · {r.retards} retard(s)</div>
+              <div className="stg-muted">{r.absences} abs. · {r.retards} retard(s) · {r.sorties_anticipees} sortie(s) anticipée(s)</div>
             </>}
       </td>
       <td style={{ whiteSpace: 'nowrap' }}>
         {r.activated ? <>
           {r.rapports.validated}/{r.rapports.deposited} validé(s)
           <div className="stg-muted">Final : {r.rapports.final_validated ? 'validé' : 'non validé'}</div>
-        </> : <span className="stg-muted">—</span>}
+        </> : <span className="stg-muted">-</span>}
       </td>
-      <td>{r.codes.length ? <CodeBadges codes={r.codes} /> : <span className="stg-muted">—</span>}</td>
+      <td>{r.codes.length ? <CodeBadges codes={r.codes} /> : <span className="stg-muted">-</span>}</td>
       <td style={{ textAlign: 'right' }}><CButton size="sm" color="primary" onClick={onOpen}>Détails</CButton></td>
     </tr>
   )

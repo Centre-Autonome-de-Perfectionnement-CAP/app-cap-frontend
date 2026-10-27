@@ -91,12 +91,12 @@ const BibliothequePage = () => {
                         <div style={{ fontWeight: 700, color: '#0f172a' }}>{w.title}</div>
                         <div className="stg-muted">{w.kind_label}{w.year ? ` · ${w.year}` : ''} · {w.authors || 'Auteur à indiquer'}</div>
                       </td>
-                      <td className="stg-muted">{w.formation || '—'}</td>
+                      <td className="stg-muted">{w.formation || '-'}</td>
                       <td>
                         <Pill color={WORK_STATUS[w.status].color} bg={WORK_STATUS[w.status].bg}>{w.status_label}</Pill>
                         {w.status === 'published' && <div className="stg-muted">{w.visibility === 'public' ? 'Public' : 'Par lien'} · {frDate(w.published_at)}</div>}
                       </td>
-                      <td className="stg-muted">{w.status === 'published' ? `${w.views} vue(s) · ${w.downloads} PDF` : '—'}</td>
+                      <td className="stg-muted">{w.status === 'published' ? `${w.views} vue(s) · ${w.downloads} PDF` : '-'}</td>
                       <td style={{ textAlign: 'right' }}><CButton size="sm" color="primary" onClick={() => open(w.id)}>Ouvrir</CButton></td>
                     </tr>
                   ))}

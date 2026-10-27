@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   CButton, CCard, CCardBody, CFormInput, CSpinner,
-  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
+  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CFormLabel,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilChatBubble, cilLink, cilSync, cilTrash, cilPlus } from '@coreui/icons'
@@ -136,6 +136,7 @@ const WhatsAppGroupPanel = () => {
       <CModal visible={linkOpen} onClose={() => setLinkOpen(false)} alignment="center">
         <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Utiliser un groupe existant</CModalTitle></CModalHeader>
         <CModalBody>
+          <CFormLabel className="fw-semibold small">Lien d'invitation du groupe <span className="text-danger">*</span></CFormLabel>
           <CFormInput value={link} maxLength={200} onChange={e => setLink(e.target.value)} placeholder="Exemple : https://chat.whatsapp.com/…" />
           <div className="stg-muted" style={{ marginTop: 8 }}>
             Collez le lien d'invitation du groupe. Le numéro du CAP le rejoindra ; nommez-le ensuite administrateur pour qu'il puisse y ajouter les stagiaires.

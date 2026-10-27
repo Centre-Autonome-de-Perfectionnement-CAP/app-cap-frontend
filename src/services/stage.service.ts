@@ -178,6 +178,7 @@ export interface FollowRow extends Intern {
   jours_ouvres: number
   absences: number
   retards: number
+  sorties_anticipees: number
   justifies: number
   rapports: { deposited: number; validated: number; missing: number; final_validated: boolean }
   attestation: { id: number; status: AttestationStatus; label: string; numero: string | null } | null
@@ -266,8 +267,15 @@ export interface ReportsOverview {
 }
 
 export interface AttendanceSummary {
-  jours_ouvres: number; presents: number; demi_journees: number; absences: number; retards: number; justifies: number; taux: number | null
+  jours_ouvres: number; presents: number; demi_journees: number; absences: number; justifies: number
+  /** Retards (arrivée, retour de pause) et sorties anticipées : comptés, minutes comptées, couverts par une permission. */
+  retards: number; minutes_retard: number; retards_justifies: number
+  sorties_anticipees: number; minutes_sortie_anticipee: number; sorties_justifiees: number
+  heures_dues: number; heures_presence: number
+  taux: number | null
 }
+
+export interface AttendanceGap { minutes: number; justified: boolean }
 
 export interface InternPresence {
   account: {
@@ -286,6 +294,13 @@ export interface InternPresence {
     day: string
     status: 'present' | 'half' | 'absent' | 'justified' | 'in_progress'
     justification: string | null
+    justification_label: string | null
+    retards: (AttendanceGap & { pointage: 'arrivee' | 'pause_fin' })[]
+    sortie_anticipee: AttendanceGap | null
+    /** Permissions d'une partie de journée accordées ce jour (retard, sortie_anticipee). */
+    permissions: string[]
+    minutes_dues: number
+    minutes_presence: number
     punches: Record<string, { at: string; late_minutes: number; early: boolean; distance_m: number | null } | null>
   }[]
   failures: Record<string, number>

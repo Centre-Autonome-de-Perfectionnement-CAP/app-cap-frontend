@@ -35,7 +35,7 @@ export const EligibilityBox = ({ e, frozen }: { e: AttestationEligibility | null
         {frozen && <span className="stg-muted" style={{ fontWeight: 500 }}>(au moment de la validation)</span>}
       </div>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '.875rem', marginTop: 6 }}>
-        <span>Assiduité : <strong style={{ color: e.attendance_ok ? '#047857' : '#b45309' }}>{e.taux !== null ? `${e.taux} %` : '—'}</strong> (minimum {e.seuil} %)</span>
+        <span>Assiduité : <strong style={{ color: e.attendance_ok ? '#047857' : '#b45309' }}>{e.taux !== null ? `${e.taux} %` : '-'}</strong> (minimum {e.seuil} %)</span>
         <span>Rapport final : <strong style={{ color: e.final_validated ? '#047857' : '#b45309' }}>{e.final_validated ? 'validé' : 'non validé'}</strong></span>
         <span className="stg-muted">{e.jours_ouvres} jour(s) ouvré(s), {e.absences} absence(s)</span>
       </div>
@@ -148,7 +148,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
               <dt>Né(e) le</dt><dd>{frDate(c.date_naissance, true)} à {c.lieu_naissance}{!editing && c.pays_naissance ? ` (${c.pays_naissance})` : ''}</dd>
               <dt>Établissement</dt><dd>{c.etablissement} - {c.filiere}</dd>
               <dt>Période</dt><dd>Du {frDate(c.date_debut, true)} au {frDate(c.date_fin, true)}{c.duree ? ` (${c.duree})` : ''}</dd>
-              <dt>Lieu</dt><dd>{c.lieu ?? '—'}</dd>
+              <dt>Lieu</dt><dd>{c.lieu ?? '-'}</dd>
               {!editing && <><dt>Stage</dt><dd>Stage {c.type_stage} au sein {c.structure}</dd></>}
               {a.numero && <><dt>Numéro</dt><dd><strong>{a.numero}</strong></dd></>}
             </dl>
@@ -178,7 +178,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
                 <p className="stg-muted" style={{ margin: '4px 0 8px' }}>Choisissez la date du document, imprimez, inscrivez le numéro à la main et faites signer, puis marquez l'attestation imprimée. Le stagiaire sera prévenu qu'il peut la retirer.</p>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
                   <div>
-                    <CFormLabel className="small fw-semibold mb-1">Date du document</CFormLabel>
+                    <CFormLabel className="small fw-semibold mb-1">Date du document <span className="text-danger">*</span></CFormLabel>
                     <CFormInput type="date" value={docDate} onChange={e => setDocDate(e.target.value)} style={{ maxWidth: 180 }} />
                   </div>
                   <CButton color="primary" variant="outline" disabled={printing || !docDate} onClick={printPdf}>
@@ -209,7 +209,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
                 <div style={{ fontWeight: 700 }}>Remise au stagiaire</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 6 }}>
                   <div>
-                    <CFormLabel className="small fw-semibold mb-1">Date de remise</CFormLabel>
+                    <CFormLabel className="small fw-semibold mb-1">Date de remise <span className="text-danger">*</span></CFormLabel>
                     <CFormInput type="date" max={todayIso()} value={date} onChange={e => setDate(e.target.value)} />
                   </div>
                   <CButton color="success" style={{ color: '#fff' }} disabled={busy || !date}
@@ -257,7 +257,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
 
             {cancelMode && (
               <div className="stg-card" style={{ borderColor: '#fecdd3' }}>
-                <CFormLabel className="small fw-semibold mb-1">Motif de l'annulation</CFormLabel>
+                <CFormLabel className="small fw-semibold mb-1">Motif de l'annulation <span className="text-danger">*</span></CFormLabel>
                 <CFormTextarea rows={2} maxLength={1000} value={cancelMotif} onChange={e => setCancelMotif(e.target.value)} />
               </div>
             )}

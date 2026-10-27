@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CButton, CCard, CCardBody, CFormInput, CFormLabel, CSpinner } from '@coreui/react'
+import PasswordInput from '@/components/forms/PasswordInput'
 import stageService from '@/services/stage.service'
 import { friendlyError } from '@/components/common/ActionResult'
 import { FRONTEND_ROUTES } from '@/constants'
@@ -83,25 +84,25 @@ const SupervisorInvitationPage = () => {
                 <span>{info.name ? `Bonjour ${info.name}, ` : ''}invitation reçue sur le numéro WhatsApp se terminant par </span><strong>{info.phone.slice(-4)}</strong><span>.</span>
               </p>
               <div className="mb-3">
-                <CFormLabel className="small fw-semibold">Prénom(s)</CFormLabel>
+                <CFormLabel className="small fw-semibold">Prénom(s) <span className="text-danger">*</span></CFormLabel>
                 <CFormInput value={form.prenom} onChange={set('prenom')} maxLength={80} autoComplete="given-name" />
               </div>
               <div className="mb-3">
-                <CFormLabel className="small fw-semibold">Nom</CFormLabel>
+                <CFormLabel className="small fw-semibold">Nom <span className="text-danger">*</span></CFormLabel>
                 <CFormInput value={form.nom} onChange={set('nom')} maxLength={80} autoComplete="family-name" />
               </div>
               <div className="mb-3">
-                <CFormLabel className="small fw-semibold">Email (pour vous connecter)</CFormLabel>
+                <CFormLabel className="small fw-semibold">Email (pour vous connecter) <span className="text-danger">*</span></CFormLabel>
                 <CFormInput type="email" inputMode="email" value={form.email} onChange={set('email')} maxLength={150} autoComplete="email" />
               </div>
               <div className="mb-3">
-                <CFormLabel className="small fw-semibold">Mot de passe</CFormLabel>
-                <CFormInput type="password" value={form.password} onChange={set('password')} autoComplete="new-password" />
+                <CFormLabel className="small fw-semibold">Mot de passe <span className="text-danger">*</span></CFormLabel>
+                <PasswordInput value={form.password} onChange={set('password')} autoComplete="new-password" />
                 <span style={{ fontSize: '.875rem', color: '#64748b' }}>8 caractères minimum, avec des lettres et des chiffres.</span>
               </div>
               <div className="mb-3">
-                <CFormLabel className="small fw-semibold">Confirmer le mot de passe</CFormLabel>
-                <CFormInput type="password" value={form.password_confirmation} onChange={set('password_confirmation')} autoComplete="new-password" />
+                <CFormLabel className="small fw-semibold">Confirmer le mot de passe <span className="text-danger">*</span></CFormLabel>
+                <PasswordInput value={form.password_confirmation} onChange={set('password_confirmation')} autoComplete="new-password" />
               </div>
               {error && <div style={{ marginBottom: 12, background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239', borderRadius: 10, padding: '10px 12px', fontSize: '.88rem' }}>{error}</div>}
               <CButton type="submit" color="success" className="w-100" style={{ color: '#fff', height: 46, fontWeight: 700 }} disabled={busy}>

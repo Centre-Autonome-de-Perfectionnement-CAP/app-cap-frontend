@@ -4,7 +4,7 @@
 // demander une correction.
 
 import { useCallback, useEffect, useState } from 'react'
-import { CButton, CSpinner, CFormTextarea } from '@coreui/react'
+import { CButton, CSpinner, CFormLabel, CFormTextarea } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilCheckAlt, cilPencil, cilCommentBubble } from '@coreui/icons'
 import ViewerFrame from '@/components/document-request/ViewerFrame'
@@ -142,8 +142,10 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
                   Le rapport reste validé dans tous les cas (attestation comprise). Validée, cette version devient la version officielle.
                 </div>
               )}
-              <CFormTextarea className="mt-2" rows={3} maxLength={2000} value={text} onChange={e => setText(e.target.value)} autoFocus
-                placeholder={mode === 'approved' ? 'Commentaire (facultatif)' : 'Ce qui doit être corrigé (obligatoire)'} />
+              <CFormLabel className="fw-semibold small mt-2 mb-1">
+                {mode === 'approved' ? <>Commentaire <span style={{ color: '#94a3b8', fontWeight: 400 }}>(facultatif)</span></> : <>Ce qui doit être corrigé <span className="text-danger">*</span></>}
+              </CFormLabel>
+              <CFormTextarea rows={3} maxLength={2000} value={text} onChange={e => setText(e.target.value)} autoFocus />
             </div>
           )}
           {err && <div style={{ marginTop: 10, background: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239', borderRadius: 10, padding: '8px 12px', fontSize: '.875rem' }}>{err}</div>}

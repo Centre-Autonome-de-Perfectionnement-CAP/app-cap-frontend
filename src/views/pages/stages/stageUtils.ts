@@ -12,24 +12,28 @@ export const STATUS_STYLE: Record<StageStatus, { color: string; bg: string }> = 
 }
 
 export const frDate = (iso: string | null | undefined, long = false): string => {
-  if (!iso) return '—'
+  if (!iso) return '-'
   const d = new Date(iso.length === 10 ? `${iso}T12:00:00` : iso)
-  if (Number.isNaN(d.getTime())) return '—'
+  if (Number.isNaN(d.getTime())) return '-'
   return d.toLocaleDateString('fr-FR', long
     ? { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
     : { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 export const frDateTime = (iso: string | null | undefined): string => {
-  if (!iso) return '—'
+  if (!iso) return '-'
   const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? '—'
+  return Number.isNaN(d.getTime()) ? '-'
     : d.toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 const hh = (v?: string) => (v ?? '').replace(':', 'h')
+
+/** Durée lisible : « 40 min », « 1 h », « 1 h 05 ». */
+export const minutesLabel = (m: number): string =>
+  m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${String(m % 60).padStart(2, '0')}` : ''}`
 export const horairesLabel = (h: StageHoraires | null | undefined) =>
-  h ? `${hh(h.arrivee)} – ${hh(h.pause_debut)} · ${hh(h.pause_fin)} – ${hh(h.sortie)}` : '—'
+  h ? `${hh(h.arrivee)} – ${hh(h.pause_debut)} · ${hh(h.pause_fin)} – ${hh(h.sortie)}` : '-'
 
 /** Durée du premier au dernier jour inclus : « 3 mois », « 2 mois 4 jours ». */
 export const durationLabel = (start?: string | null, end?: string | null): string | null => {

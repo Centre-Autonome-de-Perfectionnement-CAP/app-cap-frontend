@@ -5,6 +5,7 @@ import {
   cilPlus,
   cilSearch,
   cilNotes,
+  cilDescription,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -71,6 +72,16 @@ const getCahierNavigation = (role: string | null) => {
       name: 'Par classe',
       to: '/cahier-texte/by-class',
       icon: <CIcon icon={cilSearch} customClassName="nav-icon" />,
+    },
+    {
+      component: CNavTitle,
+      name: 'Gestion RH',
+    },
+    {
+      component: CNavItem,
+      name: 'Factures normalisées',
+      to: '/cahier-texte/factures',
+      icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
     },
   ]
 }

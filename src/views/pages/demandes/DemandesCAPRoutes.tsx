@@ -1,6 +1,6 @@
 // src/views/pages/demandes/DemandesCAPRoutes.tsx
 // Routes dédiées à l'espace CAP Demandes direction.
-// Pas de DefaultLayout — CAPLayout est géré directement dans WorkflowRouter.
+// Pas de DefaultLayout - CAPLayout est géré directement dans WorkflowRouter.
 // Accessible sur /demandes/cap/*
 
 import React, { Suspense } from 'react'
@@ -24,7 +24,7 @@ const Loader = () => (
         borderRadius: '50%', margin: '0 auto 14px',
         animation: 'capspin 0.7s linear infinite',
       }} />
-      <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: 0 }}>
+      <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>
         Chargement de l'espace gestion…
       </p>
       <style>{`@keyframes capspin{to{transform:rotate(360deg)}}`}</style>

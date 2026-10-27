@@ -46,7 +46,7 @@ const TabBar = ({ tabs, activeKey, counts, onSelect }: Props) => (
               color: isActive ? 'white' : palette.color,
               borderRadius: 6,
               padding: '2px 8px',
-              fontSize: '0.85rem',
+              fontSize: '0.875rem',
               fontWeight: 800,
               minWidth: 20,
               textAlign: 'center',

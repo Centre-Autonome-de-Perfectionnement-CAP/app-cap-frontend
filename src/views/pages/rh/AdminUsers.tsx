@@ -20,6 +20,7 @@ import {
   CForm,
   CFormInput,
   CFormLabel,
+  CFormSelect,
   CAlert,
   CDropdown,
   CDropdownToggle,
@@ -58,6 +59,7 @@ const AdminUsers: React.FC = () => {
     ifu_number: '',
     bank: '',
     role_id: '',
+    chef_division_type: '' as '' | 'formation_distance' | 'formation_continue',
   })
   const [ribFile, setRibFile] = useState<File | null>(null)
   const [ifuFile, setIfuFile] = useState<File | null>(null)
@@ -80,6 +82,7 @@ const AdminUsers: React.FC = () => {
         ifu_number: user.ifu_number || '',
         bank: user.bank || '',
         role_id: user.roles?.[0]?.id?.toString() || '',
+        chef_division_type: user.chef_division_type || '',
       })
       setPhotoPreview(user.photo || null)
     } else {
@@ -93,6 +96,7 @@ const AdminUsers: React.FC = () => {
         ifu_number: '',
         bank: '',
         role_id: '',
+        chef_division_type: '',
       })
       setPhotoPreview(null)
     }
@@ -186,6 +190,9 @@ const AdminUsers: React.FC = () => {
       }
     }
   }
+
+  const selectedRole = roles.find(r => r.id.toString() === formData.role_id)
+  const isResponsableDivision = selectedRole?.slug === 'responsable-division'
 
   return (
     <>
@@ -461,11 +468,27 @@ const AdminUsers: React.FC = () => {
               id="role_id"
               label="Rôle *"
               value={formData.role_id}
-              onChange={(value) => setFormData({ ...formData, role_id: value.toString() })}
+              onChange={(value) => setFormData({ ...formData, role_id: value.toString(), chef_division_type: '' })}
               options={roles.map(r => ({ value: r.id, label: r.name }))}
               placeholder="Sélectionner un rôle"
               required
             />
+
+            {isResponsableDivision && (
+              <div className="mt-3 mb-3">
+                <CFormLabel htmlFor="chef_division_type">Type de Responsable *</CFormLabel>
+                <CFormSelect
+                  id="chef_division_type"
+                  value={formData.chef_division_type}
+                  onChange={(e) => setFormData({ ...formData, chef_division_type: e.target.value as any })}
+                  required
+                >
+                  <option value="">Sélectionner le type</option>
+                  <option value="formation_distance">Formation à Distance (FAD)</option>
+                  <option value="formation_continue">Formation Continue (FC)</option>
+                </CFormSelect>
+              </div>
+            )}
           </CModalBody>
           <CModalFooter>
             <CButton color="secondary" onClick={handleCloseModal}>

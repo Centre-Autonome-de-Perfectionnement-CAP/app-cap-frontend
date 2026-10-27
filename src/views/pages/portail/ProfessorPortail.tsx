@@ -108,7 +108,7 @@ const ProfessorPortail = () => {
           <h2 className="fw-bold">
             Bonjour, {prenoms} {nom}
           </h2>
-          <p className="text-muted fs-5">Portail Professeur — Centre Autonome de Perfectionnement</p>
+          <p className="text-muted fs-5">Portail Professeur - Centre Autonome de Perfectionnement</p>
         </div>
 
         {/* Quick Stats */}

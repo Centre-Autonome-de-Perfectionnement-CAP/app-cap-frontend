@@ -2,7 +2,9 @@
 // Squelette commun : stat cards + CCard + header + recherche + slot contenu.
 // REFONTE StatCards : colonnes adaptatives larges, espacement aéré, libellés non tronqués.
 
-import { CCard, CCardBody, CCardHeader, CRow, CCol } from '@coreui/react'
+import { CCard, CCardBody, CCardHeader } from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilDollar, cilUser, cilPen, cilTask, cilSend, cilInbox } from '@coreui/icons'
 import StatCard from '../ui/StatCard'
 import DemandeSearchBar from './DemandeSearchBar'
 import { STATUS_COLORS } from '../../constants/workflow'
@@ -30,28 +32,16 @@ interface Props {
   children: React.ReactNode
 }
 
-/**
- * Calcule la largeur Bootstrap (1-12) de chaque colonne StatCard.
- *
- * Règles :
- *  - 1 stat  → col-12           (pleine largeur, rare)
- *  - 2 stats → col-6            (deux moitiés)
- *  - 3 stats → col-4            (tiers)
- *  - 4 stats → col-6 md col-3   (géré via xs/md séparément)
- *  - 5 stats → col-12 sm-6 xl-  on laisse le grid auto
- *  - ≥6      → col-6 sm-4 lg-2
- *
- * Pour garder le code simple on rend une string de classe Tailwind/Bootstrap
- * directement via les props xs/sm/md/lg/xl de CCol.
- */
-const colBreakpoints = (n: number): { xs: number; sm: number; md: number; lg: number } => {
-  if (n === 1) return { xs: 12, sm: 12, md: 12,  lg: 12  }
-  if (n === 2) return { xs: 12, sm: 6,  md: 6,   lg: 6   }
-  if (n === 3) return { xs: 12, sm: 6,  md: 4,   lg: 4   }
-  if (n === 4) return { xs: 12, sm: 6,  md: 6,   lg: 3   }
-  if (n === 5) return { xs: 12, sm: 6,  md: 4,   lg: 3   }
-  // ≥ 6 : 2 colonnes mobile, 3 tablette, 2 par rangée desktop (max 6 par ligne)
-  return { xs: 6, sm: 4, md: 3, lg: 2 }
+// Icône par défaut selon la carte
+const STAT_ICONS: Record<string, any> = {
+  accounting_review:                cilDollar,
+  division_manager_review:          cilUser,
+  cap_manager_review:               cilPen,
+  deputy_director_secretary_review: cilTask,
+  deputy_director_review:           cilTask,
+  director_secretary_review:        cilTask,
+  director_review:                  cilPen,
+  correction:                       cilSend,
 }
 
 const DashboardShell = ({
@@ -61,30 +51,29 @@ const DashboardShell = ({
   stats = [], counts = {},
   headerExtra, children,
 }: Props) => {
-  const bp = colBreakpoints(stats.length)
-
   return (
     <div>
       {stats.length > 0 && (
-        /* g-4 au lieu de g-3 : gouttières plus larges entre cartes */
-        <CRow className="mb-5 g-4">
+        <div style={{
+          display: 'grid', gap: 10, marginBottom: 20,
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 180px), 220px))',
+        }}>
           {stats.map(s => {
             const palette = STATUS_COLORS[s.key]
+            const icon = STAT_ICONS[s.key] ?? cilInbox
             return (
-              <CCol key={s.key} xs={bp.xs} sm={bp.sm} md={bp.md} lg={bp.lg}>
-                <StatCard
-                  label={s.label}
-                  count={counts[s.key] ?? 0}
-                  color={s.color ?? palette?.color ?? '#6b7280'}
-                  bg={s.bg ?? palette?.bg ?? '#f9fafb'}
-                  text={palette?.text}
-                  urgent={s.urgent}
-                  onClick={s.onClick}
-                />
-              </CCol>
+              <StatCard
+                key={s.key}
+                label={s.label}
+                count={counts[s.key] ?? 0}
+                color={s.color ?? palette?.color ?? '#475569'}
+                bg={s.bg ?? palette?.bg ?? '#f1f5f9'}
+                icon={<CIcon icon={icon} style={{ width: 17, height: 17 }} />}
+                onClick={s.onClick}
+              />
             )
           })}
-        </CRow>
+        </div>
       )}
 
       <CCard className="border-0" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.07)', borderRadius: 14 }}>

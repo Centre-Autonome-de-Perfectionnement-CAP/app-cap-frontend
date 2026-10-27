@@ -268,7 +268,7 @@ const LegacyPrepaLink: React.FC = () => {
             <>
               <CAlert color="info">
                 <CIcon icon={cilInfo} className="me-2" />
-                Étudiant : <strong>{selectedCandidate.nomPrenoms}</strong> — Filière Prépa courante : <strong>{selectedCandidate.filiere}</strong>
+                Étudiant : <strong>{selectedCandidate.nomPrenoms}</strong> - Filière Prépa courante : <strong>{selectedCandidate.filiere}</strong>
               </CAlert>
 
               <CRow className="mb-3">

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import documentRequestService from '@/services/document-request.service'
+import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
+import { successFeedback, FAILURE_TITLE } from '../utils/actionFeedback'
 import type { DocumentRequest } from '@/types/document-request.types'
 
 interface Filters { search?: string; type?: string }
@@ -18,6 +20,12 @@ interface UseDemandesDashboardReturn {
   handleAction: (action: string, extra?: Record<string, unknown>) => Promise<void>
   reload: () => Promise<void>
 }
+
+// Rafraîchissement silencieux en arrière-plan. CORRECTIF : 2 s générait une
+// requête de listing (lourde : jointures + sous-requêtes) toutes les 2 s par
+// onglet ouvert. 10 s reste quasi temps réel pour un circuit de validation,
+// et aucun appel n'est fait quand l'onglet n'est pas visible.
+const POLLING_INTERVAL_MS = 10_000
 
 const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboardReturn => {
   const [demandes,   setDemandes]   = useState<DocumentRequest[]>([])
@@ -49,13 +57,13 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
     load(false)
   }, [load])
 
-  // Intelligent polling every 2 seconds (silent background refresh)
+  // Polling silencieux (voir POLLING_INTERVAL_MS) - suspendu si l'onglet est masqué
   useEffect(() => {
     let isMounted = true
     let isFetching = false
 
     const interval = setInterval(async () => {
-      if (isFetching) return
+      if (isFetching || document.visibilityState === 'hidden') return
       isFetching = true
       try {
         const res = await documentRequestService.getAll(filters)
@@ -73,7 +81,7 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
       } finally {
         isFetching = false
       }
-    }, 2000)
+    }, POLLING_INTERVAL_MS)
 
     return () => {
       isMounted = false
@@ -86,16 +94,20 @@ const useDemandesDashboard = (initialFilters: Filters = {}): UseDemandesDashboar
 
   const handleAction = useCallback(async (action: string, extra: Record<string, unknown> = {}) => {
     if (!selected) return
+    const reference = selected.reference
     try {
-      await documentRequestService.transition(selected.id, { action, ...extra } as any)
-      // Succès : ferme la modal et rafraîchit
+      const res: any = await documentRequestService.transition(selected.id, { action, ...extra } as any)
+      // Succès : fermeture de la fiche, rafraîchissement, puis modal central
+      // de confirmation (reste affiché jusqu'au clic sur OK).
       closeDetail()
-      await load()
+      void load()
+      const fb = successFeedback(action, reference, res?.data?.status)
+      await showSuccess(fb.title, fb.message)
     } catch (e: any) {
-      // Échec : on laisse la modal ouverte pour que l'utilisateur voie l'erreur
-      // et puisse réessayer. Le composant parent affichera l'erreur via console.
+      // Échec : la fiche reste ouverte pour corriger ou réessayer ; le modal
+      // explique simplement ce qui s'est passé.
       console.error('Erreur transition:', e?.message || e)
-      // On propage l'erreur pour que le dashboard local puisse l'afficher si besoin
+      await showError(FAILURE_TITLE, friendlyError(e) + "\nLe dossier n'a pas été modifié.")
       throw e
     }
   }, [selected, load, closeDetail])

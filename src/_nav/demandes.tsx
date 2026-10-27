@@ -37,7 +37,7 @@ const getDemandesNavigation = (role: UserRole | null) => {
   }
 
   // ── Responsable Division ──────────────────────────────────────────────────
-  if (role === 'chef-division') {
+  if (role === 'responsable-division') {
     return [
       { component: CNavTitle, name: 'Dossiers à valider' },
       {

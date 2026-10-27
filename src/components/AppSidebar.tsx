@@ -16,11 +16,12 @@ import { cilHome } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { AppSidebarNav } from './AppSidebarNav.tsx'
 import {
-  mainNavigation,
+  getMainNavigation,
   getEmploiNavigation,
   inscriptionNavigation,
   attestationNavigation,
   getNoteNavigation,
+  getRhNavigation,
   rhNavigation,
   soutenanceNavigation,
   coursNavigation,
@@ -31,11 +32,13 @@ import {
   alumniNavigation,
   legacyStudentsNavigation,
   getDemandesNavigation,
+  whatsappNavigation,
   getLegacyPrepaNavigation,
+  getStagesNavigation,
 } from '../_nav/index.tsx'
 
-// Rôles qui n'ont pas accès au portail — pas de bouton "Retour au Portail"
-const DIRECTION_ROLES_NO_PORTAL = ['sec-da', 'directrice-adjointe', 'sec-dir', 'directeur']
+// Rôles qui n'ont pas accès au portail - pas de bouton "Retour au Portail"
+const DIRECTION_ROLES_NO_PORTAL = ['sec-da', 'directrice-adjointe', 'sec-dir', 'directeur', 'superviseur']
 
 const AppSidebar = () => {
   const dispatch    = useDispatch()
@@ -46,13 +49,15 @@ const AppSidebar = () => {
 
   const getNavigationForPath = () => {
     const path = location.pathname
+    if (path.startsWith('/whatsapp'))    return whatsappNavigation
     if (path.startsWith('/legacy-students')) return legacyStudentsNavigation
     if (path.startsWith('/legacy-prepa'))    return getLegacyPrepaNavigation(role)
     if (path.startsWith('/inscription'))  return inscriptionNavigation
     if (path.startsWith('/demandes'))     return getDemandesNavigation(role)
+    if (path.startsWith('/stages'))       return getStagesNavigation(role)
     if (path.startsWith('/attestations')) return attestationNavigation
     if (path.startsWith('/notes'))        return getNoteNavigation(role)
-    if (path.startsWith('/rh'))           return rhNavigation
+    if (path.startsWith('/rh'))           return getRhNavigation(role)
     if (path.startsWith('/soutenance'))   return soutenanceNavigation
     if (path.startsWith('/emploi'))       return getEmploiNavigation(role)
     if (path.startsWith('/cahier'))       return getCahierNavigation(role)
@@ -61,7 +66,7 @@ const AppSidebar = () => {
     if (path.startsWith('/bibliotheque')) return bibliothequeNavigation
     if (path.startsWith('/cours'))        return coursNavigation
     if (path.startsWith('/alumni'))       return alumniNavigation
-    return mainNavigation
+    return getMainNavigation(role)
   }
 
   const currentNavigation = getNavigationForPath()
@@ -78,7 +83,7 @@ const AppSidebar = () => {
   // Pas de bouton "Retour au Portail" pour les rôles direction
   const isDirectionRole = DIRECTION_ROLES_NO_PORTAL.includes(role as string)
 
-  const navigationWithHomeLink = isModule && !isDirectionRole
+  const navigationWithHomeLink = isModule && !isDirectionRole && !location.pathname.startsWith('/whatsapp')
     ? [...currentNavigation, {
         component: CNavItem,
         name: 'Retour au Portail',

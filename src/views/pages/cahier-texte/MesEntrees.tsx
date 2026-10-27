@@ -120,7 +120,7 @@ const MesEntrees = () => {
               <CIcon icon={cilNotes} className="me-2 text-warning" />
               <strong>Mes entrées du cahier de texte</strong>
               {(nom || prenoms) && (
-                <span className="ms-2 text-muted small">— {prenoms} {nom}</span>
+                <span className="ms-2 text-muted small">- {prenoms} {nom}</span>
               )}
             </div>
             <CButton color="primary" size="sm" onClick={() => navigate('/cahier-texte/new')}>

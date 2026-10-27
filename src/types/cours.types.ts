@@ -29,6 +29,7 @@ export interface CourseElement {
   name: string;
   code: string;
   credits: number;
+  hours?: number;
   teaching_unit_id: number;
   teaching_unit?: TeachingUnit;
   professors?: Professor[];
@@ -44,6 +45,7 @@ export interface CreateCourseElementRequest {
   name: string;
   code: string;
   credits: number;
+  hours?: number;
   teaching_unit_id: number;
 }
 
@@ -51,6 +53,7 @@ export interface UpdateCourseElementRequest {
   name?: string;
   code?: string;
   credits?: number;
+  hours?: number;
   teaching_unit_id?: number;
 }
 
@@ -72,7 +75,6 @@ export interface Professor {
   ifu_url?: string;
   bank?: string;
   speciality?: string;
-  specialty?: string;
   status?: 'active' | 'inactive' | 'on_leave';
   grade_id?: number;
   grade?: {
@@ -83,6 +85,13 @@ export interface Professor {
   bio?: string;
   created_at?: string;
   updated_at?: string;
+  nationality?: string;
+  profession?: string;
+  city?: string;
+  district?: string;
+  plot_number?: string;
+  house_number?: string;
+
 }
 
 export interface CourseElementProfessor {

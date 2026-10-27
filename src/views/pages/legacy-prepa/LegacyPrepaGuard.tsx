@@ -4,7 +4,7 @@
 // Volontairement isolée de src/protected/ProtectedRoutes.tsx pour rester
 // autonome et facile à retirer. Pour changer les rôles autorisés, modifier
 // uniquement ALLOWED_ROLES ci-dessous ET la même constante côté backend
-// (LegacyPrepaLinkController) — les deux doivent rester synchronisées.
+// (LegacyPrepaLinkController) - les deux doivent rester synchronisées.
 
 import React from 'react'
 import { Navigate } from 'react-router-dom'

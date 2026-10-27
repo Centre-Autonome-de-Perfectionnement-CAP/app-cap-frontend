@@ -2,6 +2,7 @@ import { Component, ReactNode, ErrorInfo } from 'react'
 import { CCard, CCardBody, CButton, CAlert } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilWarning } from '@coreui/icons'
+import { isChunkLoadError, reloadForNewVersion } from '@/utils/chunkReload'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -34,6 +35,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
+    // Nouvelle version mise en ligne pendant que la page était ouverte :
+    // on recharge au lieu d'afficher une erreur.
+    if (isChunkLoadError(error) && reloadForNewVersion()) return
     this.setState({
       error,
       errorInfo,

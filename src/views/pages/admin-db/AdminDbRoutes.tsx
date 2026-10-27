@@ -1,6 +1,6 @@
 // src/views/pages/admin-db/AdminDbRoutes.tsx
 //
-// Outil interne réservé à l'administrateur — accès par URL directe
+// Outil interne réservé à l'administrateur - accès par URL directe
 // (aucune entrée dans le menu de navigation, volontairement).
 //
 // Pour désactiver cet outil : supprimer la route correspondante dans

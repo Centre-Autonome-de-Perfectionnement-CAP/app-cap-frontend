@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   CButton,
   CCard,
@@ -23,26 +24,34 @@ import { getAssetUrl } from '@/utils/assets'
 
 const Login = () => {
   const { login } = useAuth()
-  
+  const navigate  = useNavigate()
+  const location  = useLocation()
+  const [searchParams] = useSearchParams()
+
+  // Deux mécanismes supportés :
+  // 1. Query param : /login?redirectTo=/notes/professor/contrats/xxx  (depuis NoteRoutes)
+  // 2. State React Router : { redirectAfterLogin: '/...' }  (héritage)
+  const redirectTo =
+    searchParams.get('redirectTo') ||
+    (location.state as any)?.redirectAfterLogin ||
+    null
+
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
   })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading]               = useState(false)
+  const [error, setError]                   = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState({
     email: '',
     password: '',
   })
 
   const validateForm = (): boolean => {
-    const errors = {
-      email: '',
-      password: '',
-    }
+    const errors = { email: '', password: '' }
 
     if (!credentials.email.trim()) {
-      errors.email = 'L\'email est requis'
+      errors.email = "L'email est requis"
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email)) {
       errors.email = 'Email invalide'
     }
@@ -60,15 +69,13 @@ const Login = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     setLoading(true)
-
     try {
       const response = await AuthService.login(credentials)
       const { access_token, user } = response.data!
+
       login(
         access_token,
         user.last_name || user.name || '',
@@ -76,18 +83,34 @@ const Login = () => {
         user.role as any,
         user.id
       )
-      
+
+      // Redirection après login :
+      // 1. Si redirectTo est présent (lien email ou page protégée) → y aller directement
+      // 2. Sinon → route par défaut selon le rôle
+      if (redirectTo && redirectTo.startsWith('/')) {
+        navigate(decodeURIComponent(redirectTo), { replace: true })
+      } else {
+        const defaultRoutes: Record<string, string> = {
+          professeur:  '/notes/professor/dashboard',
+          admin:       '/dashboard',
+          scolarite:   '/dashboard',
+          direction:   '/dashboard',
+          responsable: '/responsable/dashboard',
+        }
+        navigate((user.role ? defaultRoutes[user.role] : undefined) ?? '/dashboard', { replace: true })
+      }
     } catch (err: any) {
-      console.error('Erreur de connexion:', err)
-      
-      if (err.response?.status === 401) {
+      const status  = err?.status
+      const message = err?.message
+
+      if (status === 401) {
         setError('Email ou mot de passe incorrect')
-      } else if (err.response?.status === 422) {
+      } else if (status === 422) {
         setError('Données de connexion invalides')
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message)
-      } else if (err.message) {
-        setError(err.message)
+      } else if (status === 500) {
+        setError('Erreur serveur. Veuillez réessayer plus tard.')
+      } else if (message) {
+        setError(message)
       } else {
         setError('Une erreur est survenue lors de la connexion. Veuillez réessayer.')
       }
@@ -97,21 +120,11 @@ const Login = () => {
   }
 
   const handleInputChange = (field: keyof LoginCredentials, value: string) => {
-    setCredentials(prev => ({
-      ...prev,
-      [field]: value,
-    }))
-    
+    setCredentials((prev) => ({ ...prev, [field]: value }))
     if (validationErrors[field]) {
-      setValidationErrors(prev => ({
-        ...prev,
-        [field]: '',
-      }))
+      setValidationErrors((prev) => ({ ...prev, [field]: '' }))
     }
-    
-    if (error) {
-      setError(null)
-    }
+    if (error) setError(null)
   }
 
   return (
@@ -125,6 +138,13 @@ const Login = () => {
                   <CForm onSubmit={handleSubmit}>
                     <h1>Se Connecter</h1>
                     <p className="text-body-secondary mb-4">Connectez-vous à votre compte</p>
+
+                    {/* Message informatif si redirection depuis un lien contrat */}
+                    {redirectTo && redirectTo.includes('/professor/contrats/') && (
+                      <CAlert color="info" className="mb-3" style={{ fontSize: 13 }}>
+                        Veuillez vous connecter pour accéder à votre contrat.
+                      </CAlert>
+                    )}
 
                     {error && (
                       <CAlert color="danger" dismissible onClose={() => setError(null)}>
@@ -170,9 +190,9 @@ const Login = () => {
 
                     <CRow>
                       <CCol xs={6}>
-                        <CButton 
-                          color="primary" 
-                          className="px-4" 
+                        <CButton
+                          color="primary"
+                          className="px-4"
                           type="submit"
                           disabled={loading}
                         >
@@ -186,9 +206,6 @@ const Login = () => {
                           )}
                         </CButton>
                       </CCol>
-                      <CCol xs={6} className="text-end">
-                        {/* Future: Mot de passe oublié */}
-                      </CCol>
                     </CRow>
                   </CForm>
                 </CCardBody>
@@ -196,15 +213,13 @@ const Login = () => {
               <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
                 <CCardBody className="text-center">
                   <div>
-                    <img 
-                      src={getAssetUrl('images/cap-1.png')} 
-                      alt="logo-cap" 
+                    <img
+                      src={getAssetUrl('images/cap-1.png')}
+                      alt="logo-cap"
                       style={{ maxWidth: '150px', marginBottom: '20px' }}
                     />
                     <h5>Centre Autonome de Perfectionnement</h5>
-                    <p className="mt-3">
-                      École Polytechnique d'Abomey-Calavi
-                    </p>
+                    <p className="mt-3">École Polytechnique d'Abomey-Calavi</p>
                   </div>
                 </CCardBody>
               </CCard>

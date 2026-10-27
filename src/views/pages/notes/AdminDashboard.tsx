@@ -343,7 +343,7 @@ const AdminDashboard = () => {
             <strong>
               {selectedProgram === null 
                 ? 'Résultats par Programme (Vue d\'ensemble)' 
-                : `Détail des Notes — ${programDetails?.program?.name || 'Programme'}`}
+                : `Détail des Notes - ${programDetails?.program?.name || 'Programme'}`}
             </strong>
             {selectedProgram !== null && programDetails?.program?.class_group?.name && (
               <span className="ms-2 text-muted">({programDetails.program.class_group.name})</span>

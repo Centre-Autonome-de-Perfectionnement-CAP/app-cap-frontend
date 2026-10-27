@@ -7,8 +7,10 @@
 import { useState } from 'react'
 import {
   CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
-  CButton, CFormInput, CFormLabel, CSpinner, CAlert,
+  CButton, CFormInput, CFormLabel, CFormTextarea, CFormSelect, CSpinner, CAlert,
 } from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilSave, cilPencil, cilPlus } from '@coreui/icons'
 
 interface Props {
   columns: string[]
@@ -44,41 +46,143 @@ const RecordFormModal = ({ columns, initialValues, onClose, onSubmit }: Props) =
     }
   }
 
+  const isLongField = (colName: string) => {
+    const n = colName.toLowerCase()
+    return n.includes('description') || n.includes('bio') || n.includes('notes') || n.includes('comment') || n.includes('data') || n.includes('content')
+  }
+
   return (
-    <CModal visible onClose={onClose} alignment="center" size="lg">
-      <CModalHeader>
-        <CModalTitle style={{ fontSize: '1.35rem', fontWeight: 800 }}>
-          {initialValues ? 'Modifier la ligne' : 'Nouvelle entrée'}
-        </CModalTitle>
+    <CModal visible onClose={onClose} alignment="center" size="xl">
+      <CModalHeader style={{ borderBottom: '1.5px solid #f1f5f9', padding: '20px 28px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: initialValues ? '#eef2ff' : '#ecfdf5',
+              color: initialValues ? '#4f46e5' : '#059669',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <CIcon icon={initialValues ? cilPencil : cilPlus} style={{ width: 18, height: 18 }} />
+          </div>
+          <div>
+            <CModalTitle style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+              {initialValues ? `Modifier la ligne #${initialValues.id ?? ''}` : 'Ajouter une nouvelle entrée'}
+            </CModalTitle>
+            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+              Remplissez les champs ci-dessous puis validez l'enregistrement.
+            </span>
+          </div>
+        </div>
       </CModalHeader>
-      <CModalBody style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+
+      <CModalBody style={{ maxHeight: '68vh', overflowY: 'auto', padding: '24px 28px', background: '#f8fafc' }}>
         {error && (
-          <CAlert color="danger" style={{ fontSize: '1rem', fontWeight: 600 }}>
+          <CAlert color="danger" style={{ fontSize: '0.95rem', fontWeight: 600, borderRadius: 8, marginBottom: 20 }}>
             {error}
           </CAlert>
         )}
-        {editableColumns.map((col) => (
-          <div key={col} style={{ marginBottom: 18 }}>
-            <CFormLabel style={{ fontSize: '1.02rem', fontWeight: 700, color: '#374151' }}>
-              {col}
-            </CFormLabel>
-            <CFormInput
-              style={{ fontSize: '1.02rem', padding: '10px 14px', border: '2px solid #e5e7eb' }}
-              value={values[col] ?? ''}
-              onChange={(e) => setValues((v) => ({ ...v, [col]: e.target.value }))}
-            />
-          </div>
-        ))}
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: editableColumns.length > 4 ? 'repeat(2, 1fr)' : '1fr',
+            gap: 18,
+          }}
+        >
+          {editableColumns.map((col) => {
+            const isLong = isLongField(col)
+            return (
+              <div
+                key={col}
+                style={{
+                  gridColumn: isLong && editableColumns.length > 4 ? 'span 2' : 'span 1',
+                  background: '#ffffff',
+                  padding: '14px 16px',
+                  borderRadius: 10,
+                  border: '1.5px solid #e2e8f0',
+                }}
+              >
+                <CFormLabel
+                  style={{
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    color: '#334155',
+                    fontFamily: 'monospace',
+                    marginBottom: 6,
+                    display: 'block',
+                  }}
+                >
+                  {col}
+                </CFormLabel>
+
+                {col === 'chef_division_type' ? (
+                  <CFormSelect
+                    style={{
+                      height: 38,
+                      fontSize: '0.92rem',
+                      borderRadius: 8,
+                      border: '1.5px solid #cbd5e1',
+                      padding: '0 12px',
+                    }}
+                    value={values[col] ?? ''}
+                    onChange={(e) => setValues((v) => ({ ...v, [col]: e.target.value }))}
+                  >
+                    <option value="">(Non défini)</option>
+                    <option value="formation_distance">Formation à Distance (FAD)</option>
+                    <option value="formation_continue">Formation Continue (FC)</option>
+                  </CFormSelect>
+                ) : isLong ? (
+                  <CFormTextarea
+                    rows={3}
+                    style={{
+                      fontSize: '0.92rem',
+                      borderRadius: 8,
+                      border: '1.5px solid #cbd5e1',
+                      padding: '8px 12px',
+                    }}
+                    value={values[col] ?? ''}
+                    onChange={(e) => setValues((v) => ({ ...v, [col]: e.target.value }))}
+                  />
+                ) : (
+                  <CFormInput
+                    style={{
+                      height: 38,
+                      fontSize: '0.92rem',
+                      borderRadius: 8,
+                      border: '1.5px solid #cbd5e1',
+                      padding: '0 12px',
+                    }}
+                    value={values[col] ?? ''}
+                    onChange={(e) => setValues((v) => ({ ...v, [col]: e.target.value }))}
+                  />
+                )}
+              </div>
+            )
+          })}
+        </div>
+
         {editableColumns.length === 0 && (
-          <div style={{ fontSize: '1rem', color: '#6b7280' }}>
+          <div style={{ fontSize: '1rem', color: '#6b7280', textAlign: 'center', padding: 24 }}>
             Aucun champ modifiable pour cette table.
           </div>
         )}
       </CModalBody>
-      <CModalFooter>
+
+      <CModalFooter style={{ borderTop: '1.5px solid #f1f5f9', padding: '16px 28px', background: '#ffffff' }}>
         <CButton
           color="light"
-          style={{ fontWeight: 700, fontSize: '1rem', border: '2px solid #e5e7eb' }}
+          style={{
+            fontWeight: 700,
+            fontSize: '0.95rem',
+            border: '1.5px solid #cbd5e1',
+            borderRadius: 8,
+            padding: '8px 18px',
+          }}
           onClick={onClose}
           disabled={saving}
         >
@@ -86,11 +190,21 @@ const RecordFormModal = ({ columns, initialValues, onClose, onSubmit }: Props) =
         </CButton>
         <CButton
           color="primary"
-          style={{ fontWeight: 700, fontSize: '1rem' }}
+          style={{
+            fontWeight: 700,
+            fontSize: '0.95rem',
+            borderRadius: 8,
+            padding: '8px 20px',
+            background: '#4f46e5',
+            borderColor: '#4f46e5',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
           onClick={handleSubmit}
           disabled={saving}
         >
-          {saving ? <CSpinner size="sm" /> : 'Enregistrer'}
+          {saving ? <CSpinner size="sm" /> : <><CIcon icon={cilSave} /> Enregistrer</>}
         </CButton>
       </CModalFooter>
     </CModal>

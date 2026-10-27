@@ -1,7 +1,7 @@
 // src/services/adminDb.service.ts
 //
 // Service HTTP pour l'outil d'administration brute des tables.
-// Réservé au rôle 'admin' — le contrôle d'accès réel est fait côté backend
+// Réservé au rôle 'admin' - le contrôle d'accès réel est fait côté backend
 // (AdminTableController::assertAdmin) ; ce service ne fait qu'appeler l'API.
 
 import HttpService from './http.service'

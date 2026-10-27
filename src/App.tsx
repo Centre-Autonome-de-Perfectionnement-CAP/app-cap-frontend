@@ -7,7 +7,7 @@ import './scss/style.scss'
 
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout.tsx'))
 import ProtectedRoute from './protected/ProtectedRoutes.tsx'
-import { AuthContextProvider, ToastProvider } from '@/contexts'
+import { AuthContextProvider, ToastProvider, useAuth } from '@/contexts'
 import { FRONTEND_ROUTES, MODULES } from '@/constants'
 import { LoadingSpinner } from '@/components'
 
@@ -32,9 +32,17 @@ const LegacyStudentsIndex = React.lazy(() => import('./views/legacy-students/Leg
 const LegacyPrepaRoutes   = React.lazy(() => import('./views/pages/legacy-prepa/LegacyPrepaRoutes.tsx'))
 const DemandesRoutes     = React.lazy(() => import('./views/pages/demandes/DemandesRoutes.tsx'))
 const AdminDbRoutes      = React.lazy(() => import('./views/pages/admin-db/AdminDbRoutes.tsx'))
+const WhatsAppRoutes     = React.lazy(() => import('./views/pages/whatsapp/WhatsAppRoutes.tsx'))
+const StagesRoutes       = React.lazy(() => import('./views/pages/stages/StagesRoutes.tsx'))
+const SupervisorInvitationPage = React.lazy(() => import('./views/pages/stages/SupervisorInvitationPage.tsx'))
 const Register           = React.lazy(() => import('./views/pages/register/Register.tsx'))
 const Page404            = React.lazy(() => import('./views/pages/page404/Page404.tsx'))
 const Page500            = React.lazy(() => import('./views/pages/page500/Page500.tsx'))
+
+// AJOUT (merge Benoite) - espace dédié "responsable" (responsable de division),
+// layout + dashboard propres, protégés par ResponsableOnlyRoute ci-dessous.
+const ResponsableLayout    = React.lazy(() => import('./layout/ResponsableLayout.tsx'))
+const ResponsableDashboard = React.lazy(() => import('./views/pages/responsable/ResponsableDashboard.tsx'))
 
 // Préfixe de routage réel sous lequel l'app est exposée côté backend
 // (ex: https://www.cap-epac.bj/services/...). Indépendant du chemin des
@@ -43,9 +51,22 @@ const Page500            = React.lazy(() => import('./views/pages/page500/Page50
 // Peut être surchargé via VITE_ROUTER_BASENAME dans .env.production.
 const ROUTER_BASENAME = import.meta.env.VITE_ROUTER_BASENAME || import.meta.env.BASE_URL
 
+/**
+ * Garde d'accès dédiée à l'espace "responsable" (responsable de division) -
+ * même pattern que WhatsAppGuard/AdminDbGuard : vérifie le rôle exact,
+ * redirige vers le portail si non autorisé.
+ */
+const ResponsableOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, role } = useAuth()
+  if (isLoading) return <LoadingSpinner fullPage message="Vérification..." />
+  if (!isAuthenticated) return <Navigate to={FRONTEND_ROUTES.LOGIN} replace />
+  if (role !== 'responsable') return <Navigate to={FRONTEND_ROUTES.PORTAIL} replace />
+  return <>{children}</>
+}
+
 const App = () => {
-  const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
-  const storedTheme = useSelector((state: any) => state.theme)
+  const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme');
+  const storedTheme = useSelector((state: any) => state.theme);
 
   useEffect(() => {
     const urlParams  = new URLSearchParams(window.location.href.split('?')[1])
@@ -63,6 +84,10 @@ const App = () => {
           <Suspense fallback={<LoadingSpinner fullPage message="Chargement de l'application..." />}>
           <Routes>
             <Route path={FRONTEND_ROUTES.LOGIN} element={<Login />} />
+            <Route path={FRONTEND_ROUTES.REGISTER} element={<Register />} />
+            <Route path={FRONTEND_ROUTES.PAGE_404} element={<Page404 />} />
+            <Route path={FRONTEND_ROUTES.PAGE_500} element={<Page500 />} />
+
             <Route
               path={FRONTEND_ROUTES.PORTAIL}
               element={
@@ -84,25 +109,16 @@ const App = () => {
             <Route path={FRONTEND_ROUTES.PAGE_500} element={<Page500 />} />
 
             <Route
-              path={`${FRONTEND_ROUTES.INSCRIPTION.BASE}/*`}
+              path={`${FRONTEND_ROUTES.RESPONSABLE_DASHBOARD}/*`}
               element={
-                <ProtectedRoute module={MODULES.INSCRIPTION}>
-                  <DefaultLayout>
-                    <InscriptionRoutes />
-                  </DefaultLayout>
-                </ProtectedRoute>
+                <ResponsableOnlyRoute>
+                  <ResponsableLayout>
+                    <ResponsableDashboard />
+                  </ResponsableLayout>
+                </ResponsableOnlyRoute>
               }
             />
-            <Route
-              path={`${FRONTEND_ROUTES.ATTESTATIONS}/*`}
-              element={
-                <ProtectedRoute module={MODULES.ATTESTATIONS}>
-                  <DefaultLayout>
-                    <AttestationRoutes />
-                  </DefaultLayout>
-                </ProtectedRoute>
-              }
-            />
+
             <Route
               path={`${FRONTEND_ROUTES.NOTES.BASE}/*`}
               element={
@@ -113,13 +129,39 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path={`${FRONTEND_ROUTES.EMPLOI_DU_TEMPS.BASE}/*`}
+              element={
+                <ProtectedRoute module={MODULES.EMPLOI_DU_TEMPS}>
+                  <DefaultLayout>
+                    <EmploiRoutes />
+                  </DefaultLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path={`${FRONTEND_ROUTES.INSCRIPTION.BASE}/*`}
+              element={
+                <ProtectedRoute module={MODULES.INSCRIPTION}>
+                  <DefaultLayout><InscriptionRoutes /></DefaultLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={`${FRONTEND_ROUTES.ATTESTATIONS}/*`}
+              element={
+                <ProtectedRoute module={MODULES.ATTESTATIONS}>
+                  <DefaultLayout><AttestationRoutes /></DefaultLayout>
+                </ProtectedRoute>
+              }
+            />
             <Route
               path={`${FRONTEND_ROUTES.COURS.BASE}/*`}
               element={
                 <ProtectedRoute module={MODULES.COURS}>
-                  <DefaultLayout>
-                    <CoursRoutes />
-                  </DefaultLayout>
+                  <DefaultLayout><CoursRoutes /></DefaultLayout>
                 </ProtectedRoute>
               }
             />
@@ -137,19 +179,7 @@ const App = () => {
               path={`${FRONTEND_ROUTES.SOUTENANCES}/*`}
               element={
                 <ProtectedRoute module={MODULES.SOUTENANCES}>
-                  <DefaultLayout>
-                    <SoutenanceRoutes />
-                  </DefaultLayout>
-               </ProtectedRoute>
-              }
-            />
-            <Route
-              path={`${FRONTEND_ROUTES.EMPLOI_DU_TEMPS.BASE}/*`}
-              element={
-                <ProtectedRoute module={MODULES.EMPLOI_DU_TEMPS}>
-                  <DefaultLayout>
-                    <EmploiRoutes />
-                  </DefaultLayout>
+                  <DefaultLayout><SoutenanceRoutes /></DefaultLayout>
                 </ProtectedRoute>
               }
             />
@@ -157,9 +187,7 @@ const App = () => {
               path={`${FRONTEND_ROUTES.CAHIER_TEXTE}/*`}
               element={
                 <ProtectedRoute module={MODULES.CAHIER_TEXTE}>
-                  <DefaultLayout>
-                    <CahierRoutes />
-                  </DefaultLayout>
+                  <DefaultLayout><CahierRoutes /></DefaultLayout>
                 </ProtectedRoute>
               }
             />
@@ -167,9 +195,7 @@ const App = () => {
               path={`${FRONTEND_ROUTES.PRESENCE.BASE}/*`}
               element={
                 <ProtectedRoute module={MODULES.PRESENCE}>
-                  <DefaultLayout>
-                    <PresenceRoutes />
-                  </DefaultLayout>
+                  <DefaultLayout><PresenceRoutes /></DefaultLayout>
                 </ProtectedRoute>
               }
             />
@@ -177,9 +203,7 @@ const App = () => {
               path={`${FRONTEND_ROUTES.FINANCE.BASE}/*`}
               element={
                 <ProtectedRoute module={MODULES.FINANCE}>
-                  <DefaultLayout>
-                    <FinanceRoutes />
-                  </DefaultLayout>
+                  <DefaultLayout><FinanceRoutes /></DefaultLayout>
                 </ProtectedRoute>
               }
             />
@@ -187,9 +211,7 @@ const App = () => {
               path={`${FRONTEND_ROUTES.BIBLIOTHEQUE}/*`}
               element={
                 <ProtectedRoute module={MODULES.BIBLIOTHEQUE}>
-                  <DefaultLayout>
-                    <BibliothequeRoutes />
-                  </DefaultLayout>
+                  <DefaultLayout><BibliothequeRoutes /></DefaultLayout>
                 </ProtectedRoute>
               }
             />
@@ -214,7 +236,7 @@ const App = () => {
               }
             />
 
-            {/* ── Module Rattachement Prépa ancien — réservé à l'administrateur ── */}
+            {/* ── Module Rattachement Prépa ancien - réservé à l'administrateur ── */}
             <Route
               path={`${FRONTEND_ROUTES.LEGACY_PREPA}/*`}
               element={
@@ -224,14 +246,22 @@ const App = () => {
               }
             />
 
-            {/* ── Module Gestion des Demandes — indépendant d'Attestation ── */}
+            {/* ── Module Gestion des Demandes - indépendant d'Attestation ── */}
             <Route path={`${FRONTEND_ROUTES.DEMANDES}/*`} element={
               <ProtectedRoute module={MODULES.DEMANDES}>
                 <DefaultLayout><DemandesRoutes /></DefaultLayout>
               </ProtectedRoute>
             } />
-            {/* Outil interne admin — retirer cette ligne + src/views/pages/admin-db pour désactiver */}
+            {/* Outil interne admin - retirer cette ligne + src/views/pages/admin-db pour désactiver */}
             <Route path="/sys-admin-db/*" element={<AdminDbRoutes />} />
+            {/* Module WhatsApp admin - rôle 'admin' strict, voir WhatsAppGuard.tsx */}
+            <Route path="/whatsapp/*" element={
+              <WhatsAppRoutes />
+            } />
+            {/* Module Stages - Responsable de division (formation continue) + admin, voir StagesGuard.tsx */}
+            <Route path="/stages/*" element={<StagesRoutes />} />
+            {/* Lien d'invitation reçu par un superviseur (public) */}
+            <Route path="/invitation-superviseur" element={<SupervisorInvitationPage />} />
 
             <Route path="*" element={<Navigate to={FRONTEND_ROUTES.PORTAIL} replace />} />
           </Routes>
@@ -239,7 +269,7 @@ const App = () => {
         </AuthContextProvider>
       </ToastProvider>
     </BrowserRouter>
-  )
-}
+  );
+};
 
 export default App

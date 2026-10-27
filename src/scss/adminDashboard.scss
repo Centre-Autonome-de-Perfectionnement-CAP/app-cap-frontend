@@ -1,0 +1,30 @@
+.admin-card {
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+  }
+
+  h6 {
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+}
+
+.presence-card {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #fff;
+}
+
+.absence-card {
+  background: linear-gradient(135deg, #ff6a6a 0%, #ff3c3c 100%);
+  color: #fff;
+}

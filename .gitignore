@@ -23,3 +23,7 @@ yarn.lock
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Archives et sauvegardes
+*.zip
+*.tar.gz

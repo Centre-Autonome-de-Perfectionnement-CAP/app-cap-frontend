@@ -75,6 +75,7 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     return () => window.removeEventListener('session-expired', handleSessionExpired);
   }, [navigate]);
 
+  // ── Login avec redirection selon le rôle ────────────────────────────────
   const login = (token: string, userNom: string, userPrenoms: string, userRole: UserRole, uid?: number): void => {
     localStorage.setItem(STORAGE_KEYS.TOKEN,   token);
     localStorage.setItem(STORAGE_KEYS.NOM,     userNom);
@@ -90,13 +91,26 @@ export const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ childr
     setRole(userRole);
     setIsAuthenticated(true);
 
-    if (CAP_DIRECTION_ROLES.includes(userRole as string)) {
+    // Redirection selon le rôle dès la connexion
+    const r = userRole as string;
+    if (CAP_DIRECTION_ROLES.includes(r)) {
       navigate(FRONTEND_ROUTES.DEMANDES_CAP);
+    } else if (r === 'responsable') {
+      // Responsable de division → son espace dédié
+      navigate(FRONTEND_ROUTES.RESPONSABLE_DASHBOARD);
+    } else if (r === 'superviseur') {
+      // Superviseur de stage → uniquement le module Stages
+      navigate('/stages/stagiaires');
+    } else if (r === 'professeur') {
+      // Professeur → dashboard notes
+      navigate(FRONTEND_ROUTES.NOTES.PROFESSOR_DASHBOARD);
     } else {
+      // Tous les autres (admin, secrétaire, comptable...) → portail des modules
       navigate(FRONTEND_ROUTES.PORTAIL);
     }
   };
 
+  // ── Logout ───────────────────────────────────────────────────────────────
   const logout = async (): Promise<void> => {
     const currentRole = role as string | null;
 

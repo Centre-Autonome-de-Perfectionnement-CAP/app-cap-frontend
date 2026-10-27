@@ -34,7 +34,6 @@ import CoursService from '@/services/cours.service'
 import EmploiDuTempsService from '@/services/emploi-du-temps.service'
 import Swal from 'sweetalert2'
 import './Calendar.scss'
-import { end } from '@popperjs/core'
 
 const Calendar: React.FC = () => {
   const calendarRef = useRef<FullCalendar>(null)

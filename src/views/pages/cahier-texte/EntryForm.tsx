@@ -20,10 +20,13 @@ import { cilSave, cilArrowLeft } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import CahierService from '@/services/cahier.service'
 import CoursService from '@/services/cours.service'
+import HttpService from '@/services/http.service'
 import { useAuth } from '@/contexts'
 import type { CreateTextbookEntryRequest, TextbookEntry } from '@/types/cahier-texte.types'
 import { TextbookEntryStatus } from '@/types/cahier-texte.types'
 import Swal from 'sweetalert2'
+
+const JOURS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
 
 const EntryForm: React.FC = () => {
   const navigate = useNavigate()
@@ -34,8 +37,10 @@ const EntryForm: React.FC = () => {
 
   const [loading, setLoading] = useState(false)
   const [programs, setPrograms] = useState<any[]>([])
+  const [creneaux, setCreneaux] = useState<any[]>([])
   const [formData, setFormData] = useState<CreateTextbookEntryRequest>({
     program_id: 0,
+    emploi_du_temps_id: 0,
     session_date: new Date().toISOString().split('T')[0],
     start_time: '08:00',
     end_time: '10:00',
@@ -59,6 +64,29 @@ const EntryForm: React.FC = () => {
     }
   }, [id])
 
+  // AJOUT - charge les créneaux d'emploi du temps (nouveau système,
+  // "Gestion emploi du temps") liés au programme sélectionné. Une entrée
+  // de cahier de texte doit obligatoirement être rattachée à un créneau.
+  useEffect(() => {
+    if (!formData.program_id) {
+      setCreneaux([])
+      return
+    }
+    HttpService.get<{ data: any[] }>('emploi-du-temps', { params: { program_id: formData.program_id } })
+      .then((res: any) => setCreneaux(res.data ?? res ?? []))
+      .catch(() => setCreneaux([]))
+  }, [formData.program_id])
+
+  const handleSelectCreneau = (emploiDuTempsId: number) => {
+    const creneau = creneaux.find((c) => c.id === emploiDuTempsId)
+    setFormData({
+      ...formData,
+      emploi_du_temps_id: emploiDuTempsId,
+      start_time: creneau?.start_time ?? formData.start_time,
+      end_time: creneau?.end_time ?? formData.end_time,
+    })
+  }
+
   const loadPrograms = async () => {
     try {
       if (isProfesseur && userId) {
@@ -81,6 +109,7 @@ const EntryForm: React.FC = () => {
       const entry = await CahierService.getEntry(parseInt(id))
       setFormData({
         program_id: entry.program_id,
+        emploi_du_temps_id: entry.emploi_du_temps_id ?? 0,
         session_date: entry.session_date,
         start_time: entry.start_time,
         end_time: entry.end_time,
@@ -120,11 +149,11 @@ const EntryForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent, publish = false) => {
     e.preventDefault()
 
-    if (!formData.program_id || !formData.session_title || !formData.content_covered) {
+    if (!formData.program_id || !formData.emploi_du_temps_id || !formData.session_title || !formData.content_covered) {
       Swal.fire({
         icon: 'warning',
         title: 'Attention',
-        text: 'Veuillez remplir tous les champs obligatoires',
+        text: 'Veuillez remplir tous les champs obligatoires (dont le créneau d\'emploi du temps)',
       })
       return
     }
@@ -206,6 +235,28 @@ const EntryForm: React.FC = () => {
                       ))}
                     </CFormSelect>
                   </CCol>
+                  <CCol md={6}>
+                    <CFormLabel htmlFor="emploi_du_temps_id">Créneau (emploi du temps) *</CFormLabel>
+                    <CFormSelect
+                      id="emploi_du_temps_id"
+                      value={formData.emploi_du_temps_id || 0}
+                      onChange={(e) => handleSelectCreneau(parseInt(e.target.value))}
+                      required
+                      disabled={!formData.program_id}
+                    >
+                      <option value={0}>
+                        {formData.program_id ? 'Sélectionner un créneau...' : 'Choisissez un programme d\'abord'}
+                      </option>
+                      {creneaux.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {JOURS[c.day_of_week]} {c.start_time}–{c.end_time} · {c.room?.name ?? ''}
+                        </option>
+                      ))}
+                    </CFormSelect>
+                  </CCol>
+                </CRow>
+
+                <CRow className="mb-3">
                   <CCol md={6}>
                     <CFormLabel htmlFor="session_date">Date de la séance *</CFormLabel>
                     <CFormInput

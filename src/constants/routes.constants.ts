@@ -1,6 +1,6 @@
 // src/constants/routes.constants.ts
-// — Ajout de FRONTEND_ROUTES.DEMANDES = '/demandes'
-// — Ajout de FRONTEND_ROUTES.DEMANDES_CAP_LOGIN et FRONTEND_ROUTES.DEMANDES_CAP
+// - Ajout de FRONTEND_ROUTES.DEMANDES = '/demandes'
+// - Ajout de FRONTEND_ROUTES.DEMANDES_CAP_LOGIN et FRONTEND_ROUTES.DEMANDES_CAP
 
 export const AUTH_ROUTES = {
   LOGIN: 'auth/login', LOGOUT: 'auth/logout',
@@ -111,7 +111,7 @@ export const EMPLOI_DU_TEMPS_ROUTES = {
   BUILDING: (id: number | string) => `emploi-du-temps/buildings/${id}`,
   ROOMS: 'emploi-du-temps/rooms',
   ROOM: (id: number | string) => `emploi-du-temps/rooms/${id}`,
-  ROOMS_AVAILABLE: 'emploi-du-temps/rooms/available',
+  ROOMS_AVAILABLE: 'emploi-du-temps/rooms-available',
   TIME_SLOTS: 'emploi-du-temps/time-slots',
   TIME_SLOT: (id: number | string) => `emploi-du-temps/time-slots/${id}`,
   TIME_SLOTS_BY_DAY: (day: string) => `emploi-du-temps/time-slots/day/${day}`,
@@ -210,7 +210,7 @@ export const FRONTEND_ROUTES = {
     ROOMS: '/emploi-du-temps/rooms', TIME_SLOTS: '/emploi-du-temps/time-slots',
     SCHEDULED_COURSES: '/emploi-du-temps/scheduled-courses', SCHEDULE_VIEW: '/emploi-du-temps/schedule-view',
   },
-  NOTES:    { BASE: '/notes', SAISIE: '/notes/saisie', BULLETINS: '/notes/bulletins' },
+  NOTES:    { BASE: '/notes', SAISIE: '/notes/saisie', BULLETINS: '/notes/bulletins', PROFESSOR_DASHBOARD: '/notes/professor/dashboard' },
   PRESENCE: { BASE: '/presence', SAISIE: '/presence/saisie', LISTE: '/presence/liste' },
   BIBLIOTHEQUE: '/bibliotheque',
   ATTESTATIONS: '/attestations',
@@ -230,4 +230,7 @@ export const FRONTEND_ROUTES = {
   // Errors
   PAGE_404: '/404',
   PAGE_500: '/500',
+
+  // Espace "responsable" (responsable de division) - voir ResponsableOnlyRoute dans App.tsx
+  RESPONSABLE_DASHBOARD: '/responsable/dashboard',
 } as const

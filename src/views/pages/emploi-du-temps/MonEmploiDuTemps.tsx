@@ -233,7 +233,7 @@ const MonEmploiDuTemps: React.FC = () => {
               <CIcon icon={cilCalendar} className="me-2 text-success" />
               <strong>Mon Emploi du Temps</strong>
               {(nom || prenoms) && (
-                <span className="ms-2 text-muted small">— {prenoms} {nom}</span>
+                <span className="ms-2 text-muted small">- {prenoms} {nom}</span>
               )}
             </div>
             <div className="d-flex gap-2 flex-wrap">

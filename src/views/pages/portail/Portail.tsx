@@ -1,9 +1,9 @@
 // src/views/pages/portail/Portail.tsx
 //
-// Tâche 11.2 — Badge numérique sur la carte "CAP Demandes" uniquement.
+// Tâche 11.2 - Badge numérique sur la carte "CAP Demandes" uniquement.
 //              Les autres modules n'ont pas (encore) de badge.
-// Tâche 11.3 — Polling via useDemandesBadge (60 s).
-// Tâche 11.4 — Badge absent si count === 0.
+// Tâche 11.3 - Polling via useDemandesBadge (60 s).
+// Tâche 11.4 - Badge absent si count === 0.
 
 import {
   CCard,
@@ -21,11 +21,23 @@ import { getAssetUrl } from '@/utils/assets'
 import { useDemandesBadge } from '@/hooks/demandes/useDemandesBadge'
 import { DemandesBadge }   from '@/components/demandes/DemandesBadge'
 
+import { useAuth } from '@/contexts'
+import { useStagesAccess } from '@/views/pages/stages/useStagesAccess'
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Liste des modules — ordre alphabétique maintenu, "CAP Demandes" marqué
+// Liste des modules - ordre alphabétique maintenu, "CAP Demandes" marqué
 // ─────────────────────────────────────────────────────────────────────────────
 
-const applications = [
+interface Application {
+  title: string
+  description: string
+  image: string
+  url: string
+  hasBadge: boolean
+  rolesAllowed?: string[]
+}
+
+const applications: Application[] = [
   {
     title: 'CAP Attestations',
     description: '',
@@ -131,20 +143,45 @@ const applications = [
     url: '/demandes',
     hasBadge: true,  // ← seul module avec badge pour l'instant
   },
+  {
+    title: 'CAP WhatsApp',
+    description: 'Administration et journalisation des envois WhatsApp.',
+    image: getAssetUrl('images/whatsapp.png'),
+    url: '/whatsapp',
+    hasBadge: false,
+    rolesAllowed: ['admin', 'responsable-division'],
+  },
+  {
+    title: 'CAP Stages',
+    description: 'Demandes de stage, propositions de dates et notes de service.',
+    image: getAssetUrl('images/cours.png'),
+    url: '/stages',
+    hasBadge: false,
+    rolesAllowed: ['admin', 'responsable-division', 'chef-division', 'secretaire'],
+  },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 const Portail = () => {
+  const { role } = useAuth()
   // Tâche 11.1 / 11.3 : badge en temps réel (polling 60 s)
   const { count } = useDemandesBadge()
+
+  // CAP Stages : seulement le Responsable de division concerné (formation continue)
+  const stagesAllowed = useStagesAccess(role)
+
+  const userApplications = applications.filter(
+    (app) => (!app.rolesAllowed || (role && app.rolesAllowed.includes(role)))
+      && (app.url !== '/stages' || stagesAllowed === true)
+  )
 
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
         <h2 className="text-left my-5">Modules du Progiciel</h2> <hr />
         <CRow>
-          {applications.map((app, index) => (
+          {userApplications.map((app, index) => (
             <CCol md={3} sm={6} className="mb-4" key={index}>
               <Link to={app.url} style={{ textDecoration: 'none' }}>
                 {/*
@@ -155,7 +192,7 @@ const Portail = () => {
                   className="h-200 shadow-sm hover-shadow"
                   style={{ position: 'relative' }}
                 >
-                  {/* Tâche 11.2 — Badge uniquement sur CAP Demandes */}
+                  {/* Tâche 11.2 - Badge uniquement sur CAP Demandes */}
                   {app.hasBadge && <DemandesBadge count={count} />}
 
                   <CCardImage orientation="top" src={app.image} height={300} className="p-3" />

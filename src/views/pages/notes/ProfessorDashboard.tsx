@@ -24,13 +24,20 @@ import {
   cilPlus,
   cilNotes,
   cilArrowRight,
+  cilFile,
 } from '@coreui/icons'
 import { LoadingSpinner } from '@/components'
 import useProfessorGrades from '@/hooks/notes/useProfessorGrades'
 import useAnneeAcademiquesData from '@/hooks/inscription/useAnneeAcademiqueData'
+import { useAuth } from '@/contexts'
+import HttpService from '@/services/http.service'
 
 const ProfessorDashboard = () => {
   const navigate = useNavigate()
+  const { nom, prenoms } = useAuth()
+  const fullName =
+    prenoms && nom ? `${prenoms} ${nom}` : 'Professeur'
+
   const {
     classes,
     programs,
@@ -60,9 +67,12 @@ const ProfessorDashboard = () => {
     }
     const fetchCohorts = async () => {
       try {
-        const response = await fetch(`http://localhost:8001/api/inscription/cohortes?academic_year_id=${selectedAcademicYear}`)
-        const data = await response.json()
-        if (data.success) setCohortOptions(data.data)
+        const response = await HttpService.get<{ success: boolean; data: any[] }>(
+          `inscription/cohortes?academic_year_id=${selectedAcademicYear}`
+        )
+        if (response.success) {
+          setCohortOptions(response.data.map((c: any) => ({ value: c.code, label: c.code })))
+        }
       } catch (e) {
         console.error('Erreur cohortes:', e)
       }
@@ -86,9 +96,9 @@ const ProfessorDashboard = () => {
     navigate(`/notes/professor/evaluation/${programUuid}`)
   }
 
-  const handleSelectClass = (classGroupId: number) => {
+  const handleSelectClass = async (classGroupId: number) => {
     setSelectedClassGroupId(classGroupId)
-    loadProgramsByClass(classGroupId)
+    await loadProgramsByClass(classGroupId)
   }
 
   if (loading && !classes.length) {
@@ -97,9 +107,10 @@ const ProfessorDashboard = () => {
 
   return (
     <>
+      {/* ── En-tête de bienvenue ── */}
       <CRow className="mb-3 align-items-center">
         <CCol>
-          <h4 className="fw-bold mb-0">Mes Classes & Évaluations</h4>
+          <h4 className="fw-bold mb-0">Bonjour, {fullName}</h4>
           <p className="text-muted small mb-0">Gérez les notes de vos classes organisées par cycle et filière</p>
         </CCol>
         <CCol xs="auto" className="d-flex gap-2">
@@ -202,7 +213,7 @@ const ProfessorDashboard = () => {
                                   {classGroup.students_count || 0} étudiant(s)
                                 </div>
                                 <CButton
-                                  color={isSelected ? 'primary' : 'primary'}
+                                  color="primary"
                                   variant={isSelected ? undefined : 'outline'}
                                   size="sm"
                                   className="w-100"
@@ -242,7 +253,7 @@ const ProfessorDashboard = () => {
       {programs.length > 0 && (
         <CCard className="mt-4 border-0 shadow-sm">
           <CCardHeader className="bg-transparent">
-            <strong>Programmes — {programs[0]?.class_group_name || 'Classe sélectionnée'}</strong>
+            <strong>Programmes - {programs[0]?.class_group_name || 'Classe sélectionnée'}</strong>
             <CBadge color="info" className="ms-2">{programs.length} cours</CBadge>
           </CCardHeader>
           <CCardBody>
@@ -269,22 +280,20 @@ const ProfessorDashboard = () => {
 
                       <div className="d-grid gap-2">
                         <CButton
-                          color="success"
                           size="sm"
-                          onClick={() => program.uuid && handleCreateEvaluation(program.uuid)}
-                          disabled={!program.uuid}
+                          color="primary"
+                          onClick={() => handleCreateEvaluation(program.uuid)}
                         >
                           <CIcon icon={cilPlus} className="me-1" />
                           Nouvelle évaluation
                         </CButton>
                         {program.column_count > 0 && (
                           <CButton
-                            color="primary"
                             size="sm"
-                            variant="outline"
-                            onClick={() => program.uuid && handleViewGrades(program.uuid)}
-                            disabled={!program.uuid}
+                            color="info"
+                            onClick={() => handleViewGrades(program.uuid)}
                           >
+                            <CIcon icon={cilFile} className="me-1" />
                             Voir les notes
                           </CButton>
                         )}

@@ -14,6 +14,7 @@ export { default as StatCard }         from './ui/StatCard'
 export { default as TabBar }           from './ui/TabBar'
 export { default as ActionButton }     from './ui/ActionButton'
 export { default as RadioCard }        from './ui/RadioCard'
+export { default as StatusNote, ReportedIssue, ActorCorrectionNote, CorrectionListNote } from './ui/StatusNote'
 
 // Modal / Shell
 export { default as DashboardShell }    from './modal/DashboardShell'
@@ -25,6 +26,7 @@ export { default as ConfirmCheckbox }   from './modal/ConfirmCheckbox'
 export { default as HistoriquePanel }   from './modal/HistoriquePanel'
 export { ResendModal } from './modal/SecretaireModals'
 export { default as RetourSecretaireModal } from './modal/RetourSecretaireModal'
+export { default as LegacyDeclarationPanel, LegacyBadge } from './modal/LegacyDeclarationPanel'
 
 // Layout direction
 export { default as DirectionShell }    from './layout/DirectionShell'

@@ -12,7 +12,7 @@ import inscriptionNavigation  from './inscription.tsx'
 import alumniNavigation       from './alumni.tsx'
 import legacyStudentsNavigation from './legacy-students.tsx'
 import getEmploiNavigation    from './emploi-du-temps.tsx'
-import rhNavigation           from './rh.tsx'
+import { getRhNavigation, rhNavigation } from './rh.tsx'
 import soutenanceNavigation   from './soutenance.tsx'
 import coursNavigation        from './cours.tsx'
 import financeNavigation      from './finance.tsx'
@@ -21,10 +21,12 @@ import attestationNavigation  from './attestation.tsx'
 import presenceNavigation     from './presence.tsx'
 import getNoteNavigation      from './note.tsx'
 import getCahierNavigation    from './cahier.tsx'
-import getDemandesNavigation  from './demandes.tsx'
+import getDemandesNavigation  from './demandes.tsx'   // ← remplace workflow.tsx
+import whatsappNavigation     from './whatsapp.tsx'
 import getLegacyPrepaNavigation from './legacy-prepa.tsx'
+import getStagesNavigation  from './stages.tsx'
 
-const mainNavigation = [
+const mainNavigationBase = [
   {
     component: CNavItem,
     name: 'Dashboard',
@@ -137,8 +139,34 @@ const mainNavigation = [
   },
 ]
 
+// mainNavigation conservé tel quel (nom + forme inchangés) pour ne rien
+// casser côté AppSidebar si jamais réutilisé ailleurs.
+const mainNavigation = mainNavigationBase
+
+// AJOUT (15/08/2026) - entrée WhatsApp admin, visible pour les rôles
+// 'admin' et 'responsable-division' (décision utilisateur). Suit le même
+// pattern que getDemandesNavigation/getNoteNavigation : une fonction du
+// rôle plutôt qu'un tableau statique, pour permettre le filtrage conditionnel.
+const getMainNavigation = (role: string | null) => {
+  if (role !== 'admin' && role !== 'responsable-division') {
+    return mainNavigationBase
+  }
+
+  return [
+    ...mainNavigationBase,
+    { component: CNavTitle, name: 'Administration' },
+    {
+      component: CNavItem,
+      name: 'WhatsApp',
+      to: '/whatsapp',
+      icon: <CIcon icon={cilBell} className="nav-icon" />,
+    },
+  ]
+}
+
 export {
   mainNavigation,
+  getMainNavigation,
   inscriptionNavigation,
   alumniNavigation,
   legacyStudentsNavigation,
@@ -149,9 +177,12 @@ export {
   coursNavigation,
   getCahierNavigation,
   soutenanceNavigation,
+  getRhNavigation,
   rhNavigation,
   presenceNavigation,
   getNoteNavigation,
-  getDemandesNavigation,   // ← ajouté, workflow retiré
+  getDemandesNavigation,
+  whatsappNavigation,
   getLegacyPrepaNavigation,
+  getStagesNavigation,
 }

@@ -1,3 +1,4 @@
+import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 import 'core-js'
@@ -6,6 +7,11 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
 import App from './App.tsx'
 import store from './store.ts'
 import { setupAxiosInterceptors } from './services/interceptor.ts'
+import { installChunkReload } from './utils/chunkReload.ts'
+import ErrorBoundary from './components/common/ErrorBoundary.tsx'
+
+// Nouvelle version en ligne : rechargement automatique au lieu d'une page blanche.
+installChunkReload()
 
 // window.location.href = '/login' contourne le basename="/services" du BrowserRouter
 // et provoque une page blanche. On utilise un CustomEvent à la place :
@@ -16,7 +22,9 @@ setupAxiosInterceptors(() => {
 })
 
 createRoot(document.getElementById('root')!).render(
-  <Provider store={store}>
-    <App />
-  </Provider>,
+  <ErrorBoundary>
+    <Provider store={store}>
+      <App />
+    </Provider>
+  </ErrorBoundary>,
 )

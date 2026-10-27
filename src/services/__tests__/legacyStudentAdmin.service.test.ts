@@ -8,6 +8,15 @@ vi.mock('../http.service')
 describe('legacyStudentAdminService (Tests Développeur 6)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Les données fictives ne sont actives que sur demande explicite (dev).
+    vi.stubEnv('VITE_LEGACY_MOCKS', 'true')
+  })
+
+  it('propage l\'erreur API quand les données fictives sont désactivées (production)', async () => {
+    vi.stubEnv('VITE_LEGACY_MOCKS', 'false')
+    vi.mocked(HttpService.post).mockRejectedValueOnce(new Error('403'))
+
+    await expect(legacyStudentAdminService.validate(1)).rejects.toThrow('403')
   })
 
   describe('1. Récupération & Filtrage (getAll)', () => {

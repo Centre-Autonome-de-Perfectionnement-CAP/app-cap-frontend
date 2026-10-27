@@ -4,11 +4,11 @@
 // - Date ET heure de soumission correctes
 // - Texte ≥ 14px
 
-import { CRow, CCol, CAlert } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilWarning, cilInfo } from '@coreui/icons'
+import { CRow, CCol } from '@coreui/react'
 import type { DocumentRequest } from '@/types/document-request.types'
-import { TYPE_LABELS, RESPONSABLE_DIVISION_LABELS } from '@/types/document-request.types'
+import { TYPE_LABELS, RESPONSABLE_DIVISION_LABELS, isLegacyDemande } from '@/types/document-request.types'
+import { LegacyBadge } from './LegacyDeclarationPanel'
+import DossierFilesSplit from '@/components/document-request/DossierFilesSplit'
 
 interface Props {
   demande: DocumentRequest
@@ -23,8 +23,8 @@ const InfoBlock = ({ title, children }: { title: string; children: React.ReactNo
     padding: '16px 18px', height: '100%', background: '#f8fafc',
   }}>
     <p style={{
-      fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase',
-      letterSpacing: '0.07em', color: '#94a3b8', marginBottom: 12,
+      fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase',
+      letterSpacing: '0.07em', color: '#64748b', marginBottom: 12,
     }}>
       {title}
     </p>
@@ -36,7 +36,7 @@ const InfoLine = ({ label, value }: { label: string; value?: string | null }) =>
   if (!value) return null
   return (
     <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: 6 }}>
-      <span style={{ color: '#9ca3af' }}>{label} : </span>
+      <span style={{ color: '#64748b' }}>{label} : </span>
       <span style={{ fontWeight: 500, color: '#374151' }}>{value}</span>
     </p>
   )
@@ -47,7 +47,7 @@ const ValidationBadge = ({
 }: { children: React.ReactNode; color: string; bg: string }) => (
   <span style={{
     display: 'inline-flex', alignItems: 'center', gap: 5,
-    fontSize: '0.8rem', padding: '3px 10px', borderRadius: 5,
+    fontSize: '0.875rem', padding: '3px 10px', borderRadius: 5,
     background: bg, color, fontWeight: 600,
   }}>
     {children}
@@ -62,12 +62,8 @@ const formatDateTime = (iso?: string | null) => {
   }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
-const DemandeDetailBase = ({ demande, children }: Props) => {
+const DemandeDetailBase = ({ demande, children, onRefresh }: Props) => {
   const submittedAt = formatDateTime(demande.submitted_at)
-
-  // Le rejet ne s'affiche que si c'est une correction secrétaire et qu'il y a une raison
-  const showRejection = demande.status === 'secretary_correction'
-    && (demande.rejected_by || demande.rejected_reason)
 
   return (
     <>
@@ -75,12 +71,15 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
         {/* Bloc Étudiant */}
         <CCol md={6}>
           <InfoBlock title="Étudiant">
-            <p style={{ fontWeight: 700, fontSize: '1rem', color: '#111827', marginBottom: 10 }}>
+            <p style={{ fontWeight: 700, fontSize: '1rem', color: '#111827', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               {demande.last_name} {demande.first_names}
+              {isLegacyDemande(demande) && <LegacyBadge status={demande.legacy_declaration_status} />}
             </p>
             <InfoLine label="Matricule" value={demande.matricule} />
             <InfoLine label="Filière"   value={demande.department} />
             <InfoLine label="Année"     value={demande.academic_year} />
+            <InfoLine label="WhatsApp"  value={demande.demandeur_whatsapp} />
+            <InfoLine label="Email"     value={demande.email} />
           </InfoBlock>
         </CCol>
 
@@ -92,7 +91,7 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
             </p>
             {submittedAt && (
               <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: 10 }}>
-                <span style={{ color: '#9ca3af' }}>Soumis le : </span>
+                <span style={{ color: '#64748b' }}>Soumis le : </span>
                 <span style={{ fontWeight: 500, color: '#374151' }}>{submittedAt}</span>
               </p>
             )}
@@ -110,7 +109,7 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
               )}
               {demande.responsable_division_type && (
                 <span style={{
-                  fontSize: '0.8rem', padding: '3px 10px', borderRadius: 5,
+                  fontSize: '0.875rem', padding: '3px 10px', borderRadius: 5,
                   background: '#e0f2fe', color: '#0369a1', fontWeight: 600,
                 }}>
                   {RESPONSABLE_DIVISION_LABELS[demande.responsable_division_type]}
@@ -118,7 +117,7 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
               )}
               {demande.signature_type && (
                 <span style={{
-                  fontSize: '0.8rem', padding: '3px 10px', borderRadius: 5,
+                  fontSize: '0.875rem', padding: '3px 10px', borderRadius: 5,
                   background: demande.signature_type === 'paraphe' ? '#ede9fe' : '#dcfce7',
                   color: demande.signature_type === 'paraphe' ? '#5b21b6' : '#166534',
                   fontWeight: 600,
@@ -134,30 +133,22 @@ const DemandeDetailBase = ({ demande, children }: Props) => {
       {/* Contenu additionnel (ex. SecretaryFileUploader) */}
       {children && <div style={{ marginTop: 16 }}>{children}</div>}
 
-      {/* Commentaires des acteurs — affichés une seule fois chacun */}
-      {demande.comptable_comment && (
-        <CAlert color="info" className="mt-3 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
-          <CIcon icon={cilInfo} className="me-1" />
-          <strong>Comptable :</strong> {demande.comptable_comment}
-        </CAlert>
-      )}
-      {demande.responsable_division_comment && (
-        <CAlert color="warning" className="mt-2 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
-          <CIcon icon={cilInfo} className="me-1" />
-          <strong>Responsable Division :</strong> {demande.responsable_division_comment}
-        </CAlert>
-      )}
+      {/* Fichiers du dossier - liste avec actions pour la secrétaire */}
+      <div style={{ marginTop: 16 }}>
+        <DossierFilesSplit
+          demandeId={demande.id}
+          demande={demande}
+          status={demande.status}
+          files={demande.files}
+          complementFiles={demande.complement_files}
+          secretaryFiles={(demande as any).secretary_files}
+          onRefresh={onRefresh}
+        />
+      </div>
 
-      {/* Rejet — affiché une seule fois, proprement */}
-      {showRejection && (
-        <CAlert color="danger" className="mt-2 py-2 mb-0" style={{ fontSize: '0.875rem' }}>
-          <CIcon icon={cilWarning} className="me-1" />
-          {demande.rejected_by && (
-            <strong>Rejeté par {demande.rejected_by}{demande.rejected_reason ? ' : ' : ''}</strong>
-          )}
-          {demande.rejected_reason}
-        </CAlert>
-      )}
+      {/* Commentaires et motifs des acteurs (rejets, retours) : plus affichés
+          ici. Le motif utile est rappelé dans la fenêtre de l'action
+          concernée ; tout reste consultable dans l'onglet « Historique ». */}
     </>
   )
 }

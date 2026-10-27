@@ -34,7 +34,7 @@ const ActionButton = ({
   const isDisabled = disabled || loading
   const hex = customBg ?? COLOR_HEX[color] ?? '#2563eb'
   const pad = size === 'sm' ? '4px 10px' : '6px 14px'
-  const fs  = size === 'sm' ? '0.78rem'  : '0.88rem'
+  const fs  = size === 'sm' ? '0.875rem' : '0.88rem'
 
   const base: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -68,7 +68,7 @@ const ActionButton = ({
     if (isDisabled || !ref.current) return
     if (variant === 'outline') {
       ref.current.style.background = hex
-      ref.current.style.color = '#ffffff'  // blanc — jamais noir sur fond coloré
+      ref.current.style.color = '#ffffff'  // blanc - jamais noir sur fond coloré
     } else if (variant === 'solid') {
       ref.current.style.opacity = '0.85'
     }

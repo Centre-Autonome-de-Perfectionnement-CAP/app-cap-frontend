@@ -155,7 +155,7 @@ const FileCard = ({
         <CIcon icon={icon} style={{ width: 26, color }} />
       </div>
       <span style={{
-        fontSize: '0.76rem',
+        fontSize: '0.875rem',
         fontWeight: 600,
         color: '#1e293b',
         lineHeight: 1.35,
@@ -215,8 +215,8 @@ const DocumentExplorerModal = ({ demande, visible, onClose }: Props) => {
                 <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>
                   Documents du dossier
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500, marginTop: 2 }}>
-                  {allFiles.length} fichier{allFiles.length > 1 ? 's' : ''} — cliquez pour visualiser
+                <div style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 500, marginTop: 2 }}>
+                  {allFiles.length} fichier{allFiles.length > 1 ? 's' : ''} - cliquez pour visualiser
                 </div>
               </div>
             </div>
@@ -228,7 +228,7 @@ const DocumentExplorerModal = ({ demande, visible, onClose }: Props) => {
             <div style={{
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
-              gap: 12, padding: '48px 0', color: '#94a3b8',
+              gap: 12, padding: '48px 0', color: '#64748b',
             }}>
               <CIcon icon={cilFolderOpen} style={{ width: 44, color: '#cbd5e1' }} />
               <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Aucun document disponible</span>
@@ -243,13 +243,13 @@ const DocumentExplorerModal = ({ demande, visible, onClose }: Props) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                       <div style={{ width: 4, height: 20, borderRadius: 2, background: meta.color, flexShrink: 0 }} />
                       <span style={{
-                        fontSize: '0.75rem', fontWeight: 700, color: meta.color,
+                        fontSize: '0.875rem', fontWeight: 700, color: meta.color,
                         textTransform: 'uppercase', letterSpacing: '0.07em',
                       }}>
                         {meta.label}
                       </span>
                       <span style={{
-                        fontSize: '0.7rem', color: '#94a3b8',
+                        fontSize: '0.875rem', color: '#64748b',
                         background: '#f1f5f9', padding: '1px 8px',
                         borderRadius: 10, fontWeight: 600,
                       }}>
@@ -274,7 +274,7 @@ const DocumentExplorerModal = ({ demande, visible, onClose }: Props) => {
         </CModalBody>
       </CModal>
 
-      {/* ── Visualiseur — monté via portal directement sur document.body
+      {/* ── Visualiseur - monté via portal directement sur document.body
            pour éviter l'empilement de backdrops CoreUI ── */}
       {createPortal(
         <AttachmentViewerModal

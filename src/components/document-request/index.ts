@@ -7,7 +7,7 @@ export { default as AttachmentViewerModal }  from './AttachmentViewerModal'
 export { default as DocumentExplorerModal }  from './DocumentExplorerModal'
 export { SecretaryFileUploader }            from './SecretaryFileUploader'
 
-// src/hooks/attestation/index.ts — ajouter à l'export existant :
+// src/hooks/attestation/index.ts - ajouter à l'export existant :
 // export { default as useDocumentRequests } from './useDocumentRequests'
 
 // src/views/pages/attestation/workflow/index.ts

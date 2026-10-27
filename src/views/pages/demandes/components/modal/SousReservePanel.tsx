@@ -8,6 +8,7 @@ import { CRow, CCol, CSpinner, CFormTextarea } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilWarning, cilCheckCircle, cilHistory, cilCommentBubble } from '@coreui/icons'
 import documentRequestService from '@/services/document-request.service'
+import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
 import type { HistoryEntry } from './HistoriquePanel'
 import type { DocumentRequest } from '@/types/document-request.types'
 
@@ -22,6 +23,7 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
   const [loading,   setLoading]   = useState(true)
   const [clearing,  setClearing]  = useState(false)
   const [comment,   setComment]   = useState('')
+
 
   useEffect(() => {
     let cancelled = false
@@ -48,8 +50,10 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
         ...(comment.trim() ? { comment: comment.trim() } : {}),
       } as any)
       onFlagCleared?.()
-    } catch (e) {
+      await showSuccess('Réserve levée', `La réserve sur le dossier ${demande.reference} a été levée.`)
+    } catch (e: any) {
       console.error(e)
+      await showError("La réserve n'a pas été levée", friendlyError(e))
     } finally {
       setClearing(false)
     }
@@ -58,7 +62,7 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '48px 0' }}>
       <CSpinner color="primary" style={{ width: 26, height: 26 }} />
-      <div style={{ color: '#9ca3af', fontSize: '0.875rem', marginTop: 10 }}>
+      <div style={{ color: '#64748b', fontSize: '0.875rem', marginTop: 10 }}>
         Chargement de la réserve…
       </div>
     </div>
@@ -88,7 +92,7 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
         {/* Colonne gauche : détail de la réserve */}
         <CCol md={canClearFlag ? 5 : 12}>
           <div style={{
-            fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase',
+            fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase',
             letterSpacing: '0.07em', color: '#64748b', marginBottom: 10,
             display: 'flex', alignItems: 'center', gap: 8,
           }}>
@@ -106,7 +110,7 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
                 <div style={{ fontWeight: 700, fontSize: '0.925rem', color: '#111827' }}>
                   {flagEntry.actor_name}
                 </div>
-                <div style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+                <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
                   {new Date(flagEntry.created_at).toLocaleDateString('fr-FR', {
                     day: '2-digit', month: 'short', year: 'numeric',
                   } as any)}
@@ -126,13 +130,13 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
                   {flagEntry.comment}
                 </div>
               ) : (
-                <div style={{ fontSize: '0.875rem', color: '#9ca3af', fontStyle: 'italic' }}>
+                <div style={{ fontSize: '0.875rem', color: '#64748b', fontStyle: 'italic' }}>
                   Aucun commentaire fourni lors de la mise sous réserve.
                 </div>
               )}
             </div>
           ) : (
-            <div style={{ fontSize: '0.875rem', color: '#9ca3af', padding: '16px 0' }}>
+            <div style={{ fontSize: '0.875rem', color: '#64748b', padding: '16px 0' }}>
               Aucune entrée de réserve trouvée dans l'historique.
             </div>
           )}
@@ -142,7 +146,7 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
         {canClearFlag && (
           <CCol md={7}>
             <div style={{
-              fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase',
+              fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase',
               letterSpacing: '0.07em', color: '#64748b', marginBottom: 10,
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
@@ -160,13 +164,13 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
                 fontSize: '0.875rem', color: '#374151', marginBottom: 8,
               }}>
                 Commentaire de correction
-                <span style={{ fontWeight: 400, color: '#9ca3af', marginLeft: 6 }}>(optionnel)</span>
+                <span style={{ fontWeight: 400, color: '#64748b', marginLeft: 6 }}>(optionnel)</span>
               </label>
               <CFormTextarea
                 rows={4}
                 value={comment}
                 onChange={e => setComment(e.target.value.slice(0, 500))}
-                placeholder="Ex : Reçu de paiement vérifié et conforme. Dossier complet."
+                placeholder="Exemple : Reçu de paiement vérifié et conforme. Dossier complet."
                 disabled={clearing}
                 style={{
                   fontSize: '0.875rem', lineHeight: 1.6,
@@ -176,8 +180,8 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
                 }}
               />
               <div style={{
-                textAlign: 'right', fontSize: '0.78rem',
-                color: '#9ca3af', marginBottom: 16,
+                textAlign: 'right', fontSize: '0.875rem',
+                color: '#64748b', marginBottom: 16,
               }}>
                 {comment.length} / 500
               </div>
@@ -203,7 +207,7 @@ const SousReservePanel = ({ demande, canClearFlag = false, onFlagCleared }: Prop
                 }
               </button>
 
-              <p style={{ marginTop: 10, fontSize: '0.78rem', color: '#9ca3af', lineHeight: 1.5 }}>
+              <p style={{ marginTop: 10, fontSize: '0.875rem', color: '#64748b', lineHeight: 1.5 }}>
                 Cette action supprime le flag de réserve et enregistre l'action dans l'historique.
               </p>
             </div>

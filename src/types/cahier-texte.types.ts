@@ -27,6 +27,7 @@ export interface TextbookEntry {
   uuid: string
   program_id: number
   scheduled_course_id?: number
+  emploi_du_temps_id?: number
   session_date: string
   start_time: string
   end_time: string
@@ -85,6 +86,7 @@ export interface TextbookEntry {
 export interface CreateTextbookEntryRequest {
   program_id: number
   scheduled_course_id?: number
+  emploi_du_temps_id: number
   session_date: string
   start_time: string
   end_time: string

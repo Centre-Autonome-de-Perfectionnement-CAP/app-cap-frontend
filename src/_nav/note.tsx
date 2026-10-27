@@ -1,63 +1,102 @@
 import CIcon from '@coreui/icons-react'
 import {
   cilBook,
-  cilPeople,
   cilClipboard,
-  cilSpeedometer,
+  cilFile,
+  cilList,
+  cilDescription,
   cilCheckCircle,
+  cilClock,
+  cilPeople,
+  cilNotes,
+  cilCloudUpload,
 } from '@coreui/icons'
-import { CNavItem, CNavTitle } from '@coreui/react'
+import { CNavItem, CNavTitle, CNavGroup } from '@coreui/react'
 
 const getNoteNavigation = (role: string | null) => {
-  const navigation: any[] = [
-    {
-      component: CNavTitle,
-      name: 'Notes',
-    },
-  ]
+  const navigation: any[] = []
 
-  // Section Professeur - visible uniquement pour les professeurs
+  // ── Professeurs ────────────────────────────────────────────────────────────
   if (role === 'professeur') {
-    navigation.push({
-      component: CNavItem,
-      name: 'Mes Classes',
-      to: '/notes/professor/dashboard',
-      icon: <CIcon icon={cilBook} customClassName="nav-icon" />,
-    })
-    return navigation
+    navigation.push(
+      { component: CNavTitle, name: 'Enseignement' },
+      {
+        component: CNavItem,
+        name: 'Mes Classes',
+        to: '/notes/professor/dashboard',
+        icon: <CIcon icon={cilBook} />,
+      },
+      {
+        component: CNavItem,
+        name: 'Cahier de texte',
+        to: '/notes/professor/textbook',
+        icon: <CIcon icon={cilNotes} />,
+      },
+      { component: CNavTitle, name: 'Gestion RH' },
+      {
+        component: CNavItem,
+        name: 'Mes Contrats',
+        to: '/notes/professor/contrats',
+        icon: <CIcon icon={cilFile} />,
+      },
+      {
+        component: CNavItem,
+        name: 'Mes Factures',
+        to: '/notes/professor/factures',   // ← vraie route, plus de hack hash
+        icon: <CIcon icon={cilCloudUpload} />,
+      },
+    )
   }
 
-  // Section Administration & Délibérations - visible pour l'administration (admin, chef-division, responsable, etc.)
-  navigation.push(
-    {
-      component: CNavItem,
-      name: 'Dashboard',
-      to: '/notes/admin/dashboard',
-      icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-    },
-    {
-      component: CNavItem,
-      name: 'Consultation Notes',
-      to: '/notes/admin/consultation',
-      icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-    },
-    {
-      component: CNavTitle,
-      name: 'Délibérations',
-    },
-    {
-      component: CNavItem,
-      name: 'Délibération Semestre',
-      to: '/notes/decisions/semester',
-      icon: <CIcon icon={cilClipboard} customClassName="nav-icon" />,
-    },
-    {
-      component: CNavItem,
-      name: 'Délibération Année',
-      to: '/notes/decisions/year',
-      icon: <CIcon icon={cilCheckCircle} customClassName="nav-icon" />,
-    }
-  )
+  // ── Administrateurs ────────────────────────────────────────────────────────
+  // FUSION main : section visible pour tout le personnel administratif
+  // (admin, chef-division, responsable-division, scolarité, direction…),
+  // pas pour les professeurs ni les étudiants - même règle que NoteRoutes.
+  if (role && role !== 'professeur' && role !== 'etudiant') {
+    navigation.push(
+      { component: CNavTitle, name: 'Notes et Évaluations' },
+      {
+        component: CNavItem,
+        name: 'Dashboard Notes',
+        to: '/notes/admin/dashboard',
+        icon: <CIcon icon={cilClipboard} />,
+      },
+      {
+        component: CNavItem,
+        name: 'Consultation Notes',
+        to: '/notes/admin/consultation',
+        icon: <CIcon icon={cilPeople} />,
+      },
+      {
+        component: CNavGroup,
+        name: 'Décisions',
+        icon: <CIcon icon={cilDescription} />,
+        items: [
+          { component: CNavItem, name: 'Décisions Semestre', to: '/notes/admin/decision-semester' },
+          { component: CNavItem, name: 'Décisions Année',    to: '/notes/admin/decision-year'     },
+        ],
+      },
+      { component: CNavTitle, name: 'Gestion des Contrats RH' },
+      {
+        component: CNavItem,
+        name: 'Tous les contrats',
+        to: '/rh/contrats',
+        icon: <CIcon icon={cilList} />,
+      },
+      {
+        component: CNavItem,
+        name: 'Contrats en attente',
+        to: '/rh/contrats?status=pending',
+        icon: <CIcon icon={cilClock} />,
+      },
+      {
+        component: CNavItem,
+        name: 'Contrats validés',
+        to: '/rh/contrats?status=signed',
+        icon: <CIcon icon={cilCheckCircle} />,
+      },
+    )
+  }
 
   return navigation
 }

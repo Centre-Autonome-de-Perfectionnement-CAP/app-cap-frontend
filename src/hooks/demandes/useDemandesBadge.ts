@@ -34,7 +34,7 @@ interface UsDemandesBadgeReturn {
  * Pour la secrétaire, additionne :
  *   - `submitted`              (nouvelles demandes)
  *   - `secretary_final_review` (À finaliser après signature Directeur)
- *   - `secretary_correction`   (À corriger — circuit de correction)
+ *   - `secretary_correction`   (À corriger - circuit de correction)
  *
  * Pour les autres acteurs, utilise le total renvoyé par l'endpoint.
  */

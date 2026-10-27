@@ -64,6 +64,7 @@ const CourseElements: React.FC = () => {
     name: '',
     code: '',
     credits: 1,
+    hours: 0,
     teaching_unit_id: '',
   })
   const [searchTerm, setSearchTerm] = useState('')
@@ -76,6 +77,7 @@ const CourseElements: React.FC = () => {
         name: element.name,
         code: element.code,
         credits: element.credits,
+        hours: element.hours || 0,
         teaching_unit_id: element.teaching_unit_id.toString(),
       })
     } else {
@@ -84,6 +86,7 @@ const CourseElements: React.FC = () => {
         name: '',
         code: '',
         credits: 1,
+        hours: 0,
         teaching_unit_id: '',
       })
     }
@@ -97,6 +100,7 @@ const CourseElements: React.FC = () => {
       name: '',
       code: '',
       credits: 1,
+      hours: 0,
       teaching_unit_id: '',
     })
   }
@@ -108,6 +112,7 @@ const CourseElements: React.FC = () => {
       const data = {
         ...formData,
         credits: formData.credits,
+        hours: Number(formData.hours) || 0,
         teaching_unit_id: parseInt(formData.teaching_unit_id)
       }
       
@@ -227,6 +232,7 @@ const CourseElements: React.FC = () => {
                     <CTableHeaderCell>Nom</CTableHeaderCell>
                     <CTableHeaderCell>UE</CTableHeaderCell>
                     <CTableHeaderCell>Crédits</CTableHeaderCell>
+                    <CTableHeaderCell>Volume horaire</CTableHeaderCell>
                     <CTableHeaderCell>Professeurs</CTableHeaderCell>
                     <CTableHeaderCell>Ressources</CTableHeaderCell>
                     <CTableHeaderCell>Actions</CTableHeaderCell>
@@ -235,13 +241,13 @@ const CourseElements: React.FC = () => {
                 <CTableBody>
                   {loading ? (
                     <CTableRow>
-                      <CTableDataCell colSpan={7} className="text-center">
+                      <CTableDataCell colSpan={8} className="text-center">
                         Chargement...
                       </CTableDataCell>
                     </CTableRow>
                   ) : courseElements.length === 0 ? (
                     <CTableRow>
-                      <CTableDataCell colSpan={7} className="text-center text-muted">
+                      <CTableDataCell colSpan={8} className="text-center text-muted">
                         {searchTerm ? 'Aucun ECUE ne correspond à votre recherche' : 'Aucun élément de cours trouvé'}
                       </CTableDataCell>
                     </CTableRow>
@@ -258,6 +264,11 @@ const CourseElements: React.FC = () => {
                         <CTableDataCell>
                           <CBadge color={getCreditsColor(element.credits)}>
                             {element.credits} ECTS
+                          </CBadge>
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <CBadge color="dark">
+                            {element.hours || 0} h
                           </CBadge>
                         </CTableDataCell>
                         <CTableDataCell>
@@ -353,6 +364,17 @@ const CourseElements: React.FC = () => {
                 min="1"
                 max="10"
                 required
+              />
+            </div>
+            <div className="mb-3">
+              <CFormLabel htmlFor="hours">Volume horaire (heures)</CFormLabel>
+              <CFormInput
+                type="number"
+                id="hours"
+                value={formData.hours}
+                onChange={(e) => setFormData({ ...formData, hours: parseInt(e.target.value) || 0 })}
+                min="0"
+                placeholder="ex: 30"
               />
             </div>
           </CModalBody>

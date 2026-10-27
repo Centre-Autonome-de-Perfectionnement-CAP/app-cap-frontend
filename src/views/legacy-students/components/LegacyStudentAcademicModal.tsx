@@ -20,8 +20,8 @@ interface Props {
 
 const EMPTY_COURSE: AcademicCourse = { name: "", code: "", professor: "", credits: 3, coefficient: 1, grade: 0, retake_grade: null, semester: "" }
 const EMPTY_RECORD: Omit<AcademicRecord, "id"> = { academic_year: "", level: "", semester: "", general_average: null, total_credits: null, obtained_credits: null, decision: "", mention: "", thesis_title: "", thesis_grade: null, thesis_date: "", quitus_accorded: false, courses: [], notes: "" }
-const DECISION_OPTIONS = [{ value: "", label: "— Décision —" }, { value: "pass", label: "Admis(e)" }, { value: "fail", label: "Ajourné(e)" }, { value: "repeat", label: "Redouble" }, { value: "excluded", label: "Exclu(e)" }]
-const MENTION_OPTIONS = [{ value: "", label: "— Mention —" }, { value: "Passable", label: "Passable" }, { value: "Assez Bien", label: "Assez Bien" }, { value: "Bien", label: "Bien" }, { value: "Très Bien", label: "Très Bien" }, { value: "Excellent", label: "Excellent" }]
+const DECISION_OPTIONS = [{ value: "", label: "- Décision -" }, { value: "pass", label: "Admis(e)" }, { value: "fail", label: "Ajourné(e)" }, { value: "repeat", label: "Redouble" }, { value: "excluded", label: "Exclu(e)" }]
+const MENTION_OPTIONS = [{ value: "", label: "- Mention -" }, { value: "Passable", label: "Passable" }, { value: "Assez Bien", label: "Assez Bien" }, { value: "Bien", label: "Bien" }, { value: "Très Bien", label: "Très Bien" }, { value: "Excellent", label: "Excellent" }]
 
 function getDecisionLabel(val?: string | null) { return DECISION_OPTIONS.find((d) => d.value === val)?.label ?? val ?? "—" }
 function getDecisionColor(val?: string | null) { switch (val) { case "pass": return "success"; case "fail": return "warning"; case "repeat": return "danger"; case "excluded": return "dark"; default: return "secondary" } }
@@ -192,7 +192,7 @@ const LegacyStudentAcademicModal: React.FC<Props> = ({ student, onClose }) => {
       <CModalHeader>
         <CModalTitle className="d-flex align-items-center gap-2">
           <CIcon icon={cilBook} />
-          Dossier académique — {student ? `${student.last_name} ${student.first_name} (${student.matricule})` : ""}
+          Dossier académique - {student ? `${student.last_name} ${student.first_name} (${student.matricule})` : ""}
         </CModalTitle>
       </CModalHeader>
       <CModalBody>
@@ -270,7 +270,7 @@ const LegacyStudentAcademicModal: React.FC<Props> = ({ student, onClose }) => {
           <>
             <div className="d-flex align-items-center gap-2 mb-3">
               <CButton size="sm" color="secondary" variant="ghost" onClick={() => { setMode("list"); setEditRecord(null) }}>← Retour</CButton>
-              <h6 className="mb-0 fw-semibold">{mode === "new" ? "Nouveau relevé académique" : `Modifier — ${editRecord?.academic_year}`}</h6>
+              <h6 className="mb-0 fw-semibold">{mode === "new" ? "Nouveau relevé académique" : `Modifier - ${editRecord?.academic_year}`}</h6>
             </div>
             <RecordForm
               initial={mode === "edit" && editRecord ? editRecord : EMPTY_RECORD}

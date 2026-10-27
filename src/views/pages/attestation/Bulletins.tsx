@@ -1,5 +1,5 @@
 // src/views/pages/attestation/Bulletins.tsx
-// Le bulletin nécessite une année académique sélectionnée — logique spéciale conservée.
+// Le bulletin nécessite une année académique sélectionnée - logique spéciale conservée.
 
 import { useState, useEffect, useCallback } from 'react'
 import {

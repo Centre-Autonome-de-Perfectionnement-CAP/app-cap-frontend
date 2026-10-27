@@ -81,7 +81,9 @@ export class HttpService {
         responseType: 'blob',
         headers: {
           'Accept': 'application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'Content-Type': 'application/json',
+          // Content-Type seulement pour un POST : sur un GET il est inutile et
+          // provoque une requête de vérification CORS supplémentaire.
+          ...(method === 'post' ? { 'Content-Type': 'application/json' } : {}),
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
       };
@@ -97,17 +99,11 @@ export class HttpService {
       
       const contentDisposition = response.headers['content-disposition'];
       let filename = undefined;
-      console.log('All headers:', response.headers);
-      console.log('Content-Disposition:', contentDisposition);
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[*]?=['"]?([^'"\s;]+)['"]?/i);
-        console.log('Filename match result:', filenameMatch);
         if (filenameMatch && filenameMatch[1]) {
           filename = decodeURIComponent(filenameMatch[1]);
-          console.log('Extracted filename:', filename);
         }
-      } else {
-        console.log('No Content-Disposition header found');
       }
       
       return { success: true, url: blobUrl, filename };
@@ -160,7 +156,7 @@ private request<T = any>(options: RequestOptions): Promise<T> {
       delete options.headers?.['Content-Type'];
       delete options.headers?.['content-type'];
 
-      // Injection explicite du token — garantit que le header Authorization
+      // Injection explicite du token - garantit que le header Authorization
       // est présent même quand l'intercepteur async ne s'applique pas
       // correctement sur les requêtes multipart.
       const token = localStorage.getItem('token');

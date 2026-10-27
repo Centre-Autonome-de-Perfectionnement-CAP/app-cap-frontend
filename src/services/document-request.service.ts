@@ -2,6 +2,7 @@
 
 import HttpService from './http.service'
 import type { WorkflowAction } from '@/types/document-request.types'
+import { localFileFrom } from '@/utils/base64File'
 
 const BASE = 'attestations/document-requests'
 
@@ -48,8 +49,27 @@ class DocumentRequestService {
   }
 
   /**
+   * Contenu d'une pièce pour le visualiseur, reçu en JSON (base64) puis
+   * reconstitué en fichier local. Les gestionnaires de téléchargement
+   * (Internet Download Manager…) interceptent les réponses PDF/image, même
+   * chargées en arrière-plan ; une réponse JSON n'est jamais interceptée.
+   */
+  previewFileContent = async (
+    id: number,
+    source: 'initial' | 'complement' | 'secretary',
+    key: string,
+  ): Promise<{ url: string; filename?: string; mime: string }> => {
+    const res: any = await HttpService.get(
+      `${BASE}/${id}/files/${source}/${encodeURIComponent(key)}?format=json`,
+    )
+    const data = res?.data
+    const { url, mime } = localFileFrom(data, key)
+    return { url, filename: data.name, mime }
+  }
+
+  /**
    * Historique d'une demande
-   * (✔️ AJOUTÉ — manquait dans ton service)
+   * (✔️ AJOUTÉ - manquait dans ton service)
    */
   getHistory = async (id: number) => {
     return HttpService.get(`${BASE}/${id}/history`)
@@ -60,6 +80,40 @@ class DocumentRequestService {
    */
   transition = async (id: number, payload: WorkflowAction) => {
     return HttpService.post(`${BASE}/${id}/transition`, payload)
+  }
+
+  // ── Commentaires des acteurs sur les pièces du dossier ───────────────────
+  // Tout acteur peut commenter ; seul l'auteur modifie / supprime ;
+  // l'historique (révisions, commentaires supprimés) n'est renvoyé qu'à la
+  // secrétaire et à l'administrateur.
+
+  listFileComments = async (id: number) => {
+    return HttpService.get(`${BASE}/${id}/file-comments`)
+  }
+
+  addFileComment = async (id: number, source: string, key: string, body: string) => {
+    return HttpService.post(`${BASE}/${id}/file-comments`, { file_source: source, file_key: key, body })
+  }
+
+  updateFileComment = async (id: number, commentId: number, body: string) => {
+    return HttpService.patch(`${BASE}/${id}/file-comments/${commentId}`, { body })
+  }
+
+  deleteFileComment = async (id: number, commentId: number) => {
+    return HttpService.delete(`${BASE}/${id}/file-comments/${commentId}`)
+  }
+
+  /**
+   * Message libre secrétaire → demandeur (texte + pièces jointes),
+   * envoyé par WhatsApp ET email. Réponse : détail succès/échec par canal
+   * avec motif exact en cas d'échec (voir ContactDemandeurModal).
+   */
+  contactDemandeur = async (id: number, message: string, attachments: File[]) => {
+    const formData = new FormData()
+    formData.append('message', message)
+    attachments.forEach(file => formData.append('attachments[]', file))
+
+    return HttpService.post(`${BASE}/${id}/contact-demandeur`, formData)
   }
 }
 

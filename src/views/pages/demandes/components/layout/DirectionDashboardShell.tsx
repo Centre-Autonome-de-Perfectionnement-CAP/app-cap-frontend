@@ -5,7 +5,7 @@
 //   - Header institutionnel avec profil acteur bien visible (nom, rôle, avatar)
 //   - Rangée de StatCards adaptées selon le rôle (cliquables → filtre actif)
 //   - Zone principale (children)
-//   - Pas de bouton portail — ces acteurs n'ont pas accès au portail
+//   - Pas de bouton portail - ces acteurs n'ont pas accès au portail
 
 import React, { useState } from 'react'
 import { CRow, CCol } from '@coreui/react'
@@ -35,7 +35,7 @@ interface Props {
   roleLabel: string
   /** Couleur accent du rôle (barre header + stat principale) */
   accentColor: string
-  /** Action du rôle — ex: "Documents à transmettre" */
+  /** Action du rôle - ex: "Documents à transmettre" */
   actionLabel: string
   /** Stats calculées par useDirectionStats */
   stats: DirectionStatsData
@@ -43,7 +43,7 @@ interface Props {
   /** Définitions des StatCards à afficher pour ce rôle */
   statDefs: StatDef[]
   children: React.ReactNode
-  /** Filtre actif (clé de stat) — contrôlé depuis le parent */
+  /** Filtre actif (clé de stat) - contrôlé depuis le parent */
   activeFilter?: keyof DirectionStatsData | null
   /** Callback quand une StatCard est cliquée */
   onFilterChange?: (key: keyof DirectionStatsData | null) => void
@@ -79,7 +79,7 @@ const StatCard = ({ label, icon, color, bg, border, urgent, value, loading, acti
         /* Bordure gauche épaissie pour plus de présence */
         borderLeft: `5px solid ${color}`,
         borderRadius: 12,
-        /* Padding généreux — libellés non compressés */
+        /* Padding généreux - libellés non compressés */
         padding: '14px 18px',
         /* Hauteur min augmentée */
         minHeight: 86,
@@ -103,7 +103,7 @@ const StatCard = ({ label, icon, color, bg, border, urgent, value, loading, acti
         display: 'flex',
         alignItems: 'flex-start',
         gap: 8,
-        /* wrap autorisé — libellés longs passent à la ligne */
+        /* wrap autorisé - libellés longs passent à la ligne */
         flexWrap: 'wrap',
         color: active ? '#fff' : color,
         fontWeight: 700,
@@ -167,7 +167,7 @@ const DirHeader = ({
         boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
       }}>
 
-        {/* Gauche — logos */}
+        {/* Gauche - logos */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
           <div style={{
             background: '#fff', borderRadius: 10, padding: '5px 10px',
@@ -187,14 +187,14 @@ const DirHeader = ({
               color: accentColor, letterSpacing: '0.12em', lineHeight: 1,
             }}>EPAC</span>
             <span style={{
-              fontSize: '0.62rem', color: `${accentColor}99`,
+              fontSize: '0.875rem', color: `${accentColor}99`,
               letterSpacing: '0.05em', textTransform: 'uppercase',
               lineHeight: 1, textAlign: 'center',
             }}>École Polytechnique</span>
           </div>
         </div>
 
-        {/* Centre — titre */}
+        {/* Centre - titre */}
         <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
           <div style={{
             fontSize: '1.25rem', fontWeight: 800, color: '#fff',
@@ -204,14 +204,14 @@ const DirHeader = ({
             {actionLabel}
           </div>
           <div style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)', marginTop: 1, fontWeight: 500 }}>
-            CAP Demandes — Gestion documentaire
+            CAP Demandes - Gestion documentaire
           </div>
         </div>
 
-        {/* Droite — profil acteur */}
+        {/* Droite - profil acteur */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
 
-          {/* Bloc identité — bien visible */}
+          {/* Bloc identité - bien visible */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             background: 'rgba(255,255,255,0.07)',
@@ -225,7 +225,7 @@ const DirHeader = ({
               background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
               border: `2px solid ${accentColor}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.82rem', fontWeight: 900, color: '#fff',
+              fontSize: '0.875rem', fontWeight: 900, color: '#fff',
               flexShrink: 0,
               boxShadow: `0 2px 8px ${accentColor}66`,
             }}>
@@ -235,7 +235,7 @@ const DirHeader = ({
             {/* Nom + rôle */}
             <div style={{ minWidth: 0 }}>
               <div style={{
-                fontSize: '0.85rem', fontWeight: 800, color: '#fff',
+                fontSize: '0.875rem', fontWeight: 800, color: '#fff',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                 maxWidth: 180,
               }}>
@@ -288,7 +288,7 @@ const DirectionDashboardShell = ({
 
     <main style={{ flex: 1, padding: '32px 40px' }}>
 
-      {/* Rangée de StatCards — colonnes adaptatives, gouttières généreuses */}
+      {/* Rangée de StatCards - colonnes adaptatives, gouttières généreuses */}
       <CRow className="mb-5 g-4">
         {statDefs.map(def => {
           const n  = statDefs.length

@@ -1,5 +1,5 @@
 // src/_nav/attestation.tsx
-// Navigation du module Attestation — génération de documents uniquement.
+// Navigation du module Attestation - génération de documents uniquement.
 // La gestion des demandes (workflow) est dans _nav/demandes.tsx
 
 import CIcon from '@coreui/icons-react'

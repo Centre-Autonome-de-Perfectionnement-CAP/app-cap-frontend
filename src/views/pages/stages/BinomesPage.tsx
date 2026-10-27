@@ -304,7 +304,7 @@ const PickIntern = ({ label, value, exclude, candidates, onChange }: {
   label: string; value: string; exclude: string; candidates: BinomeMember[]; onChange: (v: string) => void
 }) => (
   <div className="mb-3">
-    <CFormLabel className="fw-semibold small">{label}</CFormLabel>
+    <CFormLabel className="fw-semibold small">{label} <span className="text-danger">*</span></CFormLabel>
     <CFormSelect value={value} onChange={e => onChange(e.target.value)} aria-label={label}>
       <option value="">Choisir…</option>
       {candidates.filter(m => String(m.id) !== exclude).map(m => (

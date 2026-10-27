@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useParams, useSearchParams } from 'react-router-dom'
-import { CButton, CCard, CCardBody, CSpinner, CFormTextarea } from '@coreui/react'
+import { CButton, CCard, CCardBody, CSpinner, CFormLabel, CFormTextarea } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilSend, cilBan, cilCheckAlt, cilPencil, cilFile, cilHistory, cilCommentBubble, cilDescription, cilUser,
@@ -240,8 +240,8 @@ const StageDossierPage = () => {
           <Row l="Superviseur(s)" v={suivi.supervisors.length
             ? suivi.supervisors.map(s => s.name).join(', ')
             : <span style={{ color: '#b45309', fontWeight: 700 }}>Aucun</span>} />
-          <Row l="Binôme" v={suivi.team?.name ? <span className="stg-chip"><CIcon icon={cilGroup} style={{ width: 12 }} />{suivi.team.name}</span> : '—'} />
-          <Row l="Groupe WhatsApp" v={suivi.whatsapp_group ? <Pill color={WA_GROUP[suivi.whatsapp_group].color} bg={WA_GROUP[suivi.whatsapp_group].bg}>{WA_GROUP[suivi.whatsapp_group].label}</Pill> : '—'} />
+          <Row l="Binôme" v={suivi.team?.name ? <span className="stg-chip"><CIcon icon={cilGroup} style={{ width: 12 }} />{suivi.team.name}</span> : '-'} />
+          <Row l="Groupe WhatsApp" v={suivi.whatsapp_group ? <Pill color={WA_GROUP[suivi.whatsapp_group].color} bg={WA_GROUP[suivi.whatsapp_group].bg}>{WA_GROUP[suivi.whatsapp_group].label}</Pill> : '-'} />
           <Row l="Espace stagiaire" v={detail.activated_at ? `Activé le ${frDateTime(detail.activated_at)}` : 'Pas encore activé'} />
         </dl>
       </Section>
@@ -265,7 +265,7 @@ const StageDossierPage = () => {
           <Row l="Formation" v={detail.formation} />
           {!accepted && <Row l="Début souhaité" v={detail.date_debut_souhaitee ? frDate(detail.date_debut_souhaitee, true) : 'Non précisé'} />}
           {!accepted && <Row l="Durée souhaitée" v={detail.duree_souhaitee} />}
-          <Row l="Thème / service" v={detail.theme_souhaite || '—'} />
+          <Row l="Thème / service" v={detail.theme_souhaite || '-'} />
           <Row l="WhatsApp" v={<a href={`https://wa.me/${detail.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">{detail.whatsapp}</a>} />
           <Row l="Email" v={<a href={`mailto:${detail.email}`}>{detail.email}</a>} />
           <Row l="Demande déposée le" v={frDateTime(detail.created_at)} />
@@ -383,6 +383,7 @@ const StageDossierPage = () => {
             {mode === 'reject' && <>
               <h6 style={{ fontWeight: 800 }}>Ne pas retenir la demande</h6>
               <p className="stg-muted">Le motif ci-dessous (modifiable) sera envoyé au demandeur par WhatsApp et par email. Le formulaire de demande reste ouvert.</p>
+              <CFormLabel className="stg-label">Motif <span className="text-danger">*</span></CFormLabel>
               <CFormTextarea rows={5} maxLength={1000} value={note} onChange={e => setNote(e.target.value)} />
             </>}
             {formError && <div className="stg-err" style={{ marginTop: 12 }}>{formError}</div>}
@@ -500,7 +501,7 @@ const Terms = ({ t }: { t: StageTerms }) => (
     <Row l="Lieu" v={t.lieu} />
     <Row l="Début" v={frDate(t.date_debut, true)} />
     <Row l="Fin" v={frDate(t.date_fin, true)} />
-    <Row l="Durée" v={durationLabel(t.date_debut, t.date_fin) ?? '—'} />
+    <Row l="Durée" v={durationLabel(t.date_debut, t.date_fin) ?? '-'} />
     <Row l="Horaires" v={horairesLabel(t.horaires)} />
   </dl>
 )

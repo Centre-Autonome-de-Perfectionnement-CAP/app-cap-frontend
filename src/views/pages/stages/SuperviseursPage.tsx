@@ -78,7 +78,7 @@ const SuperviseursPage = () => {
               <div key={s.id} className="stg-card stg-row2">
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <strong>{s.name}</strong>
-                  <div className="stg-muted">{s.phone ?? '—'} · {s.email}</div>
+                  <div className="stg-muted">{s.phone ?? '-'} · {s.email}</div>
                 </div>
                 <span className="stg-chip">{s.active_interns} stagiaire(s) en cours</span>
                 <span className="stg-muted">depuis le {frDate(s.since)}</span>
@@ -157,7 +157,7 @@ const InviteModal = ({ visible, onClose, onDone }: { visible: boolean; onClose: 
     <CModal visible={visible} onClose={onClose} alignment="center" fullscreen="sm">
       <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Inviter des superviseurs</CModalTitle></CModalHeader>
       <CModalBody>
-        <label className="fw-semibold small mb-1">Numéro(s) WhatsApp</label>
+        <label className="fw-semibold small mb-1">Numéro(s) WhatsApp <span className="text-danger">*</span></label>
         <PhoneListField value={phones} onChange={v => { setPhones(v); setErr(null) }} disabled={busy} />
         {count === 1 && (
           <>

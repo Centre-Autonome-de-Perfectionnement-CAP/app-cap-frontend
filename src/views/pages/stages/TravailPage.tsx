@@ -124,14 +124,14 @@ const TravailPage = () => {
             <strong>Fiche</strong>
             <CRow className="g-3 mt-0">
               <CCol md={5}>
-                <CFormLabel className="fw-semibold small">Type</CFormLabel>
+                <CFormLabel className="fw-semibold small">Type <span className="text-danger">*</span></CFormLabel>
                 <CFormSelect value={form.kind} onChange={e => set('kind', e.target.value as WorkForm['kind'])}>
                   <option value="rapport_stage">Rapport de fin de formation</option>
                   <option value="memoire">Mémoire</option>
                 </CFormSelect>
               </CCol>
               <CCol md={7}>
-                <CFormLabel className="fw-semibold small">Titre (thème)</CFormLabel>
+                <CFormLabel className="fw-semibold small">Titre (thème) <span className="text-danger">*</span></CFormLabel>
                 <CFormInput value={form.title} maxLength={300} onChange={e => set('title', e.target.value)} />
               </CCol>
               <CCol xs={12}>
@@ -163,21 +163,21 @@ const TravailPage = () => {
               <CCol xs={6} md={4}>
                 <CFormLabel className="fw-semibold small">Niveau</CFormLabel>
                 <CFormSelect value={form.cycle} onChange={e => setForm(f => ({ ...f, cycle: e.target.value, annee_etude: '' }))}>
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {STUDY_CYCLES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </CFormSelect>
               </CCol>
               <CCol xs={6} md={3}>
                 <CFormLabel className="fw-semibold small">Année</CFormLabel>
                 <CFormSelect value={form.annee_etude} disabled={years.length === 0} onChange={e => set('annee_etude', e.target.value)}>
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {years.map(y => <option key={y.value} value={y.value}>{y.label}</option>)}
                 </CFormSelect>
               </CCol>
             </CRow>
 
             <div style={{ display: 'flex', alignItems: 'center', marginTop: 22 }}>
-              <strong style={{ flex: 1 }}>Personnes</strong>
+              <strong style={{ flex: 1 }}>Personnes <span className="text-danger">*</span></strong>
               <CButton size="sm" color="primary" variant="ghost" disabled={form.people.length >= 12}
                 onClick={() => set('people', [...form.people, { role: 'auteur', name: '', fonction: null, email: null, phone: null }])}>
                 <CIcon icon={cilPlus} className="me-1" />Ajouter
@@ -189,7 +189,7 @@ const TravailPage = () => {
                 <CFormSelect size="sm" value={p.role} onChange={e => setPerson(i, { role: e.target.value as PersonRole })} aria-label="Rôle">
                   {Object.entries(ROLES).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
                 </CFormSelect>
-                <CFormInput size="sm" className="name" value={p.name} maxLength={150} onChange={e => setPerson(i, { name: e.target.value })} placeholder="Nom et prénoms" aria-label="Nom" />
+                <CFormInput size="sm" className="name" value={p.name} maxLength={150} onChange={e => setPerson(i, { name: e.target.value })} placeholder="Nom et prénoms *" aria-label="Nom (obligatoire)" required />
                 <CButton size="sm" className="del" color="danger" variant="ghost" disabled={form.people.length === 1} onClick={() => set('people', form.people.filter((_, j) => j !== i))} title="Retirer"><CIcon icon={cilTrash} /></CButton>
                 <CFormInput size="sm" value={p.fonction ?? ''} maxLength={150} onChange={e => setPerson(i, { fonction: e.target.value || null })} placeholder="Fonction (facultatif)" aria-label="Fonction" />
                 <CFormInput size="sm" type="email" value={p.email ?? ''} maxLength={254} onChange={e => setPerson(i, { email: e.target.value || null })} placeholder="Email" aria-label="Email" />
@@ -199,7 +199,7 @@ const TravailPage = () => {
 
             {isNew && (
               <div style={{ marginTop: 18 }}>
-                <CFormLabel className="fw-semibold small">Document (PDF, {UPLOAD_LIMIT_MB.REPORT} Mo maximum)</CFormLabel>
+                <CFormLabel className="fw-semibold small">Document (PDF, {UPLOAD_LIMIT_MB.REPORT} Mo maximum) <span className="text-danger">*</span></CFormLabel>
                 <CFormInput type="file" accept="application/pdf" onChange={e => pickFile(e.target.files?.[0] ?? null)} />
               </div>
             )}
@@ -239,7 +239,7 @@ const TravailPage = () => {
                   label="Par lien : seules les personnes à qui vous donnez le lien" />
                 <CFormCheck className="mt-2" id="dl" checked={pub.downloadable} onChange={e => setPub(p => ({ ...p, downloadable: e.target.checked }))}
                   label="Document complet en accès libre (sinon, seule la fiche est visible)" />
-                <CFormLabel className="fw-semibold small mt-2">Licence</CFormLabel>
+                <CFormLabel className="fw-semibold small mt-2">Licence <span className="text-danger">*</span></CFormLabel>
                 <CFormSelect size="sm" value={pub.license} onChange={e => setPub(p => ({ ...p, license: e.target.value }))}>
                   {Object.entries(LICENSES).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
                 </CFormSelect>
@@ -281,7 +281,7 @@ const TravailPage = () => {
                 ? <div className="stg-muted" style={{ marginTop: 6 }}>Aucun message pour l'instant.</div>
                 : work.messages.map(m => (
                   <div key={m.id} style={{ borderTop: '1px solid #f1f5f9', padding: '10px 0' }}>
-                    <div style={{ fontWeight: 600 }}>{m.sender_name} <span className="stg-muted">→ {m.to_name ?? '—'} · {frDateTime(m.created_at)}</span></div>
+                    <div style={{ fontWeight: 600 }}>{m.sender_name} <span className="stg-muted">→ {m.to_name ?? '-'} · {frDateTime(m.created_at)}</span></div>
                     <div className="stg-muted">{m.sender_email}</div>
                     <div style={{ whiteSpace: 'pre-line', marginTop: 4 }}>{m.message}</div>
                   </div>

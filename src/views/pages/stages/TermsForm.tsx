@@ -64,7 +64,7 @@ const TermsForm = ({ value, onChange, note, onNoteChange, noteLabel, noteRequire
         </CCol>
 
         <CCol xs={12}>
-          <CFormLabel className="stg-label mb-1">Horaires</CFormLabel>
+          <CFormLabel className="stg-label mb-1">Horaires <span className="text-danger">*</span></CFormLabel>
           <div className="stg-hours">
             {([
               ['arrivee', 'Arrivée'], ['pause_debut', 'Début pause'],

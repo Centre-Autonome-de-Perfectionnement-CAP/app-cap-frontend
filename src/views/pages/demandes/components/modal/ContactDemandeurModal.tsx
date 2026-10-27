@@ -252,7 +252,7 @@ const ContactDemandeurModal = ({ demande, visible, onClose }: Props) => {
             )}
 
             <label style={{ display: 'block', fontWeight: 700, fontSize: '0.875rem', color: '#334155', marginBottom: 8 }}>
-              Message
+              Message <span className="text-danger">*</span>
             </label>
             <CFormTextarea
               rows={5}

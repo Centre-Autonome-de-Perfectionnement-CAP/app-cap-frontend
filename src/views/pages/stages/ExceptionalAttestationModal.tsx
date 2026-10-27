@@ -4,8 +4,9 @@
 
 import { useEffect, useState } from 'react'
 import {
-  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton, CSpinner, CFormInput, CFormTextarea, CFormLabel,
+  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton, CSpinner, CFormTextarea, CFormLabel,
 } from '@coreui/react'
+import PasswordInput from '@/components/forms/PasswordInput'
 import stageService, { type Attestation } from '@/services/stage.service'
 import { showSuccess, friendlyError } from '@/components/common/ActionResult'
 
@@ -56,10 +57,10 @@ const ExceptionalAttestationModal = ({ visible, stage, onClose, onDone }: Props)
           Pour <strong>{stage.nom_complet}</strong>, sans exiger les conditions habituelles. Le motif et votre nom sont conservés dans l'historique.
         </p>
         <form onSubmit={e => { e.preventDefault(); submit() }}>
-          <CFormLabel className="small fw-semibold mb-1">Motif</CFormLabel>
+          <CFormLabel className="small fw-semibold mb-1">Motif <span className="text-danger">*</span></CFormLabel>
           <CFormTextarea rows={3} maxLength={1000} value={motif} onChange={e => setMotif(e.target.value)} autoFocus />
-          <CFormLabel className="small fw-semibold mb-1 mt-3">Votre mot de passe</CFormLabel>
-          <CFormInput type="password" autoComplete="current-password" maxLength={255} value={password} onChange={e => setPassword(e.target.value)} />
+          <CFormLabel className="small fw-semibold mb-1 mt-3">Votre mot de passe <span className="text-danger">*</span></CFormLabel>
+          <PasswordInput autoComplete="current-password" maxLength={255} value={password} onChange={e => setPassword(e.target.value)} />
           <button type="submit" hidden aria-hidden />
         </form>
         {err && <div className="stg-err" style={{ marginTop: 12, marginBottom: 0 }}>{err}</div>}

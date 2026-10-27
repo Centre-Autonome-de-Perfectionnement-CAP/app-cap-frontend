@@ -59,7 +59,7 @@ const RetourSecretaireModal = ({ visible, demande, loading = false, onClose, onC
         <label htmlFor="retour-secretaire-comment" style={{
           display: 'block', fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', marginBottom: 4,
         }}>
-          Qu'avez-vous vérifié ou corrigé ?
+          Qu'avez-vous vérifié ou corrigé ? <span className="text-danger">*</span>
         </label>
         <p style={{ fontSize: '0.875rem', color: '#64748b', margin: '0 0 10px' }}>
           Quelques mots suffisent. La Secrétaire les verra dans l'historique du dossier.

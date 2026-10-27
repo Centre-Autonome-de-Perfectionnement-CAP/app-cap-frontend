@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react'
 import {
-  CButton, CFormSelect, CSpinner, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
+  CButton, CFormSelect, CSpinner, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CFormLabel,
 } from '@coreui/react'
 import stageService, { type Supervisor } from '@/services/stage.service'
 import { showSuccess, friendlyError } from '@/components/common/ActionResult'
@@ -49,10 +49,13 @@ const SupervisorAssignModal = ({ visible, ids, title, onClose, onDone }: {
         {!sups && !err && <CSpinner size="sm" color="primary" />}
         {sups && sups.length === 0 && <p className="stg-muted">Aucun superviseur inscrit. Invitez-en depuis la page « Superviseurs ».</p>}
         {sups && sups.length > 0 && (
-          <CFormSelect value={supId} onChange={e => setSupId(e.target.value)} aria-label="Superviseur">
-            <option value="">Choisir un superviseur…</option>
-            {sups.map(s => <option key={s.id} value={s.id}>{s.name} - {s.active_interns} stagiaire(s) en cours</option>)}
-          </CFormSelect>
+          <>
+            <CFormLabel className="fw-semibold small">Superviseur <span className="text-danger">*</span></CFormLabel>
+            <CFormSelect value={supId} onChange={e => setSupId(e.target.value)} aria-label="Superviseur">
+              <option value="">Choisir un superviseur…</option>
+              {sups.map(s => <option key={s.id} value={s.id}>{s.name} - {s.active_interns} stagiaire(s) en cours</option>)}
+            </CFormSelect>
+          </>
         )}
         {err && <div className="stg-err" style={{ marginTop: 12 }}>{err}</div>}
       </CModalBody>

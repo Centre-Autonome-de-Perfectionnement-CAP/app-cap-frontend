@@ -16,6 +16,8 @@ const AttestationsPage = React.lazy(() => import('./AttestationsPage'))
 const DashboardPage = React.lazy(() => import('./DashboardPage'))
 const StageDossierPage = React.lazy(() => import('./StageDossierPage'))
 const ReglagesPage = React.lazy(() => import('./ReglagesPage'))
+const BibliothequePage = React.lazy(() => import('./BibliothequePage'))
+const TravailPage = React.lazy(() => import('./TravailPage'))
 
 /** Accueil du module : un lien reçu (?ref=…) ouvre le dossier ; sinon le tableau de bord. */
 const Home = () => {
@@ -67,6 +69,8 @@ const StagesRoutes = () => (
           <Route path="/attestations" element={<SecretariatOrLead><AttestationsPage /></SecretariatOrLead>} />
           <Route path="/superviseurs" element={<LeadOnly><SuperviseursPage /></LeadOnly>} />
           <Route path="/reglages" element={<LeadOnly><ReglagesPage /></LeadOnly>} />
+          <Route path="/bibliotheque" element={<LeadOnly><BibliothequePage /></LeadOnly>} />
+          <Route path="/bibliotheque/:id" element={<LeadOnly><TravailPage /></LeadOnly>} />
           <Route path="/groupe-whatsapp" element={<Navigate to="/stages/reglages?onglet=whatsapp" replace />} />
           <Route path="*" element={<Navigate to="/stages" replace />} />
         </Routes>

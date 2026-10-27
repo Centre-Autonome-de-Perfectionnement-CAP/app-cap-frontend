@@ -3,7 +3,7 @@
 // les pages réservées au responsable (attestations, superviseurs,
 // réglages) ; le secrétariat ne voit que les attestations.
 import CIcon from '@coreui/icons-react'
-import { cilBriefcase, cilPeople, cilUserFollow, cilGroup, cilTask, cilDescription, cilBadge, cilSpeedometer, cilSettings } from '@coreui/icons'
+import { cilBriefcase, cilPeople, cilUserFollow, cilGroup, cilTask, cilDescription, cilBadge, cilSpeedometer, cilSettings, cilLibrary } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
 const getStagesNavigation = (role: string | null) => {
@@ -21,6 +21,7 @@ const getStagesNavigation = (role: string | null) => {
     ...(lead ? [
       attestations,
       { component: CNavItem, name: 'Superviseurs', to: '/stages/superviseurs', icon: <CIcon icon={cilUserFollow} customClassName="nav-icon" /> },
+      { component: CNavItem, name: 'Bibliothèque', to: '/stages/bibliotheque', icon: <CIcon icon={cilLibrary} customClassName="nav-icon" /> },
       { component: CNavItem, name: 'Réglages', to: '/stages/reglages', icon: <CIcon icon={cilSettings} customClassName="nav-icon" /> },
     ] : []),
   ]

@@ -148,3 +148,25 @@ export const INTERN_SCOPES: Record<InternScope, string> = {
   all:          'Tous',
 }
 
+
+/** Niveau d'études : cycle puis année (même liste que le serveur, StudyLevel). */
+export const STUDY_CYCLES: { value: string; label: string; years: number }[] = [
+  { value: 'licence', label: 'Licence', years: 3 },
+  { value: 'master', label: 'Master', years: 2 },
+  { value: 'ingenieur', label: 'Cycle ingénieur', years: 5 },
+  { value: 'bts', label: 'BTS', years: 2 },
+  { value: 'doctorat', label: 'Doctorat', years: 3 },
+  { value: 'autre', label: 'Autre', years: 0 },
+]
+
+export const studyYears = (cycle: string | null | undefined): { value: string; label: string }[] =>
+  Array.from({ length: STUDY_CYCLES.find(c => c.value === cycle)?.years ?? 0 }, (_, i) => ({
+    value: String(i + 1),
+    label: cycle === 'licence' || cycle === 'master' ? `${cycle === 'licence' ? 'Licence' : 'Master'} ${i + 1}` : `${i === 0 ? '1re' : `${i + 1}e`} année`,
+  }))
+
+/** Statuts d'un travail de la bibliothèque. */
+export const WORK_STATUS: Record<'proposed' | 'draft' | 'published' | 'unpublished', { color: string; bg: string }> = {
+  proposed: { color: '#b45309', bg: '#fffbeb' }, draft: { color: '#475569', bg: '#f1f5f9' },
+  published: { color: '#047857', bg: '#ecfdf5' }, unpublished: { color: '#9f1239', bg: '#fff1f2' },
+}

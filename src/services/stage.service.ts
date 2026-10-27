@@ -386,7 +386,7 @@ export interface BinomesOverview { teams: StageTeam[]; requests: StageTeam[]; in
 
 export interface WhatsAppGroupOverview {
   year: number
-  group: { id: number; name: string; origin: 'created' | 'linked'; created_at: string; members: number } | null
+  group: { id: number; name: string; origin: 'created' | 'linked'; created_at: string; members: number; supervisors: number } | null
   waiting: number
   history: { id: number; year: number; name: string; origin: string; created_at: string; dissolved_at: string | null }[]
 }

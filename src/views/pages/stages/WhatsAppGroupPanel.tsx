@@ -65,7 +65,7 @@ const WhatsAppGroupPanel = () => {
                       <span className="stg-chip">{g.origin === 'created' ? 'Créé par la plateforme' : 'Groupe existant'}</span>
                     </div>
                     <div className="stg-muted" style={{ marginTop: 4 }}>
-                      {g.members} stagiaire(s) ajouté(s) · depuis le {frDate(g.created_at)}
+                      {g.members} stagiaire(s) et {g.supervisors} superviseur(s) dans le groupe · depuis le {frDate(g.created_at)}
                       {data.waiting > 0 && ` · ${data.waiting} stagiaire(s) en cours pas encore ajouté(s)`}
                     </div>
                   </>
@@ -109,7 +109,8 @@ const WhatsAppGroupPanel = () => {
 
             <div style={{ marginTop: 16, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px', fontSize: '.875rem', color: '#475569' }}>
               Chaque stagiaire est ajouté le jour où son stage commence ; si ses réglages WhatsApp l'empêchent, il reçoit le lien du groupe en privé.
-              Il en est retiré une semaine après la fin de son stage. La mise à jour se fait automatiquement chaque jour.
+              Il en est retiré une semaine après la fin de son stage. Les superviseurs y sont ajoutés aussi, et retirés s'ils ne le sont plus.
+              La mise à jour se fait automatiquement chaque jour (10h30).
             </div>
           </CCardBody>
         </CCard>

@@ -10,6 +10,7 @@ import {
 import stageService, { type StageSettings } from '@/services/stage.service'
 import { showSuccess, friendlyError } from '@/components/common/ActionResult'
 import { UPLOAD_LIMIT_MB, isTooHeavy } from '@/constants/validation.constants'
+import ReglementEditor from './ReglementEditor'
 
 const StageSettingsForm = () => {
   const [form, setForm] = useState<StageSettings | null>(null)
@@ -227,10 +228,10 @@ const StageSettingsForm = () => {
             <CCol xs={12}><hr className="my-1" /></CCol>
             <CCol xs={12}>
               <CFormLabel className="fw-semibold small">Règlement intérieur (version {form.reglement_version}) <span className="text-danger">*</span></CFormLabel>
-              <CFormTextarea rows={8} maxLength={10000} value={form.reglement_text} onChange={e => set('reglement_text', e.target.value)} />
+              <ReglementEditor value={form.reglement_text} onChange={v => set('reglement_text', v)} />
               <div style={{ fontSize: '.875rem', color: '#64748b', marginTop: 4 }}>
-                Toute modification crée une nouvelle version : chaque stagiaire devra la relire et l'accepter.
-                Mise en forme : <b>**texte**</b> en gras, <b style={{ color: '#be123c' }}>!!texte!!</b> en gras rouge ; un paragraphe qui commence par !!…!! est encadré.
+                Toute modification crée une nouvelle version : chaque stagiaire en cours de stage devra la relire et l'accepter.
+                Sélectionnez un passage puis cliquez sur un bouton de mise en forme ; « Aperçu » montre le règlement tel que le stagiaire le verra.
                 Remplacés automatiquement à l'affichage : {'{horaires}'} (horaires du stagiaire), {'{tolerance}'} (minutes avant retard),
                 {' {delai_permission}'} (jours ouvrés), {'{rapports}'} (fréquence des rapports), {'{seuil}'} (assiduité minimale).
               </div>

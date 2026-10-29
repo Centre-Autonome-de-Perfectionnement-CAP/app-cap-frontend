@@ -1,5 +1,5 @@
 import { Component, ReactNode, ErrorInfo } from 'react'
-import { CCard, CCardBody, CButton, CAlert } from '@coreui/react'
+import { CCard, CCardBody, CButton, CAlert, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilWarning } from '@coreui/icons'
 import { isChunkLoadError, reloadForNewVersion } from '@/utils/chunkReload'
@@ -13,6 +13,8 @@ interface ErrorBoundaryState {
   hasError: boolean
   error: Error | null
   errorInfo: ErrorInfo | null
+  /** Nouvelle version en ligne : rechargement en cours, aucune erreur affichée. */
+  updating: boolean
 }
 
 /**
@@ -26,11 +28,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       hasError: false,
       error: null,
       errorInfo: null,
+      updating: false,
     }
   }
 
-  static getDerivedStateFromError(_error: Error): Partial<ErrorBoundaryState> {
-    return { hasError: true }
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { hasError: true, updating: isChunkLoadError(error) }
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
@@ -41,6 +44,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     this.setState({
       error,
       errorInfo,
+      updating: false,
     })
 
     // Vous pouvez envoyer l'erreur à un service de logging ici
@@ -52,10 +56,20 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       hasError: false,
       error: null,
       errorInfo: null,
+      updating: false,
     })
   }
 
   render(): ReactNode {
+    // Rechargement vers la nouvelle version : écran neutre, jamais d'erreur.
+    if (this.state.updating) {
+      return (
+        <div className="min-vh-100 d-flex flex-column align-items-center justify-content-center gap-3 p-3" role="status" aria-live="polite">
+          <CSpinner color="primary" />
+          <span className="text-body-secondary">Mise à jour de l'application…</span>
+        </div>
+      )
+    }
     if (this.state.hasError) {
       // Si un fallback personnalisé est fourni, l'utiliser
       if (this.props.fallback) {

@@ -109,9 +109,16 @@ export class HttpService {
       return { success: true, url: blobUrl, filename };
     } catch (error: any) {
       if (error.response?.data instanceof Blob) {
+        // Message du serveur s'il est en JSON ; sinon (réponse vide, page
+        // d'erreur HTML) l'erreur d'origine, traduite par friendlyError.
         const text = await error.response.data.text();
-        const json = JSON.parse(text);
-        throw new Error(json.message);
+        let message: unknown;
+        try {
+          message = text ? JSON.parse(text)?.message : undefined;
+        } catch {
+          message = undefined;
+        }
+        if (typeof message === 'string' && message.trim()) throw new Error(message);
       }
       throw error;
     }

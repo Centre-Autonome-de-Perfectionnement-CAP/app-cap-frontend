@@ -60,11 +60,16 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
         isClearable={isClearable}
         isSearchable
         isMulti={multiple}
+        // Liste ouverte au-dessus de tout : jamais coupée par une fenêtre
+        // (modale) ou un bloc qui défile.
+        menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+        menuPlacement="auto"
         styles={{
           control: (base) => ({
             ...base,
             minHeight: '37px',
           }),
+          menuPortal: (base) => ({ ...base, zIndex: 2000 }),
         }}
       />
     </div>

@@ -215,16 +215,20 @@ const TravailPage = () => {
           <CCol lg={5}>
             <CCard className="border-0 shadow-sm mb-3" style={{ borderRadius: 14 }}><CCardBody>
               <strong>Document</strong>
+              {work.has_file && work.file_origin === 'rapport' && (
+                <div className="stg-muted" style={{ marginTop: 6 }}>Rapport validé du stagiaire : rien à ajouter. Une version corrigée après soutenance le remplace d'elle-même.</div>
+              )}
+              {!work.has_file && work.source_type === 'stage_report' && (
+                <div className="stg-muted" style={{ marginTop: 6 }}>Le rapport du stagiaire apparaîtra ici dès qu'il sera validé.</div>
+              )}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-                {work.has_file && <CButton size="sm" color="secondary" variant="outline" onClick={() => setViewing(true)}>Voir le PDF</CButton>}
-                <label className="btn btn-sm btn-outline-primary mb-0">
-                  {busy === 'file' && <CSpinner size="sm" className="me-1" />}{work.has_file ? 'Remplacer le PDF' : 'Ajouter le PDF'}
+                {work.has_file && <CButton size="sm" color="primary" variant="outline" onClick={() => setViewing(true)}>Voir le PDF</CButton>}
+                <label className={`btn btn-sm mb-0 ${work.has_file ? 'btn-link px-0' : 'btn-outline-primary'}`}>
+                  {busy === 'file' && <CSpinner size="sm" className="me-1" />}
+                  {!work.has_file ? 'Ajouter le PDF' : work.file_origin === 'rapport' ? 'Utiliser un autre PDF' : 'Remplacer le PDF'}
                   <input type="file" accept="application/pdf" hidden onChange={e => pickFile(e.target.files?.[0] ?? null)} />
                 </label>
               </div>
-              {!work.has_file && work.source_type === 'stage_report' && (
-                <div className="stg-muted" style={{ marginTop: 8 }}>Le rapport validé du stagiaire est repris automatiquement à la publication.</div>
-              )}
             </CCardBody></CCard>
 
             <CCard className="border-0 shadow-sm mb-3" style={{ borderRadius: 14 }}><CCardBody>
@@ -245,7 +249,8 @@ const TravailPage = () => {
                 </CFormSelect>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
-                <CButton color="success" style={{ color: '#fff' }} disabled={!!busy} onClick={publish}>
+                <CButton color="success" style={{ color: '#fff' }} disabled={!!busy || !work.has_file} onClick={publish}
+                  title={work.has_file ? undefined : 'Le document doit être disponible avant la publication'}>
                   {busy === 'publish' && <CSpinner size="sm" className="me-1" />}{published ? 'Mettre à jour la publication' : 'Publier'}
                 </CButton>
                 {published && <CButton color="danger" variant="outline" disabled={!!busy} onClick={() => run('unpublish', async () => apply(await bibliothequeService.unpublish(work.id)))}>Retirer</CButton>}

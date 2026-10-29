@@ -22,7 +22,9 @@ export interface WorkPerson { id?: number; role: PersonRole; name: string; fonct
 export interface WorkDetail extends WorkRow {
   summary: string | null; keywords: string[]; etablissement: string | null; universite: string | null
   filiere: string | null; cycle: string | null; annee_etude: number | null
-  license: 'tous_droits' | 'cc_by_nc'; downloadable: boolean; has_file: boolean; authors_consent: boolean
+  license: 'tous_droits' | 'cc_by_nc'; downloadable: boolean; has_file: boolean
+  /** « rapport » : PDF du rapport validé du stagiaire, repris sans rien ajouter. */
+  file_origin: 'travail' | 'rapport'; authors_consent: boolean
   people: WorkPerson[]; share_url: string
   messages: { id: number; sender_name: string; sender_email: string; message: string; created_at: string; to_name: string | null }[]
 }

@@ -144,79 +144,62 @@ const MessagesTable: React.FC<Props> = ({ status }) => {
             ))}
           </div>
 
-          {/* Ordinateur : tableau */}
+          {/* Ordinateur : tableau à largeurs fixes (aucune colonne ne déborde sur
+              une autre) ; textes longs coupés proprement, entiers au survol. */}
           <div className="d-none d-lg-block">
-          <CTable hover responsive small>
+          <CTable hover small align="middle" className="wa-table mb-0">
+            <colgroup>
+              <col style={{ width: 170 }} />
+              <col />
+              {status === 'failed' && <col style={{ width: '26%' }} />}
+              <col style={{ width: 92 }} />
+              <col style={{ width: 150 }} />
+              {status === 'failed' && <col style={{ width: 120 }} />}
+            </colgroup>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell>Module</CTableHeaderCell>
                 <CTableHeaderCell>Destinataire</CTableHeaderCell>
                 <CTableHeaderCell>Message</CTableHeaderCell>
-                <CTableHeaderCell>Contexte</CTableHeaderCell>
-                <CTableHeaderCell>Tentatives</CTableHeaderCell>
                 {status === 'failed' && <CTableHeaderCell>Erreur</CTableHeaderCell>}
-                <CTableHeaderCell>
-                  {status === 'sent' ? 'Envoyé le' : 'Mis en file le'}
-                </CTableHeaderCell>
-                {status === 'failed' && <CTableHeaderCell>Action</CTableHeaderCell>}
+                <CTableHeaderCell className="text-center">Tentatives</CTableHeaderCell>
+                <CTableHeaderCell>{status === 'sent' ? 'Envoyé le' : 'Mis en file le'}</CTableHeaderCell>
+                {status === 'failed' && <CTableHeaderCell />}
               </CTableRow>
             </CTableHead>
             <CTableBody>
               {rows.map((row) => (
                 <CTableRow key={row.id}>
                   <CTableDataCell>
-                    <CBadge color="info">{row.module ?? 'inconnu'}</CBadge>
+                    <div className="fw-semibold text-truncate" title={row.recipient}>{row.recipient}</div>
+                    <CBadge color="info" className="mt-1">{row.module ?? 'inconnu'}</CBadge>
                   </CTableDataCell>
 
-                  <CTableDataCell className="text-nowrap">{row.recipient}</CTableDataCell>
-
-                  <CTableDataCell style={{ maxWidth: 280 }}>
-                    {row.media_type !== 'text' && (
-                      <CBadge color="secondary" className="me-1">
-                        {row.file_name}
-                      </CBadge>
+                  <CTableDataCell>
+                    {row.media_type !== 'text' && row.file_name && (
+                      <div className="text-truncate small fw-semibold text-secondary mb-1" title={row.file_name}>📎 {row.file_name}</div>
                     )}
-                    <span
-                      className="text-truncate d-inline-block align-middle"
-                      style={{ maxWidth: 240 }}
-                      title={row.message ?? ''}
-                    >
+                    <div className="wa-clamp" title={row.message ?? ''}>
                       {row.message || <span className="text-muted fst-italic">-</span>}
-                    </span>
+                    </div>
+                    {row.context && <div className="text-truncate small text-muted mt-1" title={row.context}>{row.context}</div>}
                   </CTableDataCell>
-
-                  <CTableDataCell>
-                    <span className="text-muted small">{row.context ?? '-'}</span>
-                  </CTableDataCell>
-
-                  <CTableDataCell>
-                    <CBadge color={row.attempts > 1 ? 'warning' : 'secondary'}>
-                      {row.attempts}
-                    </CBadge>
-                  </CTableDataCell>
-
-                  {status === 'failed' && (
-                    <CTableDataCell className="text-danger small" style={{ maxWidth: 200 }}>
-                      {row.last_error ?? '-'}
-                    </CTableDataCell>
-                  )}
-
-                  <CTableDataCell className="text-nowrap small">{dateOf(row)}</CTableDataCell>
 
                   {status === 'failed' && (
                     <CTableDataCell>
-                      <CButton
-                        color="secondary"
-                        variant="ghost"
-                        size="sm"
-                        disabled={retryingId === row.id}
-                        onClick={() => handleRetry(row.id)}
-                        title="Réessayer l'envoi"
-                      >
-                        {retryingId === row.id
-                          ? <CSpinner size="sm" />
-                          : <CIcon icon={cilReload} />
-                        }
+                      <div className="wa-clamp text-danger small" title={row.last_error ?? ''}>{row.last_error ?? '-'}</div>
+                    </CTableDataCell>
+                  )}
+
+                  <CTableDataCell className="text-center">
+                    <CBadge color={row.attempts > 1 ? 'warning' : 'secondary'}>{row.attempts}</CBadge>
+                  </CTableDataCell>
+
+                  <CTableDataCell className="small">{dateOf(row)}</CTableDataCell>
+
+                  {status === 'failed' && (
+                    <CTableDataCell className="text-end">
+                      <CButton color="secondary" variant="outline" size="sm" disabled={retryingId === row.id} onClick={() => handleRetry(row.id)}>
+                        {retryingId === row.id ? <CSpinner size="sm" /> : <><CIcon icon={cilReload} className="me-1" />Réessayer</>}
                       </CButton>
                     </CTableDataCell>
                   )}
@@ -225,6 +208,12 @@ const MessagesTable: React.FC<Props> = ({ status }) => {
             </CTableBody>
           </CTable>
           </div>
+          <style>{`
+            .wa-table { table-layout: fixed; width: 100%; }
+            .wa-table td, .wa-table th { overflow: hidden; vertical-align: top; padding-top: .7rem; padding-bottom: .7rem; }
+            .wa-table th { white-space: nowrap; }
+            .wa-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; white-space: pre-line; }
+          `}</style>
 
           {/* Pagination compacte : lisible à toutes les tailles, même avec beaucoup de pages */}
           {lastPage > 1 && (

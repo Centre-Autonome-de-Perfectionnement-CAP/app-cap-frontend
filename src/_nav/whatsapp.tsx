@@ -19,6 +19,7 @@ const whatsappNavigation = [
     component: CNavItem,
     name: 'Connexion',
     to: '/whatsapp',
+    end: true, // actif seulement sur /whatsapp, pas sur ses sous-pages
     icon: <CIcon icon={cilPhone} className="nav-icon" />,
   },
   {

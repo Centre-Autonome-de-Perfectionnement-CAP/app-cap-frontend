@@ -15,7 +15,6 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
-  CWidgetStatsA,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
@@ -32,13 +31,13 @@ const WIDGETS: Array<{
   key: keyof Pick<WhatsAppStats, 'sent' | 'failed' | 'queued' | 'sending' | 'total'>
   label: string
   color: string
-  icon: any
+  icon: string[]
 }> = [
-  { key: 'sent',    label: 'Envoyés',  color: 'success',   icon: cilCheckCircle },
-  { key: 'failed',  label: 'Échoués',  color: 'danger',    icon: cilXCircle     },
-  { key: 'queued',  label: 'En file',  color: 'secondary', icon: cilClock       },
-  { key: 'sending', label: 'En cours', color: 'warning',   icon: cilLoop        },
-  { key: 'total',   label: 'Total',    color: 'primary',   icon: cilChartPie    },
+  { key: 'sent',    label: 'Envoyés',  color: '#16a34a', icon: cilCheckCircle },
+  { key: 'failed',  label: 'Échoués',  color: '#dc2626', icon: cilXCircle     },
+  { key: 'queued',  label: 'En file',  color: '#64748b', icon: cilClock       },
+  { key: 'sending', label: 'En cours', color: '#d97706', icon: cilLoop        },
+  { key: 'total',   label: 'Total',    color: '#326761', icon: cilChartPie    },
 ]
 
 const StatsPanel: React.FC = () => {
@@ -63,12 +62,15 @@ const StatsPanel: React.FC = () => {
       <CRow className="g-3 mb-4">
         {WIDGETS.map(({ key, label, color, icon }) => (
           <CCol key={key} xs={6} md={4} xl>
-            <CWidgetStatsA
-              color={color as any}
-              value={(stats?.[key] ?? 0).toString()}
-              title={label}
-              chart={<CIcon icon={icon} size="xl" />}
-            />
+            <div className="h-100 d-flex align-items-center gap-3 bg-white border rounded-3 p-3" style={{ boxShadow: `inset 4px 0 0 ${color}` }}>
+              <span className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 42, height: 42, background: `${color}1a`, color }}>
+                <CIcon icon={icon} size="lg" />
+              </span>
+              <div className="min-w-0">
+                <div className="fs-4 fw-bold lh-1 text-truncate">{(stats?.[key] ?? 0).toLocaleString('fr-FR')}</div>
+                <div className="text-muted mt-1">{label}</div>
+              </div>
+            </div>
           </CCol>
         ))}
       </CRow>
@@ -110,9 +112,9 @@ const StatsPanel: React.FC = () => {
                     <CTableDataCell>
                       <CBadge color="info">{row.module}</CBadge>
                     </CTableDataCell>
-                    <CTableDataCell className="text-success">{row.sent}</CTableDataCell>
-                    <CTableDataCell className="text-danger">{row.failed}</CTableDataCell>
-                    <CTableDataCell><strong>{row.total}</strong></CTableDataCell>
+                    <CTableDataCell className="text-success">{row.sent.toLocaleString('fr-FR')}</CTableDataCell>
+                    <CTableDataCell className="text-danger">{row.failed.toLocaleString('fr-FR')}</CTableDataCell>
+                    <CTableDataCell><strong>{row.total.toLocaleString('fr-FR')}</strong></CTableDataCell>
                     <CTableDataCell>
                       <CBadge color={rate >= 90 ? 'success' : rate >= 70 ? 'warning' : 'danger'}>
                         {rate}%

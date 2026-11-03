@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import {
-  CButton, CCard, CCardBody, CFormInput, CSpinner,
+  CButton, CCard, CCardBody, CFormInput, CFormSwitch, CSpinner,
   CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CFormLabel,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
@@ -42,6 +42,18 @@ const WhatsAppGroupPanel = () => {
     }
   }
 
+  const setAuto = async (auto: boolean) => {
+    setBusy('auto')
+    try {
+      await stageService.updateSettings({ wa_group_auto: auto })
+      setData(d => (d ? { ...d, auto } : d))
+    } catch (e) {
+      await showError('Réglage non enregistré', friendlyError(e))
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const g = data?.group
 
   return (
@@ -73,13 +85,20 @@ const WhatsAppGroupPanel = () => {
                   <>
                     <strong style={{ fontSize: '1.05rem' }}>Pas encore de groupe pour {data.year}</strong>
                     <div className="stg-muted" style={{ marginTop: 4 }}>
-                      Il sera créé automatiquement à l'arrivée du premier stagiaire de l'année. Vous pouvez aussi le créer maintenant
-                      ou utiliser un groupe existant.
+                      {data.auto
+                        ? "Il sera créé automatiquement à l'arrivée du premier stagiaire de l'année. Vous pouvez aussi le créer maintenant ou utiliser un groupe existant."
+                        : 'Création automatique désactivée : créez le groupe ou utilisez un groupe existant.'}
                       {data.waiting > 0 && ` ${data.waiting} stagiaire(s) en cours attendent le groupe.`}
                     </div>
                   </>
                 )}
               </div>
+            </div>
+
+            <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <CFormSwitch id="wa-auto" checked={data.auto} disabled={!!busy} onChange={e => setAuto(e.target.checked)}
+                label="Créer automatiquement le groupe de l'année (au premier stagiaire)" />
+              {busy === 'auto' && <CSpinner size="sm" color="primary" />}
             </div>
 
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>

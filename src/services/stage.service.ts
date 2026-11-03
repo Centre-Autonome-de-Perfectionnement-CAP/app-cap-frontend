@@ -82,6 +82,7 @@ export interface StageDetail extends StageListRow {
 
 export interface StageSettings {
   requests_open: boolean
+  wa_group_auto: boolean
   closed_message: string
   default_rejection_reason: string
   default_service: string
@@ -401,6 +402,8 @@ export interface BinomesOverview { teams: StageTeam[]; requests: StageTeam[]; in
 
 export interface WhatsAppGroupOverview {
   year: number
+  /** Création automatique du groupe au premier stagiaire de l'année. */
+  auto: boolean
   group: { id: number; name: string; origin: 'created' | 'linked'; created_at: string; members: number; supervisors: number } | null
   waiting: number
   history: { id: number; year: number; name: string; origin: string; created_at: string; dissolved_at: string | null }[]
@@ -555,6 +558,9 @@ class StageService {
 
   attestationPdf = async (id: number, date?: string): Promise<LocalFile> =>
     this.pdfFrom(await HttpService.get(`${BASE}/attestations/${id}/pdf${date ? `?date=${encodeURIComponent(date)}` : ''}`), 'attestation.pdf')
+
+  /** Renvoie la note au stagiaire (message puis PDF), responsable seulement. */
+  resendNote = (stageId: number, noteId: number) => HttpService.post(`${BASE}/demandes/${stageId}/notes/${noteId}/renvoyer`, {})
 
   notePdf = async (stageId: number, noteId: number): Promise<LocalFile> =>
     this.pdfFrom(await HttpService.get(`${BASE}/demandes/${stageId}/notes/${noteId}/pdf`), 'note-de-service.pdf')

@@ -602,6 +602,10 @@ class InscriptionService {
     return result.url;
   };
 
+  /** Étudiants de 1re et 2e année depuis 2023, par année et filière (PDF). */
+  exportCapHistory = async (): Promise<string> =>
+    (await HttpService.downloadFile(`${INSCRIPTION_ROUTES.BASE}/students/export/cap-history`)).url;
+
   exportListForResponsable = async (type: 'fiche-presence' | 'fiche-emargement'): Promise<string> => {
     const result = await HttpService.downloadFile(
       `${INSCRIPTION_ROUTES.BASE}/responsable/export/${type}`

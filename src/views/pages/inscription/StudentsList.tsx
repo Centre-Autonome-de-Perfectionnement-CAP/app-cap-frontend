@@ -54,6 +54,7 @@ const StudentsList = () => {
   const [localSearchQuery, setLocalSearchQuery]   = useState(searchQuery)
   const [hasExistingGroups, setHasExistingGroups] = useState(false)
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false)
+  const [capExporting, setCapExporting]           = useState(false)
   const debouncedSearchQuery = useDebounce(localSearchQuery, 300)
 
   // ── Responsable ──────────────────────────────────────────────────────────
@@ -326,6 +327,22 @@ const StudentsList = () => {
     [selectedYear, selectedFiliere, selectedNiveau, selectedCohort, filterOptions]
   )
 
+  const handleCapHistory = async () => {
+    setCapExporting(true)
+    try {
+      const url  = await InscriptionService.exportCapHistory()
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'liste_etudiants_cap_depuis_2023.pdf'
+      link.click()
+      window.URL.revokeObjectURL(url)
+    } catch {
+      Swal.fire({ icon: 'error', title: 'Erreur', text: 'Impossible de télécharger la liste des étudiants. Veuillez réessayer.' })
+    } finally {
+      setCapExporting(false)
+    }
+  }
+
   if (loading) {
     return <LoadingSpinner message="Chargement de la liste des étudiants..." fullPage />
   }
@@ -353,6 +370,9 @@ const StudentsList = () => {
                   onClick={handleCreateGroups}>Créer des groupes</CButton>
               </>
             )}
+            <CButton color="success" variant="outline" size="sm" className="me-2" disabled={capExporting}
+              title="Télécharger les étudiants de première et deuxième année depuis 2023, par année et filière"
+              onClick={handleCapHistory}>{capExporting ? 'Génération du PDF...' : 'Télécharger tous (PDF)'}</CButton>
             <CButton color="primary" variant="outline" size="sm" className="me-2"
               onClick={() => handleExport('fiche-presence')}>Fiche de présence</CButton>
             <CButton color="primary" variant="outline" size="sm"

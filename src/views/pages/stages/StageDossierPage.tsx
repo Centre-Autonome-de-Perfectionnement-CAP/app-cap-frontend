@@ -125,6 +125,19 @@ const StageDossierPage = () => {
     }
   }
 
+  const resendNote = async (noteId: number) => {
+    if (!detail) return
+    setBusy(true)
+    try {
+      const res: any = await stageService.resendNote(detail.id, noteId)
+      await showSuccess('Note renvoyée', res?.message)
+    } catch (e) {
+      await showError('Envoi impossible', friendlyError(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const selfFollow = async (action: 'add' | 'remove') => {
     if (!detail) return
     setBusy(true)
@@ -293,6 +306,11 @@ const StageDossierPage = () => {
               <CButton size="sm" color="primary" variant="outline" onClick={() => setNoteView(n.id)}>
                 <CIcon icon={cilFile} className="me-1" />Voir
               </CButton>
+              {lead && n.id === detail.notes.reduce((a, b) => (b.version > a.version ? b : a)).id && (
+                <CButton size="sm" color="secondary" variant="outline" disabled={busy} onClick={() => resendNote(n.id)}>
+                  <CIcon icon={cilSend} className="me-1" />Renvoyer au stagiaire
+                </CButton>
+              )}
             </span>
             <span className="stg-muted">Émise le {frDateTime(n.issued_at)}{n.issued_by ? ` par ${n.issued_by}` : ' (accord du demandeur)'}</span>
             {n.motif && <span className="stg-muted">Motif : {n.motif}</span>}

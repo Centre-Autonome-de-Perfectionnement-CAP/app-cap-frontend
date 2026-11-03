@@ -3,7 +3,7 @@
 // reçu sur WhatsApp. Pensée d'abord pour le téléphone.
 
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import { CButton, CCard, CCardBody, CFormInput, CFormLabel, CSpinner } from '@coreui/react'
 import PasswordInput from '@/components/forms/PasswordInput'
 import stageService from '@/services/stage.service'
@@ -13,7 +13,8 @@ import { FRONTEND_ROUTES } from '@/constants'
 const SupervisorInvitationPage = () => {
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const token = params.get('token') ?? ''
+  // Lien court (…/invitation-superviseur/JETON) ; l'ancien format (?token=) reste accepté.
+  const token = useParams().token ?? params.get('token') ?? ''
   const [info, setInfo] = useState<{ phone: string; name: string | null } | null>(null)
   const [invalid, setInvalid] = useState<string | null>(null)
   const [form, setForm] = useState({ prenom: '', nom: '', email: '', password: '', password_confirmation: '' })
@@ -24,7 +25,7 @@ const SupervisorInvitationPage = () => {
   const [used, setUsed] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!/^[A-Za-z0-9]{48}$/.test(token)) { setInvalid("Ce lien d'invitation est incomplet. Ouvrez-le à nouveau depuis le message WhatsApp."); return }
+    if (!/^(?:[A-Za-z0-9]{16}|[A-Za-z0-9]{48})$/.test(token)) { setInvalid("Ce lien d'invitation est incomplet. Ouvrez-le à nouveau depuis le message WhatsApp."); return }
     stageService.invitationInfo(token).then(setInfo).catch((e: any) => {
       if ((e?.status ?? e?.response?.status) === 409) setUsed(friendlyError(e))
       else setInvalid(friendlyError(e))

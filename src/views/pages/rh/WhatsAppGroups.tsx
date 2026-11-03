@@ -113,6 +113,41 @@ const WhatsAppGroups: React.FC = () => {
               <CSpinner color="primary" />
             </div>
           ) : (
+            <>
+            {/* Téléphone et tablette : une carte par filière */}
+            <div className="d-lg-none d-flex flex-column gap-2">
+              {departments.map((dept) => (
+                <div key={dept.id} className="border rounded-3 p-3 bg-white">
+                  <div className="d-flex align-items-start justify-content-between gap-2">
+                    <div className="min-w-0">
+                      <div className="fw-semibold text-break">{dept.name}{dept.abbreviation ? ` (${dept.abbreviation})` : ''}</div>
+                      <div className="text-muted small">{dept.cycle?.name || '-'}</div>
+                    </div>
+                    <CBadge color={dept.whatsapp_link ? 'success' : 'warning'} className="flex-shrink-0">
+                      {dept.whatsapp_link ? 'Configuré' : 'Non configuré'}
+                    </CBadge>
+                  </div>
+                  {dept.whatsapp_link && (
+                    <a href={dept.whatsapp_link} target="_blank" rel="noopener noreferrer" className="d-block mt-2 text-primary text-break small">
+                      {dept.whatsapp_link}
+                    </a>
+                  )}
+                  <div className="d-flex gap-2 mt-2">
+                    <CButton color="primary" variant="outline" size="sm" onClick={() => openEditModal(dept)}>
+                      <CIcon icon={cilPencil} className="me-1" />{dept.whatsapp_link ? 'Modifier' : 'Ajouter le lien'}
+                    </CButton>
+                    {dept.whatsapp_link && (
+                      <CButton color="danger" variant="outline" size="sm" onClick={() => handleDelete(dept)}>
+                        <CIcon icon={cilTrash} className="me-1" />Supprimer
+                      </CButton>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Ordinateur : tableau */}
+            <div className="d-none d-lg-block">
             <CTable hover responsive>
               <CTableHead>
                 <CTableRow>
@@ -182,11 +217,13 @@ const WhatsAppGroups: React.FC = () => {
                 ))}
               </CTableBody>
             </CTable>
+            </div>
+            </>
           )}
         </CCardBody>
       </CCard>
 
-      <CModal visible={showModal} onClose={() => setShowModal(false)} size="lg">
+      <CModal visible={showModal} onClose={() => setShowModal(false)} size="lg" fullscreen="sm">
         <CModalHeader>
           <CModalTitle>
             {editingDept?.whatsapp_link ? 'Modifier' : 'Ajouter'} le lien WhatsApp
@@ -204,12 +241,12 @@ const WhatsAppGroups: React.FC = () => {
                 </CRow>
                 <CRow className="mb-3">
                   <CCol>
-                    <CFormLabel>Lien WhatsApp *</CFormLabel>
+                    <CFormLabel>Lien WhatsApp <span className="text-danger">*</span></CFormLabel>
                     <CFormInput
                       type="url"
                       value={whatsappLink}
                       onChange={(e) => setWhatsappLink(e.target.value)}
-                      placeholder="https://chat.whatsapp.com/..."
+                      placeholder="Exemple : https://chat.whatsapp.com/AbCdEf123"
                       required
                     />
                     <small className="text-muted">

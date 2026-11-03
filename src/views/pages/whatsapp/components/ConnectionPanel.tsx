@@ -101,7 +101,7 @@ const ConnectionPanel: React.FC = () => {
 
       <CRow className="g-4">
         {/* Colonne gauche - statut et infos */}
-        <CCol xs={12} md={isConnected ? 5 : 12} lg={isConnected ? 4 : 12}>
+        <CCol xs={12} md={isConnected ? 8 : (status?.qr ? 5 : 12)} lg={isConnected ? 6 : (status?.qr ? 4 : 12)}>
 
           {/* Statut */}
           <div className="mb-4">
@@ -117,7 +117,7 @@ const ConnectionPanel: React.FC = () => {
               <table className="table table-sm table-borderless mb-0">
                 <tbody>
                   <tr>
-                    <td className="text-muted ps-0" style={{ width: 130 }}>Numéro</td>
+                    <td className="text-muted ps-0 text-nowrap" style={{ width: 130 }}>Numéro</td>
                     <td className="fw-semibold">
                       {status?.phone
                         ? status.phone.replace(/(\d{3})(\d{2})(\d{2})(\d{2})(\d{2})/, '+$1 $2 $3 $4 $5')
@@ -125,14 +125,14 @@ const ConnectionPanel: React.FC = () => {
                     </td>
                   </tr>
                   <tr>
-                    <td className="text-muted ps-0">Nom affiché</td>
-                    <td className="fw-semibold">
+                    <td className="text-muted ps-0 text-nowrap">Nom affiché</td>
+                    <td className="fw-semibold text-break">
                       {status?.display_name || <span className="text-muted fst-italic">Non renseigné</span>}
                     </td>
                   </tr>
                   {status?.connected_at && (
                     <tr>
-                      <td className="text-muted ps-0">Connecté le</td>
+                      <td className="text-muted ps-0 text-nowrap">Connecté le</td>
                       <td className="fw-semibold">
                         {new Date(status.connected_at).toLocaleString('fr-FR')}
                       </td>

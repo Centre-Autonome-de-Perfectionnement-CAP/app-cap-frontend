@@ -262,6 +262,7 @@ const App = () => {
             <Route path="/stages/*" element={<StagesRoutes />} />
             {/* Lien d'invitation reçu par un superviseur (public) */}
             <Route path="/invitation-superviseur" element={<SupervisorInvitationPage />} />
+            <Route path="/invitation-superviseur/:token" element={<SupervisorInvitationPage />} />
 
             <Route path="*" element={<Navigate to={FRONTEND_ROUTES.PORTAIL} replace />} />
           </Routes>

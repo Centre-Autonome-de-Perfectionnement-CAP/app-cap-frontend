@@ -62,6 +62,11 @@ const MessagesTable: React.FC<Props> = ({ status }) => {
 
   useEffect(() => { load(1) }, [load])
 
+  const dateOf = (row: WaMessageLogRow) => {
+    const d = status === 'sent' ? row.sent_at : row.queued_at
+    return d ? new Date(d).toLocaleString('fr-FR') : '-'
+  }
+
   const handleRetry = async (id: number) => {
     setRetryingId(id)
     try {
@@ -80,13 +85,13 @@ const MessagesTable: React.FC<Props> = ({ status }) => {
     <>
       {/* Barre de filtres */}
       <CRow className="mb-3 align-items-center g-2">
-        <CCol xs="auto">
+        <CCol xs={12} sm="auto">
           <span className="text-muted small">{total} message{total > 1 ? 's' : ''}</span>
         </CCol>
         {modules.length > 0 && (
-          <CCol xs="auto" className="ms-auto">
+          <CCol xs={12} sm="auto" className="ms-sm-auto">
             <CFormSelect
-              size="sm"
+              aria-label="Filtrer par module"
               style={{ minWidth: 200 }}
               value={moduleFilter}
               onChange={(e) => setModuleFilter(e.target.value)}
@@ -109,6 +114,38 @@ const MessagesTable: React.FC<Props> = ({ status }) => {
         <p className="text-muted text-center py-4 mb-0">Aucun message dans cette catégorie.</p>
       ) : (
         <>
+          {/* Téléphone et tablette : une carte par message */}
+          <div className="d-lg-none d-flex flex-column gap-2">
+            {rows.map((row) => (
+              <div key={row.id} className="border rounded-3 p-3 bg-white">
+                <div className="d-flex align-items-start justify-content-between gap-2">
+                  <div className="min-w-0">
+                    <CBadge color="info" className="me-1">{row.module ?? 'inconnu'}</CBadge>
+                    <span className="fw-semibold text-break">{row.recipient}</span>
+                  </div>
+                  {status === 'failed' && (
+                    <CButton color="secondary" variant="outline" size="sm" className="flex-shrink-0"
+                      disabled={retryingId === row.id} onClick={() => handleRetry(row.id)}>
+                      {retryingId === row.id ? <CSpinner size="sm" /> : <><CIcon icon={cilReload} className="me-1" />Réessayer</>}
+                    </CButton>
+                  )}
+                </div>
+                {row.media_type !== 'text' && <CBadge color="secondary" className="mt-2 text-wrap text-break">{row.file_name}</CBadge>}
+                <p className="mb-1 mt-2 text-break" style={{ whiteSpace: 'pre-line', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {row.message || <span className="text-muted fst-italic">-</span>}
+                </p>
+                {status === 'failed' && row.last_error && <p className="text-danger small mb-1 text-break">{row.last_error}</p>}
+                <div className="d-flex flex-wrap gap-2 small text-muted">
+                  <span>{dateOf(row)}</span>
+                  {row.context && <span className="text-break">· {row.context}</span>}
+                  <span>· {row.attempts} tentative{row.attempts > 1 ? 's' : ''}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Ordinateur : tableau */}
+          <div className="d-none d-lg-block">
           <CTable hover responsive small>
             <CTableHead>
               <CTableRow>
@@ -144,12 +181,12 @@ const MessagesTable: React.FC<Props> = ({ status }) => {
                       style={{ maxWidth: 240 }}
                       title={row.message ?? ''}
                     >
-                      {row.message || <span className="text-muted fst-italic">—</span>}
+                      {row.message || <span className="text-muted fst-italic">-</span>}
                     </span>
                   </CTableDataCell>
 
                   <CTableDataCell>
-                    <span className="text-muted small">{row.context ?? '—'}</span>
+                    <span className="text-muted small">{row.context ?? '-'}</span>
                   </CTableDataCell>
 
                   <CTableDataCell>
@@ -160,16 +197,11 @@ const MessagesTable: React.FC<Props> = ({ status }) => {
 
                   {status === 'failed' && (
                     <CTableDataCell className="text-danger small" style={{ maxWidth: 200 }}>
-                      {row.last_error ?? '—'}
+                      {row.last_error ?? '-'}
                     </CTableDataCell>
                   )}
 
-                  <CTableDataCell className="text-nowrap small">
-                    {(status === 'sent' ? row.sent_at : row.queued_at)
-                      ? new Date((status === 'sent' ? row.sent_at : row.queued_at) as string)
-                          .toLocaleString('fr-FR')
-                      : '—'}
-                  </CTableDataCell>
+                  <CTableDataCell className="text-nowrap small">{dateOf(row)}</CTableDataCell>
 
                   {status === 'failed' && (
                     <CTableDataCell>
@@ -192,17 +224,15 @@ const MessagesTable: React.FC<Props> = ({ status }) => {
               ))}
             </CTableBody>
           </CTable>
+          </div>
 
+          {/* Pagination compacte : lisible à toutes les tailles, même avec beaucoup de pages */}
           {lastPage > 1 && (
-            <CPagination align="center" className="mt-3" size="sm">
+            <CPagination align="center" className="mt-3">
               <CPaginationItem disabled={page <= 1} onClick={() => load(page - 1)}>
                 Précédent
               </CPaginationItem>
-              {Array.from({ length: lastPage }, (_, i) => i + 1).map((n) => (
-                <CPaginationItem key={n} active={page === n} onClick={() => load(n)}>
-                  {n}
-                </CPaginationItem>
-              ))}
+              <CPaginationItem disabled>Page {page} sur {lastPage}</CPaginationItem>
               <CPaginationItem disabled={page >= lastPage} onClick={() => load(page + 1)}>
                 Suivant
               </CPaginationItem>

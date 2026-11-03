@@ -62,7 +62,7 @@ const StatsPanel: React.FC = () => {
       {/* Compteurs */}
       <CRow className="g-3 mb-4">
         {WIDGETS.map(({ key, label, color, icon }) => (
-          <CCol key={key} xs={12} sm={6} md={4} lg={2}>
+          <CCol key={key} xs={6} md={4} xl>
             <CWidgetStatsA
               color={color as any}
               value={(stats?.[key] ?? 0).toString()}
@@ -77,6 +77,21 @@ const StatsPanel: React.FC = () => {
       {stats?.by_module && stats.by_module.length > 0 ? (
         <>
           <p className="text-muted small mb-2">Répartition par module</p>
+          {/* Téléphone : une ligne par module */}
+          <div className="d-md-none d-flex flex-column gap-2">
+            {stats.by_module.map((row) => {
+              const rate = row.total > 0 ? Math.round((row.sent / row.total) * 100) : 0
+              return (
+                <div key={row.module} className="border rounded-3 p-3 bg-white d-flex align-items-center gap-2 flex-wrap">
+                  <CBadge color="info">{row.module}</CBadge>
+                  <span className="text-success">{row.sent} envoyé{row.sent > 1 ? 's' : ''}</span>
+                  <span className="text-danger">{row.failed} échoué{row.failed > 1 ? 's' : ''}</span>
+                  <CBadge className="ms-auto" color={rate >= 90 ? 'success' : rate >= 70 ? 'warning' : 'danger'}>{rate}%</CBadge>
+                </div>
+              )
+            })}
+          </div>
+          <div className="d-none d-md-block">
           <CTable hover responsive small>
             <CTableHead>
               <CTableRow>
@@ -108,6 +123,7 @@ const StatsPanel: React.FC = () => {
               })}
             </CTableBody>
           </CTable>
+          </div>
         </>
       ) : (
         <p className="text-muted text-center py-3 mb-0">Aucun envoi enregistré pour l'instant.</p>

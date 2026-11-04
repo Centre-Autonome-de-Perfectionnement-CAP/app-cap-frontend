@@ -10,7 +10,7 @@ import {
   CTooltip,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilCheckCircle, cilXCircle, cilPencil, cilTransfer } from '@coreui/icons'
+import { cilCheckCircle, cilXCircle, cilPencil, cilTransfer, cilSend } from '@coreui/icons'
 import Select from 'react-select'
 import type { PendingStudentData } from '../../types/inscription.types'
 import RenamePieceModal from './RenamePieceModal'
@@ -36,6 +36,8 @@ interface PendingStudentRowProps {
   onLevelChange: (studentId: number, level: string) => void
   onRenamePiece: (studentId: number, pieceKey: string, customName: string) => Promise<void | { success: boolean }>
   onTransferWave?: (student: PendingStudentData) => void
+  /** Renvoyer la fiche de confirmation (email + WhatsApp) au candidat. */
+  onResendFiche?: (student: PendingStudentData) => void
 }
 
 /**
@@ -56,6 +58,7 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
   onLevelChange,
   onRenamePiece,
   onTransferWave,
+  onResendFiche,
 }) => {
   const getStatusColor = (status: string) => {
     if (status === 'approved') return 'success'
@@ -145,9 +148,24 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
               </CBadge>
             )}
           </div>
-          {/* Ligne 2 : Bouton de transfert - toujours visible */}
-          {onTransferWave && (
-            <div className="mt-1">
+          {/* Ligne 2 : actions - toujours visibles */}
+          {(onTransferWave || onResendFiche) && (
+            <div className="mt-1 d-flex flex-wrap gap-1">
+              {onResendFiche && (
+                <CButton
+                  size="sm"
+                  color="info"
+                  variant="outline"
+                  className="py-0 px-2 d-flex align-items-center gap-1"
+                  style={{ fontSize: '0.72rem', fontWeight: 600 }}
+                  onClick={() => onResendFiche(student)}
+                  title="Renvoyer la fiche de confirmation par email et WhatsApp"
+                >
+                  <CIcon icon={cilSend} size="sm" />
+                  Renvoyer la fiche
+                </CButton>
+              )}
+              {onTransferWave && (
               <CButton
                 size="sm"
                 color="warning"
@@ -158,6 +176,7 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
                 <CIcon icon={cilTransfer} size="sm" />
                 Changer de vague
               </CButton>
+              )}
             </div>
           )}
         </CTableDataCell>

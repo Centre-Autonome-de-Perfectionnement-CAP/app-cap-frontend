@@ -12,6 +12,8 @@ import { Pagination, LoadingSpinner } from '../../../components/common'
 import usePendingStudentsData from '../../../hooks/inscription/usePendingSudentsData'
 import { useDebounce } from '../../../hooks/common'
 import Swal from 'sweetalert2'
+import InscriptionService from '../../../services/inscription.service'
+import { friendlyError } from '../../../components/common/ActionResult'
 import type { PendingStudentData } from '../../../types/inscription.types'
 
 interface SelectOption {
@@ -430,6 +432,28 @@ const PendingStudents: React.FC = () => {
     [transferWave]
   )
 
+  // Candidats qui n'ont pas reçu leur fiche de confirmation (email arrivé sans
+  // le PDF) : nouvelle fiche par email et WhatsApp, message adapté.
+  const handleResendFiche = useCallback(async (student: PendingStudentData): Promise<void> => {
+    const name = [student.first_name, student.last_name].filter(Boolean).join(' ') || 'ce candidat'
+    const confirm = await Swal.fire({
+      icon: 'question',
+      title: 'Renvoyer la fiche de confirmation ?',
+      text: `La fiche sera régénérée et envoyée à ${name} par email et WhatsApp.`,
+      showCancelButton: true,
+      confirmButtonText: 'Renvoyer',
+      cancelButtonText: 'Annuler',
+    })
+    if (!confirm.isConfirmed) return
+    Swal.fire({ title: 'Envoi en cours…', allowOutsideClick: false, didOpen: () => Swal.showLoading() })
+    try {
+      const res = await InscriptionService.resendConfirmationFiche(student.id)
+      Swal.fire({ icon: 'success', title: 'Fiche renvoyée', text: res?.message || 'La fiche a été renvoyée par email et WhatsApp.' })
+    } catch (e) {
+      Swal.fire({ icon: 'error', title: 'Envoi impossible', text: friendlyError(e) })
+    }
+  }, [])
+
   return (
     <CCard className="mb-4 shadow-sm">
       <CCardHeader>
@@ -478,6 +502,7 @@ const PendingStudents: React.FC = () => {
               onLevelChange={handleLevelChange}
               onRenamePiece={renamePiece}
               onTransferWave={(student) => setTransferModalStudent(student)}
+              onResendFiche={handleResendFiche}
             />
             {totalPages > 1 && (
               <Pagination

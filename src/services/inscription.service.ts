@@ -370,6 +370,10 @@ class InscriptionService {
   /**
    * Transfère un étudiant vers une autre vague
    */
+  /** Renvoie la fiche de confirmation (PDF régénéré) par email et WhatsApp. */
+  resendConfirmationFiche = async (id: number | string): Promise<{ message?: string }> =>
+    HttpService.post(`${INSCRIPTION_ROUTES.PENDING_STUDENTS}/${id}/renvoyer-fiche`, {})
+
   transferWave = async (id: number | string, toWave: number, reason?: string) => {
     return await HttpService.patch(`${INSCRIPTION_ROUTES.PENDING_STUDENTS}/${id}/transfer-wave`, {
       to_wave: toWave,

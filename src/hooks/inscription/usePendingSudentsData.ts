@@ -340,6 +340,13 @@ const usePendingStudentsData = () => {
     }
   };
 
+  /** Suppression définitive d'un dossier ; l'erreur remonte à l'appelant. */
+  const deleteStudent = async (studentId: number): Promise<void> => {
+    await InscriptionService.deletePendingStudent(studentId);
+    setPendingStudents(prev => prev.filter(student => student.id !== studentId));
+    setTotalStudents(total => Math.max(0, total - 1));
+  };
+
   return {
     academicYears,
     pendingStudents,
@@ -370,6 +377,7 @@ const usePendingStudentsData = () => {
     updateStudentLevel,
     renamePiece,
     transferWave,
+    deleteStudent,
   };
 };
 

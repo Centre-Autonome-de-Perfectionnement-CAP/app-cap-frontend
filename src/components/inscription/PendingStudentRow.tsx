@@ -10,7 +10,7 @@ import {
   CTooltip,
 } from '@coreui/react'
 import { CIcon } from '@coreui/icons-react'
-import { cilCheckCircle, cilXCircle, cilPencil, cilTransfer, cilSend } from '@coreui/icons'
+import { cilCheckCircle, cilXCircle, cilPencil, cilTransfer, cilSend, cilTrash } from '@coreui/icons'
 import Select from 'react-select'
 import type { PendingStudentData } from '../../types/inscription.types'
 import RenamePieceModal from './RenamePieceModal'
@@ -38,6 +38,8 @@ interface PendingStudentRowProps {
   onTransferWave?: (student: PendingStudentData) => void
   /** Renvoyer la fiche de confirmation (email + WhatsApp) au candidat. */
   onResendFiche?: (student: PendingStudentData) => void
+  /** Supprimer définitivement le dossier. */
+  onDelete?: (student: PendingStudentData) => void
 }
 
 /**
@@ -59,6 +61,7 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
   onRenamePiece,
   onTransferWave,
   onResendFiche,
+  onDelete,
 }) => {
   const getStatusColor = (status: string) => {
     if (status === 'approved') return 'success'
@@ -149,7 +152,7 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
             )}
           </div>
           {/* Ligne 2 : actions - toujours visibles */}
-          {(onTransferWave || onResendFiche) && (
+          {(onTransferWave || onResendFiche || onDelete) && (
             <div className="mt-1 d-flex flex-wrap gap-1">
               {onResendFiche && (
                 <CButton
@@ -176,6 +179,20 @@ const PendingStudentRow: React.FC<PendingStudentRowProps> = ({
                 <CIcon icon={cilTransfer} size="sm" />
                 Changer de vague
               </CButton>
+              )}
+              {onDelete && (
+                <CButton
+                  size="sm"
+                  color="danger"
+                  variant="outline"
+                  className="py-0 px-2 d-flex align-items-center gap-1"
+                  style={{ fontSize: '0.72rem', fontWeight: 600 }}
+                  onClick={() => onDelete(student)}
+                  title="Supprimer définitivement le dossier"
+                >
+                  <CIcon icon={cilTrash} size="sm" />
+                  Supprimer
+                </CButton>
               )}
             </div>
           )}

@@ -57,6 +57,7 @@ const PendingStudents: React.FC = () => {
     updateStudentLevel,
     renamePiece,
     transferWave,
+    deleteStudent,
   } = usePendingStudentsData()
 
   const [editedData, setEditedData] = useState<PendingStudentData[]>(pendingStudents)
@@ -454,6 +455,30 @@ const PendingStudents: React.FC = () => {
     }
   }, [])
 
+  // Suppression définitive : dossier, pièces et fiche de confirmation.
+  const handleDelete = useCallback(async (student: PendingStudentData): Promise<void> => {
+    const name = [student.first_name, student.last_name].filter(Boolean).join(' ') || 'ce candidat'
+    const confirm = await Swal.fire({
+      icon: 'warning',
+      title: 'Supprimer définitivement ce dossier ?',
+      text: `Le dossier de ${name}${student.tracking_code ? ` (${student.tracking_code})` : ''}, ses pièces et sa fiche de confirmation seront effacés. Cette action est irréversible.`,
+      showCancelButton: true,
+      confirmButtonText: 'Supprimer',
+      confirmButtonColor: '#e55353',
+      cancelButtonText: 'Annuler',
+      focusCancel: true,
+    })
+    if (!confirm.isConfirmed) return
+    Swal.fire({ title: 'Suppression en cours…', allowOutsideClick: false, didOpen: () => Swal.showLoading() })
+    try {
+      await deleteStudent(student.id)
+      setSelectedStudents(prev => prev.filter(id => id !== student.id))
+      Swal.fire({ icon: 'success', title: 'Dossier supprimé', timer: 2000, showConfirmButton: false })
+    } catch (e) {
+      Swal.fire({ icon: 'error', title: 'Suppression impossible', text: friendlyError(e) })
+    }
+  }, [deleteStudent])
+
   return (
     <CCard className="mb-4 shadow-sm">
       <CCardHeader>
@@ -503,6 +528,7 @@ const PendingStudents: React.FC = () => {
               onRenamePiece={renamePiece}
               onTransferWave={(student) => setTransferModalStudent(student)}
               onResendFiche={handleResendFiche}
+              onDelete={handleDelete}
             />
             {totalPages > 1 && (
               <Pagination

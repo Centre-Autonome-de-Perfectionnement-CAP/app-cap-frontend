@@ -19,6 +19,11 @@ const ReglagesPage = React.lazy(() => import('./ReglagesPage'))
 const BibliothequePage = React.lazy(() => import('./BibliothequePage'))
 const TravailPage = React.lazy(() => import('./TravailPage'))
 
+// Pages les plus ouvertes : chargées dès l'entrée dans le module, pendant la
+// vérification des droits, au lieu de l'être l'une après l'autre.
+void import('./DashboardPage')
+void import('./StagiairesPage')
+
 /** Accueil du module : un lien reçu (?ref=…) ouvre le dossier ; sinon le tableau de bord. */
 const Home = () => {
   const { search } = useLocation()

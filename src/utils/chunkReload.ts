@@ -32,8 +32,12 @@ export const reloadForNewVersion = (): boolean => {
 /** À appeler une fois au démarrage. */
 export const installChunkReload = (): void => {
   // Événement émis par Vite quand un import dynamique échoue
-  window.addEventListener('vite:preloadError', (event: Event) => {
-    if (reloadForNewVersion()) event.preventDefault()
+  // On recharge sans « avaler » l'erreur : annulée, l'import renverrait un
+  // module vide et l'écran d'erreur s'afficherait le temps du rechargement
+  // (« Cannot read properties of undefined (reading 'default') »). Laissée
+  // telle quelle, elle est reconnue comme une mise à jour.
+  window.addEventListener('vite:preloadError', () => {
+    reloadForNewVersion()
   })
   window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
     if (isChunkLoadError(event.reason)) reloadForNewVersion()

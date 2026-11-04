@@ -40,7 +40,7 @@ describe('ErrorBoundary', () => {
     )
 
     expect(screen.getByText(/Une erreur s'est produite/i)).toBeInTheDocument()
-    expect(screen.getByText(/Test error/i)).toBeInTheDocument()
+    expect(screen.getByText(/Cette page n'a pas pu s'afficher/i)).toBeInTheDocument()
   })
 
   it('devrait afficher le bouton "Réessayer"', () => {
@@ -112,14 +112,13 @@ describe('ErrorBoundary', () => {
     expect(consoleErrorSpy).toHaveBeenCalled()
   })
 
-  it('devrait afficher le message d\'erreur dans l\'alerte', () => {
+  it('ne devrait jamais afficher le détail technique hors développement', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>
     )
 
-    const errorAlert = screen.getByText(/Test error/i).closest('.alert')
-    expect(errorAlert).toHaveClass('alert-danger')
+    expect(screen.queryByText(/Test error/i)).not.toBeInTheDocument()
   })
 })

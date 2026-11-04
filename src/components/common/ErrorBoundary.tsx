@@ -87,13 +87,19 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 className="text-danger mb-4"
               />
               <h3 className="mb-3">Une erreur s'est produite</h3>
-              <CAlert color="danger" className="text-start">
-                <strong>Erreur :</strong>
-                <pre className="mb-0 mt-2" style={{ fontSize: '0.875rem' }}>
-                  {this.state.error?.toString()}
-                </pre>
-              </CAlert>
-              
+              <p className="text-body-secondary mb-3">
+                Cette page n'a pas pu s'afficher. Rechargez-la ; si cela se reproduit, prévenez l'administrateur.
+              </p>
+              {/* Détail technique : seulement sur le poste du développeur. */}
+              {process.env.NODE_ENV === 'development' && (
+                <CAlert color="danger" className="text-start">
+                  <strong>Erreur :</strong>
+                  <pre className="mb-0 mt-2" style={{ fontSize: '0.875rem' }}>
+                    {this.state.error?.toString()}
+                  </pre>
+                </CAlert>
+              )}
+
               {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
                 <CAlert color="warning" className="text-start">
                   <strong>Stack Trace :</strong>

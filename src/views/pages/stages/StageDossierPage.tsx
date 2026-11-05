@@ -7,13 +7,13 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useParams, useSearchParams } from 'react-router-dom'
-import { CButton, CCard, CCardBody, CSpinner, CFormLabel, CFormTextarea } from '@coreui/react'
+import { CButton, CCard, CCardBody, CSpinner, CFormLabel, CFormTextarea, CFormSelect } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilSend, cilBan, cilCheckAlt, cilPencil, cilFile, cilHistory, cilCommentBubble, cilDescription, cilUser,
-  cilCalendarCheck, cilBadge, cilPeople, cilGroup, cilReload,
+  cilCalendarCheck, cilBadge, cilPeople, cilGroup, cilReload, cilXCircle, cilActionUndo,
 } from '@coreui/icons'
-import stageService, { type StageDetail, type StageTerms } from '@/services/stage.service'
+import stageService, { type RevokeMotif, type StageDetail, type StageNoteKind, type StageTerms } from '@/services/stage.service'
 import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
 import TermsForm, { validateTerms } from './TermsForm'
 import StageFileViewer from './StageFileViewer'
@@ -21,12 +21,18 @@ import PresencePanel from './PresencePanel'
 import InternReportsPanel from './InternReportsPanel'
 import InternAttestationPanel from './InternAttestationPanel'
 import SupervisorAssignModal from './SupervisorAssignModal'
+import ExceptionalAttestationModal from './ExceptionalAttestationModal'
 import { Breadcrumb, CodeBadges, FilterTabs, Pill, StagesStyles, useOpenDossier } from './StagesUi'
 import {
   STATUS_STYLE, HISTORY_LABELS, PHASE, WA_GROUP, frDate, frDateTime, horairesLabel, durationLabel,
 } from './stageUtils'
 
-type Mode = 'view' | 'propose' | 'reject' | 'rectify'
+type Mode = 'view' | 'propose' | 'reject' | 'rectify' | 'end'
+type EndType = 'desistement' | 'revocation'
+
+const NOTE_KIND: Record<StageNoteKind, string> = {
+  initiale: 'Initiale', rectificative: 'Rectificative', desistement: 'Désistement', revocation: 'Révocation',
+}
 type Tab = 'resume' | 'presence' | 'rapports' | 'attestation' | 'historique'
 
 const StageDossierPage = () => {
@@ -44,6 +50,9 @@ const StageDossierPage = () => {
   const [viewerKey, setViewerKey] = useState<string | null>(null)
   const [noteView, setNoteView] = useState<number | null>(null)
   const [assignOpen, setAssignOpen] = useState(false)
+  const [endType, setEndType] = useState<EndType>('desistement')
+  const [endMotif, setEndMotif] = useState<RevokeMotif | ''>('')
+  const [exceptional, setExceptional] = useState(false)
 
   const load = useCallback(async () => {
     setError(null)
@@ -72,6 +81,7 @@ const StageDossierPage = () => {
     if (m === 'propose') { setTerms(detail.suggested_terms); setNote('') }
     if (m === 'rectify') { setTerms(detail.terms); setNote('') }
     if (m === 'reject') setNote(detail.default_rejection_reason)
+    if (m === 'end') { setEndType('desistement'); setEndMotif(''); setNote('') }
     setMode(m)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -106,6 +116,27 @@ const StageDossierPage = () => {
     if (mode === 'reject') {
       if (!note.trim()) { setFormError('Le motif est obligatoire.'); return }
       return run(() => stageService.reject(detail.id, note.trim()), 'Demande non retenue')
+    }
+    if (mode === 'end') {
+      if (endType === 'revocation' && !endMotif) { setFormError('Choisissez le motif de la révocation.'); return }
+      if (endType === 'revocation' && !note.trim()) { setFormError('Précisez le motif de la révocation.'); return }
+      return run(() => stageService.endStage(detail.id, {
+        type: endType, ...(endType === 'revocation' ? { motif_type: endMotif as RevokeMotif } : {}), motif: note.trim() || undefined,
+      }), endType === 'revocation' ? 'Stage révoqué' : 'Désistement enregistré')
+    }
+  }
+
+  const undoEnd = async () => {
+    if (!detail) return
+    setBusy(true)
+    try {
+      const res: any = await stageService.undoEnd(detail.id)
+      if (res?.data) setDetail(res.data)
+      await showSuccess('Le stage reprend', res?.message)
+    } catch (e) {
+      await showError('Annulation impossible', friendlyError(e))
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -206,12 +237,46 @@ const StageDossierPage = () => {
           {busy ? <CSpinner size="sm" className="me-1" /> : <CIcon icon={cilCheckAlt} className="me-1" />}Accepter ses dates
         </CButton>
       )}
+      {detail.fin.can_end && (
+        <CButton color="danger" variant="outline" size="sm" onClick={() => openMode('end')}>
+          <CIcon icon={cilXCircle} className="me-1" />Mettre fin au stage
+        </CButton>
+      )}
       <CButton color="secondary" variant="outline" size="sm" onClick={load} title="Actualiser"><CIcon icon={cilReload} /></CButton>
     </div>
   )
 
+  const end = detail.fin.current
+
   // ── Blocs ────────────────────────────────────────────────────────────────
   const blocks = {
+    end: end && (
+      <Section icon={cilXCircle} title={end.type_label} tone="#be123c">
+        <dl className="dos-dl">
+          <Row l="Enregistré le" v={frDateTime(end.at)} />
+          <Row l="Dernier jour de présence" v={end.last_day ? frDate(end.last_day, true) : 'Aucune présence enregistrée'} />
+          {(end.motif_type || end.motif) && (
+            <Row l="Motif" v={[end.motif_type ? detail.fin.motifs[end.motif_type] : null, end.motif].filter(Boolean).join(' : ')} />
+          )}
+        </dl>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+          {end.note_id && (
+            <CButton size="sm" color="primary" variant="outline" onClick={() => setNoteView(end.note_id)}>
+              <CIcon icon={cilFile} className="me-1" />Voir la note
+            </CButton>
+          )}
+          {detail.fin.can_undo && (
+            <CButton size="sm" color="secondary" variant="outline" disabled={busy} onClick={undoEnd}>
+              {busy ? <CSpinner size="sm" className="me-1" /> : <CIcon icon={cilActionUndo} className="me-1" />}
+              Annuler (erreur) - jusqu'au {frDateTime(end.undo_until)}
+            </CButton>
+          )}
+          {lead && end.type !== 'revoque' && detail.activated_at && (
+            <CButton size="sm" color="warning" variant="outline" onClick={() => setExceptional(true)}>Attestation spéciale</CButton>
+          )}
+        </div>
+      </Section>
+    ),
     counter: lastCounter && (
       <Section icon={cilCommentBubble} title="Contre-proposition du demandeur" tone="#7c3aed">
         <p style={{ margin: 0, fontWeight: 700 }}>
@@ -302,11 +367,11 @@ const StageDossierPage = () => {
         {detail.notes.map(n => (
           <div key={n.id} className="dos-item">
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <strong style={{ flex: 1 }}>{n.kind === 'rectificative' ? 'Rectificative' : 'Initiale'} · {n.number}</strong>
+              <strong style={{ flex: 1 }}>{NOTE_KIND[n.kind]} · {n.number}{n.cancelled_at && <span className="stg-muted"> (annulée)</span>}</strong>
               <CButton size="sm" color="primary" variant="outline" onClick={() => setNoteView(n.id)}>
                 <CIcon icon={cilFile} className="me-1" />Voir
               </CButton>
-              {lead && n.id === detail.notes.reduce((a, b) => (b.version > a.version ? b : a)).id && (
+              {lead && accepted && n.id === detail.notes.reduce((a, b) => (b.version > a.version ? b : a)).id && (
                 <CButton size="sm" color="secondary" variant="outline" disabled={busy} onClick={() => resendNote(n.id)}>
                   <CIcon icon={cilSend} className="me-1" />Renvoyer au stagiaire
                 </CButton>
@@ -404,12 +469,44 @@ const StageDossierPage = () => {
               <CFormLabel className="stg-label">Motif <span className="text-danger">*</span></CFormLabel>
               <CFormTextarea rows={5} maxLength={1000} value={note} onChange={e => setNote(e.target.value)} />
             </>}
+            {mode === 'end' && <>
+              <h6 style={{ fontWeight: 800 }}>Mettre fin au stage</h6>
+              <p className="stg-muted">
+                Le stagiaire reçoit la note correspondante par WhatsApp et par email ; son espace, le pointage, les rapports et les rappels s'arrêtent.
+                En cas d'erreur, vous pourrez annuler pendant 48 h.
+              </p>
+              <div className="dos-endtypes" role="radiogroup" aria-label="Type de fin">
+                {([
+                  ['desistement', 'Désistement constaté', 'Le stagiaire est parti sans le signaler.'],
+                  ['revocation', 'Révocation', 'Décision de fin du stage (absences, règlement…). Aucune attestation.'],
+                ] as [EndType, string, string][]).map(([k, label, help]) => (
+                  <label key={k} className="dos-endtype" data-on={endType === k ? '1' : '0'}>
+                    <input type="radio" name="end-type" checked={endType === k} onChange={() => { setEndType(k); setFormError(null) }} />
+                    <span><strong>{label}</strong><span className="stg-muted">{help}</span></span>
+                  </label>
+                ))}
+              </div>
+              {endType === 'revocation' && <>
+                <CFormLabel className="stg-label" htmlFor="end-motif-type">Motif <span className="text-danger">*</span></CFormLabel>
+                <CFormSelect id="end-motif-type" value={endMotif} onChange={e => setEndMotif(e.target.value as RevokeMotif | '')}>
+                  <option value="">Choisir…</option>
+                  {Object.entries(detail.fin.motifs).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </CFormSelect>
+              </>}
+              <CFormLabel className="stg-label mt-2" htmlFor="end-motif">
+                {endType === 'revocation' ? <>Précisions <span className="text-danger">*</span></> : 'Précisions (facultatif)'}
+              </CFormLabel>
+              <CFormTextarea id="end-motif" rows={4} maxLength={1000} value={note} onChange={e => setNote(e.target.value)}
+                placeholder={endType === 'revocation' ? 'Exemple : six absences non justifiées entre le 9 et le 18 novembre.' : 'Exemple : injoignable depuis le 12 novembre.'} />
+            </>}
             {formError && <div className="stg-err" style={{ marginTop: 12 }}>{formError}</div>}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
               <CButton color="secondary" variant="ghost" onClick={() => { setMode('view'); setFormError(null) }} disabled={busy}>Annuler</CButton>
-              <CButton color={mode === 'reject' ? 'danger' : 'success'} style={{ color: '#fff' }} onClick={submit} disabled={busy}>
+              <CButton color={mode === 'reject' || mode === 'end' ? 'danger' : 'success'} style={{ color: '#fff' }} onClick={submit} disabled={busy}>
                 {busy && <CSpinner size="sm" className="me-1" />}
-                {mode === 'propose' ? 'Envoyer la proposition' : mode === 'rectify' ? 'Émettre la note rectificative' : 'Confirmer et informer le demandeur'}
+                {mode === 'propose' ? 'Envoyer la proposition' : mode === 'rectify' ? 'Émettre la note rectificative'
+                  : mode === 'end' ? (endType === 'revocation' ? 'Révoquer et envoyer la note' : 'Enregistrer le désistement')
+                  : 'Confirmer et informer le demandeur'}
               </CButton>
             </div>
           </CCardBody>
@@ -453,7 +550,7 @@ const StageDossierPage = () => {
 
       {mode === 'view' && !accepted && (
         <div className="dos-grid">
-          <div className="dos-col">{blocks.pair}{blocks.counter}{blocks.waiting}{blocks.terms}{blocks.rejection}{blocks.person}{blocks.files}</div>
+          <div className="dos-col">{blocks.end}{blocks.pair}{blocks.counter}{blocks.waiting}{blocks.terms}{blocks.rejection}{blocks.person}{blocks.files}</div>
           <div className="dos-col">{blocks.notes}{blocks.exchanges}{blocks.history}</div>
         </div>
       )}
@@ -461,7 +558,7 @@ const StageDossierPage = () => {
       <StageFileViewer
         visible={noteView !== null}
         stageId={detail.id}
-        files={detail.notes.map(n => ({ key: String(n.id), label: `Note ${n.kind === 'rectificative' ? 'rectificative' : 'de service'} · ${n.number}` }))}
+        files={detail.notes.map(n => ({ key: String(n.id), label: `Note ${n.kind === 'initiale' ? 'de service' : NOTE_KIND[n.kind].toLowerCase()} · ${n.number}` }))}
         initialKey={noteView !== null ? String(noteView) : null}
         title="Notes de service"
         loader={key => stageService.notePdf(detail.id, Number(key))}
@@ -474,6 +571,11 @@ const StageDossierPage = () => {
         initialKey={viewerKey}
         onClose={() => setViewerKey(null)}
       />
+      {lead && end && (
+        <ExceptionalAttestationModal visible={exceptional} stage={{ id: detail.id, nom_complet: detail.nom_complet }}
+          onClose={() => setExceptional(false)}
+          onDone={() => { setExceptional(false); showSuccess('Attestation spéciale validée', 'Le secrétariat a été prévenu pour l\'impression.') }} />
+      )}
       {lead && accepted && (
         <SupervisorAssignModal visible={assignOpen} ids={[detail.id]} title={`Superviseur de ${detail.nom_complet}`}
           onClose={() => setAssignOpen(false)} onDone={() => { setAssignOpen(false); load() }} />
@@ -498,6 +600,11 @@ const StageDossierPage = () => {
         .dos-msg[data-staff='0'] { background: #f5f3ff; }
         .dos-hist { display: flex; gap: 10px; font-size: .875rem; padding: 6px 0; }
         .dos-hist > div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+        .dos-endtypes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin: 4px 0 12px; }
+        .dos-endtype { display: flex; gap: 10px; align-items: flex-start; border: 1px solid #dbe3ec; border-radius: 12px; padding: 10px 12px; cursor: pointer; font-size: .9rem; }
+        .dos-endtype > span { display: flex; flex-direction: column; gap: 2px; }
+        .dos-endtype[data-on='1'] { border-color: #be123c; background: #fff1f2; }
+        .dos-endtype input { margin-top: 4px; accent-color: #be123c; }
         .dos-dot { width: 9px; height: 9px; border-radius: 50%; background: #0f766e; margin-top: 6px; flex-shrink: 0; }
       `}</style>
     </div>

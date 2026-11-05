@@ -8,6 +8,7 @@ const BASE = 'stages/admin'
 
 export type StageStatus =
   | 'submitted' | 'proposal_sent' | 'counter_proposed' | 'accepted' | 'rejected' | 'expired' | 'withdrawn'
+  | 'desiste' | 'desiste_constate' | 'revoque'
 
 export interface StageHoraires { arrivee: string; pause_debut: string; pause_fin: string; sortie: string }
 
@@ -49,6 +50,26 @@ export interface StageExchange {
   at: string
 }
 
+export type StageNoteKind = 'initiale' | 'rectificative' | 'desistement' | 'revocation'
+
+export type RevokeMotif = 'absences' | 'reglement' | 'autre'
+
+export interface StageEndState {
+  can_end: boolean
+  can_undo: boolean
+  motifs: Record<RevokeMotif, string>
+  current: {
+    type: 'desiste' | 'desiste_constate' | 'revoque'
+    type_label: string
+    motif_type: RevokeMotif | null
+    motif: string | null
+    last_day: string | null
+    at: string
+    undo_until: string
+    note_id: number | null
+  } | null
+}
+
 export interface StageDetail extends StageListRow {
   civilite: string
   nom: string
@@ -68,11 +89,13 @@ export interface StageDetail extends StageListRow {
   proposal_sent_at: string | null
   proposal_expires_at: string | null
   exchanges: StageExchange[]
-  notes: { id: number; number: string; kind: 'initiale' | 'rectificative'; version: number; motif: string | null; issued_by: string | null; issued_at: string; has_pdf: boolean }[]
+  notes: { id: number; number: string; kind: StageNoteKind; version: number; motif: string | null; issued_by: string | null; issued_at: string; has_pdf: boolean; cancelled_at: string | null }[]
   history: { id: number; action: string; from_status: string | null; to_status: string | null; actor: 'staff' | 'demandeur' | 'systeme'; user_name: string | null; comment: string | null; meta: any; at: string }[]
   suggested_terms: StageTerms | null
   default_rejection_reason: string
   can: { propose: boolean; reject: boolean; accept_counter: boolean; rectify: boolean }
+  /** Fin anticipée : désistement constaté, révocation, annulation (48 h). */
+  fin: StageEndState
   /** Stagiaire (demande acceptée) : encadrement, assiduité, rapports, codes d'attention. */
   suivi: FollowRow | null
   me: InternViewer
@@ -561,6 +584,9 @@ class StageService {
 
   /** Renvoie la note au stagiaire (message puis PDF), responsable seulement. */
   resendNote = (stageId: number, noteId: number) => HttpService.post(`${BASE}/demandes/${stageId}/notes/${noteId}/renvoyer`, {})
+  endStage = (stageId: number, body: { type: 'desistement' | 'revocation'; motif_type?: RevokeMotif; motif?: string }) =>
+    HttpService.post(`${BASE}/demandes/${stageId}/fin`, body)
+  undoEnd = (stageId: number) => HttpService.post(`${BASE}/demandes/${stageId}/fin/annuler`, {})
 
   notePdf = async (stageId: number, noteId: number): Promise<LocalFile> =>
     this.pdfFrom(await HttpService.get(`${BASE}/demandes/${stageId}/notes/${noteId}/pdf`), 'note-de-service.pdf')

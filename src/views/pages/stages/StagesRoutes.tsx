@@ -18,6 +18,7 @@ const StageDossierPage = React.lazy(() => import('./StageDossierPage'))
 const ReglagesPage = React.lazy(() => import('./ReglagesPage'))
 const BibliothequePage = React.lazy(() => import('./BibliothequePage'))
 const TravailPage = React.lazy(() => import('./TravailPage'))
+const MessagesPage = React.lazy(() => import('./MessagesPage'))
 
 // Pages les plus ouvertes : chargées dès l'entrée dans le module, pendant la
 // vérification des droits, au lieu de l'être l'une après l'autre.
@@ -71,6 +72,8 @@ const StagesRoutes = () => (
           <Route path="/binomes" element={<Staff><BinomesPage /></Staff>} />
           <Route path="/demandes-stagiaires" element={<Staff><DemandesStagiairesPage /></Staff>} />
           <Route path="/rapports" element={<Staff><RapportsPage /></Staff>} />
+          <Route path="/messages" element={<Staff><MessagesPage /></Staff>} />
+          <Route path="/messages/:channel" element={<Staff><MessagesPage /></Staff>} />
           <Route path="/attestations" element={<SecretariatOrLead><AttestationsPage /></SecretariatOrLead>} />
           <Route path="/superviseurs" element={<LeadOnly><SuperviseursPage /></LeadOnly>} />
           <Route path="/reglages" element={<LeadOnly><ReglagesPage /></LeadOnly>} />

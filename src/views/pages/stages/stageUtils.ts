@@ -9,6 +9,9 @@ export const STATUS_STYLE: Record<StageStatus, { color: string; bg: string }> = 
   rejected:         { color: '#e11d48', bg: '#fff1f2' },
   expired:          { color: '#64748b', bg: '#f1f5f9' },
   withdrawn:        { color: '#9a3412', bg: '#fff7ed' },
+  desiste:          { color: '#9a3412', bg: '#fff7ed' },
+  desiste_constate: { color: '#9a3412', bg: '#fff7ed' },
+  revoque:          { color: '#be123c', bg: '#fff1f2' },
 }
 
 export const frDate = (iso: string | null | undefined, long = false): string => {
@@ -83,6 +86,8 @@ export const HISTORY_LABELS: Record<string, string> = {
   activation_reminder: "Rappel d'activation envoyé",
   activated:        'Présence confirmée - espace stagiaire activé',
   withdrawn:        'Désistement (présence jamais confirmée)',
+  stage_ended:      'Fin anticipée du stage',
+  stage_end_undone: 'Fin de stage annulée : le stage reprend',
   reglement_accepted: 'Règlement intérieur accepté',
   device_reset:     'Téléphone de stage réinitialisé',
   device_refused:   'Connexion refusée depuis un autre téléphone',

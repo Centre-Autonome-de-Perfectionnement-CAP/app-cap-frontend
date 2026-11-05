@@ -15,7 +15,7 @@ import { isStagesLead } from './StagesGuard'
 import { ExportButton, Empty, FilterTabs, PageHead, Pill, StagesStyles, useOpenDossier } from './StagesUi'
 import { STATUS_STYLE, frDate, durationLabel } from './stageUtils'
 
-type Filter = 'to_handle' | StageStatus | 'all'
+type Filter = 'to_handle' | StageStatus | 'ended' | 'all'
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'to_handle',        label: 'À traiter' },
@@ -25,6 +25,7 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: 'rejected',         label: 'Non retenues' },
   { key: 'expired',          label: 'Expirées' },
   { key: 'withdrawn',        label: 'Désistements' },
+  { key: 'ended',            label: 'Fins de stage' },
   { key: 'all',              label: 'Toutes' },
 ]
 

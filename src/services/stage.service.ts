@@ -70,6 +70,31 @@ export interface StageEndState {
   } | null
 }
 
+// ── Messagerie de stage (texte, éphémère) ───────────────────────────────
+export interface ChatChannel {
+  key: string
+  kind: 'group' | 'general'
+  title: string
+  subtitle: string
+  last: { body: string; at: string; who: string } | null
+  unread: number
+}
+export interface ChatMessage {
+  id: number
+  body: string
+  at: string
+  mine: boolean
+  sender: { key: string; name: string; role: string | null }
+}
+export interface ChatThread {
+  channel: Omit<ChatChannel, 'last' | 'unread'>
+  messages: ChatMessage[]
+  first_unread_id: number | null
+  has_more: boolean
+  seen: { id: number; count: number } | null
+  keep_days: number
+}
+
 export interface StageDetail extends StageListRow {
   civilite: string
   nom: string
@@ -587,6 +612,14 @@ class StageService {
   endStage = (stageId: number, body: { type: 'desistement' | 'revocation'; motif_type?: RevokeMotif; motif?: string }) =>
     HttpService.post(`${BASE}/demandes/${stageId}/fin`, body)
   undoEnd = (stageId: number) => HttpService.post(`${BASE}/demandes/${stageId}/fin/annuler`, {})
+
+  chatList = async (): Promise<{ channels: ChatChannel[]; unread: number; keep_days: number }> =>
+    (await HttpService.get(`${BASE}/messages`)).data
+  chatThread = async (channel: string, q: { after?: number; before?: number } = {}): Promise<ChatThread> => {
+    const qs = new URLSearchParams(Object.entries(q).filter(([, v]) => v).map(([k, v]) => [k, String(v)])).toString()
+    return (await HttpService.get(`${BASE}/messages/${encodeURIComponent(channel)}${qs ? `?${qs}` : ''}`)).data
+  }
+  chatSend = (channel: string, body: string) => HttpService.post(`${BASE}/messages/${encodeURIComponent(channel)}`, { body })
 
   notePdf = async (stageId: number, noteId: number): Promise<LocalFile> =>
     this.pdfFrom(await HttpService.get(`${BASE}/demandes/${stageId}/notes/${noteId}/pdf`), 'note-de-service.pdf')

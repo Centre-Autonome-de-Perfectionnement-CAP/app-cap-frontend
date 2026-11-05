@@ -88,6 +88,7 @@ export const HISTORY_LABELS: Record<string, string> = {
   withdrawn:        'Désistement (présence jamais confirmée)',
   stage_ended:      'Fin anticipée du stage',
   stage_end_undone: 'Fin de stage annulée : le stage reprend',
+  punch_corrected:  'Pointage corrigé (sortie requalifiée en départ en pause)',
   reglement_accepted: 'Règlement intérieur accepté',
   device_reset:     'Téléphone de stage réinitialisé',
   device_refused:   'Connexion refusée depuis un autre téléphone',

@@ -1,14 +1,15 @@
 // src/views/pages/stages/MessagesPage.tsx
 // Messagerie de stage (progiciel) : « Mes stagiaires » (superviseur et ses
 // stagiaires, visible par eux seuls) et la discussion générale. Texte, pièces
-// jointes, réponse à un message, « vu par » ; tout s'efface après 7 jours. Liste à gauche, fil à
-// droite (un seul volet sur petit écran). Rafraîchi tant que la page est visible.
+// jointes, réponse à un message, modification de ses messages, « vu par » ; tout s'efface après
+// 7 jours. Liste à gauche, fil à droite (un seul volet sur petit écran) ; aucune discussion
+// ouverte par défaut, et on peut en sortir. Rafraîchi tant que la page est visible.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilArrowLeft, cilLockLocked, cilSend, cilInfo, cilPaperclip, cilShareAlt } from '@coreui/icons'
+import { cilX, cilLockLocked, cilSend, cilInfo, cilPaperclip, cilShareAlt, cilPencil } from '@coreui/icons'
 import stageService, { type ChatChannel, type ChatFile, type ChatMessage, type ChatSeen, type ChatThread } from '@/services/stage.service'
 import { friendlyError } from '@/components/common/ActionResult'
 import { PageHead, StagesStyles } from './StagesUi'
@@ -45,7 +46,6 @@ const tone = (key: string) => TONES[[...key].reduce((a, c) => a + c.charCodeAt(0
 
 const MessagesPage = () => {
   const { channel } = useParams()
-  const navigate = useNavigate()
   const [list, setList] = useState<{ channels: ChatChannel[]; keep_days: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -54,13 +54,6 @@ const MessagesPage = () => {
   }, [])
   useEffect(loadList, [loadList, channel])
   useVisiblePoll(loadList, POLL_LIST_MS)
-
-  // Grand écran : la première discussion s'ouvre d'elle-même.
-  useEffect(() => {
-    if (!channel && list?.channels.length && window.matchMedia('(min-width: 992px)').matches) {
-      navigate(`/stages/messages/${list.channels[0].key}`, { replace: true })
-    }
-  }, [channel, list, navigate])
 
   const groups = list?.channels.filter(c => c.kind === 'group') ?? []
   const general = list?.channels.filter(c => c.kind === 'general') ?? []
@@ -122,6 +115,7 @@ const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) =>
   const [text, setText] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null)
+  const [editing, setEditing] = useState<ChatMessage | null>(null)
   const [sending, setSending] = useState(false)
   const [older, setOlder] = useState(false)
   const box = useRef<HTMLDivElement>(null)
@@ -141,9 +135,13 @@ const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) =>
     const last = thread.messages[thread.messages.length - 1]?.id
     try {
       const d = await stageService.chatThread(channel, last ? { after: last } : {})
+      const edits = new Map((d.edits ?? []).map(e => [e.id, e.body]))
       setThread(t => t && {
         ...t, seen: d.seen ?? t.seen,
-        messages: last ? [...t.messages, ...d.messages.filter(m => !t.messages.some(x => x.id === m.id))] : d.messages,
+        messages: last
+          ? [...t.messages.map(m => (edits.has(m.id) ? { ...m, body: edits.get(m.id)!, edited: true } : m)),
+            ...d.messages.filter(m => !t.messages.some(x => x.id === m.id))]
+          : d.messages,
       })
       if (d.messages.length && stick.current) scrollDown()
     } catch { /* nouvel essai au prochain passage */ }
@@ -177,6 +175,7 @@ const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) =>
 
   const send = async () => {
     const body = text.trim()
+    if (editing) return saveEdit(body)
     if ((!body && !files.length) || sending) return
     setSending(true); setError(null)
     try {
@@ -190,7 +189,25 @@ const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) =>
     }
   }
 
-  const quote = (m: ChatMessage) => { setReplyTo(m); input.current?.focus() }
+  const saveEdit = async (body: string) => {
+    if (!editing || sending) return
+    if (!body && !editing.files.length) { setError('Le message ne peut pas être vide.'); return }
+    setSending(true); setError(null)
+    try {
+      await stageService.chatEdit(channel, editing.id, body)
+      const id = editing.id
+      setThread(t => t && { ...t, messages: t.messages.map(m => (m.id === id && m.body !== body ? { ...m, body, edited: true } : m)) })
+      setEditing(null); setText('')
+    } catch (e) {
+      setError(friendlyError(e))
+    } finally {
+      setSending(false)
+    }
+  }
+  const startEdit = (m: ChatMessage) => { setReplyTo(null); setFiles([]); setEditing(m); setText(m.body); input.current?.focus() }
+  const cancelEdit = () => { setEditing(null); setText('') }
+
+  const quote = (m: ChatMessage) => { cancelEdit(); setReplyTo(m); input.current?.focus() }
   const jump = (id: number) => {
     const el = document.getElementById(`msg-${id}`)
     if (!el) return
@@ -207,15 +224,15 @@ const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) =>
   return (
     <>
       <header className="msg-th">
-        <button type="button" className="msg-back" onClick={() => navigate('/stages/messages')} aria-label="Retour aux discussions">
-          <CIcon icon={cilArrowLeft} />
-        </button>
         <span className="msg-av" data-kind={c.kind}>{c.kind === 'general' ? 'CAP' : 'G'}</span>
-        <div style={{ minWidth: 0 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <strong>{c.title}</strong>
           <small>{c.subtitle}</small>
         </div>
         {c.kind === 'group' && <span className="msg-lock"><CIcon icon={cilLockLocked} style={{ width: 14 }} />Privé</span>}
+        <button type="button" className="msg-back" onClick={() => navigate('/stages/messages')} aria-label="Fermer la discussion" title="Fermer la discussion">
+          <CIcon icon={cilX} />
+        </button>
       </header>
 
       <div ref={box} className="msg-body" onScroll={e => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }}>
@@ -247,11 +264,16 @@ const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) =>
                   )}
                   {m.body}
                   {m.files.map(f => <Attachment key={f.id} channel={channel} f={f} mine={m.mine} onError={setError} />)}
-                  <span className="msg-tm">{time(m.at)}</span>
+                  <span className="msg-tm">{m.edited ? 'modifié · ' : ''}{time(m.at)}</span>
                 </div>
                 <button type="button" className="msg-reply" onClick={() => quote(m)} aria-label="Répondre à ce message" title="Répondre">
                   <CIcon icon={cilShareAlt} style={{ width: 16, transform: 'scaleX(-1)' }} />
                 </button>
+                {m.mine && (
+                  <button type="button" className="msg-reply" onClick={() => startEdit(m)} aria-label="Modifier ce message" title="Modifier">
+                    <CIcon icon={cilPencil} style={{ width: 16 }} />
+                  </button>
+                )}
               </div>
               {m.mine && thread.seen?.id === m.id && <SeenBy seen={thread.seen} />}
             </div>
@@ -260,6 +282,15 @@ const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) =>
       </div>
 
       {error && <div style={{ padding: '8px 12px 0' }}><div className="stg-err">{error}</div></div>}
+      {editing && (
+        <div className="msg-replying">
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <b>Modification du message</b>
+            <span>{editing.body || 'Pièce jointe'}</span>
+          </div>
+          <button type="button" className="msg-x" onClick={cancelEdit} aria-label="Annuler la modification">×</button>
+        </div>
+      )}
       {replyTo && (
         <div className="msg-replying">
           <div style={{ minWidth: 0, flex: 1 }}>
@@ -281,20 +312,24 @@ const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) =>
       )}
       <div className="msg-comp">
         <input ref={picker} type="file" multiple accept={ACCEPT} hidden onChange={e => pick(e.target.files)} />
-        <button type="button" className="msg-clip" onClick={() => picker.current?.click()} disabled={files.length >= MAX_FILES || sending}
+        <button type="button" className="msg-clip" onClick={() => picker.current?.click()} disabled={files.length >= MAX_FILES || sending || !!editing}
           aria-label="Joindre un fichier" title="PDF, Word, ZIP, images ; 5 Mo au plus, 3 fichiers">
           <CIcon icon={cilPaperclip} style={{ width: 20 }} />
         </button>
         <label htmlFor="msg-input" className="visually-hidden">Votre message</label>
         <textarea ref={input} id="msg-input" rows={1} maxLength={2000} value={text} onChange={e => setText(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+            if (e.key === 'Escape' && editing) cancelEdit()
+          }}
           placeholder={c.kind === 'group' ? 'Écrire un message à vos stagiaires…' : 'Écrire un message à tous…'}
           style={{ height: Math.min(132, 44 + Math.max(0, text.split('\n').length - 1) * 21) }} />
-        <button type="button" className="msg-send" onClick={send} disabled={(!text.trim() && !files.length) || sending} aria-label="Envoyer">
+        <button type="button" className="msg-send" onClick={send} disabled={(!text.trim() && !files.length && !editing?.files.length) || sending}
+          aria-label={editing ? 'Enregistrer la modification' : 'Envoyer'}>
           {sending ? <CSpinner size="sm" /> : <CIcon icon={cilSend} />}
         </button>
       </div>
-      <p className="msg-hint">Entrée pour envoyer, Maj + Entrée pour aller à la ligne. Survolez un message pour y répondre.</p>
+      <p className="msg-hint">Entrée pour envoyer, Maj + Entrée pour aller à la ligne. Survolez un message pour y répondre ou modifier le vôtre.</p>
     </>
   )
 }
@@ -378,7 +413,8 @@ const MessagesStyles = () => (
     .msg-th { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid #eef2f6; }
     .msg-th strong { display: block; font-size: .95rem; }
     .msg-th small { display: block; color: #64748b; font-size: .875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .msg-back { all: unset; cursor: pointer; display: none; width: 34px; height: 34px; border-radius: 10px; align-items: center; justify-content: center; color: #475569; }
+    .msg-back { all: unset; cursor: pointer; display: inline-flex; width: 34px; height: 34px; border-radius: 10px; align-items: center; justify-content: center; color: #475569; flex-shrink: 0; }
+    .msg-back:hover { background: #f1f5f9; }
     .msg-lock { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: .875rem; color: #64748b; background: #f8fafc; border: 1px solid #e6ebf2; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
     .msg-body { flex: 1; overflow-y: auto; background: #f6f8f7; padding: 14px 22px; display: flex; flex-direction: column; }
     .msg-row { display: flex; flex-direction: column; }
@@ -446,7 +482,6 @@ const MessagesStyles = () => (
       .msg-wrap { grid-template-columns: minmax(0, 1fr); height: calc(100vh - 200px); }
       .msg-wrap[data-open='1'] .msg-list { display: none; }
       .msg-wrap[data-open='0'] .msg-pane { display: none; }
-      .msg-back { display: inline-flex; }
       .msg-body { padding: 12px; }
       .msg-b { max-width: 82%; }
       .msg-lock { display: none; }

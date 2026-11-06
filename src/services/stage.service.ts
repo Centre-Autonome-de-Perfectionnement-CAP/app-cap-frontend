@@ -85,6 +85,8 @@ export interface ChatMessage {
   body: string
   at: string
   mine: boolean
+  /** Modifié par son auteur après l'envoi. */
+  edited?: boolean
   sender: { key: string; name: string; role: string | null }
   files: ChatFile[]
   /** Message cité ; « deleted » s'il a été effacé (7 jours). */
@@ -98,6 +100,8 @@ export interface ChatThread {
   has_more: boolean
   seen: ChatSeen | null
   keep_days: number
+  /** Actualisation : messages déjà affichés, modifiés récemment. */
+  edits?: { id: number; body: string }[]
 }
 
 export interface StageDetail extends StageListRow {
@@ -302,7 +306,7 @@ export interface ReportSummary {
 export interface ReportDetail extends ReportSummary {
   /** by : binôme qui a déposé la version (rapport commun). */
   versions: { version: number; name: string; size: number; note: string | null; late: boolean; post_defense?: boolean; at: string; by?: string | null }[]
-  comments: { id: number; version: number | null; author: 'staff' | 'stagiaire'; name: string; body: string; at: string }[]
+  comments: { id: number; version: number | null; author: 'staff' | 'stagiaire'; name: string; body: string; at: string; can_delete?: boolean }[]
   reviews: { id: number; version: number; role: 'superviseur' | 'responsable'; decision: 'approved' | 'rejected'; comment: string | null; name: string; at: string }[]
 }
 
@@ -570,6 +574,8 @@ class StageService {
 
   commentReport = (id: number, body: string) => HttpService.post(`${BASE}/rapports/${id}/commentaires`, { body })
 
+  deleteReportComment = (id: number, commentId: number) => HttpService.delete(`${BASE}/rapports/${id}/commentaires/${commentId}`)
+
   decideReport = (id: number, decision: 'approved' | 'rejected', comment?: string) =>
     HttpService.post(`${BASE}/rapports/${id}/decision`, { decision, comment: comment || null })
 
@@ -634,6 +640,8 @@ class StageService {
     msg.files.forEach(f => form.append('files[]', f))
     return HttpService.post(`${BASE}/messages/${encodeURIComponent(channel)}`, form)
   }
+  chatEdit = (channel: string, id: number, body: string) =>
+    HttpService.patch(`${BASE}/messages/${encodeURIComponent(channel)}/${id}`, { body })
   /** Pièce jointe → adresse locale (blob). */
   chatFile = async (channel: string, fileId: number): Promise<string> =>
     (await HttpService.downloadFile(`${BASE}/messages/${encodeURIComponent(channel)}/fichiers/${fileId}`)).url

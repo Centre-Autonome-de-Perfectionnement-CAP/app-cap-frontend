@@ -34,6 +34,7 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
   const [comment, setComment] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [removing, setRemoving] = useState<number | null>(null)
 
   useEffect(() => {
     setD(null); setFile(null); setMode('view'); setErr(null)
@@ -83,10 +84,31 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
     }
   }
 
+  // Retrait d'un commentaire (abus) : deux clics, « Supprimer » puis « Confirmer ».
+  const removeComment = async (id: number) => {
+    if (!d) return
+    if (removing !== id) { setRemoving(id); return }
+    setBusy(true); setErr(null)
+    try {
+      const res: any = await stageService.deleteReportComment(d.id, id)
+      setD(res.data); setRemoving(null)
+    } catch (e) {
+      setErr(friendlyError(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const st = d ? STATUS_COLOR[d.status] : null
   const events = d ? [
     ...d.versions.map(v => ({ at: v.at, el: <><strong>Version {v.version}</strong> déposée{v.by ? ` par ${v.by}` : ''}{v.late ? ' (en retard)' : ''}{v.post_defense ? ' - corrigée après soutenance' : ''}{v.note ? <div style={{ whiteSpace: 'pre-line' }}>{v.note}</div> : null}</> })),
-    ...d.comments.map(c => ({ at: c.at, el: <><strong>{c.name}</strong> <span className="text-muted">(v{c.version})</span><div style={{ whiteSpace: 'pre-line' }}>{c.body}</div></> })),
+    ...d.comments.map(c => ({ at: c.at, el: <>
+      <strong>{c.name}</strong> <span className="text-muted">(v{c.version})</span><div style={{ whiteSpace: 'pre-line' }}>{c.body}</div>
+      <button type="button" disabled={busy} onClick={() => removeComment(c.id)}
+        style={{ all: 'unset', cursor: 'pointer', fontSize: '.875rem', fontWeight: 600, color: removing === c.id ? '#e11d48' : '#64748b', marginTop: 2 }}>
+        {removing === c.id ? 'Confirmer la suppression' : 'Supprimer'}
+      </button>
+    </> })),
     ...d.reviews.map(r => ({ at: r.at, el: <><strong style={{ color: r.decision === 'approved' ? '#059669' : '#ea580c' }}>{r.decision === 'approved' ? 'Validé' : 'À corriger'}</strong> par {r.name} ({r.role}, v{r.version}){r.comment ? <div style={{ whiteSpace: 'pre-line' }}>{r.comment}</div> : null}</> })),
   ].sort((a, b) => a.at.localeCompare(b.at)) : []
 
@@ -127,7 +149,7 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
             ))}
           </ol>
           <div style={{ marginTop: 12 }}>
-            <CFormTextarea rows={2} maxLength={2000} placeholder="Commenter (le stagiaire est prévenu)…" value={comment} onChange={e => setComment(e.target.value)} />
+            <CFormTextarea rows={2} maxLength={2000} placeholder="Exemple : Ajoutez le planning de la semaine." value={comment} onChange={e => setComment(e.target.value)} />
             <CButton size="sm" color="secondary" variant="outline" className="mt-2" disabled={busy || !comment.trim()} onClick={sendComment}>
               <CIcon icon={cilCommentBubble} className="me-1" />Envoyer
             </CButton>

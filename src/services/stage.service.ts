@@ -295,10 +295,13 @@ export interface ReportSummary {
   late: boolean
   submitted_at: string | null
   stage?: { id: number; reference: string; nom_complet: string } | null
+  /** Rapport commun du binôme : il vaut aussi pour ce stagiaire. */
+  binome?: { report_id: number; name: string; deposited_by: string | null } | null
 }
 
 export interface ReportDetail extends ReportSummary {
-  versions: { version: number; name: string; size: number; note: string | null; late: boolean; post_defense?: boolean; at: string }[]
+  /** by : binôme qui a déposé la version (rapport commun). */
+  versions: { version: number; name: string; size: number; note: string | null; late: boolean; post_defense?: boolean; at: string; by?: string | null }[]
   comments: { id: number; version: number | null; author: 'staff' | 'stagiaire'; name: string; body: string; at: string }[]
   reviews: { id: number; version: number; role: 'superviseur' | 'responsable'; decision: 'approved' | 'rejected'; comment: string | null; name: string; at: string }[]
 }

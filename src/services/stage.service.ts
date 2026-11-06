@@ -79,19 +79,24 @@ export interface ChatChannel {
   last: { body: string; at: string; who: string } | null
   unread: number
 }
+export interface ChatFile { id: number; name: string; mime: string; size: number; image: boolean }
 export interface ChatMessage {
   id: number
   body: string
   at: string
   mine: boolean
   sender: { key: string; name: string; role: string | null }
+  files: ChatFile[]
+  /** Message cité ; « deleted » s'il a été effacé (7 jours). */
+  reply: { id: number; name?: string; body?: string; deleted?: boolean } | null
 }
+export interface ChatSeen { id: number; by: { key: string; name: string; at: string | null }[] }
 export interface ChatThread {
   channel: Omit<ChatChannel, 'last' | 'unread'>
   messages: ChatMessage[]
   first_unread_id: number | null
   has_more: boolean
-  seen: { id: number; count: number } | null
+  seen: ChatSeen | null
   keep_days: number
 }
 
@@ -619,7 +624,16 @@ class StageService {
     const qs = new URLSearchParams(Object.entries(q).filter(([, v]) => v).map(([k, v]) => [k, String(v)])).toString()
     return (await HttpService.get(`${BASE}/messages/${encodeURIComponent(channel)}${qs ? `?${qs}` : ''}`)).data
   }
-  chatSend = (channel: string, body: string) => HttpService.post(`${BASE}/messages/${encodeURIComponent(channel)}`, { body })
+  chatSend = (channel: string, msg: { body: string; files: File[]; replyTo?: number }) => {
+    const form = new FormData()
+    form.append('body', msg.body)
+    if (msg.replyTo) form.append('reply_to', String(msg.replyTo))
+    msg.files.forEach(f => form.append('files[]', f))
+    return HttpService.post(`${BASE}/messages/${encodeURIComponent(channel)}`, form)
+  }
+  /** Pièce jointe → adresse locale (blob). */
+  chatFile = async (channel: string, fileId: number): Promise<string> =>
+    (await HttpService.downloadFile(`${BASE}/messages/${encodeURIComponent(channel)}/fichiers/${fileId}`)).url
 
   notePdf = async (stageId: number, noteId: number): Promise<LocalFile> =>
     this.pdfFrom(await HttpService.get(`${BASE}/demandes/${stageId}/notes/${noteId}/pdf`), 'note-de-service.pdf')

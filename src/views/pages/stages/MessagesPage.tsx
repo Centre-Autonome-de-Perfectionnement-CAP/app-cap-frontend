@@ -1,15 +1,15 @@
 // src/views/pages/stages/MessagesPage.tsx
 // Messagerie de stage (progiciel) : « Mes stagiaires » (superviseur et ses
-// stagiaires, visible par eux seuls) et la discussion générale. Texte
-// seulement ; les messages s'effacent après 7 jours. Liste à gauche, fil à
+// stagiaires, visible par eux seuls) et la discussion générale. Texte, pièces
+// jointes, réponse à un message, « vu par » ; tout s'efface après 7 jours. Liste à gauche, fil à
 // droite (un seul volet sur petit écran). Rafraîchi tant que la page est visible.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilArrowLeft, cilLockLocked, cilSend, cilInfo } from '@coreui/icons'
-import stageService, { type ChatChannel, type ChatMessage, type ChatThread } from '@/services/stage.service'
+import { cilArrowLeft, cilLockLocked, cilSend, cilInfo, cilPaperclip, cilShareAlt } from '@coreui/icons'
+import stageService, { type ChatChannel, type ChatFile, type ChatMessage, type ChatSeen, type ChatThread } from '@/services/stage.service'
 import { friendlyError } from '@/components/common/ActionResult'
 import { PageHead, StagesStyles } from './StagesUi'
 
@@ -68,7 +68,7 @@ const MessagesPage = () => {
   return (
     <div className="stg-page">
       <StagesStyles />
-      <PageHead title="Messages" subtitle={`Texte seulement · les messages s'effacent après ${list?.keep_days ?? 7} jours`} />
+      <PageHead title="Messages" subtitle={`Messages et pièces jointes s'effacent après ${list?.keep_days ?? 7} jours`} />
       {error && !list && <div className="stg-err">{error}</div>}
       <div className="msg-wrap" data-open={channel ? '1' : '0'}>
         <aside className="msg-list">
@@ -107,14 +107,26 @@ const ChannelRow = ({ c, active }: { c: ChatChannel; active: boolean }) => {
   )
 }
 
+const ACCEPT = '.pdf,.doc,.docx,.zip,.jpg,.jpeg,.png,.webp'
+const MAX_FILES = 3
+const MAX_BYTES = 5 * 1024 * 1024
+const ALLOWED = /\.(pdf|docx?|zip|jpe?g|png|webp)$/i
+const sizeLabel = (b: number) => (b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} Ko` : `${(b / 1024 / 1024).toFixed(1).replace('.', ',')} Mo`)
+const extOf = (name: string) => (name.split('.').pop() ?? '').toUpperCase().slice(0, 4)
+const initials = (s: string) => s.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase()
+
 const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) => {
   const navigate = useNavigate()
   const [thread, setThread] = useState<ChatThread | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [text, setText] = useState('')
+  const [files, setFiles] = useState<File[]>([])
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null)
   const [sending, setSending] = useState(false)
   const [older, setOlder] = useState(false)
   const box = useRef<HTMLDivElement>(null)
+  const picker = useRef<HTMLInputElement>(null)
+  const input = useRef<HTMLTextAreaElement>(null)
   const stick = useRef(true)
   const scrollDown = () => requestAnimationFrame(() => { const el = box.current; if (el) el.scrollTop = el.scrollHeight })
 
@@ -149,19 +161,41 @@ const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) =>
     } catch (e) { setError(friendlyError(e)) } finally { setOlder(false) }
   }
 
+  const pick = (list: FileList | null) => {
+    if (!list?.length) return
+    const room = MAX_FILES - files.length
+    const ok: File[] = []
+    for (const f of Array.from(list)) {
+      if (ok.length >= room) { setError('Trois fichiers au plus par message.'); break }
+      if (!ALLOWED.test(f.name)) { setError('Fichiers acceptés : PDF, Word, ZIP et images.'); continue }
+      if (f.size === 0 || f.size > MAX_BYTES) { setError(`« ${f.name} » est vide ou dépasse 5 Mo.`); continue }
+      ok.push(f)
+    }
+    setFiles(prev => [...prev, ...ok])
+    if (picker.current) picker.current.value = ''
+  }
+
   const send = async () => {
     const body = text.trim()
-    if (!body || sending) return
+    if ((!body && !files.length) || sending) return
     setSending(true); setError(null)
     try {
-      await stageService.chatSend(channel, body)
-      setText(''); stick.current = true
+      await stageService.chatSend(channel, { body, files, replyTo: replyTo?.id })
+      setText(''); setFiles([]); setReplyTo(null); stick.current = true
       await refresh(); scrollDown()
     } catch (e) {
       setError(friendlyError(e))
     } finally {
       setSending(false)
     }
+  }
+
+  const quote = (m: ChatMessage) => { setReplyTo(m); input.current?.focus() }
+  const jump = (id: number) => {
+    const el = document.getElementById(`msg-${id}`)
+    if (!el) return
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    el.classList.add('msg-flash'); window.setTimeout(() => el.classList.remove('msg-flash'), 1400)
   }
 
   if (!thread) return error
@@ -204,30 +238,123 @@ const Thread = ({ channel, onRead }: { channel: string; onRead: () => void }) =>
                   {m.sender.name}{m.sender.role && <span className="msg-role">{m.sender.role}</span>}
                 </p>
               )}
-              <div className="msg-b" data-mine={m.mine ? '1' : '0'} data-run={sameRun ? '1' : '0'}>
-                {m.body}
-                <span className="msg-tm">
-                  {time(m.at)}{m.mine && thread.seen?.id === m.id && thread.seen.count > 0 ? ` · Vu${thread.seen.count > 1 ? ` par ${thread.seen.count}` : ''}` : ''}
-                </span>
+              <div className="msg-line" data-mine={m.mine ? '1' : '0'}>
+                <div id={`msg-${m.id}`} className="msg-b" data-mine={m.mine ? '1' : '0'} data-run={sameRun ? '1' : '0'}>
+                  {m.reply && (
+                    <button type="button" className="msg-quote" onClick={() => { if (!m.reply?.deleted) jump(m.reply!.id) }}>
+                      {m.reply.deleted ? <i>Message effacé</i> : <><b>{m.reply.name}</b><span>{m.reply.body || 'Pièce jointe'}</span></>}
+                    </button>
+                  )}
+                  {m.body}
+                  {m.files.map(f => <Attachment key={f.id} channel={channel} f={f} mine={m.mine} onError={setError} />)}
+                  <span className="msg-tm">{time(m.at)}</span>
+                </div>
+                <button type="button" className="msg-reply" onClick={() => quote(m)} aria-label="Répondre à ce message" title="Répondre">
+                  <CIcon icon={cilShareAlt} style={{ width: 16, transform: 'scaleX(-1)' }} />
+                </button>
               </div>
+              {m.mine && thread.seen?.id === m.id && <SeenBy seen={thread.seen} />}
             </div>
           )
         })}
       </div>
 
       {error && <div style={{ padding: '8px 12px 0' }}><div className="stg-err">{error}</div></div>}
+      {replyTo && (
+        <div className="msg-replying">
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <b>Réponse à {replyTo.mine ? 'vous-même' : replyTo.sender.name}</b>
+            <span>{replyTo.body || 'Pièce jointe'}</span>
+          </div>
+          <button type="button" className="msg-x" onClick={() => setReplyTo(null)} aria-label="Annuler la réponse">×</button>
+        </div>
+      )}
+      {files.length > 0 && (
+        <div className="msg-chips">
+          {files.map((f, i) => (
+            <span key={`${f.name}-${i}`} className="msg-chip">
+              <span className="msg-chip-n">{f.name}</span><span style={{ color: '#94a3b8' }}>{sizeLabel(f.size)}</span>
+              <button type="button" className="msg-x" onClick={() => setFiles(prev => prev.filter((_, k) => k !== i))} aria-label={`Retirer ${f.name}`}>×</button>
+            </span>
+          ))}
+        </div>
+      )}
       <div className="msg-comp">
+        <input ref={picker} type="file" multiple accept={ACCEPT} hidden onChange={e => pick(e.target.files)} />
+        <button type="button" className="msg-clip" onClick={() => picker.current?.click()} disabled={files.length >= MAX_FILES || sending}
+          aria-label="Joindre un fichier" title="PDF, Word, ZIP, images ; 5 Mo au plus, 3 fichiers">
+          <CIcon icon={cilPaperclip} style={{ width: 20 }} />
+        </button>
         <label htmlFor="msg-input" className="visually-hidden">Votre message</label>
-        <textarea id="msg-input" rows={1} maxLength={2000} value={text} onChange={e => setText(e.target.value)}
+        <textarea ref={input} id="msg-input" rows={1} maxLength={2000} value={text} onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
           placeholder={c.kind === 'group' ? 'Écrire un message à vos stagiaires…' : 'Écrire un message à tous…'}
           style={{ height: Math.min(132, 44 + Math.max(0, text.split('\n').length - 1) * 21) }} />
-        <button type="button" className="msg-send" onClick={send} disabled={!text.trim() || sending} aria-label="Envoyer">
+        <button type="button" className="msg-send" onClick={send} disabled={(!text.trim() && !files.length) || sending} aria-label="Envoyer">
           {sending ? <CSpinner size="sm" /> : <CIcon icon={cilSend} />}
         </button>
       </div>
-      <p className="msg-hint">Entrée pour envoyer, Maj + Entrée pour aller à la ligne.</p>
+      <p className="msg-hint">Entrée pour envoyer, Maj + Entrée pour aller à la ligne. Survolez un message pour y répondre.</p>
     </>
+  )
+}
+
+/** Pièce jointe : aperçu pour une image (chargé à l'affichage), carte à télécharger sinon. */
+const Attachment = ({ channel, f, mine, onError }: { channel: string; f: ChatFile; mine: boolean; onError: (m: string) => void }) => {
+  const [src, setSrc] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    if (!f.image) return
+    let url: string | null = null, alive = true
+    stageService.chatFile(channel, f.id).then(u => { url = u; if (alive) setSrc(u); else URL.revokeObjectURL(u) }).catch(() => {})
+    return () => { alive = false; if (url) URL.revokeObjectURL(url) }
+  }, [channel, f.id, f.image])
+
+  const open = async () => {
+    if (busy) return
+    setBusy(true)
+    try {
+      const url = src ?? await stageService.chatFile(channel, f.id)
+      const a = document.createElement('a')
+      a.href = url; a.download = f.name; a.rel = 'noopener'
+      if (f.image) a.target = '_blank'
+      a.click()
+      if (!src) window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (e) { onError(friendlyError(e)) } finally { setBusy(false) }
+  }
+
+  if (f.image) {
+    return (
+      <button type="button" className="msg-img" onClick={open} aria-label={`Ouvrir l'image ${f.name}`}>
+        {src ? <img src={src} alt={f.name} /> : <span>Image…</span>}
+      </button>
+    )
+  }
+  return (
+    <button type="button" className="msg-file" data-mine={mine ? '1' : '0'} onClick={open} disabled={busy}>
+      <span className="msg-ext">{extOf(f.name)}</span>
+      <span style={{ minWidth: 0, flex: 1 }}><b>{f.name}</b><small>{busy ? 'Ouverture…' : sizeLabel(f.size)}</small></span>
+    </button>
+  )
+}
+
+/** Pastilles « vu par » sous mon dernier message ; au clic, la liste avec l'heure. */
+const SeenBy = ({ seen }: { seen: ChatSeen }) => {
+  const [open, setOpen] = useState(false)
+  if (!seen.by.length) return null
+  return (
+    <div className="msg-seen">
+      <button type="button" className="msg-seen-btn" onClick={() => setOpen(v => !v)} aria-expanded={open} aria-label={`Vu par ${seen.by.length}`}>
+        {seen.by.slice(0, 5).map(p => <span key={p.key} style={{ background: tone(p.key) }} title={p.name}>{initials(p.name)}</span>)}
+        {seen.by.length > 5 && <em>+{seen.by.length - 5}</em>}
+      </button>
+      {open && (
+        <div className="msg-seen-pop">
+          <b>Vu par</b>
+          {seen.by.map(p => <p key={p.key}><span>{p.name}</span><span>{p.at ? listTime(p.at) : ''}</span></p>)}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -276,6 +403,45 @@ const MessagesStyles = () => (
     .msg-older { all: unset; cursor: pointer; font-size: .875rem; font-weight: 700; color: #326761; background: #fff; border: 1px solid #e6ebf2; border-radius: 999px; padding: 3px 12px; }
     .msg-none, .msg-empty { margin: auto; color: #64748b; font-size: .9rem; display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .msg-loading { display: flex; gap: 8px; align-items: center; justify-content: center; padding: 24px; color: #64748b; font-size: .9rem; }
+    .msg-line { display: flex; align-items: center; gap: 6px; }
+    .msg-line[data-mine='1'] { flex-direction: row-reverse; }
+    .msg-line .msg-b { margin-top: 3px; }
+    .msg-line[data-mine='1'] .msg-b { align-self: auto; }
+    .msg-reply { all: unset; cursor: pointer; opacity: 0; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; color: #64748b; flex-shrink: 0; }
+    .msg-line:hover .msg-reply, .msg-reply:focus-visible { opacity: 1; background: #fff; border: 1px solid #e6ebf2; }
+    .msg-flash { box-shadow: 0 0 0 3px rgba(50, 103, 97, .35); }
+    .msg-quote { all: unset; cursor: pointer; display: block; box-sizing: border-box; width: 100%; border-left: 3px solid #326761; background: #f1f5f9; border-radius: 8px; padding: 4px 8px; margin-bottom: 6px; font-size: .875rem; }
+    .msg-b[data-mine='1'] .msg-quote { border-left-color: rgba(255,255,255,.6); background: rgba(255,255,255,.15); }
+    .msg-quote b { display: block; }
+    .msg-quote span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; opacity: .85; }
+    .msg-img { all: unset; cursor: pointer; display: block; margin-top: 4px; border-radius: 10px; overflow: hidden; background: rgba(0,0,0,.05); }
+    .msg-img img { display: block; max-height: 220px; max-width: 100%; }
+    .msg-img span { display: flex; width: 180px; height: 110px; align-items: center; justify-content: center; font-size: .875rem; opacity: .7; }
+    .msg-file { all: unset; cursor: pointer; box-sizing: border-box; display: flex; gap: 8px; align-items: center; width: 100%; margin-top: 4px; padding: 7px; border-radius: 10px; background: #f8fafc; border: 1px solid #e6ebf2; }
+    .msg-file[data-mine='1'] { background: rgba(255,255,255,.15); border-color: transparent; }
+    .msg-file b { display: block; font-size: .875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .msg-file small { display: block; font-size: .875rem; opacity: .75; }
+    .msg-ext { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: .875rem; background: #eaf3f1; color: #326761; }
+    .msg-file[data-mine='1'] .msg-ext { background: rgba(255,255,255,.2); color: #fff; }
+    .msg-seen { align-self: flex-end; text-align: right; margin-top: 4px; position: relative; }
+    .msg-seen-btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; padding: 2px 4px; border-radius: 999px; }
+    .msg-seen-btn span { width: 26px; height: 26px; border-radius: 13px; border: 2px solid #f6f8f7; margin-left: -7px; color: #fff; font-size: .875rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+    .msg-seen-btn span:first-child { margin-left: 0; }
+    .msg-seen-btn em { font-style: normal; font-size: .875rem; color: #64748b; margin-left: 4px; }
+    .msg-seen-pop { position: absolute; right: 0; bottom: 34px; z-index: 5; min-width: 220px; background: #fff; border: 1px solid #e6ebf2; border-radius: 12px; box-shadow: 0 12px 30px -10px rgba(0,0,0,.3); padding: 10px 12px; text-align: left; font-size: .875rem; }
+    .msg-seen-pop p { display: flex; justify-content: space-between; gap: 16px; margin: 4px 0 0; }
+    .msg-seen-pop p span:last-child { color: #64748b; }
+    .msg-replying { display: flex; align-items: center; gap: 8px; border-left: 4px solid #326761; background: #eaf3f1; padding: 7px 12px; font-size: .875rem; }
+    .msg-replying b { display: block; color: #326761; }
+    .msg-replying span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #64748b; }
+    .msg-x { all: unset; cursor: pointer; width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #64748b; }
+    .msg-x:hover { background: #fff; }
+    .msg-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 0; }
+    .msg-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; border: 1px solid #e6ebf2; background: #f8fafc; border-radius: 10px; padding: 2px 4px 2px 10px; font-size: .875rem; }
+    .msg-chip-n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+    .msg-clip { all: unset; cursor: pointer; width: 40px; height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: #64748b; flex-shrink: 0; }
+    .msg-clip:hover { background: #f1f5f9; }
+    .msg-clip:disabled { opacity: .4; cursor: not-allowed; }
     @media (max-width: 991px) {
       .msg-wrap { grid-template-columns: minmax(0, 1fr); height: calc(100vh - 200px); }
       .msg-wrap[data-open='1'] .msg-list { display: none; }
@@ -284,6 +450,7 @@ const MessagesStyles = () => (
       .msg-body { padding: 12px; }
       .msg-b { max-width: 82%; }
       .msg-lock { display: none; }
+      .msg-reply { opacity: 1; }
     }
   `}</style>
 )

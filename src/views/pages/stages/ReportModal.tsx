@@ -85,8 +85,8 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
 
   const st = d ? STATUS_COLOR[d.status] : null
   const events = d ? [
-    ...d.versions.map(v => ({ at: v.at, el: <><strong>Version {v.version}</strong> déposée{v.late ? ' (en retard)' : ''}{v.post_defense ? ' - corrigée après soutenance' : ''}{v.note ? <div style={{ whiteSpace: 'pre-line' }}>{v.note}</div> : null}</> })),
-    ...d.comments.map(c => ({ at: c.at, el: <><strong>{c.author === 'staff' ? c.name : 'Stagiaire'}</strong> <span className="text-muted">(v{c.version})</span><div style={{ whiteSpace: 'pre-line' }}>{c.body}</div></> })),
+    ...d.versions.map(v => ({ at: v.at, el: <><strong>Version {v.version}</strong> déposée{v.by ? ` par ${v.by}` : ''}{v.late ? ' (en retard)' : ''}{v.post_defense ? ' - corrigée après soutenance' : ''}{v.note ? <div style={{ whiteSpace: 'pre-line' }}>{v.note}</div> : null}</> })),
+    ...d.comments.map(c => ({ at: c.at, el: <><strong>{c.name}</strong> <span className="text-muted">(v{c.version})</span><div style={{ whiteSpace: 'pre-line' }}>{c.body}</div></> })),
     ...d.reviews.map(r => ({ at: r.at, el: <><strong style={{ color: r.decision === 'approved' ? '#059669' : '#ea580c' }}>{r.decision === 'approved' ? 'Validé' : 'À corriger'}</strong> par {r.name} ({r.role}, v{r.version}){r.comment ? <div style={{ whiteSpace: 'pre-line' }}>{r.comment}</div> : null}</> })),
   ].sort((a, b) => a.at.localeCompare(b.at)) : []
 
@@ -98,7 +98,7 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
 
   return (
     <ViewerFrame
-      title={d ? `${d.label} - ${d.stage?.nom_complet ?? ''}` : 'Rapport'}
+      title={d ? `${d.label} - ${d.stage?.nom_complet ?? ''}${d.binome ? ` et ${d.binome.name} (binôme)` : ''}` : 'Rapport'}
       badge={d && <>
         {st && <Pill color={st.color} bg={st.bg}>{d.status_label}</Pill>}
         {d.late && <Pill color="#b45309" bg="#fef3c7">En retard</Pill>}

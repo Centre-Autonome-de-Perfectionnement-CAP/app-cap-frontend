@@ -73,8 +73,8 @@ const RapportsPage = () => {
               <CIcon icon={cilDescription} style={{ width: 18 }} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <strong style={{ color: '#0f172a' }}>{r.stage?.nom_complet}</strong>
-              <span className="stg-muted" style={{ display: 'block' }}>{r.label} · version {r.current_version}{r.late ? ' · en retard' : ''}</span>
+              <strong style={{ color: '#0f172a' }}>{r.stage?.nom_complet}{r.binome ? ` et ${r.binome.name}` : ''}</strong>
+              <span className="stg-muted" style={{ display: 'block' }}>{r.label}{r.binome ? ' · rapport du binôme' : ''} · version {r.current_version}{r.late ? ' · en retard' : ''}</span>
             </span>
             <Pill color={STATUS[r.status].color} bg={STATUS[r.status].bg}>{r.status_label}</Pill>
             <span className="stg-muted">{frDateTime(r.submitted_at)}</span>

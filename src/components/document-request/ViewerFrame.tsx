@@ -16,6 +16,7 @@ import {
   cilChevronRight, cilChevronLeft,
 } from '@coreui/icons'
 import PdfViewer from './PdfViewer'
+import { preloadPdfJs } from './pdfEngine'
 import type { FileKind } from './fileKind'
 
 const isTyping = (t: EventTarget | null) => {
@@ -115,6 +116,8 @@ const ViewerFrame = ({
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
+    // Le lecteur PDF se charge pendant le téléchargement du document.
+    preloadPdfJs()
     return () => { document.body.style.overflow = '' }
   }, [])
 

@@ -17,6 +17,7 @@ import {
 } from '@coreui/icons'
 import PdfViewer from './PdfViewer'
 import { preloadPdfJs } from './pdfEngine'
+import type { PdfStream } from './progressiveFile'
 import type { FileKind } from './fileKind'
 
 const isTyping = (t: EventTarget | null) => {
@@ -96,7 +97,8 @@ export interface ViewerFrameProps {
   onIndex?: (i: number) => void
   loading: boolean
   error: string | null
-  file: { url: string; kind: FileKind } | null
+  /** url : fichier complet en mémoire ; stream : PDF lu par tranches (affichage progressif). */
+  file: { url: string | null; kind: FileKind; stream?: PdfStream } | null
   onDownload: () => void
   onClose: () => void
   /** Panneau latéral (informations, commentaires, décision…). */
@@ -210,10 +212,12 @@ const ViewerFrame = ({
                 <span style={{ fontSize: '0.9rem', color: '#7f1d1d', fontWeight: 600 }}>{error}</span>
               </div>
             )}
-            {!loading && !error && file?.kind === 'pdf' && (
-              <PdfViewer key={file.url} src={file.url} title={label} onDownload={onDownload} />
+            {!loading && !error && file?.kind === 'pdf' && (file.url || file.stream) && (
+              // Lecture par tranches prioritaire : l'adresse complète, apparue en
+              // cours de route, ne relance pas l'affichage.
+              <PdfViewer key={file.stream ? `stream-${label}-${file.stream.total}` : file.url} src={file.stream ? null : file.url} stream={file.stream} title={label} onDownload={onDownload} />
             )}
-            {!loading && !error && file?.kind === 'image' && (
+            {!loading && !error && file?.kind === 'image' && file.url && (
               <ImageViewer key={file.url} src={file.url} alt={label} onDownload={onDownload} />
             )}
             {!loading && !error && file?.kind === 'other' && (

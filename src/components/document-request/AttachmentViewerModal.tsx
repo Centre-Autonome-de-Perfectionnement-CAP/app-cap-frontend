@@ -10,7 +10,8 @@ import { TYPE_LABELS } from '@/types/document-request.types'
 import FileCommentsPanel from './FileCommentsPanel'
 import ViewerFrame from './ViewerFrame'
 import { saveLocalFile } from '@/utils/base64File'
-import { getDossierFile, peekDossierFile, prefetchDossierFiles, type FileKind } from './dossierFileCache'
+import { getDossierFile, peekDossierFile, prefetchDossierFiles } from './dossierFileCache'
+import type { Opened } from './progressiveFile'
 import useFileComments from './useFileComments'
 
 // ─── Types publics ────────────────────────────────────────────────────────────
@@ -96,10 +97,7 @@ const InfoLine = ({ label, value }: { label: string; value?: string | null }) =>
 const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCommentsChanged }: Props) => {
   const [loading,     setLoading]     = useState(false)
   const [error,       setError]       = useState<string | null>(null)
-  const [blobUrl,     setBlobUrl]     = useState<string | null>(null)
-  const [filename,    setFilename]    = useState<string | undefined>(undefined)
-  const [kind,        setKind]        = useState<FileKind | null>(null)
-  const [realExt,     setRealExt]     = useState('')
+  const [opened,      setOpened]      = useState<Opened | null>(null)
   const [index,       setIndex]       = useState(0)
 
   // Liste des documents : celle fournie, sinon le seul document ouvert
@@ -126,17 +124,17 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
   const total  = list.length
 
   useEffect(() => {
-    if (!active) { setBlobUrl(null); setError(null); return }
+    if (!active) { setOpened(null); setError(null); return }
     // Déjà en mémoire : affichage immédiat
     const hit = peekDossierFile(demandeId, active)
-    if (hit) { setBlobUrl(hit.url); setFilename(hit.filename); setKind(hit.kind); setRealExt(hit.ext); setError(null); setLoading(false) }
+    if (hit) { setOpened(hit); setError(null); setLoading(false) }
     else {
-      setBlobUrl(null); setLoading(true); setError(null)
+      setOpened(null); setLoading(true); setError(null)
     }
     let cancelled = false
     if (!hit) {
       getDossierFile(demandeId, active)
-        .then(result => { if (!cancelled) { setBlobUrl(result.url); setFilename(result.filename); setKind(result.kind); setRealExt(result.ext) } })
+        .then(result => { if (!cancelled) setOpened(result) })
         .catch((err: any) => {
           if (!cancelled) setError(err?.message || 'Impossible de charger ce document.')
         })
@@ -154,16 +152,18 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
   if (!file || !active) return null
 
   // Affichage selon le contenu réel du fichier (voir dossierFileCache)
-  const ext         = realExt || extensionOf(active.path)
+  const ext         = opened?.ext || extensionOf(active.path)
   const dateLabel   = formatDateTime(active.uploadedAt)
   const originStyle = ORIGIN_STYLES[active.source]
   const nbComments  = comments.countFor(active.source, active.key)
 
   const downloadName = active.source === 'secretary'
-    ? (filename || active.label)
+    ? (opened?.name || active.label)
     : `${active.label}.${ext || 'pdf'}`
 
-  const handleDownload = () => { if (blobUrl) saveLocalFile(blobUrl, downloadName) }
+  const handleDownload = () => {
+    opened?.full().then(u => saveLocalFile(u, downloadName)).catch((err: any) => setError(err?.message || 'Impossible de télécharger ce document.'))
+  }
 
   return (
     <ViewerFrame
@@ -182,7 +182,7 @@ const AttachmentViewerModal = ({ demandeId, demande, file, files, onClose, onCom
       onIndex={setIndex}
       loading={loading}
       error={error}
-      file={blobUrl && kind ? { url: blobUrl, kind } : null}
+      file={opened ? { url: opened.url, kind: opened.kind, stream: opened.stream } : null}
       onDownload={handleDownload}
       onClose={onClose}
       sidebar={<>

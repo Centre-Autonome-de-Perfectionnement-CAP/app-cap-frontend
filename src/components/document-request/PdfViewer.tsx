@@ -14,9 +14,13 @@ import CIcon from '@coreui/icons-react'
 import { cilZoomIn, cilZoomOut, cilFullscreen, cilFile, cilCloudDownload } from '@coreui/icons'
 
 import { loadPdfJs } from './pdfEngine'
+import type { PdfStream } from './progressiveFile'
 
 interface Props {
-  src: string
+  /** Fichier complet en mémoire… */
+  src?: string | null
+  /** …ou PDF lu par tranches : la 1re page s'affiche sans attendre la fin. */
+  stream?: PdfStream
   title: string
   onDownload: () => void
 }
@@ -25,7 +29,7 @@ interface Props {
 // même worker : chaque libération est attendue avant l'ouverture suivante.
 let releasing: Promise<unknown> = Promise.resolve()
 
-const PdfViewer = ({ src, title, onDownload }: Props) => {
+const PdfViewer = ({ src, stream, title, onDownload }: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const pagesRef  = useRef<HTMLDivElement>(null)
   const [doc,     setDoc]     = useState<any>(null)
@@ -33,6 +37,7 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
   const [loading, setLoading] = useState(true)
   const [failed,  setFailed]  = useState(false)
   const [pages,   setPages]   = useState(0)
+  const fetched = useRef(false)
 
   // 1) Ouverture du document : une seule fois par fichier.
   useEffect(() => {
@@ -45,11 +50,24 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
         const pdfjs = await loadPdfJs()
         await releasing
         if (cancelled) return
-        task = pdfjs.getDocument({ url: src })
+        if (stream) {
+          const transport = new pdfjs.PDFDataRangeTransport(stream.total, stream.head)
+          transport.requestDataRange = (begin: number, end: number) => {
+            stream.read(begin, end - begin)
+              .then(chunk => { if (!cancelled) transport.onDataRange(begin, chunk) })
+              .catch(() => { if (!cancelled) { setFailed(true); setLoading(false) } })
+          }
+          // Seules les parties utiles à l'affichage sont demandées d'abord ;
+          // le reste suit une fois la 1re page dessinée (voir plus bas).
+          task = pdfjs.getDocument({ range: transport, rangeChunkSize: 256 * 1024, disableAutoFetch: true })
+        } else {
+          task = pdfjs.getDocument({ url: src as string })
+        }
         const opened = await task.promise
         if (cancelled) return
         setPages(opened.numPages)
         setDoc(opened)
+
       } catch {
         if (!cancelled) { setFailed(true); setLoading(false) }
       }
@@ -59,7 +77,7 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
       cancelled = true
       if (task) releasing = releasing.then(() => task.destroy()).catch(() => undefined)
     }
-  }, [src])
+  }, [src, stream])
 
   // 2) Pages : emplacements à la bonne taille tout de suite, dessin seulement
   // quand une page approche de l'écran ; tout est redessiné à chaque zoom.
@@ -100,7 +118,15 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
         await render.promise
         if (cancelled) return
         slot.replaceChildren(canvas)
-        if (n === 1) setLoading(false)
+        if (n === 1) {
+          setLoading(false)
+          // 1re page affichée : le reste du fichier arrive en arrière-plan,
+          // puis il est gardé pour le téléchargement et une prochaine ouverture.
+          if (stream && !fetched.current) {
+            fetched.current = true
+            doc.getData().then((data: Uint8Array) => stream.complete(data)).catch(() => undefined)
+          }
+        }
       } catch {
         // Dessin interrompu par un nouveau zoom : rien à signaler.
         if (!cancelled && n === 1) { setFailed(true); setLoading(false) }
@@ -147,7 +173,7 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
       observer?.disconnect()
       renders.forEach(r => { try { r.cancel() } catch { /* déjà terminé */ } })
     }
-  }, [doc, zoom, title])
+  }, [doc, zoom, title, stream])
 
   if (failed) return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 20, textAlign: 'center' }}>

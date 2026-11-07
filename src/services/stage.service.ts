@@ -3,6 +3,7 @@
 
 import HttpService from './http.service'
 import { localFileFrom, saveLocalFile, type LocalFile } from '@/utils/base64File'
+import type { ChunkLoader } from '@/components/document-request/progressiveFile'
 
 const BASE = 'stages/admin'
 
@@ -579,8 +580,9 @@ class StageService {
   decideReport = (id: number, decision: 'approved' | 'rejected', comment?: string) =>
     HttpService.post(`${BASE}/rapports/${id}/decision`, { decision, comment: comment || null })
 
-  reportFile = async (id: number, version: number): Promise<LocalFile> =>
-    localFileFrom(await HttpService.get(`${BASE}/rapports/${id}/versions/${version}`), 'rapport.pdf', 'application/pdf')
+  /** Version d'un rapport, par tranches (affichage progressif). */
+  reportChunks = (id: number, version: number): ChunkLoader => (from, size) =>
+    HttpService.get(`${BASE}/rapports/${id}/versions/${version}?from=${from}&size=${size}`)
 
   // ── Attestations (lot 5) ───────────────────────────────────────────────
 
@@ -678,8 +680,9 @@ class StageService {
     HttpService.post('stages/invitation/accepter', payload)
 
   /** Pièce d'une demande. */
-  fileContent = async (id: number, key: string): Promise<LocalFile> =>
-    localFileFrom(await HttpService.get(`${BASE}/demandes/${id}/pieces/${encodeURIComponent(key)}?format=json`), key)
+  /** Pièce d'une demande de stage, par tranches (affichage progressif). */
+  fileChunks = (id: number, key: string): ChunkLoader => (from, size) =>
+    HttpService.get(`${BASE}/demandes/${id}/pieces/${encodeURIComponent(key)}?format=json&from=${from}&size=${size}`)
 }
 
 export default new StageService()

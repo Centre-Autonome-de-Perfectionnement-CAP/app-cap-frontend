@@ -180,3 +180,11 @@ export const WORK_STATUS: Record<'proposed' | 'draft' | 'published' | 'unpublish
   proposed: { color: '#b45309', bg: '#fffbeb' }, draft: { color: '#475569', bg: '#f1f5f9' },
   published: { color: '#047857', bg: '#ecfdf5' }, unpublished: { color: '#9f1239', bg: '#fff1f2' },
 }
+
+/** Couleurs des statuts d'une tâche. */
+export const TASK_STATUS: Record<'todo' | 'submitted' | 'revision' | 'validated', { color: string; bg: string }> = {
+  todo:      { color: '#475569', bg: '#f1f5f9' },
+  submitted: { color: '#2563eb', bg: '#eff6ff' },
+  revision:  { color: '#ea580c', bg: '#fff7ed' },
+  validated: { color: '#047857', bg: '#d1fae5' },
+}

@@ -12,6 +12,7 @@ const BinomesPage       = React.lazy(() => import('./BinomesPage'))
 const SuperviseursPage  = React.lazy(() => import('./SuperviseursPage'))
 const DemandesStagiairesPage = React.lazy(() => import('./DemandesStagiairesPage'))
 const RapportsPage = React.lazy(() => import('./RapportsPage'))
+const TachesPage = React.lazy(() => import('./TachesPage'))
 const AttestationsPage = React.lazy(() => import('./AttestationsPage'))
 const DashboardPage = React.lazy(() => import('./DashboardPage'))
 const StageDossierPage = React.lazy(() => import('./StageDossierPage'))
@@ -72,6 +73,7 @@ const StagesRoutes = () => (
           <Route path="/binomes" element={<Staff><BinomesPage /></Staff>} />
           <Route path="/demandes-stagiaires" element={<Staff><DemandesStagiairesPage /></Staff>} />
           <Route path="/rapports" element={<Staff><RapportsPage /></Staff>} />
+          <Route path="/taches" element={<Staff><TachesPage /></Staff>} />
           <Route path="/messages" element={<Staff><MessagesPage /></Staff>} />
           <Route path="/messages/:channel" element={<Staff><MessagesPage /></Staff>} />
           <Route path="/attestations" element={<SecretariatOrLead><AttestationsPage /></SecretariatOrLead>} />

@@ -5,32 +5,15 @@
 // réglé sur « Télécharger les PDF », etc.) TÉLÉCHARGENT le fichier au lieu de
 // l'afficher. Ici, chaque page est dessinée avec pdf.js : le document s'affiche
 // toujours, et ne se télécharge que si l'utilisateur clique sur « Télécharger ».
+// Seules les pages visibles (et leurs voisines) sont dessinées : la première
+// page s'affiche vite, même pour un long rapport.
 
 import { useEffect, useRef, useState } from 'react'
 import { CButton, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilZoomIn, cilZoomOut, cilFullscreen, cilFile, cilCloudDownload } from '@coreui/icons'
 
-type PdfJs = typeof import('pdfjs-dist')
-
-// pdf.js (≈ 1 Mo) n'est chargé qu'à la première ouverture d'un PDF.
-let pdfjsPromise: Promise<PdfJs> | null = null
-const loadPdfJs = (): Promise<PdfJs> => {
-  if (!pdfjsPromise) {
-    // Le moteur de rendu tourne dans un « worker » que Vite compile en fichier
-    // .js classique : certains serveurs servent mal les fichiers .mjs (type
-    // MIME), ce qui empêchait l'affichage des PDF.
-    pdfjsPromise = Promise.all([
-      import('pdfjs-dist'),
-      import('pdfjs-dist/build/pdf.worker.min.mjs?worker'),
-    ]).then(([lib, worker]) => {
-      const PdfWorker = (worker as any).default as new () => Worker
-      lib.GlobalWorkerOptions.workerPort = new PdfWorker()
-      return lib
-    })
-  }
-  return pdfjsPromise
-}
+import { loadPdfJs } from './pdfEngine'
 
 interface Props {
   src: string
@@ -78,53 +61,90 @@ const PdfViewer = ({ src, title, onDownload }: Props) => {
     }
   }, [src])
 
-  // 2) Dessin des pages : à chaque zoom, sans recharger le document.
+  // 2) Pages : emplacements à la bonne taille tout de suite, dessin seulement
+  // quand une page approche de l'écran ; tout est redessiné à chaque zoom.
   useEffect(() => {
     const container = pagesRef.current
-    if (!doc || !container) return
+    const scroller = scrollRef.current
+    if (!doc || !container || !scroller) return
     let cancelled = false
     const renders: any[] = []
+    const drawn = new Set<number>()
     container.innerHTML = ''
     setLoading(true)
 
-    ;(async () => {
+    const available = Math.max(320, scroller.clientWidth - 48)
+    // Netteté suffisante, deux fois moins de calcul qu'une résolution double.
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5)
+
+    const draw = async (n: number, slot: HTMLDivElement) => {
+      if (drawn.has(n) || cancelled) return
+      drawn.add(n)
       try {
-        const available = Math.max(320, (scrollRef.current?.clientWidth ?? 900) - 48)
-        const ratio = Math.min(window.devicePixelRatio || 1, 2)
-
-        for (let n = 1; n <= doc.numPages; n++) {
-          if (cancelled) return
-          const page = await doc.getPage(n)
-          const base = page.getViewport({ scale: 1 })
-          const scale = (available / base.width) * zoom
-          const viewport = page.getViewport({ scale: scale * ratio })
-
-          const canvas = document.createElement('canvas')
-          canvas.width  = Math.floor(viewport.width)
-          canvas.height = Math.floor(viewport.height)
-          canvas.style.width  = `${Math.floor(viewport.width / ratio)}px`
-          canvas.style.height = `${Math.floor(viewport.height / ratio)}px`
-          canvas.style.display = 'block'
-          canvas.style.margin = '0 auto 16px'
-          canvas.style.background = '#fff'
-          canvas.style.boxShadow = '0 2px 10px rgba(15,23,42,0.12)'
-          canvas.setAttribute('aria-label', `${title} - page ${n}`)
-          container.appendChild(canvas)
-
-          const render = page.render({ canvasContext: canvas.getContext('2d')!, viewport })
-          renders.push(render)
-          await render.promise
-          if (n === 1 && !cancelled) setLoading(false)
-        }
-        if (!cancelled) setLoading(false)
+        const page = await doc.getPage(n)
+        if (cancelled) return
+        const base = page.getViewport({ scale: 1 })
+        const scale = (available / base.width) * zoom
+        const viewport = page.getViewport({ scale: scale * ratio })
+        const canvas = document.createElement('canvas')
+        canvas.width  = Math.floor(viewport.width)
+        canvas.height = Math.floor(viewport.height)
+        canvas.style.width  = `${Math.floor(viewport.width / ratio)}px`
+        canvas.style.height = `${Math.floor(viewport.height / ratio)}px`
+        canvas.style.display = 'block'
+        canvas.setAttribute('aria-label', `${title} - page ${n}`)
+        slot.style.width = canvas.style.width
+        slot.style.height = canvas.style.height
+        const render = page.render({ canvasContext: canvas.getContext('2d')!, viewport })
+        renders.push(render)
+        await render.promise
+        if (cancelled) return
+        slot.replaceChildren(canvas)
+        if (n === 1) setLoading(false)
       } catch {
         // Dessin interrompu par un nouveau zoom : rien à signaler.
+        if (!cancelled && n === 1) { setFailed(true); setLoading(false) }
+      }
+    }
+
+    let observer: IntersectionObserver | null = null
+    ;(async () => {
+      try {
+        // Taille de la 1re page pour réserver la place de toutes les pages.
+        const first = (await doc.getPage(1)).getViewport({ scale: 1 })
+        if (cancelled) return
+        const w = Math.floor(available * zoom)
+        const h = Math.floor(first.height * (w / first.width))
+        const slots: HTMLDivElement[] = []
+        for (let n = 1; n <= doc.numPages; n++) {
+          const slot = document.createElement('div')
+          slot.dataset.page = String(n)
+          Object.assign(slot.style, {
+            width: `${w}px`, height: `${h}px`, margin: '0 auto 16px', background: '#fff',
+            boxShadow: '0 2px 10px rgba(15,23,42,0.12)',
+          })
+          container.appendChild(slot)
+          slots.push(slot)
+        }
+        observer = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            if (!e.isIntersecting) return
+            const n = Number((e.target as HTMLElement).dataset.page)
+            draw(n, e.target as HTMLDivElement)
+            // La page suivante est préparée d'avance pour un défilement fluide.
+            if (slots[n]) draw(n + 1, slots[n])
+          })
+        }, { root: scroller, rootMargin: '600px 0px' })
+        slots.forEach(s => observer!.observe(s))
+        draw(1, slots[0])
+      } catch {
         if (!cancelled) { setFailed(true); setLoading(false) }
       }
     })()
 
     return () => {
       cancelled = true
+      observer?.disconnect()
       renders.forEach(r => { try { r.cancel() } catch { /* déjà terminé */ } })
     }
   }, [doc, zoom, title])

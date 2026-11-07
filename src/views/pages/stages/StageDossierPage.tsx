@@ -140,6 +140,20 @@ const StageDossierPage = () => {
     }
   }
 
+  const reinstate = async () => {
+    if (!detail) return
+    setBusy(true)
+    try {
+      const res: any = await stageService.reinstate(detail.id)
+      if (res?.data) setDetail(res.data)
+      await showSuccess('Stage rétabli', res?.message)
+    } catch (e) {
+      await showError('Rétablissement impossible', friendlyError(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const openPartner = useOpenDossier(detail?.reference ?? 'Dossier')
 
   const splitPair = async () => {
@@ -305,6 +319,17 @@ const StageDossierPage = () => {
           {' - '}{detail.pair.status_label}. Proposition et décision valent pour les deux : mêmes service et dates.
         </span>
         {lead && <CButton size="sm" color="secondary" variant="outline" disabled={busy} onClick={splitPair}>Séparer le binôme</CButton>}
+      </div>
+    ),
+    withdrawn: detail.status === 'withdrawn' && (
+      <div className="dos-info" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ flex: 1, minWidth: 220 }}>
+          Stage annulé automatiquement : la présence n'a pas été confirmée dans le délai. En cas d'erreur (téléphone qui refuse
+          l'empreinte, absence justifiée…), rétablissez-le : le stagiaire reçoit un nouveau lien et dispose à nouveau du délai.
+        </span>
+        <CButton size="sm" color="primary" disabled={busy} onClick={reinstate}>
+          {busy ? <CSpinner size="sm" className="me-1" /> : <CIcon icon={cilActionUndo} className="me-1" />}Rétablir le stage
+        </CButton>
       </div>
     ),
     rejection: detail.status === 'rejected' && detail.rejection_reason && (
@@ -550,7 +575,7 @@ const StageDossierPage = () => {
 
       {mode === 'view' && !accepted && (
         <div className="dos-grid">
-          <div className="dos-col">{blocks.end}{blocks.pair}{blocks.counter}{blocks.waiting}{blocks.terms}{blocks.rejection}{blocks.person}{blocks.files}</div>
+          <div className="dos-col">{blocks.end}{blocks.withdrawn}{blocks.pair}{blocks.counter}{blocks.waiting}{blocks.terms}{blocks.rejection}{blocks.person}{blocks.files}</div>
           <div className="dos-col">{blocks.notes}{blocks.exchanges}{blocks.history}</div>
         </div>
       )}

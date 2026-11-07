@@ -2,7 +2,7 @@
 
 import HttpService from './http.service'
 import type { WorkflowAction } from '@/types/document-request.types'
-import { localFileFrom } from '@/utils/base64File'
+import type { ChunkLoader } from '@/components/document-request/progressiveFile'
 
 const BASE = 'attestations/document-requests'
 
@@ -54,17 +54,16 @@ class DocumentRequestService {
    * (Internet Download Manager…) interceptent les réponses PDF/image, même
    * chargées en arrière-plan ; une réponse JSON n'est jamais interceptée.
    */
-  previewFileContent = async (
+  /** Pièce d'un dossier, par tranches (affichage progressif dans le visualiseur). */
+  previewChunks = (
     id: number,
     source: 'initial' | 'complement' | 'secretary',
     key: string,
-  ): Promise<{ url: string; filename?: string; mime: string }> => {
+  ): ChunkLoader => async (from, size) => {
     const res: any = await HttpService.get(
-      `${BASE}/${id}/files/${source}/${encodeURIComponent(key)}?format=json`,
+      `${BASE}/${id}/files/${source}/${encodeURIComponent(key)}?format=json&from=${from}&size=${size}`,
     )
-    const data = res?.data
-    const { url, mime } = localFileFrom(data, key)
-    return { url, filename: data.name, mime }
+    return res?.data ?? {}
   }
 
   /**

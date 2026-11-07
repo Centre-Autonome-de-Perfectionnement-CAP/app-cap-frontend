@@ -9,6 +9,7 @@ import CIcon from '@coreui/icons-react'
 import { cilCheckAlt, cilPencil, cilCommentBubble } from '@coreui/icons'
 import ViewerFrame from '@/components/document-request/ViewerFrame'
 import { saveLocalFile } from '@/utils/base64File'
+import { openProgressive, type Opened } from '@/components/document-request/progressiveFile'
 import stageService, { type ReportDetail } from '@/services/stage.service'
 import { showSuccess, friendlyError } from '@/components/common/ActionResult'
 import { frDateTime } from './stageUtils'
@@ -27,7 +28,7 @@ interface Props { reportId: number | null; onClose: () => void; onChanged: () =>
 const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
   const [d, setD] = useState<ReportDetail | null>(null)
   const [version, setVersion] = useState<number>(0)
-  const [file, setFile] = useState<{ url: string; name: string } | null>(null)
+  const [file, setFile] = useState<Opened | null>(null)
   const [fileErr, setFileErr] = useState<string | null>(null)
   const [mode, setMode] = useState<'view' | 'approved' | 'rejected'>('view')
   const [text, setText] = useState('')
@@ -42,18 +43,22 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
     stageService.report(reportId).then(r => { setD(r); setVersion(r.current_version) }).catch(e => setErr(friendlyError(e)))
   }, [reportId])
 
+  // Version ouverte par tranches : la 1re page s'affiche sans attendre la fin ;
+  // une version déjà vue pendant la session s'ouvre immédiatement.
   useEffect(() => {
     if (!d || !version) return
     let alive = true
-    let url: string | null = null
     setFile(null); setFileErr(null)
-    stageService.reportFile(d.id, version)
-      .then(f => { url = f.url; if (alive) setFile(f); else URL.revokeObjectURL(f.url) })
+    openProgressive(`rapport-${d.id}-v${version}`, stageService.reportChunks(d.id, version), `${d.label} - v${version}.pdf`)
+      .then(f => { if (alive) setFile(f) })
       .catch(e => { if (alive) setFileErr(friendlyError(e)) })
-    return () => { alive = false; if (url) URL.revokeObjectURL(url) }
+    return () => { alive = false }
   }, [d?.id, version]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const download = useCallback(() => { if (file) saveLocalFile(file.url, file.name) }, [file])
+  const download = useCallback(() => {
+    if (!file) return
+    file.full().then(u => saveLocalFile(u, file.name)).catch(e => setErr(friendlyError(e)))
+  }, [file])
 
   const decide = async () => {
     if (!d || mode === 'view') return
@@ -134,7 +139,7 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
       onIndex={i => setVersion(versions[i]?.version ?? version)}
       loading={(!d && !err) || (!!d && !file && !fileErr)}
       error={d ? fileErr : err}
-      file={file ? { url: file.url, kind: 'pdf' } : null}
+      file={file ? { url: file.url, kind: file.kind, stream: file.stream } : null}
       onDownload={download}
       onClose={onClose}
       sidebar={d && (

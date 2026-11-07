@@ -12,7 +12,7 @@ export type FileKind = 'pdf' | 'image' | 'other'
 // déclenche un téléchargement, et une <img> sur un format non pris en charge
 // reste vide. On lit donc les premiers octets pour choisir l'affichage.
 
-const sniff = (b: Uint8Array): { kind: FileKind; mime: string; ext: string } | null => {
+export const sniffBytes = (b: Uint8Array): { kind: FileKind; mime: string; ext: string } | null => {
   const at = (i: number, ...bytes: number[]) => bytes.every((v, k) => b[i + k] === v)
   const ascii = (i: number, str: string) => at(i, ...Array.from(str).map(c => c.charCodeAt(0)))
   if (ascii(0, '%PDF'))                         return { kind: 'pdf',   mime: 'application/pdf', ext: 'pdf' }
@@ -26,7 +26,7 @@ const sniff = (b: Uint8Array): { kind: FileKind; mime: string; ext: string } | n
   return null
 }
 
-const kindFromName = (name: string): { kind: FileKind; ext: string } => {
+export const kindFromName = (name: string): { kind: FileKind; ext: string } => {
   const ext = (name.split('.').pop() || '').toLowerCase()
   if (ext === 'pdf') return { kind: 'pdf', ext }
   if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return { kind: 'image', ext }
@@ -38,7 +38,7 @@ export async function retype(rawUrl: string, path: string): Promise<{ url: strin
   try {
     const blob = await (await fetch(rawUrl)).blob()
     const head = new Uint8Array(await blob.slice(0, 16).arrayBuffer())
-    const found = sniff(head)
+    const found = sniffBytes(head)
     const byName = kindFromName(path)
     const kind = found?.kind ?? byName.kind
     const ext  = found?.ext || byName.ext

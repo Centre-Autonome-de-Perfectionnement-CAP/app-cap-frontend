@@ -682,6 +682,9 @@ class StageService {
     HttpService.post(`${BASE}/demandes/${stageId}/fin`, body)
   undoEnd = (stageId: number) => HttpService.post(`${BASE}/demandes/${stageId}/fin/annuler`, {})
 
+  /** Stage annulé faute de confirmation de présence : rétabli, nouveau lien envoyé. */
+  reinstate = (stageId: number) => HttpService.post(`${BASE}/demandes/${stageId}/retablir`, {})
+
   chatList = async (): Promise<{ channels: ChatChannel[]; unread: number; keep_days: number }> =>
     (await HttpService.get(`${BASE}/messages`)).data
   chatThread = async (channel: string, q: { after?: number; before?: number } = {}): Promise<ChatThread> => {

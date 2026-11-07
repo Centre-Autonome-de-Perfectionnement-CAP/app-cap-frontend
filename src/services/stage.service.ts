@@ -304,6 +304,36 @@ export interface ReportSummary {
   binome?: { report_id: number; name: string; deposited_by: string | null } | null
 }
 
+export type TaskStatus = 'todo' | 'submitted' | 'revision' | 'validated'
+export interface TaskSummary {
+  id: number
+  title: string
+  due_date: string | null
+  status: TaskStatus
+  status_label: string
+  version: number
+  submitted_at: string | null
+  published: boolean
+  published_at: string | null
+  created_by: { type: 'staff' | 'intern'; name: string; id?: number }
+  members: { id: number; name: string }[]
+  items_count: number
+}
+export interface TaskItem { id: number; kind: 'file' | 'link'; name: string; url: string | null; mime: string | null; size: number }
+export interface TaskDetail extends TaskSummary {
+  instructions: string | null
+  message: string | null
+  review_comment: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  items: TaskItem[]
+  can_delete: boolean
+  can_review: boolean
+  can_publish: boolean
+}
+/** Stagiaire en cours, pour confier une tâche (binome : nom du binôme). */
+export interface TaskIntern { id: number; name: string; binome: string | null }
+
 export interface ReportDetail extends ReportSummary {
   /** by : binôme qui a déposé la version (rapport commun). */
   versions: { version: number; name: string; size: number; note: string | null; late: boolean; post_defense?: boolean; at: string; by?: string | null }[]
@@ -583,6 +613,29 @@ class StageService {
   /** Version d'un rapport, par tranches (affichage progressif). */
   reportChunks = (id: number, version: number): ChunkLoader => (from, size) =>
     HttpService.get(`${BASE}/rapports/${id}/versions/${version}?from=${from}&size=${size}`)
+
+  // ── Tâches ─────────────────────────────────────────────────────────────
+
+  tasks = (status: string, mine: boolean): Promise<{ data: { tasks: TaskSummary[]; interns: TaskIntern[] } }> =>
+    HttpService.get(`${BASE}/taches?status=${status}${mine ? '&mine=1' : ''}`)
+
+  tasksPublished = async (): Promise<TaskSummary[]> => (await HttpService.get(`${BASE}/taches/publies`)).data
+
+  task = async (id: number): Promise<TaskDetail> => (await HttpService.get(`${BASE}/taches/${id}`)).data
+
+  createTask = (t: { stage_request_id: number; title: string; instructions?: string; due_date?: string; pour_binome?: boolean }) =>
+    HttpService.post(`${BASE}/taches`, t)
+
+  deleteTask = (id: number) => HttpService.delete(`${BASE}/taches/${id}`)
+
+  decideTask = (id: number, decision: 'validated' | 'revision', comment?: string) =>
+    HttpService.post(`${BASE}/taches/${id}/decision`, { decision, comment: comment || null })
+
+  publishTask = (id: number, isPublic: boolean) => HttpService.post(`${BASE}/taches/${id}/publication`, { public: isPublic })
+
+  /** Fichier rendu, par tranches (affichage progressif). */
+  taskChunks = (id: number, item: number): ChunkLoader => (from, size) =>
+    HttpService.get(`${BASE}/taches/${id}/fichiers/${item}?from=${from}&size=${size}`)
 
   // ── Attestations (lot 5) ───────────────────────────────────────────────
 

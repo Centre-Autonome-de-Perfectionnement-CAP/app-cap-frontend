@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CSpinner } from '@coreui/react'
+import { CModal, CModalBody, CModalHeader, CModalTitle, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilX, cilLockLocked, cilSend, cilInfo, cilPaperclip, cilShareAlt, cilPencil } from '@coreui/icons'
 import stageService, { type ChatChannel, type ChatFile, type ChatMessage, type ChatSeen, type ChatThread } from '@/services/stage.service'
@@ -374,21 +374,33 @@ const Attachment = ({ channel, f, mine, onError }: { channel: string; f: ChatFil
 }
 
 /** Pastilles « vu par » sous mon dernier message ; au clic, la liste avec l'heure. */
+/**
+ * « Vu par » : quelques pastilles sous le dernier message ; la liste
+ * complète (tous les noms, heure de lecture) s'ouvre dans une fenêtre qui
+ * défile, jamais coupée par la conversation.
+ */
 const SeenBy = ({ seen }: { seen: ChatSeen }) => {
   const [open, setOpen] = useState(false)
   if (!seen.by.length) return null
+  const n = seen.by.length
   return (
     <div className="msg-seen">
-      <button type="button" className="msg-seen-btn" onClick={() => setOpen(v => !v)} aria-expanded={open} aria-label={`Vu par ${seen.by.length}`}>
+      <button type="button" className="msg-seen-btn" onClick={() => setOpen(true)} aria-label={`Vu par ${n} personne${n > 1 ? 's' : ''} : voir les noms`}>
         {seen.by.slice(0, 5).map(p => <span key={p.key} style={{ background: tone(p.key) }} title={p.name}>{initials(p.name)}</span>)}
-        {seen.by.length > 5 && <em>+{seen.by.length - 5}</em>}
+        <em>{n === 1 ? `Vu par ${seen.by[0].name}` : `Vu par ${n}`}</em>
       </button>
-      {open && (
-        <div className="msg-seen-pop">
-          <b>Vu par</b>
-          {seen.by.map(p => <p key={p.key}><span>{p.name}</span><span>{p.at ? listTime(p.at) : ''}</span></p>)}
-        </div>
-      )}
+      <CModal visible={open} onClose={() => setOpen(false)} alignment="center" scrollable>
+        <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Vu par {n} personne{n > 1 ? 's' : ''}</CModalTitle></CModalHeader>
+        <CModalBody style={{ padding: '6px 12px 12px' }}>
+          {seen.by.map(p => (
+            <div key={p.key} className="msg-seen-row">
+              <span className="msg-seen-av" style={{ background: tone(p.key) }} aria-hidden="true">{initials(p.name)}</span>
+              <span className="msg-seen-name">{p.name}</span>
+              <span className="msg-seen-at">{p.at ? listTime(p.at) : ''}</span>
+            </div>
+          ))}
+        </CModalBody>
+      </CModal>
     </div>
   )
 }
@@ -463,10 +475,13 @@ const MessagesStyles = () => (
     .msg-seen-btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; padding: 2px 4px; border-radius: 999px; }
     .msg-seen-btn span { width: 26px; height: 26px; border-radius: 13px; border: 2px solid #f6f8f7; margin-left: -7px; color: #fff; font-size: .875rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
     .msg-seen-btn span:first-child { margin-left: 0; }
-    .msg-seen-btn em { font-style: normal; font-size: .875rem; color: #64748b; margin-left: 4px; }
-    .msg-seen-pop { position: absolute; right: 0; bottom: 34px; z-index: 5; min-width: 220px; background: #fff; border: 1px solid #e6ebf2; border-radius: 12px; box-shadow: 0 12px 30px -10px rgba(0,0,0,.3); padding: 10px 12px; text-align: left; font-size: .875rem; }
-    .msg-seen-pop p { display: flex; justify-content: space-between; gap: 16px; margin: 4px 0 0; }
-    .msg-seen-pop p span:last-child { color: #64748b; }
+    .msg-seen-btn em { font-style: normal; font-size: .875rem; color: #64748b; margin-left: 6px; }
+    .msg-seen-btn:hover em { color: #326761; text-decoration: underline; }
+    .msg-seen-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f1f5f9; font-size: .875rem; }
+    .msg-seen-row:last-child { border-bottom: 0; }
+    .msg-seen-av { width: 30px; height: 30px; border-radius: 15px; flex-shrink: 0; color: #fff; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+    .msg-seen-name { flex: 1; min-width: 0; color: #0f172a; font-weight: 600; overflow-wrap: anywhere; }
+    .msg-seen-at { color: #64748b; white-space: nowrap; }
     .msg-replying { display: flex; align-items: center; gap: 8px; border-left: 4px solid #326761; background: #eaf3f1; padding: 7px 12px; font-size: .875rem; }
     .msg-replying b { display: block; color: #326761; }
     .msg-replying span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #64748b; }

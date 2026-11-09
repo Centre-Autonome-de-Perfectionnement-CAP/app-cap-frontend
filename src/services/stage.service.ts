@@ -375,8 +375,11 @@ export interface InternPresence {
     last_login_at: string | null
     reglement_accepted_at: string | null
     reglement_version: number | null
-    devices: { id: number; device_label: string | null; created_at: string; last_used_at: string | null; revoked_at: string | null }[]
+    /** mode « code » : téléphone sans empreinte, pointage avec un code reçu sur WhatsApp. */
+    devices: { id: number; device_label: string | null; created_at: string; last_used_at: string | null; revoked_at: string | null; mode: 'empreinte' | 'code' }[]
   } | null
+  /** Période manquée avant la prise de service (jours à régulariser) et dernière régularisation. */
+  regularisation: { days: string[]; done: string | null }
   activation: { sent_at: string | null; reminders: number }
   date_debut_reelle: string | null
   shift: { planned: string; real: string; suggested_end: string; applied: boolean } | null
@@ -393,7 +396,9 @@ export interface InternPresence {
     permissions: string[]
     minutes_dues: number
     minutes_presence: number
-    punches: Record<string, { at: string; late_minutes: number; early: boolean; distance_m: number | null } | null>
+    punches: Record<string, { at: string; late_minutes: number; early: boolean; distance_m: number | null; code?: boolean } | null>
+    /** Journée de la période manquée, marquée présente par le personnel. */
+    regularise?: boolean
   }[]
   failures: Record<string, number>
 }
@@ -584,6 +589,8 @@ class StageService {
   presence = async (id: number): Promise<InternPresence> => (await HttpService.get(`${BASE}/stagiaires/${id}/presence`)).data
 
   resetDevice = (id: number) => HttpService.post(`${BASE}/stagiaires/${id}/appareil/reinitialiser`)
+  /** present : jours de la période manquée où le stagiaire était là ; les autres sont des absences. */
+  regularize = (id: number, present: string[]) => HttpService.post(`${BASE}/stagiaires/${id}/presence/regulariser`, { present })
 
   internRequests = (status: string, mine: boolean): Promise<{ data: InternRequestRow[]; pending: number }> =>
     HttpService.get(`${BASE}/demandes-stagiaires?status=${status}${mine ? '&mine=1' : ''}`)

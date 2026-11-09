@@ -1,9 +1,10 @@
 // src/views/pages/stages/PresencePanel.tsx
 // Fiche d'un stagiaire accepté : activation de l'espace, décalage de prise
-// de service, assiduité, téléphone de stage, journées.
+// de service (ou régularisation de la période manquée), assiduité,
+// téléphone de stage (empreinte ou code), journées.
 
 import { useCallback, useEffect, useState } from 'react'
-import { CButton, CSpinner } from '@coreui/react'
+import { CButton, CFormCheck, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilFingerprint, cilWarning, cilCalendarCheck } from '@coreui/icons'
 import stageService, { type InternPresence } from '@/services/stage.service'
@@ -38,7 +39,7 @@ const Gaps = ({ day }: { day: InternPresence['days'][number] }) => {
 }
 
 const FAIL: Record<string, string> = {
-  out_of_zone: 'hors zone', imprecise: 'position imprécise', webauthn: 'empreinte ou téléphone refusé', not_allowed: 'hors horaire',
+  out_of_zone: 'hors zone', imprecise: 'position imprécise', webauthn: 'empreinte ou téléphone refusé', code: 'code refusé', not_allowed: 'hors horaire',
 }
 
 const time = (iso?: string) => iso
@@ -57,6 +58,7 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
   const [busy, setBusy] = useState(false)
   const [showAll, setShowAll] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
+  const [regularizing, setRegularizing] = useState(false)
 
   const load = useCallback(async () => {
     try { setData(await stageService.presence(stageId)); setError(null) } catch (e) { setError(friendlyError(e)) }
@@ -81,6 +83,7 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
 
   const s = data.summary
   const activeDevice = data.account?.devices.find(d => !d.revoked_at)
+  const missed = data.regularisation?.days ?? []
   const fails = Object.entries(data.failures ?? {})
   const days = showAll ? data.days : data.days.slice(0, 10)
 
@@ -95,7 +98,37 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
         </div>
       )}
 
-      {data.shift && !data.shift.applied && (
+      {missed.length > 0 && (
+        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '12px 14px' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontWeight: 800, color: '#92400e' }}>
+            <CIcon icon={cilWarning} style={{ width: 16 }} />Période manquée avant la confirmation de présence
+          </div>
+          <div style={{ fontSize: '.875rem', color: '#78350f', marginTop: 4 }}>
+            Début prévu le {frDate(missed[0], true)}, présence confirmée le {frDate(data.date_debut_reelle, true)} :
+            {' '}{missed.length} jour{missed.length > 1 ? 's' : ''} ouvré{missed.length > 1 ? 's' : ''} sans pointage.
+            Régularisez la période (les jours où il était présent comptent dans son assiduité),
+            ou, s'il est vraiment arrivé en retard, décalez la fin du stage.
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+            <CButton size="sm" color="warning" style={{ color: '#fff' }} onClick={() => setRegularizing(true)}>
+              <CIcon icon={cilCalendarCheck} className="me-1" />Régulariser la période
+            </CButton>
+            {data.shift && !data.shift.applied && (
+              <CButton size="sm" color="warning" variant="outline"
+                onClick={() => onConfirmShift(data.shift!.suggested_end, `Prise de service effective le ${frDate(data.shift!.real, true)} au lieu du ${frDate(data.shift!.planned, true)} : fin décalée d'autant.`)}>
+                Décaler la fin du stage
+              </CButton>
+            )}
+          </div>
+        </div>
+      )}
+      {regularizing && (
+        <RegularizeModal stageId={stageId} days={missed} onClose={() => setRegularizing(false)}
+          onDone={async msg => { setRegularizing(false); await load(); await showSuccess('Période régularisée', msg) }} />
+      )}
+      {data.regularisation?.done && <div className="stg-muted">{data.regularisation.done}.</div>}
+
+      {missed.length === 0 && data.shift && !data.shift.applied && (
         <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '12px 14px' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontWeight: 800, color: '#92400e' }}>
             <CIcon icon={cilWarning} style={{ width: 16 }} />Prise de service décalée
@@ -143,9 +176,13 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
           <CIcon icon={cilFingerprint} style={{ width: 18, color: activeDevice ? '#059669' : '#d97706' }} />
           <span style={{ flex: 1, minWidth: 180 }}>
             {activeDevice
-              ? <>Téléphone de stage {activeDevice.device_label ? `(${activeDevice.device_label})` : ''} enregistré le {frDate(activeDevice.created_at)}{activeDevice.last_used_at ? `, dernier pointage le ${frDateTime(activeDevice.last_used_at)}` : ''}</>
+              ? <>
+                {activeDevice.mode === 'code' && <><span className="stg-pill" style={{ color: '#b45309', background: '#fffbeb' }}>Pointage avec code</span>{' '}</>}
+                Téléphone de stage {activeDevice.device_label ? `(${activeDevice.device_label})` : ''} enregistré le {frDate(activeDevice.created_at)}{activeDevice.last_used_at ? `, dernier pointage le ${frDateTime(activeDevice.last_used_at)}` : ''}
+                {activeDevice.mode === 'code' && <span className="stg-muted" style={{ display: 'block' }}>Ce téléphone ne gère pas l'empreinte : le stagiaire reçoit un code sur WhatsApp à chaque pointage. « Changement de téléphone » remet l'enregistrement à zéro (empreinte si le nouveau téléphone la gère).</span>}
+              </>
               : 'Aucun téléphone de stage : le stagiaire l\'enregistre à sa prochaine connexion, sur son propre téléphone.'}
-            <span className="stg-muted">
+            <span className="stg-muted" style={{ display: 'block' }}>
               Activé le {frDateTime(data.account.activated_at)} · règlement {data.account.reglement_accepted_at ? `accepté le ${frDate(data.account.reglement_accepted_at)}` : 'non accepté'}
             </span>
           </span>
@@ -180,11 +217,17 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
                   <td style={{ whiteSpace: 'nowrap' }}>{frDate(d.day)}</td>
                   {(['arrivee', 'pause_debut', 'pause_fin', 'sortie'] as const).map(k => {
                     const p = d.punches[k]
-                    return <td key={k} style={{ whiteSpace: 'nowrap' }}>{time(p?.at)}</td>
+                    return (
+                      <td key={k} style={{ whiteSpace: 'nowrap' }}>
+                        {time(p?.at)}
+                        {p?.code && <span title="Pointé avec un code reçu sur WhatsApp" style={{ marginLeft: 4, fontWeight: 700, color: '#b45309' }}>(code)</span>}
+                      </td>
+                    )
                   })}
                   <td>
                     <span className="stg-pill" style={{ color: DAY[d.status].color, background: DAY[d.status].bg }}>{DAY[d.status].label}</span>
                     {d.justification_label && <div className="stg-muted">{d.justification_label}</div>}
+                    {d.regularise && <div className="stg-muted">Régularisé</div>}
                   </td>
                   <td><Gaps day={d} /></td>
                 </tr>
@@ -197,6 +240,59 @@ const PresencePanel = ({ stageId, onConfirmShift }: Props) => {
         </div>
       )}
     </div>
+  )
+}
+
+/** Période manquée : tous les jours cochés présents par défaut ; décocher les absences. */
+const RegularizeModal = ({ stageId, days, onClose, onDone }: {
+  stageId: number; days: string[]; onClose: () => void; onDone: (message: string) => void
+}) => {
+  const [present, setPresent] = useState<Set<string>>(() => new Set(days))
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const toggle = (d: string) => setPresent(p => { const n = new Set(p); if (n.has(d)) n.delete(d); else n.add(d); return n })
+  const absent = days.length - present.size
+
+  const save = async () => {
+    setBusy(true); setErr(null)
+    try {
+      const res: any = await stageService.regularize(stageId, days.filter(d => present.has(d)))
+      onDone(res?.message ?? 'Période régularisée.')
+    } catch (e) {
+      setErr(friendlyError(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <CModal visible onClose={onClose} alignment="center" scrollable>
+      <CModalHeader><CModalTitle>Régulariser la période manquée</CModalTitle></CModalHeader>
+      <CModalBody>
+        <p style={{ fontSize: '.875rem', color: '#475569' }}>
+          Cochez les jours où le stagiaire était présent : ils comptent comme des journées complètes, marquées « régularisé ».
+          Les jours décochés sont des absences. Le stage est ensuite compté depuis le début prévu.
+        </p>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+          <CButton size="sm" color="link" className="p-0" onClick={() => setPresent(new Set(days))}>Tout cocher</CButton>
+          <CButton size="sm" color="link" className="p-0" onClick={() => setPresent(new Set())}>Tout décocher</CButton>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {days.map(d => (
+            <CFormCheck key={d} id={`reg-${d}`} checked={present.has(d)} onChange={() => toggle(d)}
+              label={<span style={{ textTransform: 'capitalize' }}>{frDate(d, true)}</span>} />
+          ))}
+        </div>
+        <div style={{ marginTop: 12, fontWeight: 700 }}>
+          {present.size} jour{present.size > 1 ? 's' : ''} présent{present.size > 1 ? 's' : ''}, {absent} absence{absent > 1 ? 's' : ''}
+        </div>
+        {err && <div className="stg-error mt-2">{err}</div>}
+      </CModalBody>
+      <CModalFooter>
+        <CButton color="secondary" variant="outline" onClick={onClose}>Annuler</CButton>
+        <CButton color="primary" disabled={busy} onClick={save}>{busy && <CSpinner size="sm" className="me-1" />}Régulariser</CButton>
+      </CModalFooter>
+    </CModal>
   )
 }
 

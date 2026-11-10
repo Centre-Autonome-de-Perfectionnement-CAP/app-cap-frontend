@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CButton, CCard, CCardBody, CFormCheck, CFormInput, CFormLabel, CFormSelect, CFormTextarea, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CSpinner } from '@coreui/react'
+import { CButton, CCard, CCardBody, CFormCheck, CFormInput, CFormLabel, CFormTextarea, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilReload, cilTask } from '@coreui/icons'
 import stageService, { type TaskIntern, type TaskSummary } from '@/services/stage.service'
@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts'
 import { PageHead, Empty, FilterTabs, Pill, StagesStyles } from './StagesUi'
 import { frDate, todayIso, TASK_STATUS } from './stageUtils'
 import TaskModal from './TaskModal'
+import PersonPicker from './PersonPicker'
 
 type View = 'submitted' | 'revision' | 'todo' | 'validated' | 'all' | 'publies'
 const VIEWS: { key: View; label: string }[] = [
@@ -110,14 +111,14 @@ const TachesPage = () => {
 
 const NewTaskModal = ({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) => {
   const [interns, setInterns] = useState<TaskIntern[] | null>(null)
-  const [intern, setIntern] = useState('')
+  const [intern, setIntern] = useState<number | null>(null)
   const [pair, setPair] = useState(false)
   const [title, setTitle] = useState('')
   const [instructions, setInstructions] = useState('')
   const [due, setDue] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-  const chosen = interns?.find(i => String(i.id) === intern)
+  const chosen = interns?.find(i => i.id === intern)
 
   // Stagiaires en cours (liste à jour à chaque ouverture)
   useEffect(() => {
@@ -147,10 +148,8 @@ const NewTaskModal = ({ onClose, onCreated }: { onClose: () => void; onCreated: 
       <CModalHeader><CModalTitle>Nouvelle tâche</CModalTitle></CModalHeader>
       <CModalBody>
         <CFormLabel className="fw-semibold">Stagiaire <span className="text-danger">*</span></CFormLabel>
-        <CFormSelect value={intern} disabled={!interns} onChange={e => { setIntern(e.target.value); setPair(false) }}>
-          <option value="">{interns ? 'Choisir…' : 'Chargement…'}</option>
-          {interns?.map(i => <option key={i.id} value={i.id}>{i.name}{i.binome ? ` (binôme : ${i.binome})` : ''}</option>)}
-        </CFormSelect>
+        <PersonPicker people={interns?.map(i => ({ id: i.id, name: i.name, mine: i.mine, hint: i.binome ? `binôme : ${i.binome}` : null })) ?? null}
+          value={intern} onChange={id => { setIntern(id); setPair(false) }} />
         {chosen?.binome && (
           <CFormCheck className="mt-2" id="tsk-pair" label={`Aussi pour son binôme (${chosen.binome})`} checked={pair} onChange={e => setPair(e.target.checked)} />
         )}

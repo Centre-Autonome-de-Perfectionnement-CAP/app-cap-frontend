@@ -1,19 +1,20 @@
 // src/views/pages/stages/TaskModal.tsx
 // Une tâche dans le visualiseur commun (ViewerFrame) : les fichiers remis à
 // gauche (PDF et images affichés, autres fichiers à télécharger), consignes,
-// liens, décision et publication dans le panneau latéral.
+// liens, invités, décision et publication dans le panneau latéral.
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { CButton, CFormLabel, CFormTextarea, CSpinner } from '@coreui/react'
+import { CButton, CFormCheck, CFormLabel, CFormTextarea, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilCheckAlt, cilPencil, cilTrash, cilBullhorn, cilLink } from '@coreui/icons'
+import { cilCheckAlt, cilPencil, cilTrash, cilBullhorn, cilLink, cilUserPlus, cilX } from '@coreui/icons'
 import ViewerFrame from '@/components/document-request/ViewerFrame'
 import { openProgressive, type Opened } from '@/components/document-request/progressiveFile'
 import { saveLocalFile } from '@/utils/base64File'
-import stageService, { type TaskDetail, type TaskItem } from '@/services/stage.service'
+import stageService, { type TaskDetail, type TaskInvitables, type TaskInvite, type TaskItem } from '@/services/stage.service'
 import { friendlyError, showSuccess } from '@/components/common/ActionResult'
 import { frDate, frDateTime, TASK_STATUS } from './stageUtils'
 import { Pill } from './StagesUi'
+import PersonPicker from './PersonPicker'
 
 /** Affichables dans le visualiseur ; les autres fichiers se téléchargent. */
 const PREVIEW = /\.(pdf|png|jpe?g|webp)$/i
@@ -26,7 +27,9 @@ const TaskModal = ({ taskId, onClose, onChanged }: Props) => {
   const [index, setIndex] = useState(0)
   const [file, setFile] = useState<Opened | null>(null)
   const [fileErr, setFileErr] = useState<string | null>(null)
-  const [mode, setMode] = useState<'view' | 'validated' | 'revision' | 'delete'>('view')
+  const [mode, setMode] = useState<'view' | 'validated' | 'revision' | 'delete' | 'invite'>('view')
+  const [invite, setInvite] = useState<InviteForm>(NEW_INVITE)
+  const [invitables, setInvitables] = useState<TaskInvitables | null>(null)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -85,6 +88,24 @@ const TaskModal = ({ taskId, onClose, onChanged }: Props) => {
     act(() => stageService.decideTask(t.id, mode, text.trim()), mode === 'validated' ? 'Travail validé.' : 'Demande de revoir envoyée.')
   }
 
+  const openInvite = () => {
+    setInvite(NEW_INVITE); setErr(null); setMode('invite')
+    if (!invitables) stageService.taskInvitables().then(setInvitables).catch(e => setErr(friendlyError(e)))
+  }
+  const sendInvite = () => {
+    if (!t) return
+    const id = invite.id
+    if (!id) { setErr('Choisissez la personne à inviter.'); return }
+    act(() => stageService.inviteTask(t.id, invite.type === 'intern'
+      ? { type: 'intern', id, role: invite.role, counts: invite.role === 'worker' && invite.counts }
+      : { type: 'staff', id, full_power: invite.fullPower }), 'Invitation envoyée : la personne est prévenue.')
+  }
+  const removeInvite = (i: TaskInvite) => {
+    if (t) act(() => stageService.uninviteTask(t.id, i.type, i.id), `${i.name} n'est plus invité.`)
+  }
+  // Ni les titulaires de la tâche, ni la personne déjà invitée avec les mêmes droits ne sont proposés deux fois : réinviter met à jour les droits.
+  const owners = new Set(t?.members.filter(m => !t.invited.some(i => i.type === 'intern' && i.id === m.id)).map(m => m.id))
+
   const st = t ? TASK_STATUS[t.status] : null
   const noFile = t && files.length === 0
   return (
@@ -124,6 +145,57 @@ const TaskModal = ({ taskId, onClose, onChanged }: Props) => {
                   <CIcon icon={cilLink} style={{ width: 14, flexShrink: 0 }} />{l.name}
                 </a>
               ))}
+            </div>
+          )}
+          {(t.invited.length > 0 || t.can_invite) && mode !== 'invite' && (
+            <div>
+              <div style={{ fontWeight: 800, marginBottom: 6 }}>Invités</div>
+              {t.invited.length === 0 && <div style={{ color: '#64748b' }}>Personne pour le moment.</div>}
+              {t.invited.map(i => (
+                <div key={`${i.type}-${i.id}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '5px 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, overflowWrap: 'anywhere' }}>{i.name}</div>
+                    <div style={{ color: '#64748b' }}>{inviteLabel(i)}</div>
+                  </div>
+                  {t.can_invite && (
+                    <button type="button" className="btn btn-sm btn-ghost-secondary" title={`Retirer ${i.name}`} aria-label={`Retirer ${i.name}`} disabled={busy} onClick={() => removeInvite(i)}>
+                      <CIcon icon={cilX} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {t.can_invite && (
+                <CButton color="primary" variant="ghost" size="sm" className="mt-1 px-0" onClick={openInvite}>
+                  <CIcon icon={cilUserPlus} className="me-1" />Inviter quelqu'un
+                </CButton>
+              )}
+            </div>
+          )}
+          {mode === 'invite' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontWeight: 800 }}>Inviter sur la tâche</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {(['intern', 'staff'] as const).map(k => (
+                  <CButton key={k} size="sm" color="primary" variant={invite.type === k ? undefined : 'outline'} style={{ flex: 1 }}
+                    onClick={() => setInvite({ ...NEW_INVITE, type: k })}>
+                    {k === 'intern' ? 'Un stagiaire' : 'Le personnel'}
+                  </CButton>
+                ))}
+              </div>
+              <CFormLabel className="fw-semibold small mb-0">{invite.type === 'intern' ? 'Stagiaire' : 'Membre du personnel'} <span className="text-danger">*</span></CFormLabel>
+              <PersonPicker key={invite.type} value={invite.id} onChange={id => setInvite({ ...invite, id })}
+                people={invitables ? (invite.type === 'intern' ? invitables.interns.filter(p => !owners.has(p.id)) : invitables.staff) : null}
+                placeholder={invite.type === 'intern' ? 'Exemple : AKODOGBO' : 'Exemple : ADJOVI'} />
+              {invite.type === 'intern' ? <>
+                <CFormCheck type="radio" name="inv-role" id="inv-viewer" label="Pour voir la tâche et le travail remis" checked={invite.role === 'viewer'} onChange={() => setInvite({ ...invite, role: 'viewer' })} />
+                <CFormCheck type="radio" name="inv-role" id="inv-worker" label="Pour y travailler (il peut remettre le travail)" checked={invite.role === 'worker'} onChange={() => setInvite({ ...invite, role: 'worker' })} />
+                {invite.role === 'worker' && t.can_grant && (
+                  <CFormCheck id="inv-counts" className="ms-4" label="Le travail compte aussi pour lui (il en est auteur)" checked={invite.counts} onChange={e => setInvite({ ...invite, counts: e.target.checked })} />
+                )}
+              </> : t.can_grant ? <>
+                <CFormCheck type="radio" name="inv-power" id="inv-see" label="Pour suivre la tâche (sans décision)" checked={!invite.fullPower} onChange={() => setInvite({ ...invite, fullPower: false })} />
+                <CFormCheck type="radio" name="inv-power" id="inv-full" label="Plein pouvoir : valider, demander de revoir, publier et inviter" checked={invite.fullPower} onChange={() => setInvite({ ...invite, fullPower: true })} />
+              </> : <div style={{ color: '#64748b' }}>Il pourra suivre la tâche, sans décision.</div>}
             </div>
           )}
           {t.review_comment && (
@@ -167,7 +239,11 @@ const TaskModal = ({ taskId, onClose, onChanged }: Props) => {
         </>}
       </> : <>
         <CButton color="secondary" variant="outline" onClick={() => { setMode('view'); setErr(null) }}>Retour</CButton>
-        {mode === 'delete'
+        {mode === 'invite' ? (
+          <CButton color="primary" disabled={busy || !invite.id} onClick={sendInvite}>
+            {busy && <CSpinner size="sm" className="me-1" />}Inviter
+          </CButton>
+        ) : mode === 'delete'
           ? <CButton color="danger" style={{ color: '#fff' }} disabled={busy} onClick={() => act(() => stageService.deleteTask(t.id), 'Tâche supprimée.', true)}>
             {busy && <CSpinner size="sm" className="me-1" />}Supprimer définitivement
           </CButton>
@@ -177,6 +253,16 @@ const TaskModal = ({ taskId, onClose, onChanged }: Props) => {
       </>)}
     />
   )
+}
+
+interface InviteForm { type: 'intern' | 'staff'; id: number | null; role: 'viewer' | 'worker'; counts: boolean; fullPower: boolean }
+const NEW_INVITE: InviteForm = { type: 'intern', id: null, role: 'viewer', counts: false, fullPower: false }
+
+const inviteLabel = (i: TaskInvite) => {
+  const what = i.type === 'staff'
+    ? (i.full_power ? 'Personnel, plein pouvoir' : 'Personnel, pour suivre')
+    : i.role === 'worker' ? `Pour y travailler${i.counts ? ', compte pour lui' : ''}` : 'Pour voir'
+  return i.invited_by ? `${what} · invité par ${i.invited_by}` : what
 }
 
 const Block = ({ title, children }: { title: string; children: ReactNode }) => (

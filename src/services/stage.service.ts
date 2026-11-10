@@ -330,9 +330,19 @@ export interface TaskDetail extends TaskSummary {
   can_delete: boolean
   can_review: boolean
   can_publish: boolean
+  /** Invités : stagiaires (pour voir ou y travailler) et personnel (pour voir ou avec plein pouvoir). */
+  invited: TaskInvite[]
+  can_invite: boolean
+  /** Peut faire compter le travail pour un invité et accorder le plein pouvoir. */
+  can_grant: boolean
 }
-/** Stagiaire en cours, pour confier une tâche (binome : nom du binôme). */
-export interface TaskIntern { id: number; name: string; binome: string | null }
+export type TaskInvite =
+  | { type: 'intern'; id: number; name: string; role: 'worker' | 'viewer'; counts: boolean; invited_by: string | null }
+  | { type: 'staff'; id: number; name: string; full_power: boolean; invited_by: string | null }
+/** Stagiaire en cours, pour confier une tâche (binome : nom du binôme ; mine : suivi par moi). */
+export interface TaskIntern { id: number; name: string; binome: string | null; mine: boolean }
+/** Personnes qu'on peut inviter sur une tâche. */
+export interface TaskInvitables { interns: { id: number; name: string; mine: boolean }[]; staff: { id: number; name: string }[] }
 
 export interface ReportDetail extends ReportSummary {
   /** by : binôme qui a déposé la version (rapport commun). */
@@ -639,6 +649,10 @@ class StageService {
     HttpService.post(`${BASE}/taches/${id}/decision`, { decision, comment: comment || null })
 
   publishTask = (id: number, isPublic: boolean) => HttpService.post(`${BASE}/taches/${id}/publication`, { public: isPublic })
+  taskInvitables = async (): Promise<TaskInvitables> => (await HttpService.get(`${BASE}/taches/invitables`)).data
+  inviteTask = (id: number, who: { type: 'intern' | 'staff'; id: number; role?: 'worker' | 'viewer'; counts?: boolean; full_power?: boolean }) =>
+    HttpService.post(`${BASE}/taches/${id}/invitations`, who)
+  uninviteTask = (id: number, type: 'intern' | 'staff', who: number) => HttpService.delete(`${BASE}/taches/${id}/invitations/${type}/${who}`)
 
   /** Fichier rendu, par tranches (affichage progressif). */
   taskChunks = (id: number, item: number): ChunkLoader => (from, size) =>

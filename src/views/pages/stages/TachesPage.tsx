@@ -12,7 +12,7 @@ import stageService, { type TaskIntern, type TaskSummary } from '@/services/stag
 import { friendlyError, showSuccess } from '@/components/common/ActionResult'
 import { useAuth } from '@/contexts'
 import { PageHead, Empty, FilterTabs, Pill, StagesStyles } from './StagesUi'
-import { frDate, todayIso, TASK_STATUS } from './stageUtils'
+import { frDate, frDue, isOverdue, todayIso, TASK_STATUS } from './stageUtils'
 import TaskModal from './TaskModal'
 import PersonPicker from './PersonPicker'
 
@@ -79,7 +79,7 @@ const TachesPage = () => {
       <div className="stg-list">
         {rows?.map(t => {
           const st = TASK_STATUS[t.status]
-          const late = t.due_date && t.status !== 'validated' && t.due_date < todayIso()
+          const late = t.status !== 'validated' && isOverdue(t.due_date, t.due_time)
           return (
             <button key={t.id} type="button" className="stg-card stg-row2" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setOpenId(t.id)}>
               <span style={{ width: 38, height: 38, borderRadius: 10, background: '#f0fdfa', color: '#0f766e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -96,7 +96,7 @@ const TachesPage = () => {
               {t.published && <Pill color="#6d28d9" bg="#f5f3ff">Publié</Pill>}
               {view !== 'publies' && <Pill color={st.color} bg={st.bg}>{t.status_label}</Pill>}
               <span className="stg-muted" style={late ? { color: '#e11d48', fontWeight: 700 } : undefined}>
-                {view === 'publies' ? frDate(t.published_at) : t.due_date ? frDate(t.due_date) : 'Sans échéance'}
+                {view === 'publies' ? frDate(t.published_at) : frDue(t.due_date, t.due_time)}
               </span>
             </button>
           )
@@ -116,6 +116,7 @@ const NewTaskModal = ({ onClose, onCreated }: { onClose: () => void; onCreated: 
   const [title, setTitle] = useState('')
   const [instructions, setInstructions] = useState('')
   const [due, setDue] = useState('')
+  const [dueTime, setDueTime] = useState('18:00')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const chosen = interns?.find(i => i.id === intern)
@@ -132,7 +133,7 @@ const NewTaskModal = ({ onClose, onCreated }: { onClose: () => void; onCreated: 
     try {
       await stageService.createTask({
         stage_request_id: chosen.id, title: title.trim(), instructions: instructions.trim() || undefined,
-        due_date: due || undefined, pour_binome: !!chosen.binome && pair,
+        due_date: due || undefined, due_time: due ? dueTime || undefined : undefined, pour_binome: !!chosen.binome && pair,
       })
       showSuccess('Tâche confiée : le stagiaire est prévenu.')
       onCreated()
@@ -159,7 +160,11 @@ const NewTaskModal = ({ onClose, onCreated }: { onClose: () => void; onCreated: 
         <CFormTextarea rows={4} maxLength={3000} value={instructions} onChange={e => setInstructions(e.target.value)}
           placeholder="Exemple : Version téléphone et ordinateur, avec une courte note des choix." />
         <CFormLabel className="fw-semibold mt-3">Échéance</CFormLabel>
-        <CFormInput type="date" min={todayIso()} value={due} onChange={e => setDue(e.target.value)} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <CFormInput type="date" min={todayIso()} value={due} onChange={e => setDue(e.target.value)} aria-label="Jour" />
+          <CFormInput type="time" style={{ maxWidth: 140 }} value={dueTime} disabled={!due} onChange={e => setDueTime(e.target.value)} aria-label="Heure" />
+        </div>
+        <div className="stg-muted mt-1">Facultatif. Sans heure précisée : 18h00.</div>
         {err && <div className="stg-err mt-3">{err}</div>}
       </CModalBody>
       <CModalFooter>

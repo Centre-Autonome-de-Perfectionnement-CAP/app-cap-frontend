@@ -309,6 +309,8 @@ export interface TaskSummary {
   id: number
   title: string
   due_date: string | null
+  /** Heure d'échéance (HH:MM). */
+  due_time: string | null
   status: TaskStatus
   status_label: string
   version: number
@@ -640,7 +642,7 @@ class StageService {
 
   task = async (id: number): Promise<TaskDetail> => (await HttpService.get(`${BASE}/taches/${id}`)).data
 
-  createTask = (t: { stage_request_id: number; title: string; instructions?: string; due_date?: string; pour_binome?: boolean }) =>
+  createTask = (t: { stage_request_id: number; title: string; instructions?: string; due_date?: string; due_time?: string; pour_binome?: boolean }) =>
     HttpService.post(`${BASE}/taches`, t)
 
   deleteTask = (id: number) => HttpService.delete(`${BASE}/taches/${id}`)

@@ -105,6 +105,10 @@ export const useOpenDossier = (fromLabel: string) => {
 export const StagesStyles = () => (
   <style>{`
     .stg-page { display: flex; flex-direction: column; gap: 14px; }
+    .att-dl { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 6px 12px; margin: 0; font-size: .9rem; }
+    .att-dl dt { color: #64748b; font-weight: 600; }
+    .att-dl dd { margin: 0; color: #0f172a; }
+    @media (max-width: 576px) { .att-dl { grid-template-columns: minmax(0, 1fr); } .att-dl dd { margin-bottom: 6px; } }
     .stg-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
     .stg-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
     .stg-pill { display: inline-flex; align-items: center; gap: 4px; font-size: .875rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }

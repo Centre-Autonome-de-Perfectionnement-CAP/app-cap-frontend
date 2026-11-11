@@ -12,7 +12,7 @@ import { openProgressive, type Opened } from '@/components/document-request/prog
 import { saveLocalFile } from '@/utils/base64File'
 import stageService, { type TaskDetail, type TaskInvitables, type TaskInvite, type TaskItem } from '@/services/stage.service'
 import { friendlyError, showSuccess } from '@/components/common/ActionResult'
-import { frDate, frDateTime, TASK_STATUS } from './stageUtils'
+import { frDate, frDateTime, frDue, TASK_STATUS } from './stageUtils'
 import { Pill } from './StagesUi'
 import PersonPicker from './PersonPicker'
 
@@ -115,7 +115,7 @@ const TaskModal = ({ taskId, onClose, onChanged }: Props) => {
         {st && <Pill color={st.color} bg={st.bg}>{t.status_label}{t.version > 1 ? ` (v${t.version})` : ''}</Pill>}
         {t.published && <Pill color="#6d28d9" bg="#f5f3ff">Publié</Pill>}
       </>}
-      subtitle={t && `${t.members.map(m => m.name).join(' et ')} · ${t.due_date ? `échéance ${frDate(t.due_date)}` : 'sans échéance'}`}
+      subtitle={t && `${t.members.map(m => m.name).join(' et ')} · ${t.due_date ? `échéance ${frDue(t.due_date, t.due_time)}` : 'sans échéance'}`}
       items={files.map(f => ({ id: String(f.id), label: f.name }))}
       index={index}
       onIndex={setIndex}
@@ -150,7 +150,7 @@ const TaskModal = ({ taskId, onClose, onChanged }: Props) => {
           {(t.invited.length > 0 || t.can_invite) && mode !== 'invite' && (
             <div>
               <div style={{ fontWeight: 800, marginBottom: 6 }}>Invités</div>
-              {t.invited.length === 0 && <div style={{ color: '#64748b' }}>Personne pour le moment.</div>}
+              {t.invited.length === 0 && <div style={{ color: '#64748b' }}>Personne pour le moment. Bouton « Inviter » en bas : un stagiaire ou un superviseur.</div>}
               {t.invited.map(i => (
                 <div key={`${i.type}-${i.id}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '5px 0', borderBottom: '1px solid #f1f5f9' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -164,11 +164,6 @@ const TaskModal = ({ taskId, onClose, onChanged }: Props) => {
                   )}
                 </div>
               ))}
-              {t.can_invite && (
-                <CButton color="primary" variant="ghost" size="sm" className="mt-1 px-0" onClick={openInvite}>
-                  <CIcon icon={cilUserPlus} className="me-1" />Inviter quelqu'un
-                </CButton>
-              )}
             </div>
           )}
           {mode === 'invite' && (
@@ -228,6 +223,9 @@ const TaskModal = ({ taskId, onClose, onChanged }: Props) => {
       )}
       footer={t && (mode === 'view' ? <>
         {t.can_delete && <CButton color="danger" variant="ghost" onClick={() => setMode('delete')}><CIcon icon={cilTrash} className="me-1" />Supprimer</CButton>}
+        {t.can_invite && (
+          <CButton color="secondary" variant="outline" onClick={openInvite}><CIcon icon={cilUserPlus} className="me-1" />Inviter</CButton>
+        )}
         {t.can_publish && (
           <CButton color="primary" variant="outline" disabled={busy} onClick={() => act(() => stageService.publishTask(t.id, !t.published), t.published ? 'Travail retiré des travaux publiés.' : 'Travail rendu public : il sera annoncé ce soir.')}>
             <CIcon icon={cilBullhorn} className="me-1" />{t.published ? 'Retirer de la publication' : 'Rendre public'}

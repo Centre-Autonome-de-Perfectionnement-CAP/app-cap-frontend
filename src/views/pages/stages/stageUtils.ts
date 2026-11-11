@@ -191,3 +191,11 @@ export const TASK_STATUS: Record<'todo' | 'submitted' | 'revision' | 'validated'
   revision:  { color: '#ea580c', bg: '#fff7ed' },
   validated: { color: '#047857', bg: '#d1fae5' },
 }
+
+/** Échéance d'une tâche : « 13 nov. 2026 à 18h00 ». */
+export const frDue = (date: string | null, time: string | null | undefined) =>
+  date ? `${frDate(date)}${time ? ` à ${time.replace(':', 'h')}` : ''}` : 'Sans échéance'
+
+/** Échéance dépassée (sans heure : fin de journée). */
+export const isOverdue = (date: string | null, time: string | null | undefined) =>
+  !!date && new Date(`${date}T${time || '23:59'}:00`).getTime() < Date.now()

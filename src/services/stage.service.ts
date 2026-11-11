@@ -456,7 +456,7 @@ export interface Intern {
   date_debut: string
   date_fin: string
   phase: 'current' | 'upcoming' | 'finished'
-  team: { id: number; name: string | null } | null
+  team: { id: number; name: string | null; final_mode?: FinalMode } | null
   supervisors: { id: number; name: string }[]
   supervised_by_me: boolean
   whatsapp_group: 'added' | 'invited' | 'removed' | null
@@ -480,6 +480,9 @@ export interface InternInvitation {
   intern_name: string | null
   invited_by_name: string | null
   created_at: string
+  /** Invitation en binôme : l'invitation de l'autre stagiaire */
+  pair_id?: number | null
+  final_mode?: FinalMode | null
 }
 
 export interface SupervisorInvitation {
@@ -496,12 +499,18 @@ export interface SupervisorInvitation {
   created_at: string
 }
 
-/** Stagiaire d'un binôme, ou libre pour en former un. */
-export interface BinomeMember { id: number; reference: string; nom_complet: string; etablissement: string; date_debut: string; date_fin: string }
+/** Rapport final d'un binôme : chacun le sien, ou un même mémoire déposé une fois pour les deux. */
+export type FinalMode = 'individuel' | 'commun'
+
+/** Stagiaire d'un binôme, ou libre pour en former un (« termine » : stage fini). */
+export interface BinomeMember { id: number; reference: string; nom_complet: string; etablissement: string; date_debut: string; date_fin: string; termine?: boolean }
 export interface StageTeam {
   id: number; name: string; members: BinomeMember[]; created_at: string
   /** responsable : formé dans le progiciel ; stagiaires : choisi depuis leur espace ; demande : demande de stage en binôme */
   origin: 'responsable' | 'stagiaires' | 'demande'
+  final_mode: FinalMode
+  /** un rapport final est déjà déposé : le mode ne change plus */
+  final_locked: boolean
 }
 export interface BinomeInvite {
   id: number; from: BinomeMember; to: BinomeMember; phase: 'stage' | 'demande'; created_at: string; expires_at: string
@@ -565,7 +574,9 @@ class StageService {
 
   // Stagiaires arrivés avant le système (invitation par numéro WhatsApp)
   internInvitations = async (): Promise<InternInvitation[]> => (await HttpService.get(`${BASE}/invitations-stagiaires`)).data
-  inviteInterns = (numeros: string) => HttpService.post(`${BASE}/invitations-stagiaires`, { numeros })
+  /** binome : deux numéros invités ensemble (rapport final individuel ou commun). */
+  inviteInterns = (numeros: string, binome?: { final_mode: FinalMode }) =>
+    HttpService.post(`${BASE}/invitations-stagiaires`, binome ? { numeros, binome: true, rapport_final: binome.final_mode } : { numeros })
   resendInternInvitation = (id: number) => HttpService.post(`${BASE}/invitations-stagiaires/${id}/renvoyer`)
   revokeInternInvitation = (id: number) => HttpService.delete(`${BASE}/invitations-stagiaires/${id}`)
 
@@ -577,12 +588,16 @@ class StageService {
 
   revokeInvitation = (id: number) => HttpService.delete(`${BASE}/invitations/${id}`)
 
-  /** Binômes formés et stagiaires encore libres (en cours ou à venir). */
+  /** Binômes formés et stagiaires encore libres (en cours, à venir, ou terminés sans rapport final validé). */
   binomes = async (): Promise<BinomesOverview> => (await HttpService.get(`${BASE}/equipes`)).data
 
   /** Toujours deux stagiaires ; nom facultatif (sinon « Binôme NOM / NOM »). */
-  formBinome = (stageIds: [number, number], nom?: string) =>
-    HttpService.post(`${BASE}/equipes`, { stage_ids: stageIds, nom: nom?.trim() || null })
+  formBinome = (stageIds: [number, number], nom?: string, finalMode: FinalMode = 'individuel') =>
+    HttpService.post(`${BASE}/equipes`, { stage_ids: stageIds, nom: nom?.trim() || null, final_mode: finalMode })
+
+  /** Rapport final du binôme : individuel ou commun (tant qu'aucun n'est déposé). */
+  setBinomeFinalMode = (id: number, finalMode: FinalMode) =>
+    HttpService.patch(`${BASE}/equipes/${id}/rapport-final`, { final_mode: finalMode })
 
   dissolveBinome = (id: number) => HttpService.delete(`${BASE}/equipes/${id}`)
 

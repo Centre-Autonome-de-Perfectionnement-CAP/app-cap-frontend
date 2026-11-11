@@ -1,10 +1,11 @@
 // src/views/pages/stages/BinomesPage.tsx
 // Binômes : toujours deux stagiaires. Quatre listes, comme la page des
-// stagiaires : binômes formés (avec leur origine), demandes de stage faites en
-// binôme et encore à l'étude, propositions entre stagiaires en attente de
-// réponse, et stagiaires sans binôme (en cocher deux pour les réunir).
+// stagiaires : binômes formés (avec leur origine et leur rapport final),
+// demandes de stage faites en binôme et encore à l'étude, propositions entre
+// stagiaires en attente de réponse, et stagiaires sans binôme (en cocher deux
+// pour les réunir ; un stagiaire terminé, seulement avec un autre terminé).
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   CButton, CCard, CCardBody, CFormCheck, CFormInput, CFormLabel, CFormSelect, CInputGroup, CInputGroupText, CSpinner,
@@ -12,7 +13,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilReload, cilSearch, cilX } from '@coreui/icons'
-import stageService, { type BinomesOverview, type BinomeMember, type StageTeam } from '@/services/stage.service'
+import stageService, { type BinomesOverview, type BinomeMember, type FinalMode, type StageTeam } from '@/services/stage.service'
 import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
 import { PageHead, Empty, Pill, StagesStyles, FilterTabs, useOpenDossier } from './StagesUi'
 import { frDate } from './stageUtils'
@@ -25,6 +26,38 @@ const ORIGIN: Record<StageTeam['origin'], { label: string; color: string; bg: st
   responsable: { label: 'Formé par le responsable', color: '#0f766e', bg: '#f0fdfa' },
   stagiaires: { label: 'Choisi par les stagiaires', color: '#1d4ed8', bg: '#eff6ff' },
   demande: { label: 'Demandé en binôme', color: '#7c3aed', bg: '#f5f3ff' },
+}
+
+export const FINAL_MODES: Record<FinalMode, { label: string; hint: string; color: string; bg: string }> = {
+  individuel: {
+    label: 'Individuel', color: '#475569', bg: '#f1f5f9',
+    hint: 'Chacun dépose son propre rapport final (stage académique, binôme de travail).',
+  },
+  commun: {
+    label: 'Commun (un même mémoire)', color: '#0f766e', bg: '#f0fdfa',
+    hint: 'Un seul rapport final pour les deux : déposé par l\'un, il vaut pour les deux (fin de formation).',
+  },
+}
+
+/** Choix du rapport final d'un binôme (formation, invitation, modification). */
+export const FinalModeChoice = ({ value, onChange, disabled }: { value: FinalMode; onChange: (v: FinalMode) => void; disabled?: boolean }) => {
+  const name = useId()
+  return (
+    <div role="radiogroup" aria-label="Rapport final" style={{ display: 'grid', gap: 8 }}>
+      {(Object.keys(FINAL_MODES) as FinalMode[]).map(k => (
+        <label key={k} style={{
+          display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 10, cursor: disabled ? 'default' : 'pointer',
+          border: `1px solid ${value === k ? '#0f766e' : '#e2e8f0'}`, background: value === k ? '#f0fdfa' : '#fff',
+        }}>
+          <input type="radio" name={name} checked={value === k} disabled={disabled} onChange={() => onChange(k)} style={{ marginTop: 4 }} />
+          <span>
+            <strong style={{ color: '#0f172a' }}>{FINAL_MODES[k].label}</strong>
+            <span className="stg-muted" style={{ display: 'block' }}>{FINAL_MODES[k].hint}</span>
+          </span>
+        </label>
+      ))}
+    </div>
+  )
 }
 
 const matches = (q: string, people: BinomeMember[]) =>
@@ -50,6 +83,8 @@ const BinomesPage = () => {
   const [selected, setSelected] = useState<number[]>([])
   const [forming, setForming] = useState(false)
   const [dissolving, setDissolving] = useState<StageTeam | null>(null)
+  const [moding, setModing] = useState<StageTeam | null>(null)
+  const [mode, setMode] = useState<FinalMode>('individuel')
   const [busy, setBusy] = useState(false)
   const openDossier = useOpenDossier(`Binômes · ${TABS[tab]}`)
 
@@ -83,8 +118,26 @@ const BinomesPage = () => {
     }
   }
 
+  const saveMode = async () => {
+    if (!moding) return
+    setBusy(true)
+    try {
+      const res: any = await stageService.setBinomeFinalMode(moding.id, mode)
+      setModing(null)
+      await load()
+      await showSuccess('Rapport final', res?.message)
+    } catch (e) {
+      await showError('Action impossible', friendlyError(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const toggle = (id: number) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : s.length < 2 ? [...s, id] : [s[1], id])
   const pair = selected.length === 2 ? [selected[0], selected[1]] as [number, number] : undefined
+  // Un stagiaire terminé ne fait binôme qu'avec un autre stagiaire terminé.
+  const chosen = data?.candidates.filter(m => selected.includes(m.id)) ?? []
+  const mixed = chosen.length === 2 && !!chosen[0].termine !== !!chosen[1].termine
 
   return (
     <div className="stg-page">
@@ -121,8 +174,8 @@ const BinomesPage = () => {
             ? <Empty text={needle ? 'Aucun binôme ne correspond à la recherche.' : 'Aucun binôme pour l\'instant. Les stagiaires peuvent aussi en proposer un depuis leur espace.'} />
             : (
               <div style={{ overflowX: 'auto' }}>
-                <table className="stg-table" style={{ minWidth: 760 }}>
-                  <thead><tr><th>Binôme</th><th>Stagiaires</th><th>Fin de stage</th><th>Formé le</th><th /></tr></thead>
+                <table className="stg-table" style={{ minWidth: 900 }}>
+                  <thead><tr><th>Binôme</th><th>Stagiaires</th><th>Fin de stage</th><th>Rapport final</th><th>Formé le</th><th /></tr></thead>
                   <tbody>
                     {lists.binomes.map(t => (
                       <tr key={t.id}>
@@ -132,6 +185,16 @@ const BinomesPage = () => {
                         </td>
                         <td>{t.members.map(m => <PersonLink key={m.id} m={m} onOpen={openDossier} />)}</td>
                         <td>{t.members.map(m => <div key={m.id} className="bin-line">{frDate(m.date_fin)}</div>)}</td>
+                        <td>
+                          <Pill color={FINAL_MODES[t.final_mode].color} bg={FINAL_MODES[t.final_mode].bg}>{FINAL_MODES[t.final_mode].label}</Pill>
+                          <div>
+                            <CButton size="sm" color="primary" variant="ghost" className="px-0" disabled={t.final_locked}
+                              title={t.final_locked ? 'Un rapport final est déjà déposé : ce réglage ne peut plus changer.' : undefined}
+                              onClick={() => { setMode(t.final_mode); setModing(t) }}>
+                              {t.final_locked ? 'Rapport final déposé' : 'Changer'}
+                            </CButton>
+                          </div>
+                        </td>
                         <td className="stg-muted">{frDate(t.created_at)}</td>
                         <td style={{ textAlign: 'right' }}><CButton size="sm" color="danger" variant="ghost" onClick={() => setDissolving(t)}>Défaire</CButton></td>
                       </tr>
@@ -184,9 +247,11 @@ const BinomesPage = () => {
             ? <Empty text="Tous les stagiaires en cours ou à venir sont en binôme." />
             : (
               <>
-                <div className="stg-muted" style={{ marginBottom: 8 }}>Cochez deux stagiaires pour les réunir en binôme.</div>
+                <div className="stg-muted" style={{ marginBottom: 8 }}>
+                  Cochez deux stagiaires pour les réunir en binôme. Un stagiaire terminé (son rapport final reste à valider) se réunit seulement avec un autre stagiaire terminé.
+                </div>
                 <div style={{ overflowX: 'auto' }}>
-                  <table className="stg-table" style={{ minWidth: 640 }}>
+                  <table className="stg-table" style={{ minWidth: 700 }}>
                     <thead><tr><th style={{ width: 34 }} /><th>Stagiaire</th><th>Établissement</th><th>Période</th></tr></thead>
                     <tbody>
                       {lists.libres.map(m => (
@@ -194,7 +259,10 @@ const BinomesPage = () => {
                           <td><CFormCheck checked={selected.includes(m.id)} onChange={() => toggle(m.id)} aria-label={`Choisir ${m.nom_complet}`} /></td>
                           <td><PersonLink m={m} onOpen={openDossier} /></td>
                           <td className="stg-muted">{m.etablissement}</td>
-                          <td className="stg-muted">{frDate(m.date_debut)} → {frDate(m.date_fin)}</td>
+                          <td className="stg-muted">
+                            {frDate(m.date_debut)} → {frDate(m.date_fin)}
+                            {m.termine && <div><Pill color="#64748b" bg="#f1f5f9">Terminé</Pill></div>}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -207,13 +275,28 @@ const BinomesPage = () => {
 
       {selected.length > 0 && (
         <div className="stg-bar-sel">
-          <strong style={{ marginRight: 'auto' }}>{selected.length} / 2 sélectionné(s)</strong>
-          <CButton color="light" size="sm" disabled={selected.length !== 2} onClick={() => setForming(true)}>Former ce binôme</CButton>
+          <strong style={{ marginRight: 'auto' }}>
+            {selected.length} / 2 sélectionné(s)
+            {mixed && <span style={{ display: 'block', fontWeight: 500 }}>Un stagiaire terminé se réunit seulement avec un autre stagiaire terminé.</span>}
+          </strong>
+          <CButton color="light" size="sm" disabled={selected.length !== 2 || mixed} onClick={() => setForming(true)}>Former ce binôme</CButton>
           <CButton color="link" size="sm" style={{ color: '#fff' }} onClick={() => setSelected([])}>Annuler</CButton>
         </div>
       )}
 
       <FormBinomeModal visible={forming} preset={pair} onClose={() => setForming(false)} onDone={() => { setForming(false); setSelected([]); load() }} />
+
+      <CModal visible={!!moding} onClose={() => setModing(null)} alignment="center" fullscreen="sm">
+        <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Rapport final de « {moding?.name} »</CModalTitle></CModalHeader>
+        <CModalBody>
+          <FinalModeChoice value={mode} onChange={setMode} disabled={busy} />
+          <div className="stg-muted" style={{ marginTop: 10 }}>Les deux stagiaires sont prévenus. Ce réglage ne change plus une fois un rapport final déposé.</div>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" variant="ghost" onClick={() => setModing(null)}>Annuler</CButton>
+          <CButton color="primary" disabled={busy || mode === moding?.final_mode} onClick={saveMode}>{busy && <CSpinner size="sm" className="me-1" />}Enregistrer</CButton>
+        </CModalFooter>
+      </CModal>
 
       <CModal visible={!!dissolving} onClose={() => setDissolving(null)} alignment="center">
         <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Défaire « {dissolving?.name} » ?</CModalTitle></CModalHeader>
@@ -236,8 +319,9 @@ const BinomesPage = () => {
 }
 
 /**
- * Former un binôme : deux stagiaires libres, nom facultatif. Depuis la liste
- * des stagiaires, les deux choisis arrivent déjà sélectionnés (`preset`).
+ * Former un binôme : deux stagiaires libres (tous deux en stage, ou tous deux
+ * terminés), rapport final individuel ou commun, nom facultatif. Depuis la
+ * liste des stagiaires, les deux choisis arrivent déjà sélectionnés (`preset`).
  */
 export const FormBinomeModal = ({ visible, preset, onClose, onDone }: {
   visible: boolean
@@ -248,24 +332,29 @@ export const FormBinomeModal = ({ visible, preset, onClose, onDone }: {
   const [candidates, setCandidates] = useState<BinomeMember[] | null>(null)
   const [pair, setPair] = useState<[string, string]>(['', ''])
   const [name, setName] = useState('')
+  const [mode, setMode] = useState<FinalMode>('individuel')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
     if (!visible) return
-    setCandidates(null); setName(''); setErr(null)
+    setCandidates(null); setName(''); setErr(null); setMode('individuel')
     setPair(preset ? [String(preset[0]), String(preset[1])] : ['', ''])
     stageService.binomes().then(d => setCandidates(d.candidates)).catch(e => setErr(friendlyError(e)))
   }, [visible, preset])
 
   // Déjà en binôme : le serveur le refuse ; on le dit tout de suite.
   const taken = candidates && preset ? preset.filter(id => !candidates.some(m => m.id === id)).length : 0
+  const first = candidates?.find(m => String(m.id) === pair[0])
+  const second = candidates?.find(m => String(m.id) === pair[1])
+  const mixed = !!first && !!second && !!first.termine !== !!second.termine
 
   const save = async () => {
     if (!pair[0] || !pair[1]) { setErr('Choisissez les deux stagiaires.'); return }
+    if (mixed) { setErr('Un stagiaire terminé se réunit seulement avec un autre stagiaire terminé.'); return }
     setBusy(true); setErr(null)
     try {
-      const res: any = await stageService.formBinome([Number(pair[0]), Number(pair[1])], name)
+      const res: any = await stageService.formBinome([Number(pair[0]), Number(pair[1])], name, mode)
       onDone()
       await showSuccess('Binôme formé', res?.message)
     } catch (e) {
@@ -281,11 +370,15 @@ export const FormBinomeModal = ({ visible, preset, onClose, onDone }: {
       <CModalBody>
         {!candidates && !err && <CSpinner size="sm" color="primary" />}
         {candidates && taken > 0 && (
-          <div className="stg-err">Un des stagiaires choisis est déjà en binôme (ou son stage est terminé). Défaites d'abord son binôme.</div>
+          <div className="stg-err">Un des stagiaires choisis est déjà en binôme, ou son rapport final est déjà validé. Défaites d'abord son binôme.</div>
         )}
         {candidates && taken === 0 && <>
           <PickIntern label="Premier stagiaire" value={pair[0]} exclude={pair[1]} candidates={candidates} onChange={v => setPair([v, pair[1]])} />
-          <PickIntern label="Second stagiaire" value={pair[1]} exclude={pair[0]} candidates={candidates} onChange={v => setPair([pair[0], v])} />
+          <PickIntern label="Second stagiaire" value={pair[1]} exclude={pair[0]}
+            candidates={first ? candidates.filter(m => !!m.termine === !!first.termine) : candidates} onChange={v => setPair([pair[0], v])} />
+          {mixed && <div className="stg-err" style={{ marginBottom: 12 }}>Un stagiaire terminé se réunit seulement avec un autre stagiaire terminé.</div>}
+          <div className="fw-semibold small mb-1">Rapport final <span className="text-danger">*</span></div>
+          <div className="mb-3"><FinalModeChoice value={mode} onChange={setMode} disabled={busy} /></div>
           <CFormLabel className="fw-semibold small">Nom <span className="stg-muted">(facultatif)</span></CFormLabel>
           <CFormInput value={name} maxLength={80} onChange={e => setName(e.target.value)} placeholder="Exemple : Binôme Réseaux 1" />
           <div className="stg-muted" style={{ marginTop: 8 }}>Les deux stagiaires et leurs superviseurs sont prévenus.</div>
@@ -294,7 +387,7 @@ export const FormBinomeModal = ({ visible, preset, onClose, onDone }: {
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" variant="ghost" onClick={onClose}>Annuler</CButton>
-        <CButton color="primary" onClick={save} disabled={busy || !candidates || taken > 0}>{busy && <CSpinner size="sm" className="me-1" />}Former le binôme</CButton>
+        <CButton color="primary" onClick={save} disabled={busy || !candidates || taken > 0 || mixed}>{busy && <CSpinner size="sm" className="me-1" />}Former le binôme</CButton>
       </CModalFooter>
     </CModal>
   )
@@ -308,7 +401,7 @@ const PickIntern = ({ label, value, exclude, candidates, onChange }: {
     <CFormSelect value={value} onChange={e => onChange(e.target.value)} aria-label={label}>
       <option value="">Choisir…</option>
       {candidates.filter(m => String(m.id) !== exclude).map(m => (
-        <option key={m.id} value={m.id}>{m.nom_complet} - {m.reference} (jusqu'au {frDate(m.date_fin)})</option>
+        <option key={m.id} value={m.id}>{m.nom_complet} - {m.reference} ({m.termine ? `terminé le ${frDate(m.date_fin)}` : `jusqu'au ${frDate(m.date_fin)}`})</option>
       ))}
     </CFormSelect>
   </div>

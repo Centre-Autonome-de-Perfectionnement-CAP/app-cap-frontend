@@ -58,6 +58,10 @@ const StagiairesPage = () => {
   const allChecked = rows.length > 0 && rows.every(r => selected.includes(r.id))
   const toggle = (id: number) => setSelected(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]))
   const pair = useMemo<[number, number] | undefined>(() => (selected.length === 2 ? [selected[0], selected[1]] : undefined), [selected])
+  // Stage terminé : plus de superviseur à attribuer ni à suivre ; binôme seulement entre terminés.
+  const chosen = rows.filter(r => selected.includes(r.id))
+  const anyFinished = chosen.some(r => r.phase === 'finished')
+  const mixedPair = chosen.length === 2 && (chosen[0].phase === 'finished') !== (chosen[1].phase === 'finished')
 
   const selfAssign = async (action: 'add' | 'remove', ids: number[]) => {
     if (!list) return
@@ -141,10 +145,11 @@ const StagiairesPage = () => {
       {selected.length > 0 && (
         <div className="stg-bar-sel">
           <strong style={{ marginRight: 'auto' }}>{selected.length} sélectionné(s)</strong>
-          {lead && <CButton color="light" size="sm" onClick={() => setAssignIds(selected)}>Attribuer un superviseur</CButton>}
-          {!lead && <CButton color="light" size="sm" disabled={busy} onClick={() => selfAssign('add', selected)}>Les suivre</CButton>}
-          {!lead && <CButton color="light" size="sm" variant="outline" style={{ color: '#fff', borderColor: '#fff' }} disabled={busy} onClick={() => selfAssign('remove', selected)}>Ne plus les suivre</CButton>}
-          <CButton color="light" size="sm" disabled={selected.length !== 2} title={selected.length !== 2 ? 'Un binôme compte exactement deux stagiaires' : undefined}
+          {lead && !anyFinished && <CButton color="light" size="sm" onClick={() => setAssignIds(selected)}>Attribuer un superviseur</CButton>}
+          {!lead && !anyFinished && <CButton color="light" size="sm" disabled={busy} onClick={() => selfAssign('add', selected)}>Les suivre</CButton>}
+          {!lead && !anyFinished && <CButton color="light" size="sm" variant="outline" style={{ color: '#fff', borderColor: '#fff' }} disabled={busy} onClick={() => selfAssign('remove', selected)}>Ne plus les suivre</CButton>}
+          <CButton color="light" size="sm" disabled={selected.length !== 2 || mixedPair}
+            title={selected.length !== 2 ? 'Un binôme compte exactement deux stagiaires' : mixedPair ? 'Un stagiaire terminé se réunit seulement avec un autre stagiaire terminé' : undefined}
             onClick={() => setTeamOpen(true)}>
             <CIcon icon={cilGroup} className="me-1" />Former un binôme
           </CButton>

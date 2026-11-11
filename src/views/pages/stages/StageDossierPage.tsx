@@ -343,7 +343,10 @@ const StageDossierPage = () => {
           <Row l="Superviseur(s)" v={suivi.supervisors.length
             ? suivi.supervisors.map(s => s.name).join(', ')
             : <span style={{ color: '#b45309', fontWeight: 700 }}>Aucun</span>} />
-          <Row l="Binôme" v={suivi.team?.name ? <span className="stg-chip"><CIcon icon={cilGroup} style={{ width: 12 }} />{suivi.team.name}</span> : '-'} />
+          <Row l="Binôme" v={suivi.team?.name ? <>
+            <span className="stg-chip"><CIcon icon={cilGroup} style={{ width: 12 }} />{suivi.team.name}</span>
+            <span className="stg-muted"> · rapport final {suivi.team.final_mode === 'commun' ? 'commun' : 'individuel'}</span>
+          </> : '-'} />
           <Row l="Groupe WhatsApp" v={suivi.whatsapp_group ? <Pill color={WA_GROUP[suivi.whatsapp_group].color} bg={WA_GROUP[suivi.whatsapp_group].bg}>{WA_GROUP[suivi.whatsapp_group].label}</Pill> : '-'} />
           <Row l="Espace stagiaire" v={detail.activated_at ? `Activé le ${frDateTime(detail.activated_at)}` : 'Pas encore activé'} />
         </dl>

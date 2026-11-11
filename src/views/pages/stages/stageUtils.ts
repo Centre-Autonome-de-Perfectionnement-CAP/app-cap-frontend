@@ -121,6 +121,9 @@ export const HISTORY_LABELS: Record<string, string> = {
   attestation_delivered: 'Attestation remise au stagiaire',
   attestation_scan:      "Scan de l'attestation archivé",
   attestation_cancelled: 'Attestation annulée',
+  attestation_notified:  'Stagiaire prévenu à nouveau : attestation à retirer',
+  work_attestation_invited: 'Attestation de travail : lien envoyé',
+  work_attestation_draft:   'Attestation de travail préparée',
   attestation_reset:     'Attestation à valider de nouveau (date de fin modifiée)',
 }
 
@@ -199,3 +202,15 @@ export const frDue = (date: string | null, time: string | null | undefined) =>
 /** Échéance dépassée (sans heure : fin de journée). */
 export const isOverdue = (date: string | null, time: string | null | undefined) =>
   !!date && new Date(`${date}T${time || '23:59'}:00`).getTime() < Date.now()
+
+/** Impression directe d'un PDF (fenêtre d'impression du navigateur ; à défaut, ouvert dans un onglet). */
+export const printPdf = (f: { url: string }) => {
+  const frame = document.createElement('iframe')
+  frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'
+  frame.src = f.url
+  frame.onload = () => {
+    try { frame.contentWindow?.focus(); frame.contentWindow?.print() } catch { window.open(f.url, '_blank', 'noopener') }
+    setTimeout(() => { frame.remove(); URL.revokeObjectURL(f.url) }, 60000)
+  }
+  document.body.appendChild(frame)
+}

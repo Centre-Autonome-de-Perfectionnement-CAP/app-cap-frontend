@@ -196,6 +196,60 @@ export interface AttestationContent {
   pays_naissance: string | null; type_stage: string; structure: string
 }
 
+/** Attestation de travail (invitation sans compte, vérification, impression, intéressé prévenu, remise). */
+export type WorkAttestationStatus = 'invitee' | 'a_valider' | 'a_imprimer' | 'imprimee' | 'prete' | 'remise' | 'annulee'
+export interface WorkAttestationValues {
+  civilite: 'M.' | 'Mme' | 'Mlle' | null
+  nom: string | null
+  prenoms: string | null
+  email: string | null
+  phone: string | null
+  diplome: string | null
+  nature: string | null
+  fonctions: string[]
+  taches: string[]
+  date_debut: string | null
+  date_fin: string | null
+  appreciation: string | null
+}
+export interface WorkAttestation {
+  id: number
+  status: WorkAttestationStatus
+  status_label: string
+  nom_complet: string | null
+  phone: string | null
+  numero: string | null
+  date_debut: string | null
+  date_fin: string | null
+  stage: { id: number; reference: string | null } | null
+  expires_at: string | null
+  notified_at: string | null
+  delivered_on: string | null
+  updated_at: string | null
+  // Détail
+  values?: WorkAttestationValues
+  missing?: string[]
+  document_date?: string | null
+  default_document_date?: string
+  next_number?: string | null
+  send_count?: number
+  last_sent_at?: string | null
+  submitted_at?: string | null
+  notify_count?: number
+  created_by?: string | null
+  validated_by?: string | null
+  validated_at?: string | null
+  printed_by?: string | null
+  printed_at?: string | null
+  notified_by?: string | null
+  delivered_by?: string | null
+  cancelled_by?: string | null
+  cancelled_at?: string | null
+  cancel_reason?: string | null
+  natures?: string[]
+  limits?: { fonctions: number; taches: number; fonction: number; tache: number; total: number }
+}
+
 export interface Attestation {
   id: number
   kind: 'normale' | 'exceptionnelle' | 'demande'
@@ -703,6 +757,26 @@ class StageService {
 
   deliveredAttestation = (id: number, date: string) => HttpService.post(`${BASE}/attestations/${id}/remise`, { date })
 
+  /** Prévenir à nouveau le stagiaire : son attestation imprimée l'attend au secrétariat. */
+  notifyAttestation = (id: number) => HttpService.post(`${BASE}/attestations/${id}/prevenir`, {})
+
+  // ── Attestations de travail ────────────────────────────────────────────
+
+  workAttestations = (status: string, q = ''): Promise<{ data: WorkAttestation[]; counts: Partial<Record<WorkAttestationStatus, number>> }> =>
+    HttpService.get(`${BASE}/attestations-travail?status=${encodeURIComponent(status)}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ''}`)
+  workAttestation = async (id: number): Promise<WorkAttestation> => (await HttpService.get(`${BASE}/attestations-travail/${id}`)).data
+  inviteWorkAttestation = (numero: string) => HttpService.post(`${BASE}/attestations-travail`, { numero })
+  /** Dossier d'un ancien stagiaire : lien envoyé, ou fiche remplie par le responsable. */
+  workAttestationFromStage = (stageId: number, mode: 'lien' | 'remplir') => HttpService.post(`${BASE}/stagiaires/${stageId}/attestation-travail`, { mode })
+  updateWorkAttestation = (id: number, values: Partial<WorkAttestationValues>) => HttpService.put(`${BASE}/attestations-travail/${id}`, values)
+  validateWorkAttestation = (id: number) => HttpService.post(`${BASE}/attestations-travail/${id}/valider`, {})
+  resendWorkAttestation = (id: number) => HttpService.post(`${BASE}/attestations-travail/${id}/renvoyer`, {})
+  cancelWorkAttestation = (id: number, motif: string) => HttpService.post(`${BASE}/attestations-travail/${id}/annuler`, { motif })
+  printedWorkAttestation = (id: number, numero: string, date: string) =>
+    HttpService.post(`${BASE}/attestations-travail/${id}/imprimee`, { numero: numero || null, date })
+  notifyWorkAttestation = (id: number) => HttpService.post(`${BASE}/attestations-travail/${id}/prevenir`, {})
+  deliveredWorkAttestation = (id: number, date: string) => HttpService.post(`${BASE}/attestations-travail/${id}/remise`, { date })
+
   uploadAttestationScan = (id: number, file: File) => {
     const fd = new FormData()
     fd.append('file', file)
@@ -713,6 +787,9 @@ class StageService {
 
   attestationPdf = async (id: number, date?: string): Promise<LocalFile> =>
     this.pdfFrom(await HttpService.get(`${BASE}/attestations/${id}/pdf${date ? `?date=${encodeURIComponent(date)}` : ''}`), 'attestation.pdf')
+
+  workAttestationPdf = async (id: number, date?: string): Promise<LocalFile> =>
+    this.pdfFrom(await HttpService.get(`${BASE}/attestations-travail/${id}/pdf${date ? `?date=${encodeURIComponent(date)}` : ''}`), 'attestation-de-travail.pdf')
 
   /** Renvoie la note au stagiaire (message puis PDF), responsable seulement. */
   resendNote = (stageId: number, noteId: number) => HttpService.post(`${BASE}/demandes/${stageId}/notes/${noteId}/renvoyer`, {})

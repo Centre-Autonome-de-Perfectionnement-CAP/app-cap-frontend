@@ -13,7 +13,7 @@ import stageService, { type Attestation, type AttestationEligibility } from '@/s
 import { showSuccess, friendlyError } from '@/components/common/ActionResult'
 import StageFileViewer from './StageFileViewer'
 import ExceptionalAttestationModal from './ExceptionalAttestationModal'
-import { frDate, frDateTime, todayIso } from './stageUtils'
+import { frDate, frDateTime, printPdf, todayIso } from './stageUtils'
 import { UPLOAD_LIMIT_MB, isTooHeavy } from '@/constants/validation.constants'
 
 export const ATT_STATUS: Record<Attestation['status'], { color: string; bg: string }> = {
@@ -98,19 +98,11 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
   }
 
   /** Impression directe du PDF (fenêtre d'impression du navigateur). */
-  const printPdf = async () => {
+  const print = async () => {
     if (!a) return
     setPrinting(true); setErr(null)
     try {
-      const f = await stageService.attestationPdf(a.id, ['a_valider', 'a_imprimer'].includes(a.status) ? docDate : undefined)
-      const frame = document.createElement('iframe')
-      frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'
-      frame.src = f.url
-      frame.onload = () => {
-        try { frame.contentWindow?.focus(); frame.contentWindow?.print() } catch { window.open(f.url, '_blank', 'noopener') }
-        setTimeout(() => { frame.remove(); URL.revokeObjectURL(f.url) }, 60000)
-      }
-      document.body.appendChild(frame)
+      printPdf(await stageService.attestationPdf(a.id, ['a_valider', 'a_imprimer'].includes(a.status) ? docDate : undefined))
     } catch (e) {
       setErr(friendlyError(e))
     } finally {
@@ -181,7 +173,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
                     <CFormLabel className="small fw-semibold mb-1">Date du document <span className="text-danger">*</span></CFormLabel>
                     <CFormInput type="date" value={docDate} onChange={e => setDocDate(e.target.value)} style={{ maxWidth: 180 }} />
                   </div>
-                  <CButton color="primary" variant="outline" disabled={printing || !docDate} onClick={printPdf}>
+                  <CButton color="primary" variant="outline" disabled={printing || !docDate} onClick={print}>
                     {printing ? <CSpinner size="sm" className="me-1" /> : <CIcon icon={cilPrint} className="me-1" />}Imprimer
                   </CButton>
                   <CButton color="secondary" variant="ghost" onClick={() => setPdfView(true)}><CIcon icon={cilDescription} className="me-1" />Aperçu</CButton>
@@ -197,7 +189,7 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
                   <CIcon icon={cilDescription} className="me-1" />{a.status === 'a_valider' ? 'Aperçu du PDF' : 'Voir le PDF'}
                 </CButton>
                 {a.status !== 'a_valider' && (
-                  <CButton size="sm" color="secondary" variant="outline" disabled={printing} onClick={printPdf}>
+                  <CButton size="sm" color="secondary" variant="outline" disabled={printing} onClick={print}>
                     {printing ? <CSpinner size="sm" className="me-1" /> : <CIcon icon={cilPrint} className="me-1" />}Réimprimer
                   </CButton>
                 )}
@@ -216,6 +208,11 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
                     onClick={() => run(() => stageService.deliveredAttestation(a.id, date), 'Remise enregistrée')}>
                     <CIcon icon={cilTask} className="me-1" />Marquer remise
                   </CButton>
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 10 }}>
+                  <span className="stg-muted" style={{ flex: 1, minWidth: 200 }}>Le stagiaire a été prévenu à l'impression. Il ne vient pas ? Relancez-le.</span>
+                  <CButton size="sm" color="primary" variant="outline" disabled={busy}
+                    onClick={() => run(() => stageService.notifyAttestation(a.id), 'Stagiaire prévenu')}>Prévenir à nouveau</CButton>
                 </div>
                 <details style={{ marginTop: 10 }}>
                   <summary className="stg-muted" style={{ cursor: 'pointer' }}>Corriger le numéro noté ou la date du document</summary>
@@ -329,12 +326,6 @@ const AttestationModal = ({ attestationId, lead, onClose, onChanged }: Props) =>
           onClose={() => setScanView(false)}
         />
       )}
-      <style>{`
-        .att-dl { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 6px 12px; margin: 0; font-size: .9rem; }
-        .att-dl dt { color: #64748b; font-weight: 600; }
-        .att-dl dd { margin: 0; color: #0f172a; }
-        @media (max-width: 576px) { .att-dl { grid-template-columns: minmax(0, 1fr); } .att-dl dd { margin-bottom: 6px; } }
-      `}</style>
     </CModal>
   )
 }

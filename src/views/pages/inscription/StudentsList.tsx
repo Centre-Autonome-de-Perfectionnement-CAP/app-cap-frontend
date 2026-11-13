@@ -48,6 +48,7 @@ const StudentsList = () => {
     getStudentDetails: getStudentDetailsFromHook,
     updateStudent,
     loading,
+    loadedOnce,
     error,
   } = useStudentsListData()
 
@@ -343,7 +344,8 @@ const StudentsList = () => {
     }
   }
 
-  if (loading) {
+  // Plein écran au premier chargement seulement : une recherche ne vide plus la page.
+  if (!loadedOnce) {
     return <LoadingSpinner message="Chargement de la liste des étudiants..." fullPage />
   }
 
@@ -399,14 +401,16 @@ const StudentsList = () => {
           />
 
           {/* ✅ Passe les 3 nouvelles props pour la fonctionnalité Responsable */}
-          <StudentTable
-            students={students}
-            loading={false}
-            onRowClick={handleRowClick}
-            onAssignResponsible={handleAssignResponsible}
-            groupResponsibleMap={groupResponsibleMap}
-            assigningId={assigningId}
-          />
+          <div style={{ opacity: loading ? 0.55 : 1, transition: 'opacity .15s' }} aria-busy={loading}>
+            <StudentTable
+              students={students}
+              loading={false}
+              onRowClick={handleRowClick}
+              onAssignResponsible={handleAssignResponsible}
+              groupResponsibleMap={groupResponsibleMap}
+              assigningId={assigningId}
+            />
+          </div>
 
           <Pagination
             currentPage={currentPage}

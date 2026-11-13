@@ -214,7 +214,7 @@ const DocumentsManagement: React.FC = () => {
                 <CRow className="mb-3">
                   <CCol>
                     <CFormLabel>Lien externe</CFormLabel>
-                    <CFormInput type="url" value={formData.lien} onChange={e => setFormData({...formData, lien: e.target.value})} placeholder="https://..." />
+                    <CFormInput type="url" value={formData.lien} onChange={e => setFormData({...formData, lien: e.target.value})} placeholder="Exemple : https://..." />
                   </CCol>
                 </CRow>
               </>

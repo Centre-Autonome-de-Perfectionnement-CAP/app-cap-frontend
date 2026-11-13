@@ -546,7 +546,7 @@ const InformationsManagement: React.FC = () => {
             <CRow className="mb-3">
               <CCol>
                 <CFormLabel>Lien</CFormLabel>
-                <CFormInput value={formData.link} onChange={e => setFormData({...formData, link: e.target.value})} placeholder="/enroll" />
+                <CFormInput value={formData.link} onChange={e => setFormData({...formData, link: e.target.value})} placeholder="Exemple : /enroll" />
               </CCol>
             </CRow>
             <CRow className="mb-3">

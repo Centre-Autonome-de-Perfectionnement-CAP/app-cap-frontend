@@ -164,6 +164,15 @@ body {
   flex-direction: column;
 }
 
+// Formulaire qui englobe body et footer : même colonne flexible, sinon le
+// body ne rétrécit pas et la fin du formulaire est coupée sans défilement.
+.modal-content > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 // Le body du modal est scrollable - CoreUI le gère avec [scrollable],
 // mais on force quand même pour les cas sans scrollable.
 .modal-body {

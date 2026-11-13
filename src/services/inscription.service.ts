@@ -126,6 +126,17 @@ type NiveauxResponse = {
   data: Record<string, NiveauOption[]>;
 };
 
+/** Envoi WhatsApp groupé (historique des 30 derniers jours). */
+export interface WhatsAppBroadcastItem {
+  id: string
+  at: string
+  by: string | null
+  total: number
+  sent: number
+  failed: number
+  message: string
+}
+
 /**
  * Service pour le module Inscription
  * Adapté aux vraies routes du backend Laravel
@@ -789,6 +800,24 @@ class InscriptionService {
     }
   };
   
+  // ==================== MESSAGES WHATSAPP GROUPÉS ====================
+
+  /** Envoi aux étudiants cochés et aux numéros ajoutés ; le message part d'abord, puis chaque fichier. */
+  sendWhatsAppMessages = async (data: { etudiants: number[]; numeros: string; message: string; fichiers: File[] }): Promise<{
+    data: { recipients: number; invalid_numbers: string[]; without_phone: string[]; minutes: number }; message: string
+  }> => {
+    const fd = new FormData()
+    data.etudiants.forEach(id => fd.append('etudiants[]', String(id)))
+    fd.append('numeros', data.numeros)
+    fd.append('message', data.message)
+    data.fichiers.forEach(f => fd.append('fichiers[]', f))
+    return await HttpService.post(`${INSCRIPTION_ROUTES.BASE}/messages-whatsapp`, fd)
+  }
+
+  /** Derniers envois (30 jours). */
+  whatsAppMessagesHistory = async (): Promise<WhatsAppBroadcastItem[]> =>
+    (await HttpService.get<any>(`${INSCRIPTION_ROUTES.BASE}/messages-whatsapp`)).data ?? []
+
   // ==================== PERIODS & STATUS ====================
   
   getActivePeriods = async () => {

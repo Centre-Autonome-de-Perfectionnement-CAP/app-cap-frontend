@@ -5,6 +5,7 @@ import {
   cilCalendar,
   cilList,
   cilTask,
+  cilSend,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -42,6 +43,12 @@ const inscriptionNavigation = [
     name: "Corrections d'infos",
     to: '/inscription/corrections',
     icon: <CIcon icon={cilTask} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Messages WhatsApp',
+    to: '/inscription/messages-whatsapp',
+    icon: <CIcon icon={cilSend} customClassName="nav-icon" />,
   },
 ]
 

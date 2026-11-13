@@ -5,5 +5,6 @@ const PendingStudents = React.lazy(() => import('./PendingStudents'))
 const AnneeAcademiques = React.lazy(() => import('./AnneeAcademiques'))
 const StudentsList = React.lazy(() => import('./StudentsList'))
 const CorrectionRequestsList = React.lazy(() => import('./CorrectionRequestsList'))
+const WhatsAppMessages = React.lazy(() => import('./WhatsAppMessages'))
 
-export { Dashboard, PendingStudents, AnneeAcademiques, StudentsList, CorrectionRequestsList }
+export { Dashboard, PendingStudents, AnneeAcademiques, StudentsList, CorrectionRequestsList, WhatsAppMessages }

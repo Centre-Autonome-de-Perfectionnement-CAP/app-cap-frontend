@@ -355,7 +355,7 @@ export interface ReportSummary {
   correction_status?: 'pending' | 'approved' | 'rejected' | null
   late: boolean
   submitted_at: string | null
-  stage?: { id: number; reference: string; nom_complet: string } | null
+  stage?: { id: number; reference: string; nom_complet: string; /** stage terminé ou arrêté */ termine?: boolean } | null
   /** Rapport commun du binôme : il vaut aussi pour ce stagiaire. */
   binome?: { report_id: number; name: string; deposited_by: string | null } | null
 }

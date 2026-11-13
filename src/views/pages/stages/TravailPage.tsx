@@ -18,7 +18,7 @@ import { STUDY_CYCLES, WORK_STATUS, frDateTime, studyYears } from './stageUtils'
 import StageFileViewer from './StageFileViewer'
 import { UPLOAD_LIMIT_MB, isTooHeavy } from '@/constants/validation.constants'
 
-const ROLES: Record<PersonRole, string> = { auteur: 'Auteur', maitre: 'Maître de mémoire', superviseur: 'Superviseur' }
+const ROLES: Record<PersonRole, string> = { auteur: 'Auteur', maitre: 'Maître de mémoire', encadrant: 'Encadrant', superviseur: 'Superviseur' }
 const LICENSES = { tous_droits: 'Tous droits réservés', cc_by_nc: 'Creative Commons BY-NC (partage permis, sans usage commercial)' }
 const EMPTY: WorkForm = {
   kind: 'memoire', title: '', summary: '', keywords: '', year: String(new Date().getFullYear()),

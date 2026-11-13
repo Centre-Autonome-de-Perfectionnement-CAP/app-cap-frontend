@@ -179,6 +179,8 @@ export interface AttestationEligibility {
   taux: number | null
   seuil: number
   attendance_ok: boolean
+  /** false : stagiaire invité au stage déjà terminé, seul le rapport final compte */
+  attendance_required?: boolean
   final_validated: boolean
   eligible: boolean
   jours_ouvres: number
@@ -196,7 +198,7 @@ export interface AttestationContent {
   pays_naissance: string | null; type_stage: string; structure: string
 }
 
-/** Attestation de travail (invitation sans compte, vérification, impression, intéressé prévenu, remise). */
+/** Attestation de service fait (invitation sans compte, vérification, impression, intéressé prévenu, remise). */
 export type WorkAttestationStatus = 'invitee' | 'a_valider' | 'a_imprimer' | 'imprimee' | 'prete' | 'remise' | 'annulee'
 export interface WorkAttestationValues {
   civilite: 'M.' | 'Mme' | 'Mlle' | null
@@ -760,11 +762,13 @@ class StageService {
   /** Prévenir à nouveau le stagiaire : son attestation imprimée l'attend au secrétariat. */
   notifyAttestation = (id: number) => HttpService.post(`${BASE}/attestations/${id}/prevenir`, {})
 
-  // ── Attestations de travail ────────────────────────────────────────────
+  // ── Attestations de service fait ────────────────────────────────────────────
 
   workAttestations = (status: string, q = ''): Promise<{ data: WorkAttestation[]; counts: Partial<Record<WorkAttestationStatus, number>> }> =>
     HttpService.get(`${BASE}/attestations-travail?status=${encodeURIComponent(status)}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ''}`)
   workAttestation = async (id: number): Promise<WorkAttestation> => (await HttpService.get(`${BASE}/attestations-travail/${id}`)).data
+  /** Attestations de service fait d'un ancien stagiaire (dossier). */
+  stageWorkAttestations = async (stageId: number): Promise<WorkAttestation[]> => (await HttpService.get(`${BASE}/stagiaires/${stageId}/attestations-travail`)).data
   inviteWorkAttestation = (numero: string) => HttpService.post(`${BASE}/attestations-travail`, { numero })
   /** Dossier d'un ancien stagiaire : lien envoyé, ou fiche remplie par le responsable. */
   workAttestationFromStage = (stageId: number, mode: 'lien' | 'remplir') => HttpService.post(`${BASE}/stagiaires/${stageId}/attestation-travail`, { mode })

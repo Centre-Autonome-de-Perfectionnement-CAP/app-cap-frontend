@@ -20,7 +20,6 @@ import StageFileViewer from './StageFileViewer'
 import PresencePanel from './PresencePanel'
 import InternReportsPanel from './InternReportsPanel'
 import InternAttestationPanel from './InternAttestationPanel'
-import WorkAttestationButton from './WorkAttestationButton'
 import SupervisorAssignModal from './SupervisorAssignModal'
 import ExceptionalAttestationModal from './ExceptionalAttestationModal'
 import { Breadcrumb, CodeBadges, FilterTabs, Pill, StagesStyles, useOpenDossier } from './StagesUi'
@@ -251,9 +250,6 @@ const StageDossierPage = () => {
           onClick={() => run(() => stageService.acceptCounter(detail.id), 'Contre-proposition acceptée')}>
           {busy ? <CSpinner size="sm" className="me-1" /> : <CIcon icon={cilCheckAlt} className="me-1" />}Accepter ses dates
         </CButton>
-      )}
-      {accepted && lead && suivi?.phase === 'finished' && (
-        <WorkAttestationButton stage={{ id: detail.id, nom_complet: detail.nom_complet, whatsapp: detail.whatsapp }} />
       )}
       {detail.fin.can_end && (
         <CButton color="danger" variant="outline" size="sm" onClick={() => openMode('end')}>
@@ -573,7 +569,7 @@ const StageDossierPage = () => {
           {tab === 'rapports' && <Section icon={cilFile} title="Rapports" tone="#7c3aed"><InternReportsPanel stageId={detail.id} /></Section>}
           {tab === 'attestation' && (
             <Section icon={cilBadge} title="Attestation" tone="#0f766e">
-              <InternAttestationPanel stage={{ id: detail.id, nom_complet: detail.nom_complet }} lead={lead} />
+              <InternAttestationPanel stage={{ id: detail.id, nom_complet: detail.nom_complet, whatsapp: detail.whatsapp }} lead={lead} />
             </Section>
           )}
           {tab === 'historique' && blocks.history}

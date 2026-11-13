@@ -122,8 +122,8 @@ export const HISTORY_LABELS: Record<string, string> = {
   attestation_scan:      "Scan de l'attestation archivé",
   attestation_cancelled: 'Attestation annulée',
   attestation_notified:  'Stagiaire prévenu à nouveau : attestation à retirer',
-  work_attestation_invited: 'Attestation de travail : lien envoyé',
-  work_attestation_draft:   'Attestation de travail préparée',
+  work_attestation_invited: 'Attestation de service fait : lien envoyé',
+  work_attestation_draft:   'Attestation de service fait préparée',
   attestation_reset:     'Attestation à valider de nouveau (date de fin modifiée)',
 }
 
@@ -213,4 +213,46 @@ export const printPdf = (f: { url: string }) => {
     setTimeout(() => { frame.remove(); URL.revokeObjectURL(f.url) }, 60000)
   }
   document.body.appendChild(frame)
+}
+
+/**
+ * Provenance (établissement d'origine) : clé de regroupement tolérante, sans
+ * comparaison stricte. « EPAC », « École Polytechnique d'Abomey-Calavi » et
+ * « epac / uac » se retrouvent ensemble : sigle écrit (mot en majuscules),
+ * sinon initiales des mots importants, sinon le texte simplifié.
+ */
+const PROVENANCE_STOP = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'l', 'd', 'et', 'en', 'a', 'au', 'aux', 'pour', 'sur'])
+export const provenanceKey = (raw: string | null | undefined): string => {
+  const text = (raw ?? '').trim()
+  if (!text) return '-'
+  const acronym = text.match(/\b[A-ZÉÈ]{2,8}\b/)
+  if (acronym) return acronym[0].normalize('NFD').replace(/[̀-ͯ]/g, '')
+  const words = text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(w => w && !PROVENANCE_STOP.has(w))
+  if (words.length >= 3) return words.map(w => w[0]).join('').toUpperCase()
+  // Un seul mot court (« esgis ») : traité comme un sigle.
+  return words.length === 1 && words[0].length <= 8 ? words[0].toUpperCase() : words.join(' ')
+}
+
+/** Regroupe des lignes par provenance ; libellé : l'écriture la plus fréquente du groupe. */
+export const groupByProvenance = <T,>(rows: T[], get: (r: T) => string | null | undefined) => {
+  const keyed = rows.map(r => { const raw = (get(r) ?? '').trim(); return { r, raw, key: provenanceKey(raw) } })
+  // « epac uac », « esgis cotonou » : rejoignent le sigle déjà connu qu'ils contiennent.
+  const sigles = new Set(keyed.map(k => k.key).filter(k => /^[A-Z0-9]+$/.test(k)))
+  for (const k of keyed) {
+    if (!sigles.has(k.key)) {
+      const hit = k.key.split(' ').map(w => w.toUpperCase()).find(w => sigles.has(w))
+      if (hit) k.key = hit
+    }
+  }
+  const groups = new Map<string, { key: string; rows: T[]; spellings: Map<string, number> }>()
+  for (const { r, raw, key } of keyed) {
+    const g = groups.get(key) ?? { key, rows: [] as T[], spellings: new Map<string, number>() }
+    g.rows.push(r)
+    if (raw) g.spellings.set(raw, (g.spellings.get(raw) ?? 0) + 1)
+    groups.set(key, g)
+  }
+  return [...groups.values()]
+    .map(g => ({ key: g.key, rows: g.rows, label: [...g.spellings.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Provenance non indiquée' }))
+    .sort((a, b) => b.rows.length - a.rows.length || a.label.localeCompare(b.label))
 }

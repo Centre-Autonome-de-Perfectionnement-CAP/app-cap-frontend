@@ -9,7 +9,7 @@ const BASE = 'bibliotheque/admin'
 
 export type WorkStatus = 'proposed' | 'draft' | 'published' | 'unpublished'
 export type WorkKind = 'rapport_stage' | 'memoire'
-export type PersonRole = 'auteur' | 'maitre' | 'superviseur'
+export type PersonRole = 'auteur' | 'maitre' | 'encadrant' | 'superviseur'
 
 export interface WorkRow {
   id: number; slug: string; kind: WorkKind; kind_label: string; source_type: 'stage_report' | 'defense' | 'manuel'

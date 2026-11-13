@@ -1,5 +1,5 @@
 // src/views/pages/stages/WorkAttestationModal.tsx
-// Une attestation de travail, selon l'étape et le rôle :
+// Une attestation de service fait, selon l'étape et le rôle :
 //  - responsable : lien en attente (renvoyer, ou remplir soi-même), vérifier
 //    et corriger chaque point, aperçu, valider, annuler ;
 //  - secrétariat (et responsable) : imprimer (numéro du registre), faire
@@ -137,7 +137,8 @@ const WorkAttestationModal = ({ attestationId, lead, onClose, onChanged }: Props
   }
 
   const st = a ? WORK_STATUS[a.status] : null
-  const editing = lead && !!a && (a.status === 'invitee' || a.status === 'a_valider')
+  // La fiche se vérifie une fois remplie par la personne (ou préparée depuis un dossier).
+  const editing = lead && a?.status === 'a_valider'
   const open = !!a && ['invitee', 'a_valider', 'a_imprimer', 'imprimee', 'prete'].includes(a.status)
   const lim = a?.limits
   const total = [...v.fonctions, ...v.taches].join('').length
@@ -146,8 +147,8 @@ const WorkAttestationModal = ({ attestationId, lead, onClose, onChanged }: Props
     <CModal visible={attestationId !== null} onClose={onClose} size="lg" fullscreen="md" scrollable>
       <CModalHeader>
         <CModalTitle style={{ fontSize: '1rem', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          {a ? <>Attestation de travail{a.nom_complet ? ` - ${a.nom_complet}` : ''}
-            {st && <span className="stg-pill" style={{ color: st.color, background: st.bg }}>{a.status_label}</span>}</> : 'Attestation de travail'}
+          {a ? <>Attestation de service fait{a.nom_complet ? ` - ${a.nom_complet}` : ''}
+            {st && <span className="stg-pill" style={{ color: st.color, background: st.bg }}>{a.status_label}</span>}</> : 'Attestation de service fait'}
         </CModalTitle>
       </CModalHeader>
       <CModalBody>
@@ -159,7 +160,7 @@ const WorkAttestationModal = ({ attestationId, lead, onClose, onChanged }: Props
                 <strong>Lien envoyé au {a.phone}</strong>
                 <div className="stg-muted">
                   Envoyé {a.send_count} fois, dernière le {frDateTime(a.last_sent_at)} · valable jusqu'au {frDateTime(a.expires_at)}.
-                  La personne remplit sa fiche sans compte. Vous pouvez aussi la remplir vous-même ci-dessous : le lien ne fonctionnera plus.
+                  La personne remplit sa fiche sans compte. Vous serez prévenu dès qu'elle l'aura envoyée : vous la vérifierez alors.
                 </div>
                 {lead && (
                   <CButton size="sm" color="primary" variant="outline" className="mt-2" disabled={busy}
@@ -170,7 +171,7 @@ const WorkAttestationModal = ({ attestationId, lead, onClose, onChanged }: Props
 
             {editing ? (
               <div className="stg-card">
-                <div style={{ fontWeight: 700, marginBottom: 10 }}>{a.status === 'invitee' ? 'Remplir la fiche' : 'Vérifier, corriger, compléter'}</div>
+                <div style={{ fontWeight: 700, marginBottom: 10 }}>Vérifier, corriger, compléter</div>
                 <div className="row g-2">
                   <div className="col-sm-3">
                     <CFormLabel className="small fw-semibold mb-1">Civilité <span className="text-danger">*</span></CFormLabel>
@@ -243,7 +244,7 @@ const WorkAttestationModal = ({ attestationId, lead, onClose, onChanged }: Props
                   </CButton>
                 </div>
               </div>
-            ) : a.values && (
+            ) : a.values && a.status !== 'invitee' && (
               <dl className="att-dl">
                 <dt>Personne</dt><dd>{a.nom_complet}</dd>
                 <dt>Diplôme</dt><dd>{a.values.diplome ?? '-'}</dd>
@@ -378,9 +379,9 @@ const WorkAttestationModal = ({ attestationId, lead, onClose, onChanged }: Props
       {a && (
         <StageFileViewer
           visible={pdfView}
-          files={[{ key: 'pdf', label: ['invitee', 'a_valider'].includes(a.status) ? 'Aperçu (non validée)' : `Attestation de travail${a.numero ? ` N° ${a.numero}` : ''}` }]}
+          files={[{ key: 'pdf', label: ['invitee', 'a_valider'].includes(a.status) ? 'Aperçu (non validée)' : `Attestation de service fait${a.numero ? ` N° ${a.numero}` : ''}` }]}
           initialKey="pdf"
-          title="Attestation de travail"
+          title="Attestation de service fait"
           loader={() => stageService.workAttestationPdf(a.id, a.status === 'a_imprimer' ? docDate : undefined)}
           onClose={() => setPdfView(false)}
         />

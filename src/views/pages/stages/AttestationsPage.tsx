@@ -1,6 +1,6 @@
 // src/views/pages/stages/AttestationsPage.tsx
-// Attestations : de stage et de travail, même circuit. Le responsable valide
-// (et invite pour une attestation de travail) ; le secrétariat imprime,
+// Attestations : de stage et de service fait, même circuit. Le responsable valide
+// (et invite pour une attestation de service fait) ; le secrétariat imprime,
 // prévient l'intéressé, remet (date) et archive le scan.
 
 import { useCallback, useEffect, useState } from 'react'
@@ -20,7 +20,7 @@ import AttestationModal, { ATT_STATUS } from './AttestationModal'
 import WorkAttestationModal, { WORK_STATUS } from './WorkAttestationModal'
 import { frDate, frDateTime } from './stageUtils'
 
-type Kind = 'stage' | 'travail'
+type Kind = 'stage' | 'service'
 
 const FILTERS: [AttestationStatus | 'all', string][] = [
   ['a_valider', 'À valider'], ['a_imprimer', 'À imprimer'], ['imprimee', 'À remettre'], ['remise', 'Remises'], ['annulee', 'Annulées'], ['all', 'Toutes'],
@@ -35,14 +35,15 @@ const AttestationsPage = () => {
   const { role } = useAuth()
   const lead = isStagesLead(role as string)
   const [params, setParams] = useSearchParams()
-  const kind: Kind = params.get('type') === 'travail' ? 'travail' : 'stage'
-  const setKind = (k: Kind) => setParams(p => { const n = new URLSearchParams(p); n.delete('attestation'); if (k === 'travail') n.set('type', k); else n.delete('type'); return n }, { replace: true })
+  // « travail » : ancien nom, gardé pour les liens déjà envoyés.
+  const kind: Kind = ['service', 'travail'].includes(params.get('type') ?? '') ? 'service' : 'stage'
+  const setKind = (k: Kind) => setParams(p => { const n = new URLSearchParams(p); n.delete('attestation'); if (k === 'service') n.set('type', k); else n.delete('type'); return n }, { replace: true })
 
   return (
     <div className="stg-page">
       <StagesStyles />
       <FilterTabs
-        options={[{ key: 'stage', label: 'Attestations de stage' }, { key: 'travail', label: 'Attestations de travail' }]}
+        options={[{ key: 'stage', label: 'Attestations de stage' }, { key: 'service', label: 'Attestations de service fait' }]}
         value={kind}
         onChange={k => setKind(k as Kind)}
       />
@@ -139,7 +140,7 @@ const WorkAttestations = ({ lead }: { lead: boolean }) => {
   return (
     <>
       <PageHead
-        title="Attestations de travail"
+        title="Attestations de service fait"
         subtitle={lead
           ? `${todo} attestation(s) à vérifier. Invitez la personne : elle remplit sa fiche sans compte, vous vérifiez, le secrétariat imprime et la prévient.`
           : `${todo} attestation(s) à imprimer, à faire signer ou à remettre.`}
@@ -157,7 +158,7 @@ const WorkAttestations = ({ lead }: { lead: boolean }) => {
 
       {error && <div className="stg-err">{error}</div>}
       {!rows && !error && <div style={{ padding: 40, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
-      {rows && rows.length === 0 && <CCard className="border-0 shadow-sm"><CCardBody><Empty text="Aucune attestation de travail dans cette catégorie." /></CCardBody></CCard>}
+      {rows && rows.length === 0 && <CCard className="border-0 shadow-sm"><CCardBody><Empty text="Aucune attestation de service fait dans cette catégorie." /></CCardBody></CCard>}
 
       <div className="stg-list">
         {rows?.map(a => (
@@ -170,7 +171,7 @@ const WorkAttestations = ({ lead }: { lead: boolean }) => {
       </div>
 
       <WorkAttestationModal attestationId={openId} lead={lead} onClose={close} onChanged={load} />
-      {lead && <InviteWorkModal visible={inviting} onClose={() => setInviting(false)} onDone={id => { setInviting(false); load(); setOpenId(id) }} />}
+      {lead && <InviteWorkModal visible={inviting} onClose={() => setInviting(false)} onDone={() => { setInviting(false); if (status === 'invitee') load(); else setStatus('invitee') }} />}
     </>
   )
 }
@@ -204,7 +205,7 @@ const Row = ({ onOpen, tone, name, label, at, detail }: {
 )
 
 /** Inviter une personne par son numéro WhatsApp : elle reçoit un lien pour remplir sa fiche, sans compte. */
-const InviteWorkModal = ({ visible, onClose, onDone }: { visible: boolean; onClose: () => void; onDone: (id: number) => void }) => {
+const InviteWorkModal = ({ visible, onClose, onDone }: { visible: boolean; onClose: () => void; onDone: () => void }) => {
   const [phone, setPhone] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -215,7 +216,7 @@ const InviteWorkModal = ({ visible, onClose, onDone }: { visible: boolean; onClo
     setBusy(true); setErr(null)
     try {
       const res: any = await stageService.inviteWorkAttestation(phone.trim())
-      onDone(res.data.id)
+      onDone()
       await showSuccess('Invitation envoyée', res?.message)
     } catch (e) {
       setErr(friendlyError(e))
@@ -226,7 +227,7 @@ const InviteWorkModal = ({ visible, onClose, onDone }: { visible: boolean; onClo
 
   return (
     <CModal visible={visible} onClose={onClose} alignment="center" fullscreen="sm">
-      <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Attestation de travail : inviter une personne</CModalTitle></CModalHeader>
+      <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Attestation de service fait : inviter une personne</CModalTitle></CModalHeader>
       <CModalBody>
         <label className="fw-semibold small mb-1" htmlFor="work-phone">Numéro WhatsApp <span className="text-danger">*</span></label>
         <CFormInput id="work-phone" type="tel" inputMode="tel" autoComplete="off" maxLength={20} value={phone} disabled={busy}
@@ -235,7 +236,7 @@ const InviteWorkModal = ({ visible, onClose, onDone }: { visible: boolean; onClo
         <div style={{ marginTop: 12, background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: 10, padding: '10px 12px', fontSize: '.875rem', color: '#115e59' }}>
           La personne reçoit sur WhatsApp un lien personnel (7 jours, une seule utilisation), sans compte à créer. Elle indique son identité,
           son diplôme, la période, ses fonctions et ses tâches. Vous vérifiez ensuite chaque point avant de valider.
-          Pour un ancien stagiaire, utilisez plutôt le bouton « Attestation de travail » de son dossier : tout est prérempli.
+          Pour un ancien stagiaire, utilisez plutôt le bouton « Attestation de service fait » de son dossier : tout est prérempli.
         </div>
         {err && <div className="stg-err" style={{ marginTop: 12 }}>{err}</div>}
       </CModalBody>

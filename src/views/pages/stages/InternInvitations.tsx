@@ -33,11 +33,17 @@ export const InviteInternButton = ({ onClick }: { onClick: () => void }) => (
   </CButton>
 )
 
-/** Liste des invitations + fenêtre d'envoi. */
-export const InternInvitations = ({ open, onOpenChange, onRegistered }: {
+/**
+ * Liste des invitations (onglet « Invitations » de la page Stagiaires) et
+ * fenêtre d'envoi (toujours disponible). onCount : nombre d'invitations en
+ * attente, pour le compteur de l'onglet.
+ */
+export const InternInvitations = ({ open, onOpenChange, onRegistered, showList, onCount }: {
   open: boolean
   onOpenChange: (v: boolean) => void
   onRegistered?: () => void
+  showList: boolean
+  onCount?: (pending: number) => void
 }) => {
   const [invs, setInvs] = useState<InternInvitation[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -48,6 +54,7 @@ export const InternInvitations = ({ open, onOpenChange, onRegistered }: {
     try { setInvs(await stageService.internInvitations()) } catch (e) { setError(friendlyError(e)) }
   }, [])
   useEffect(() => { load() }, [load])
+  useEffect(() => { if (invs) onCount?.(invs.filter(i => i.status === 'pending').length) }, [invs, onCount])
 
   const act = async (id: number, fn: () => Promise<any>, title: string) => {
     setBusyId(id)
@@ -62,19 +69,17 @@ export const InternInvitations = ({ open, onOpenChange, onRegistered }: {
     }
   }
 
-  // Rien à montrer tant qu'aucune invitation n'a été envoyée.
-  const hasAny = (invs?.length ?? 0) > 0
-
   return (
     <>
-      {(hasAny || error) && (
+      {showList && (
         <CCard className="border-0 shadow-sm" style={{ borderRadius: 14 }}>
           <CCardHeader style={{ background: '#fff', fontWeight: 800 }}>
             Stagiaires invités ({(invs ?? []).filter(i => i.status === 'pending').length} en attente)
           </CCardHeader>
           <CCardBody>
             {error && <div className="stg-err">{error}</div>}
-            {invs && invs.length === 0 && <Empty text="Aucune invitation envoyée." />}
+            {!invs && !error && <div style={{ padding: 24, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
+            {invs && invs.length === 0 && <Empty text="Aucune invitation envoyée. « Inviter un stagiaire existant » envoie un lien sur WhatsApp." />}
             <div className="stg-list">
               {invs?.map(i => {
                 const st = STATUS[i.status]

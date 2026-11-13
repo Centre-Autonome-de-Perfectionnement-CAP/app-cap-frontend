@@ -2,13 +2,15 @@
 // Stagiaires (demandes acceptées) : une ligne par stagiaire avec sa période,
 // son encadrement, son assiduité, ses rapports et ses codes d'attention.
 // « Détails » ouvre son dossier. Le filtre est dans l'adresse et dans le
-// titre : on sait toujours ce que l'on regarde.
+// titre : on sait toujours ce que l'on regarde. Les lignes peuvent être
+// regroupées par provenance (établissement d'origine, rapprochement souple).
+// Onglet « Invitations » : les stagiaires invités par numéro WhatsApp.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CButton, CCard, CCardBody, CFormInput, CFormCheck, CInputGroup, CInputGroupText, CSpinner } from '@coreui/react'
+import { CButton, CCard, CCardBody, CFormInput, CFormCheck, CFormSwitch, CInputGroup, CInputGroupText, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilSearch, cilReload, cilGroup, cilX } from '@coreui/icons'
+import { cilSearch, cilReload, cilGroup, cilX, cilChevronBottom, cilChevronRight } from '@coreui/icons'
 import stageService, { type FollowResponse, type FollowRow, type InternScope } from '@/services/stage.service'
 import { showSuccess, showError, friendlyError } from '@/components/common/ActionResult'
 import { useAuth } from '@/contexts'
@@ -19,7 +21,7 @@ import { FormBinomeModal } from './BinomesPage'
 import {
   PageHead, Empty, Pill, StagesStyles, ExportButton, FilterTabs, CodeBadges, CodesLegend, useOpenDossier,
 } from './StagesUi'
-import { PHASE, INTERN_SCOPES, frDate } from './stageUtils'
+import { PHASE, INTERN_SCOPES, frDate, groupByProvenance } from './stageUtils'
 
 const LEAD_SCOPES: InternScope[] = ['active', 'current', 'upcoming', 'unsupervised', 'finished', 'all']
 const SUPERVISOR_SCOPES: InternScope[] = ['mine', ...LEAD_SCOPES]
@@ -29,9 +31,15 @@ const StagiairesPage = () => {
   const lead = isStagesLead(role as string)
   const scopes = lead ? LEAD_SCOPES : SUPERVISOR_SCOPES
   const [params, setParams] = useSearchParams()
-  const asked = (params.get('filtre') ?? params.get('scope')) as InternScope | null
-  const scope: InternScope = asked && scopes.includes(asked) ? asked : scopes[0]
-  const setScope = (s: InternScope) => setParams(p => { const n = new URLSearchParams(p); n.delete('scope'); n.set('filtre', s); return n }, { replace: true })
+  const asked = params.get('filtre') ?? params.get('scope')
+  const invitationsTab = lead && asked === 'invitations'
+  const scope: InternScope = asked && scopes.includes(asked as InternScope) ? asked as InternScope : scopes[0]
+  const setScope = (s: InternScope | 'invitations') => setParams(p => { const n = new URLSearchParams(p); n.delete('scope'); n.set('filtre', s); return n }, { replace: true })
+  const [pendingInvites, setPendingInvites] = useState<number | undefined>(undefined)
+  // Regroupement par provenance : proposé d'office pour les stagiaires terminés.
+  const [grouped, setGrouped] = useState(scope === 'finished')
+  useEffect(() => { setGrouped(scope === 'finished') }, [scope])
+  const [collapsed, setCollapsed] = useState<string[]>([])
 
   const [q, setQ] = useState('')
   const [search, setSearch] = useState('')
@@ -55,6 +63,7 @@ const StagiairesPage = () => {
   useEffect(() => { const t = setTimeout(() => setSearch(q.trim()), 400); return () => clearTimeout(t) }, [q])
 
   const rows = list?.data ?? []
+  const groups = useMemo(() => (grouped ? groupByProvenance(rows, r => r.etablissement) : null), [grouped, rows])
   const allChecked = rows.length > 0 && rows.every(r => selected.includes(r.id))
   const toggle = (id: number) => setSelected(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]))
   const pair = useMemo<[number, number] | undefined>(() => (selected.length === 2 ? [selected[0], selected[1]] : undefined), [selected])
@@ -84,28 +93,35 @@ const StagiairesPage = () => {
     <div className="stg-page">
       <StagesStyles />
       <PageHead
-        title={`Stagiaires · ${INTERN_SCOPES[scope]}`}
-        subtitle={lead ? 'Une ligne par stagiaire. « Détails » ouvre son dossier complet.' : 'Les stagiaires que vous suivez, et ceux que vous pouvez prendre en charge.'}
+        title={`Stagiaires · ${invitationsTab ? 'Invitations' : INTERN_SCOPES[scope]}`}
+        subtitle={invitationsTab ? 'Stagiaires invités par leur numéro WhatsApp : chacun remplit lui-même son dossier.'
+          : lead ? 'Une ligne par stagiaire. « Détails » ouvre son dossier complet.' : 'Les stagiaires que vous suivez, et ceux que vous pouvez prendre en charge.'}
         actions={<>
-          <ExportButton path={exportPath} />
+          {!invitationsTab && <ExportButton path={exportPath} />}
           <CButton color="secondary" variant="outline" size="sm" onClick={load} disabled={loading} title="Actualiser"><CIcon icon={cilReload} /></CButton>
           {lead && <InviteInternButton onClick={() => setInviteOpen(true)} />}
         </>}
       />
 
-      <FilterTabs
-        options={scopes.map(k => ({ key: k, label: INTERN_SCOPES[k], count: list?.counts?.[k] }))}
-        value={scope}
+      <FilterTabs<InternScope | 'invitations'>
+        options={[
+          ...scopes.map(k => ({ key: k, label: INTERN_SCOPES[k], count: list?.counts?.[k] })),
+          ...(lead ? [{ key: 'invitations' as const, label: 'Invitations', count: pendingInvites }] : []),
+        ]}
+        value={invitationsTab ? 'invitations' : scope}
         onChange={setScope}
       />
 
-      <CCard className="border-0 shadow-sm" style={{ borderRadius: 14 }}>
+      {!invitationsTab && <CCard className="border-0 shadow-sm" style={{ borderRadius: 14 }}>
         <CCardBody>
-          <CInputGroup style={{ marginBottom: 12 }}>
-            <CInputGroupText style={{ background: '#fff' }}><CIcon icon={cilSearch} style={{ width: 16, color: '#94a3b8' }} /></CInputGroupText>
-            <CFormInput value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher : nom, référence, établissement…" maxLength={100} />
-            {q && <CButton color="secondary" variant="outline" onClick={() => setQ('')} title="Effacer"><CIcon icon={cilX} /></CButton>}
-          </CInputGroup>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+            <CInputGroup style={{ flex: '1 1 280px' }}>
+              <CInputGroupText style={{ background: '#fff' }}><CIcon icon={cilSearch} style={{ width: 16, color: '#94a3b8' }} /></CInputGroupText>
+              <CFormInput value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher : nom, référence, établissement…" maxLength={100} />
+              {q && <CButton color="secondary" variant="outline" onClick={() => setQ('')} title="Effacer"><CIcon icon={cilX} /></CButton>}
+            </CInputGroup>
+            <CFormSwitch id="stg-group" label="Regrouper par provenance" checked={grouped} onChange={e => { setGrouped(e.target.checked); setCollapsed([]) }} />
+          </div>
 
           {error && <div className="stg-err">{error}</div>}
           {loading && !list && <div style={{ padding: 40, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
@@ -127,20 +143,36 @@ const StagiairesPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map(r => (
-                    <InternLine key={r.id} r={r} seuil={list?.seuil ?? 80} lead={lead} busy={busy}
-                      checked={selected.includes(r.id)} onToggle={() => toggle(r.id)}
-                      onOpen={() => openDossier(r.reference)}
-                      onAssign={() => setAssignIds([r.id])}
-                      onSelf={action => selfAssign(action, [r.id])} />
-                  ))}
+                  {(groups ?? [{ key: '', label: '', rows }]).map(g => {
+                    const closed = collapsed.includes(g.key)
+                    return [
+                      groups && (
+                        <tr key={`g-${g.key}`} className="stg-grp">
+                          <td colSpan={8}>
+                            <button type="button" onClick={() => setCollapsed(c => (closed ? c.filter(x => x !== g.key) : [...c, g.key]))} aria-expanded={!closed}>
+                              <CIcon icon={closed ? cilChevronRight : cilChevronBottom} style={{ width: 14 }} />
+                              <strong>{g.label}</strong>
+                              <span className="stg-muted">{g.rows.length} stagiaire(s)</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ),
+                      ...(closed ? [] : g.rows.map(r => (
+                        <InternLine key={r.id} r={r} seuil={list?.seuil ?? 80} lead={lead} busy={busy}
+                          checked={selected.includes(r.id)} onToggle={() => toggle(r.id)}
+                          onOpen={() => openDossier(r.reference)}
+                          onAssign={() => setAssignIds([r.id])}
+                          onSelf={action => selfAssign(action, [r.id])} />
+                      ))),
+                    ]
+                  })}
                 </tbody>
               </table>
             </div>
           )}
           {rows.length > 0 && <div style={{ marginTop: 12 }}><CodesLegend /></div>}
         </CCardBody>
-      </CCard>
+      </CCard>}
 
       {selected.length > 0 && (
         <div className="stg-bar-sel">
@@ -157,13 +189,21 @@ const StagiairesPage = () => {
         </div>
       )}
 
-      {lead && <InternInvitations open={inviteOpen} onOpenChange={setInviteOpen} onRegistered={load} />}
+      {lead && (
+        <InternInvitations open={inviteOpen} onOpenChange={setInviteOpen} onRegistered={load}
+          showList={invitationsTab} onCount={setPendingInvites} />
+      )}
 
       {lead && (
         <SupervisorAssignModal visible={assignIds !== null} ids={assignIds ?? []}
           onClose={() => setAssignIds(null)} onDone={() => { setAssignIds(null); setSelected([]); load() }} />
       )}
       <FormBinomeModal visible={teamOpen} preset={pair} onClose={() => setTeamOpen(false)} onDone={() => { setTeamOpen(false); setSelected([]); load() }} />
+      <style>{`
+        .stg-grp td { background: #f8fafc; padding: 0 !important; }
+        .stg-grp button { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 10px; color: #0f172a; }
+        .stg-grp button:hover { background: #f1f5f9; }
+      `}</style>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 // src/views/pages/stages/WorkAttestationButton.tsx
 // Dossier d'un ancien stagiaire venu ensuite travailler au CAP : préparer son
-// attestation de travail. Deux façons : lui envoyer le lien (il complète
+// attestation de service fait. Deux façons : lui envoyer le lien (il complète
 // diplôme, période, fonctions et tâches), ou remplir la fiche soi-même.
 
 import { useState } from 'react'
@@ -11,7 +11,11 @@ import { cilBadge, cilPencil, cilSend } from '@coreui/icons'
 import stageService from '@/services/stage.service'
 import { friendlyError, showSuccess } from '@/components/common/ActionResult'
 
-const WorkAttestationButton = ({ stage }: { stage: { id: number; nom_complet: string; whatsapp: string | null } }) => {
+/** onCreated : ouvrir la fiche sur place (sinon, la page des attestations). */
+const WorkAttestationButton = ({ stage, onCreated }: {
+  stage: { id: number; nom_complet: string; whatsapp: string | null }
+  onCreated?: (id: number, mode: 'lien' | 'remplir') => void
+}) => {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState<'lien' | 'remplir' | null>(null)
@@ -22,7 +26,8 @@ const WorkAttestationButton = ({ stage }: { stage: { id: number; nom_complet: st
     try {
       const res: any = await stageService.workAttestationFromStage(stage.id, mode)
       setOpen(false)
-      navigate(`/stages/attestations?type=travail&attestation=${res.data.id}`)
+      if (onCreated) onCreated(res.data.id, mode)
+      else navigate(`/stages/attestations?type=service&attestation=${res.data.id}`)
       if (mode === 'lien') await showSuccess('Lien envoyé', res?.message)
     } catch (e) {
       setErr(friendlyError(e))
@@ -34,10 +39,10 @@ const WorkAttestationButton = ({ stage }: { stage: { id: number; nom_complet: st
   return (
     <>
       <CButton color="primary" variant="outline" size="sm" onClick={() => { setErr(null); setOpen(true) }}>
-        <CIcon icon={cilBadge} className="me-1" />Attestation de travail
+        <CIcon icon={cilBadge} className="me-1" />Nouvelle attestation de service fait
       </CButton>
       <CModal visible={open} onClose={() => setOpen(false)} alignment="center" fullscreen="sm">
-        <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Attestation de travail : {stage.nom_complet}</CModalTitle></CModalHeader>
+        <CModalHeader><CModalTitle style={{ fontSize: '1rem' }}>Attestation de service fait : {stage.nom_complet}</CModalTitle></CModalHeader>
         <CModalBody>
           <p style={{ margin: '0 0 12px', color: '#334155' }}>
             Pour un ancien stagiaire venu ensuite travailler au CAP. Son identité est reprise de son dossier.

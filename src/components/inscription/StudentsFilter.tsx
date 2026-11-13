@@ -243,7 +243,7 @@ const StudentsFilter: React.FC<StudentsFilterProps> = ({
             <label className="form-label fw-semibold">Recherche</label>
             <CInputGroup>
               <CFormInput
-                placeholder="Rechercher..."
+                placeholder="Exemple : AGOSSOU ou un matricule"
                 value={searchQuery || ''}
                 onChange={onSearchChange}
               />

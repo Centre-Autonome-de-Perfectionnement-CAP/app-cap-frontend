@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import InscriptionService from '../../services/inscription.service.ts';
 import Swal from 'sweetalert2';
 import { StudentListItem, StudentDetails, FilterOptions } from '../../types/inscription.types';
@@ -17,15 +17,16 @@ const useStudentsListData = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  /** Premier chargement terminé : ensuite la page reste affichée pendant les recherches. */
+  const [loadedOnce, setLoadedOnce] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Options des filtres : seulement quand l'année change (pas à chaque lettre tapée).
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const options = await InscriptionService.filterOptions(selectedYear !== 'all' ? selectedYear : undefined);
-        
+    let alive = true;
+    InscriptionService.filterOptions(selectedYear !== 'all' ? selectedYear : undefined)
+      .then(options => {
+        if (!alive) return;
         setFilterOptions({
           years: options.years || [],
           filieres: options.filieres || [],
@@ -34,30 +35,44 @@ const useStudentsListData = () => {
           cohorts: options.cohorts || [],
           redoublants: ['all', 'oui', 'non'],
         });
+      })
+      .catch(() => { if (alive) setError('Impossible de charger les filtres.'); });
+    return () => { alive = false; };
+  }, [selectedYear]);
 
-        const response = await InscriptionService.studentsList(
-          selectedYear,
-          selectedFiliere,
-          selectedEntryDiploma,
-          selectedRedoublant,
-          selectedNiveau,
-          currentPage,
-          searchQuery,
-          undefined,
-          selectedCohort
-        );
+  // Liste : rechargée sur place ; une réponse arrivée après une recherche plus récente est ignorée.
+  const requestId = useRef(0);
+  useEffect(() => {
+    const id = ++requestId.current;
+    setLoading(true);
+    setError(null);
+    InscriptionService.studentsList(
+      selectedYear,
+      selectedFiliere,
+      selectedEntryDiploma,
+      selectedRedoublant,
+      selectedNiveau,
+      currentPage,
+      searchQuery,
+      undefined,
+      selectedCohort
+    )
+      .then(response => {
+        if (id !== requestId.current) return;
         setStudents(response.data || []);
         setTotalPages(response.totalPages || 1);
-      } catch (error) {
-        console.error('Erreur lors du fetch des données:', error);
+      })
+      .catch(() => {
+        if (id !== requestId.current) return;
         setError('Impossible de charger les données.');
         setStudents([]);
         setTotalPages(1);
-      } finally {
+      })
+      .finally(() => {
+        if (id !== requestId.current) return;
         setLoading(false);
-      }
-    };
-    fetchData();
+        setLoadedOnce(true);
+      });
   }, [selectedYear, selectedFiliere, selectedEntryDiploma, selectedRedoublant, selectedNiveau, selectedCohort, currentPage, searchQuery]);
 
   // Réinitialiser le niveau si la filière change
@@ -151,6 +166,7 @@ const useStudentsListData = () => {
     updateStudent,
     exportList,
     loading,
+    loadedOnce,
     error,
   };
 };

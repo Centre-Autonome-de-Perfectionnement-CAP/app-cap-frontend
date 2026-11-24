@@ -38,9 +38,9 @@ export const EligibilityBox = ({ e, frozen }: { e: AttestationEligibility | null
         {e.attendance_required !== false && (
           <span>Assiduité : <strong style={{ color: e.attendance_ok ? '#047857' : '#b45309' }}>{e.taux !== null ? `${e.taux} %` : '-'}</strong> (minimum {e.seuil} %)</span>
         )}
-        <span>Rapport final : <strong style={{ color: e.final_validated ? '#047857' : '#b45309' }}>{e.final_validated ? 'validé' : 'non validé'}</strong></span>
+        <span>Rapport de fin de stage : <strong style={{ color: e.final_validated ? '#047857' : '#b45309' }}>{e.final_validated ? 'validé' : 'non validé'}</strong></span>
         {e.attendance_required === false
-          ? <span className="stg-muted">Stagiaire invité, stage terminé : seul le rapport final compte.</span>
+          ? <span className="stg-muted">Stagiaire invité, stage terminé : seul le rapport de fin de stage compte.</span>
           : <span className="stg-muted">{e.jours_ouvres} jour(s) ouvré(s), {e.absences} absence(s)</span>}
       </div>
     </div>

@@ -34,7 +34,7 @@ const InternReportsPanel = ({ stageId }: { stageId: number }) => {
     <div>
       <div className="stg-muted" style={{ marginBottom: 8 }}>
         Fréquence : {data.frequency} · {data.stats.deposited} déposé(s), {data.stats.validated} validé(s), {data.stats.missing} manquant(s)
-        · rapport final {data.stats.final_validated ? 'validé' : 'non validé'}
+        · rapport de fin de stage {data.stats.final_validated ? 'validé' : 'non validé'}
       </div>
       {rows.slice(0, 12).map(p => (
         <button key={p.key} type="button" disabled={!p.report} onClick={() => p.report && setOpenId(p.report.id)}

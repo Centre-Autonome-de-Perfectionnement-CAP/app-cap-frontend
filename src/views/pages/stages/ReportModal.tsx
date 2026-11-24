@@ -37,6 +37,11 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
   const [err, setErr] = useState<string | null>(null)
   const [removing, setRemoving] = useState<number | null>(null)
 
+  // Décisions possibles maintenant (champ absent : tout est proposé). reverse : le responsable change une décision déjà prise.
+  const canApprove = d?.decisions?.approve ?? true
+  const canReject = d?.decisions?.reject ?? true
+  const reverse = !!d?.decisions?.reverse
+
   useEffect(() => {
     setD(null); setFile(null); setMode('view'); setErr(null)
     if (reportId === null) return
@@ -71,6 +76,8 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
       await showSuccess(mode === 'approved' ? 'Rapport validé' : 'Correction demandée', res?.message)
     } catch (e) {
       setErr(friendlyError(e))
+      // Décision refusée (déjà prise par quelqu'un d'autre, par exemple) : l'écran se met à jour.
+      stageService.report(d.id).then(r => { setD(r); setMode('view'); onChanged() }).catch(() => undefined)
     } finally {
       setBusy(false)
     }
@@ -163,14 +170,16 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
             <div style={{ marginTop: 14, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
               <div style={{ fontWeight: 700 }}>{d.correction_status === 'pending'
                 ? (mode === 'approved' ? 'Valider la version corrigée' : 'Ne pas retenir la version corrigée')
-                : (mode === 'approved' ? 'Valider ce rapport' : 'Demander une correction')}</div>
+                : (mode === 'approved' ? 'Valider ce rapport' : (reverse ? 'Renvoyer ce rapport à corriger' : 'Demander une correction'))}</div>
               {d.correction_status === 'pending' && (
                 <div style={{ fontSize: '.875rem', color: '#475569', marginTop: 4 }}>
                   Le rapport reste validé dans tous les cas (attestation comprise). Validée, cette version devient la version officielle.
                 </div>
               )}
               <CFormLabel className="fw-semibold small mt-2 mb-1">
-                {mode === 'approved' ? <>Commentaire <span style={{ color: '#94a3b8', fontWeight: 400 }}>(facultatif)</span></> : <>Ce qui doit être corrigé <span className="text-danger">*</span></>}
+                {mode === 'approved'
+                  ? <>Commentaire <span style={{ color: '#94a3b8', fontWeight: 400 }}>(facultatif)</span></>
+                  : <>Ce qui doit être corrigé <span className="text-danger">*</span></>}
               </CFormLabel>
               <CFormTextarea rows={3} maxLength={2000} value={text} onChange={e => setText(e.target.value)} autoFocus />
             </div>
@@ -179,8 +188,9 @@ const ReportModal = ({ reportId, onClose, onChanged }: Props) => {
         </div>
       )}
       footer={d && (mode === 'view' ? <>
-        <CButton color="warning" variant="outline" onClick={() => { setText(''); setMode('rejected') }}><CIcon icon={cilPencil} className="me-1" />À corriger</CButton>
-        <CButton color="success" style={{ color: '#fff' }} onClick={() => { setText(''); setMode('approved') }}><CIcon icon={cilCheckAlt} className="me-1" />Valider</CButton>
+        {!canApprove && !canReject && <span style={{ color: '#64748b', fontSize: '.875rem' }}>Aucune décision possible sur cette version.</span>}
+        {canReject && <CButton color="warning" variant="outline" onClick={() => { setText(''); setMode('rejected') }}><CIcon icon={cilPencil} className="me-1" />À corriger</CButton>}
+        {canApprove && <CButton color="success" style={{ color: '#fff' }} onClick={() => { setText(''); setMode('approved') }}><CIcon icon={cilCheckAlt} className="me-1" />Valider</CButton>}
       </> : <>
         <CButton color="secondary" variant="outline" onClick={() => { setMode('view'); setErr(null) }}>Retour</CButton>
         <CButton color={mode === 'approved' ? 'success' : 'warning'} style={{ color: '#fff' }} disabled={busy} onClick={decide}>

@@ -80,6 +80,19 @@ const RateModal = ({ intern, criteria, onClose, onSaved }: { intern: EvalToRate;
   const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
   const total = criteria.reduce((t, c) => t + (Number.isFinite(num(scores[c.key])) ? num(scores[c.key]) : 0), 0)
 
+  // Jamais au-dessus du maximum du critère (pas de 5 / 3) : la saisie est ramenée au maximum.
+  const setScore = (c: EvalCriterion, raw: string) => {
+    const clean = raw.replace(/[^\d.,]/g, '').slice(0, 4)
+    const v = num(clean)
+    if (Number.isFinite(v) && v > c.max) {
+      setScores({ ...scores, [c.key]: String(c.max) })
+      setErr(`${c.label} : la note maximale est ${c.max}.`)
+      return
+    }
+    setScores({ ...scores, [c.key]: clean })
+    setErr(null)
+  }
+
   const save = async () => {
     for (const c of criteria) {
       const v = num(scores[c.key])
@@ -105,7 +118,7 @@ const RateModal = ({ intern, criteria, onClose, onSaved }: { intern: EvalToRate;
           <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <CFormLabel htmlFor={`ev-${c.key}`} className="fw-semibold mb-0" style={{ flex: 1 }}>{c.label} <span className="text-danger">*</span></CFormLabel>
             <CFormInput id={`ev-${c.key}`} inputMode="decimal" style={{ width: 124, textAlign: 'center' }} value={scores[c.key]}
-              onChange={e => setScores({ ...scores, [c.key]: e.target.value.replace(/[^\d.,]/g, '').slice(0, 4) })} placeholder="Exemple : 3,5" aria-label={`${c.label}, sur ${c.max}`} />
+              onChange={e => setScore(c, e.target.value)} placeholder="Exemple : 3,5" aria-label={`${c.label}, sur ${c.max}`} />
             <span className="stg-muted" style={{ width: 28 }}>/ {c.max}</span>
           </div>
         ))}

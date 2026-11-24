@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useState, useCallback } from 'react'
-import { CButton, CCard, CCardHeader, CCardBody, CAlert } from '@coreui/react'
+import { CButton, CCard, CCardHeader, CCardBody, CAlert, CSpinner } from '@coreui/react'
 import {
   StudentsFilter,
   StudentTable,
@@ -351,6 +351,7 @@ const StudentsList = () => {
 
   return (
     <>
+      <style>{progressCss}</style>
       <CCard className="mb-4 shadow-sm">
         <CCardHeader className="d-flex justify-content-between align-items-center">
           <span className="fw-bold">Liste des Étudiants</span>
@@ -401,7 +402,14 @@ const StudentsList = () => {
           />
 
           {/* ✅ Passe les 3 nouvelles props pour la fonctionnalité Responsable */}
-          <div style={{ opacity: loading ? 0.55 : 1, transition: 'opacity .15s' }} aria-busy={loading}>
+          {/* Recherche en cours : barre animée et message, la liste reste en place */}
+          <div className="sl-progress" aria-hidden={!loading} style={{ visibility: loading ? 'visible' : 'hidden' }}>
+            <span />
+          </div>
+          <div className="sl-status" role="status" aria-live="polite">
+            {loading ? <><CSpinner size="sm" color="primary" className="me-2" />Mise à jour de la liste…</> : '\u00A0'}
+          </div>
+          <div style={{ opacity: loading ? 0.45 : 1, transition: 'opacity .15s', pointerEvents: loading ? 'none' : undefined }} aria-busy={loading}>
             <StudentTable
               students={students}
               loading={false}
@@ -458,5 +466,13 @@ const StudentsList = () => {
     </>
   )
 }
+
+const progressCss = `
+  .sl-progress { height: 3px; border-radius: 3px; background: #e0f2f1; overflow: hidden; margin-bottom: 4px; }
+  .sl-progress span { display: block; height: 100%; width: 35%; background: #0f766e; border-radius: 3px; animation: sl-move 1s ease-in-out infinite; }
+  .sl-status { min-height: 22px; font-size: .875rem; color: #0f766e; font-weight: 600; display: flex; align-items: center; margin-bottom: 6px; }
+  @keyframes sl-move { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+  @media (prefers-reduced-motion: reduce) { .sl-progress span { animation: none; width: 100%; opacity: .6; } }
+`
 
 export default StudentsList

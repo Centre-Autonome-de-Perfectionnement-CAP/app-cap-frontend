@@ -21,6 +21,7 @@ import PresencePanel from './PresencePanel'
 import InternReportsPanel from './InternReportsPanel'
 import InternAttestationPanel from './InternAttestationPanel'
 import SupervisorAssignModal from './SupervisorAssignModal'
+import { NpiRow, OtherStays } from './PersonNpi'
 import ExceptionalAttestationModal from './ExceptionalAttestationModal'
 import { Breadcrumb, CodeBadges, FilterTabs, Pill, StagesStyles, useOpenDossier } from './StagesUi'
 import {
@@ -367,6 +368,7 @@ const StageDossierPage = () => {
         <dl className="dos-dl">
           <Row l="Né(e) le" v={`${frDate(detail.date_naissance, true)} à ${detail.lieu_naissance}`} />
           <Row l="Nationalité" v={detail.nationalite} />
+          <NpiRow detail={detail} lead={lead} onSaved={setDetail} />
           <Row l="Établissement" v={detail.etablissement} />
           <Row l="Formation" v={detail.formation} />
           {!accepted && <Row l="Début souhaité" v={detail.date_debut_souhaitee ? frDate(detail.date_debut_souhaitee, true) : 'Non précisé'} />}
@@ -376,6 +378,7 @@ const StageDossierPage = () => {
           <Row l="Email" v={<a href={`mailto:${detail.email}`}>{detail.email}</a>} />
           <Row l="Demande déposée le" v={frDateTime(detail.created_at)} />
         </dl>
+        <OtherStays stays={detail.autres_stages} />
       </Section>
     ),
     files: (
@@ -569,7 +572,7 @@ const StageDossierPage = () => {
           {tab === 'rapports' && <Section icon={cilFile} title="Rapports" tone="#7c3aed"><InternReportsPanel stageId={detail.id} /></Section>}
           {tab === 'attestation' && (
             <Section icon={cilBadge} title="Attestation" tone="#0f766e">
-              <InternAttestationPanel stage={{ id: detail.id, nom_complet: detail.nom_complet, whatsapp: detail.whatsapp }} lead={lead} />
+              <InternAttestationPanel stage={{ id: detail.id, nom_complet: detail.nom_complet }} lead={lead} />
             </Section>
           )}
           {tab === 'historique' && blocks.history}

@@ -3,8 +3,9 @@
 //  1. stagiaires en cours / stages terminés ;
 //  2. rapports de fin de stage (mémoires compris) / rapports périodiques ;
 //  3. à traiter / renvoyés au stagiaire / validés. Un rapport validé quitte
-//     « À traiter » ; le responsable peut toujours le rouvrir, commenter et
-//     trancher à nouveau.
+//     « À traiter » ; le responsable peut toujours le rouvrir et commenter, et
+//     revenir sur sa décision (motif obligatoire) tant que l'attestation n'est
+//     pas validée.
 // Dans chaque case : un groupe par stagiaire, le plus ancien en attente d'abord.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -154,7 +155,7 @@ const RapportsPage = () => {
       </div>
 
       {state === 'approved' && lead && (
-        <div className="stg-muted">Un rapport validé reste modifiable : ouvrez-le pour ajouter un commentaire ou revenir sur la décision.</div>
+        <div className="stg-muted">Un rapport validé reste ouvert aux commentaires. Vous pouvez revenir sur votre décision, avec un motif, tant que l'attestation n'est pas validée.</div>
       )}
       {error && <div className="stg-err">{error}</div>}
       {!lists && !error && <div style={{ padding: 40, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}

@@ -3,12 +3,13 @@
 // son encadrement, son assiduité, ses rapports et ses codes d'attention.
 // « Détails » ouvre son dossier. Le filtre est dans l'adresse et dans le
 // titre : on sait toujours ce que l'on regarde. Les lignes peuvent être
-// regroupées par provenance (établissement d'origine, rapprochement souple).
+// Stagiaires terminés : des cartes par provenance (établissement d'origine,
+// rapprochement souple) ; un clic sur une carte n'affiche que ce groupe.
 // Onglet « Invitations » : les stagiaires invités par numéro WhatsApp.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CButton, CCard, CCardBody, CFormInput, CFormCheck, CFormSwitch, CInputGroup, CInputGroupText, CSpinner } from '@coreui/react'
+import { CButton, CCard, CCardBody, CFormInput, CFormCheck, CInputGroup, CInputGroupText, CSpinner } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSearch, cilReload, cilGroup, cilX, cilChevronBottom, cilChevronRight } from '@coreui/icons'
 import stageService, { type FollowResponse, type FollowRow, type InternScope } from '@/services/stage.service'
@@ -36,10 +37,11 @@ const StagiairesPage = () => {
   const scope: InternScope = asked && scopes.includes(asked as InternScope) ? asked as InternScope : scopes[0]
   const setScope = (s: InternScope | 'invitations') => setParams(p => { const n = new URLSearchParams(p); n.delete('scope'); n.set('filtre', s); return n }, { replace: true })
   const [pendingInvites, setPendingInvites] = useState<number | undefined>(undefined)
-  // Regroupement par provenance : proposé d'office pour les stagiaires terminés.
-  const [grouped, setGrouped] = useState(scope === 'finished')
-  useEffect(() => { setGrouped(scope === 'finished') }, [scope])
+  // Stagiaires terminés : regroupés par provenance, une carte par groupe.
+  const grouped = scope === 'finished'
+  const [prov, setProv] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState<string[]>([])
+  useEffect(() => { setProv(null); setCollapsed([]) }, [scope])
 
   const [q, setQ] = useState('')
   const [search, setSearch] = useState('')
@@ -63,7 +65,9 @@ const StagiairesPage = () => {
   useEffect(() => { const t = setTimeout(() => setSearch(q.trim()), 400); return () => clearTimeout(t) }, [q])
 
   const rows = list?.data ?? []
-  const groups = useMemo(() => (grouped ? groupByProvenance(rows, r => r.etablissement) : null), [grouped, rows])
+  const allGroups = useMemo(() => (grouped ? groupByProvenance(rows, r => r.etablissement) : null), [grouped, rows])
+  const picked = allGroups?.find(g => g.key === prov) ?? null
+  const groups = picked ? [picked] : allGroups
   const allChecked = rows.length > 0 && rows.every(r => selected.includes(r.id))
   const toggle = (id: number) => setSelected(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]))
   const pair = useMemo<[number, number] | undefined>(() => (selected.length === 2 ? [selected[0], selected[1]] : undefined), [selected])
@@ -117,11 +121,24 @@ const StagiairesPage = () => {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
             <CInputGroup style={{ flex: '1 1 280px' }}>
               <CInputGroupText style={{ background: '#fff' }}><CIcon icon={cilSearch} style={{ width: 16, color: '#94a3b8' }} /></CInputGroupText>
-              <CFormInput value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher : nom, référence, établissement…" maxLength={100} />
+              <CFormInput value={q} onChange={e => setQ(e.target.value)} placeholder="Exemple : AGOSSOU, STG-AB12CD ou EPAC" maxLength={100} aria-label="Rechercher un stagiaire" />
               {q && <CButton color="secondary" variant="outline" onClick={() => setQ('')} title="Effacer"><CIcon icon={cilX} /></CButton>}
             </CInputGroup>
-            <CFormSwitch id="stg-group" label="Regrouper par provenance" checked={grouped} onChange={e => { setGrouped(e.target.checked); setCollapsed([]) }} />
           </div>
+
+          {allGroups && allGroups.length > 0 && (
+            <div className="stg-prov" role="group" aria-label="Provenance">
+              <button type="button" className={prov === null ? 'on' : ''} onClick={() => setProv(null)}>
+                <span className="n">{rows.length}</span><span>Toutes les provenances</span>
+              </button>
+              {allGroups.map(g => (
+                <button key={g.key} type="button" className={prov === g.key ? 'on' : ''} title={g.label}
+                  onClick={() => { setProv(prov === g.key ? null : g.key); setCollapsed([]) }}>
+                  <span className="n">{g.rows.length}</span><span className="l">{g.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
           {error && <div className="stg-err">{error}</div>}
           {loading && !list && <div style={{ padding: 40, textAlign: 'center' }}><CSpinner size="sm" color="primary" /></div>}
@@ -203,6 +220,13 @@ const StagiairesPage = () => {
         .stg-grp td { background: #f8fafc; padding: 0 !important; }
         .stg-grp button { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 10px; color: #0f172a; }
         .stg-grp button:hover { background: #f1f5f9; }
+        .stg-prov { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin-bottom: 14px; }
+        .stg-prov button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px;
+          border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; transition: border-color .15s, box-shadow .15s; min-width: 0; }
+        .stg-prov button:hover, .stg-prov button:focus-visible { border-color: #0f766e; }
+        .stg-prov button.on { border-color: #0f766e; background: #f0fdfa; box-shadow: 0 0 0 3px rgba(15, 118, 110, .12); }
+        .stg-prov .n { font-size: 1.4rem; font-weight: 800; color: #0f766e; line-height: 1.1; }
+        .stg-prov .l { font-weight: 600; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       `}</style>
     </div>
   )

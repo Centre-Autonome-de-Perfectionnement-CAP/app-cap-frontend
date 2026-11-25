@@ -23,6 +23,7 @@ const MessagesPage = React.lazy(() => import('./MessagesPage'))
 const DocumentsPage = React.lazy(() => import('./DocumentsPage'))
 const AvisPage = React.lazy(() => import('./AvisPage'))
 const EvaluationsPage = React.lazy(() => import('./EvaluationsPage'))
+const DoublonsPage = React.lazy(() => import('./DoublonsPage'))
 
 // Pages les plus ouvertes : chargées dès l'entrée dans le module, pendant la
 // vérification des droits, au lieu de l'être l'une après l'autre.
@@ -83,6 +84,7 @@ const StagesRoutes = () => (
           <Route path="/avis" element={<Staff><AvisPage /></Staff>} />
           <Route path="/evaluations" element={<Staff><EvaluationsPage /></Staff>} />
           <Route path="/attestations" element={<SecretariatOrLead><AttestationsPage /></SecretariatOrLead>} />
+          <Route path="/doublons" element={<LeadOnly><DoublonsPage /></LeadOnly>} />
           <Route path="/superviseurs" element={<LeadOnly><SuperviseursPage /></LeadOnly>} />
           <Route path="/reglages" element={<LeadOnly><ReglagesPage /></LeadOnly>} />
           <Route path="/bibliotheque" element={<LeadOnly><BibliothequePage /></LeadOnly>} />

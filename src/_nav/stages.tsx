@@ -3,7 +3,7 @@
 // les pages réservées au responsable (attestations, superviseurs,
 // réglages) ; le secrétariat ne voit que les attestations.
 import CIcon from '@coreui/icons-react'
-import { cilBriefcase, cilPeople, cilUserFollow, cilGroup, cilTask, cilDescription, cilBadge, cilSpeedometer, cilSettings, cilLibrary, cilChatBubble, cilCheckCircle, cilFolderOpen, cilCommentSquare, cilStar } from '@coreui/icons'
+import { cilBriefcase, cilPeople, cilUserFollow, cilGroup, cilTask, cilDescription, cilBadge, cilSpeedometer, cilSettings, cilLibrary, cilChatBubble, cilCheckCircle, cilFolderOpen, cilCommentSquare, cilStar, cilCopy } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
 const getStagesNavigation = (role: string | null) => {
@@ -25,6 +25,7 @@ const getStagesNavigation = (role: string | null) => {
     { component: CNavItem, name: 'Binômes', to: '/stages/binomes', icon: <CIcon icon={cilGroup} customClassName="nav-icon" /> },
     ...(lead ? [
       attestations,
+      { component: CNavItem, name: 'Doublons probables', to: '/stages/doublons', icon: <CIcon icon={cilCopy} customClassName="nav-icon" /> },
       { component: CNavItem, name: 'Superviseurs', to: '/stages/superviseurs', icon: <CIcon icon={cilUserFollow} customClassName="nav-icon" /> },
       { component: CNavItem, name: 'Bibliothèque', to: '/stages/bibliotheque', icon: <CIcon icon={cilLibrary} customClassName="nav-icon" /> },
       { component: CNavItem, name: 'Réglages', to: '/stages/reglages', icon: <CIcon icon={cilSettings} customClassName="nav-icon" /> },

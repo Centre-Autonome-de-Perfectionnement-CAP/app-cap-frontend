@@ -57,7 +57,6 @@ const StageSettingsForm = () => {
         permission_delay_days: form.permission_delay_days,
         report_frequency: form.report_frequency,
         report_grace_days: form.report_grace_days,
-        final_report_open_days: form.final_report_open_days,
         final_correction_days: form.final_correction_days,
         seuil_assiduite: form.seuil_assiduite,
         attestation_structure: form.attestation_structure,
@@ -167,10 +166,6 @@ const StageSettingsForm = () => {
             <CCol xs={6} md={4}>
               <CFormLabel className="fw-semibold small">Délai après la période (jours ouvrés) <span className="text-danger">*</span></CFormLabel>
               <CFormInput type="number" min={0} max={10} value={form.report_grace_days} onChange={e => set('report_grace_days', Math.max(0, Math.min(10, Number(e.target.value) || 0)))} />
-            </CCol>
-            <CCol xs={6} md={4}>
-              <CFormLabel className="fw-semibold small">Rapport final ouvert (jours avant la fin) <span className="text-danger">*</span></CFormLabel>
-              <CFormInput type="number" min={3} max={60} value={form.final_report_open_days} onChange={e => set('final_report_open_days', Math.max(3, Math.min(60, Number(e.target.value) || 14)))} />
             </CCol>
             <CCol xs={6} md={4}>
               <CFormLabel className="fw-semibold small">Version corrigée après soutenance (jours après la fin) <span className="text-danger">*</span></CFormLabel>

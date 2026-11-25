@@ -3,8 +3,8 @@ import httpService from './http.service'
 class SoutenanceService {
   // Périodes de soumission - Récupère les années avec leurs périodes
   async getPeriods() {
-    const response = await httpService.get('/api/inscription/annees-academiques')
-    const periodsResponse = await httpService.get('/api/soutenance/periods')
+    const response = await httpService.get('inscription/academic-years')
+    const periodsResponse = await httpService.get('soutenance/periods')
     const periods = periodsResponse.data.data || periodsResponse.data
     
     const years = (response.data.data || response.data).map((year: any) => ({
@@ -16,7 +16,7 @@ class SoutenanceService {
   }
 
   async createPeriod(yearId: number, data: { start_date: string; end_date: string }) {
-    const response = await httpService.post('/api/soutenance/periods', {
+    const response = await httpService.post('soutenance/periods', {
       academic_year_id: yearId,
       ...data,
     })
@@ -24,25 +24,25 @@ class SoutenanceService {
   }
 
   async updatePeriod(periodId: number, data: { start_date: string; end_date: string }) {
-    const response = await httpService.put(`/api/soutenance/periods/${periodId}`, data)
+    const response = await httpService.put(`soutenance/periods/${periodId}`, data)
     return response.data
   }
 
   // Soumissions - retourne les données brutes pour DataTables
   async getSubmissions() {
-    const response = await httpService.get('/api/soutenance/submissions/data')
+    const response = await httpService.get('soutenance/submissions/data')
     return response.data
   }
 
   async acceptSubmission(submissionId: number) {
-    const response = await httpService.post('/api/soutenance/submissions/accept', {
+    const response = await httpService.post('soutenance/submissions/accept', {
       submission_id: submissionId,
     })
     return response.data
   }
 
   async rejectSubmission(submissionId: number, reason: string) {
-    const response = await httpService.post('/api/soutenance/submissions/reject', {
+    const response = await httpService.post('soutenance/submissions/reject', {
       submission_id: submissionId,
       rejection_reason: reason,
     })
@@ -50,25 +50,25 @@ class SoutenanceService {
   }
 
   async getDossierDetails(submissionId: number) {
-    const response = await httpService.get(`/api/soutenance/submissions/${submissionId}/dossier`)
+    const response = await httpService.get(`soutenance/submissions/${submissionId}/dossier`)
     return response.data.data || response.data
   }
 
   // Jurys - retourne les données brutes pour DataTables
   async getJurySubmissions() {
-    const response = await httpService.get('/api/soutenance/jury/data')
+    const response = await httpService.get('soutenance/jury/data')
     return response.data
   }
 
   async getJury(submissionId: number) {
-    const response = await httpService.get('/api/soutenance/jury/get', {
+    const response = await httpService.get('soutenance/jury/get', {
       params: { submission_id: submissionId },
     })
     return response.data.data || response.data
   }
 
   async saveJury(submissionId: number, data: any) {
-    const response = await httpService.post(`/api/soutenance/submissions/${submissionId}/jury`, data)
+    const response = await httpService.post(`soutenance/submissions/${submissionId}/jury`, data)
     return response.data
   }
 
@@ -76,8 +76,8 @@ class SoutenanceService {
   async exportJury(type: 'proposals' | 'notes', yearId: any, defenseType: any) {
     const endpoint =
       type === 'proposals'
-        ? '/api/soutenance/jury/export-proposals'
-        : '/api/soutenance/jury/export-notes'
+        ? 'soutenance/jury/export-proposals'
+        : 'soutenance/jury/export-notes'
     const response = await httpService.get(endpoint, {
       params: { academic_year: yearId, defense_type: defenseType },
       responseType: 'blob',
@@ -87,22 +87,22 @@ class SoutenanceService {
 
   // Données de référence
   async getAcademicYears() {
-    const response = await httpService.get('/api/inscription/annees-academiques')
+    const response = await httpService.get('inscription/academic-years')
     return response.data.data || response.data
   }
 
   async getDepartments() {
-    const response = await httpService.get('/api/inscription/filieres')
+    const response = await httpService.get('inscription/filieres')
     return response.data.data || response.data
   }
 
   async getProfessors() {
-    const response = await httpService.get('/api/rh/professors')
+    const response = await httpService.get('rh/professors')
     return response.data.data || response.data
   }
 
   async getRooms() {
-    const response = await httpService.get('/api/emploi-du-temps/rooms')
+    const response = await httpService.get('emploi-du-temps/rooms')
     return response.data.data || response.data
   }
 }

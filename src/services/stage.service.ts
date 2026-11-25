@@ -105,6 +105,24 @@ export interface ChatThread {
   edits?: { id: number; body: string }[]
 }
 
+export type IdentityCriterion = 'npi' | 'telephone' | 'email' | 'identite'
+
+export interface OtherStay {
+  id: number; reference: string; status: StageStatus; status_label: string
+  date_debut: string | null; date_fin: string | null
+  /** Demande ou stage encore en cours : en même temps que celui-ci. */
+  live: boolean
+  why: IdentityCriterion[]
+}
+
+export interface DuplicateGroup {
+  people: {
+    id: number; reference: string; nom_complet: string; status: StageStatus; status_label: string
+    etablissement: string; date_debut: string | null; date_fin: string | null; live: boolean
+  }[]
+  shared: IdentityCriterion[]
+}
+
 export interface StageDetail extends StageListRow {
   civilite: string
   nom: string
@@ -115,6 +133,10 @@ export interface StageDetail extends StageListRow {
   theme_souhaite: string | null
   email: string
   whatsapp: string
+  /** null : jamais renseigné (stage inscrit avant le contrôle des doublons). */
+  npi: string | null
+  /** Autres demandes ou stages de la même personne (historique et doublons). */
+  autres_stages: OtherStay[]
   files: { key: string; label: string; ext: string }[]
   terms: StageTerms | null
   rejection_reason: string | null
@@ -155,7 +177,6 @@ export interface StageSettings {
   permission_delay_days: number
   report_frequency: 'journalier' | 'hebdomadaire' | 'mensuel'
   report_grace_days: number
-  final_report_open_days: number
   final_correction_days?: number
   seuil_assiduite: number
   attestation_structure: string
@@ -407,6 +428,8 @@ export interface ReportDetail extends ReportSummary {
   versions: { version: number; name: string; size: number; note: string | null; late: boolean; post_defense?: boolean; at: string; by?: string | null }[]
   comments: { id: number; version: number | null; author: 'staff' | 'stagiaire'; name: string; body: string; at: string; can_delete?: boolean }[]
   reviews: { id: number; version: number; role: 'superviseur' | 'responsable'; decision: 'approved' | 'rejected'; comment: string | null; name: string; at: string }[]
+  /** Ce que le décideur peut faire maintenant ; reverse : changer une décision déjà prise (motif obligatoire). */
+  decisions?: { approve: boolean; reject: boolean; reverse: boolean } | null
 }
 
 export interface ReportPeriod {
@@ -589,6 +612,10 @@ class StageService {
     return HttpService.get(`${BASE}/demandes${qs.toString() ? `?${qs}` : ''}`)
   }
 
+  duplicates = async (): Promise<DuplicateGroup[]> => (await HttpService.get(`${BASE}/doublons`)).data
+
+  updateNpi = (id: number, npi: string) => HttpService.patch(`${BASE}/stagiaires/${id}/npi`, { npi })
+
   get = async (idOrRef: number | string): Promise<StageDetail> =>
     (await HttpService.get(`${BASE}/demandes/${encodeURIComponent(String(idOrRef))}`)).data
 
@@ -767,11 +794,7 @@ class StageService {
   workAttestations = (status: string, q = ''): Promise<{ data: WorkAttestation[]; counts: Partial<Record<WorkAttestationStatus, number>> }> =>
     HttpService.get(`${BASE}/attestations-travail?status=${encodeURIComponent(status)}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ''}`)
   workAttestation = async (id: number): Promise<WorkAttestation> => (await HttpService.get(`${BASE}/attestations-travail/${id}`)).data
-  /** Attestations de service fait d'un ancien stagiaire (dossier). */
-  stageWorkAttestations = async (stageId: number): Promise<WorkAttestation[]> => (await HttpService.get(`${BASE}/stagiaires/${stageId}/attestations-travail`)).data
   inviteWorkAttestation = (numero: string) => HttpService.post(`${BASE}/attestations-travail`, { numero })
-  /** Dossier d'un ancien stagiaire : lien envoyé, ou fiche remplie par le responsable. */
-  workAttestationFromStage = (stageId: number, mode: 'lien' | 'remplir') => HttpService.post(`${BASE}/stagiaires/${stageId}/attestation-travail`, { mode })
   updateWorkAttestation = (id: number, values: Partial<WorkAttestationValues>) => HttpService.put(`${BASE}/attestations-travail/${id}`, values)
   validateWorkAttestation = (id: number) => HttpService.post(`${BASE}/attestations-travail/${id}/valider`, {})
   resendWorkAttestation = (id: number) => HttpService.post(`${BASE}/attestations-travail/${id}/renvoyer`, {})
